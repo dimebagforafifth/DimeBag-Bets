@@ -1,16 +1,32 @@
-import { useReducer, useRef } from 'react'
+import { useReducer, useRef, useState } from 'react'
 import type { Account } from '../core/index.js'
 import { availableToWager } from '../core/index.js'
-import { DEFAULT_HOUSE_CONFIG, type MinesHouseConfig } from '../games/mines/index.js'
+import {
+  DEFAULT_HOUSE_CONFIG as DEFAULT_MINES_CONFIG,
+  type MinesHouseConfig,
+} from '../games/mines/index.js'
 import { MinesGame } from '../games/mines/ui/MinesGame.js'
+import {
+  DEFAULT_CRASH_CONFIG,
+  type CrashHouseConfig,
+} from '../games/crash/index.js'
+import { CrashGame } from '../games/crash/ui/CrashGame.js'
 
 /**
- * Manager-controlled house settings (the vig + rounding policy). Today this is
- * the shipping default (1% edge, floored = slightly house-favorable). At roll-up
- * an admin panel / Supabase settings row feeds this single source of truth —
- * game logic never changes, only this value.
+ * Manager-controlled house settings (the vig). Today these are the shipping
+ * defaults; at roll-up an admin panel / Supabase settings row feeds this single
+ * source of truth — game logic never changes, only these values. Per game,
+ * since each tunes its vig differently (Mines: edge + rounding; Crash: a base
+ * plus a small manager spread that moves only probability).
  */
-const HOUSE_CONFIG: MinesHouseConfig = DEFAULT_HOUSE_CONFIG
+const MINES_CONFIG: MinesHouseConfig = DEFAULT_MINES_CONFIG
+const CRASH_CONFIG: CrashHouseConfig = DEFAULT_CRASH_CONFIG
+
+type GameKey = 'mines' | 'crash'
+const GAMES: { key: GameKey; label: string }[] = [
+  { key: 'mines', label: 'Mines' },
+  { key: 'crash', label: 'Crash' },
+]
 
 /**
  * The app shell (CLAUDE.md §5). For Phase 0 it owns the one shared account —
@@ -27,6 +43,7 @@ export function App() {
     pending: 0,
   })
   const [, refresh] = useReducer((n: number) => n + 1, 0)
+  const [active, setActive] = useState<GameKey>('mines')
   const account = accountRef.current
 
   return (
@@ -35,6 +52,17 @@ export function App() {
         <div className="brand">
           DimeBag<span className="brand-dot">·</span>Bets
         </div>
+        <nav className="game-switch">
+          {GAMES.map((g) => (
+            <button
+              key={g.key}
+              className={`game-tab ${active === g.key ? 'is-active' : ''}`}
+              onClick={() => setActive(g.key)}
+            >
+              {g.label}
+            </button>
+          ))}
+        </nav>
         <div className="figure">
           <div className="figure-block">
             <span className="figure-label">Balance</span>
@@ -50,7 +78,11 @@ export function App() {
       </header>
 
       <main className="app-main">
-        <MinesGame account={account} houseConfig={HOUSE_CONFIG} onBalanceChange={refresh} />
+        {active === 'mines' ? (
+          <MinesGame account={account} houseConfig={MINES_CONFIG} onBalanceChange={refresh} />
+        ) : (
+          <CrashGame account={account} houseConfig={CRASH_CONFIG} onBalanceChange={refresh} />
+        )}
       </main>
 
       <footer className="app-footer">
