@@ -187,6 +187,11 @@ body {
 .chip:hover:not(:disabled) {
   color: var(--text);
 }
+.chip.is-on {
+  background: var(--surface-2);
+  color: var(--gem);
+  border-color: rgba(61, 214, 140, 0.4);
+}
 .chip:disabled {
   opacity: 0.5;
   cursor: default;
