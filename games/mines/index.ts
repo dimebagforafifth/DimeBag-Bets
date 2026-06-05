@@ -10,7 +10,6 @@ export {
   safeTiles,
   rawMultiplier,
   displayMultiplier,
-  applyRounding,
   minesMultiplier,
 } from './multiplier.js'
 export type { MinesHouseConfig, PayoutRounding } from './multiplier.js'
