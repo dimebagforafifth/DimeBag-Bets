@@ -16,6 +16,12 @@ import { minesMeta } from '../games/mines/index.js'
 import { MinesGame } from '../games/mines/ui/MinesGame.js'
 import { crashMeta } from '../games/crash/index.js'
 import { CrashGame } from '../games/crash/ui/CrashGame.js'
+import { diceMeta } from '../games/dice/index.js'
+import { DiceGame } from '../games/dice/ui/DiceGame.js'
+import { limboMeta } from '../games/limbo/index.js'
+import { LimboGame } from '../games/limbo/ui/LimboGame.js'
+import { kenoMeta } from '../games/keno/index.js'
+import { KenoGame } from '../games/keno/ui/KenoGame.js'
 
 /** What every game view receives from the shell: the shared account + a signal
  *  to re-render the balance. (Games may also accept an optional per-game
@@ -36,6 +42,9 @@ export interface GameDef {
 export const GAMES: GameDef[] = [
   { ...minesMeta, Component: MinesGame },
   { ...crashMeta, Component: CrashGame },
+  { ...diceMeta, Component: DiceGame },
+  { ...limboMeta, Component: LimboGame },
+  { ...kenoMeta, Component: KenoGame },
 ]
 
 /** Look up a game by its key (used for routing to a game page). */

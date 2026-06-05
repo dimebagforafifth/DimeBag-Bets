@@ -303,9 +303,94 @@ body {
 }
 
 .mines-error,
-.crash-error {
+.crash-error,
+.dice-error,
+.limbo-error,
+.keno-error {
   color: var(--red);
   font-size: 12.5px;
+  margin: 0;
+}
+
+/* ---- stat readout box (shared by game views) ---- */
+.stat {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0;
+}
+.stat-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-value {
+  display: block;
+  margin: 2px 0 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.stat-value.is-hot {
+  color: var(--green);
+}
+.stat-button {
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  transition: border-color 0.15s ease;
+}
+.stat-button:hover {
+  border-color: var(--muted);
+}
+
+/* ---- numeric stepper: − [ value ] + (shared by game views) ---- */
+.stepper {
+  display: flex;
+  gap: 6px;
+}
+.stepper-btn {
+  width: 40px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.stepper-btn:hover:not(:disabled) {
+  background: #294056;
+}
+.stepper-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.stepper-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.stepper-value .field-input {
+  border: none;
+  background: transparent;
+  text-align: center;
+  padding: 10px 4px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+/* hide the native number spinner — the −/+ buttons replace it */
+.stepper-value .field-input::-webkit-outer-spin-button,
+.stepper-value .field-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
 }
 
