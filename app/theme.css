@@ -9,7 +9,11 @@
   --green: #00e701;
   --green-press: #00c700;
   --red: #ed4163;
-  --gem: #3dd68c;
+  /* The one standard "treasure green" every game's gem + win state derives from.
+     Deep, precious emerald. --gem-glow holds its RGB channels for translucent
+     glows (rgba(var(--gem-glow), a)). Change these two and the whole app shifts. */
+  --gem: #0a9d5a;
+  --gem-glow: 10, 157, 90;
 
   --radius: 10px;
   --gap: 16px;
@@ -161,6 +165,11 @@ body {
   color: var(--text);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
 .figure {
   display: flex;
   gap: 28px;
@@ -263,7 +272,7 @@ body {
 .chip.is-on {
   background: var(--surface-2);
   color: var(--gem);
-  border-color: rgba(61, 214, 140, 0.4);
+  border-color: rgba(var(--gem-glow), 0.4);
 }
 .chip:disabled {
   opacity: 0.5;
@@ -306,7 +315,8 @@ body {
 .crash-error,
 .dice-error,
 .limbo-error,
-.keno-error {
+.keno-error,
+.plinko-error {
   color: var(--red);
   font-size: 12.5px;
   margin: 0;
@@ -452,4 +462,95 @@ body {
 }
 .verify-bad {
   color: var(--red);
+}
+
+/* ---- one shared gem palette (every game's gem facets derive from --gem) ---- */
+.gem-crown {
+  fill: var(--gem);
+}
+.gem-table {
+  fill: color-mix(in srgb, var(--gem) 22%, #ffffff);
+}
+.gem-cl {
+  fill: color-mix(in srgb, var(--gem) 52%, #ffffff);
+}
+.gem-cr {
+  fill: color-mix(in srgb, var(--gem) 80%, #000000);
+}
+.gem-p1 {
+  fill: color-mix(in srgb, var(--gem) 58%, #000000);
+}
+.gem-p2 {
+  fill: var(--gem);
+}
+.gem-p3 {
+  fill: color-mix(in srgb, var(--gem) 74%, #000000);
+}
+.gem-p4 {
+  fill: color-mix(in srgb, var(--gem) 46%, #000000);
+}
+.gem-gloss {
+  fill: #ffffff;
+}
+.gem-girdle {
+  stroke: #063d29;
+}
+.gem-spark {
+  fill: #ffffff;
+}
+
+/* ===== shared win popup — every game shows this centered over its stage ===== */
+.win-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+  animation: win-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.win-popup {
+  min-width: 180px;
+  text-align: center;
+  padding: 22px 40px;
+  border-radius: 16px;
+  background: rgba(8, 18, 24, 0.86);
+  border: 3px solid color-mix(in srgb, var(--gem) 68%, #6dff9d);
+  box-shadow: 0 0 36px rgba(var(--gem-glow), 0.55), inset 0 0 22px rgba(var(--gem-glow), 0.18),
+    0 16px 50px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+}
+.win-popup-mult {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--gem) 45%, #8effbe);
+  text-shadow: 0 0 18px rgba(var(--gem-glow), 0.7);
+}
+.win-popup-divider {
+  height: 2px;
+  width: 64%;
+  margin: 14px auto;
+  border-radius: 2px;
+  background: rgba(var(--gem-glow), 0.4);
+}
+.win-popup-amount {
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--gem) 45%, #8effbe);
+  text-shadow: 0 0 14px rgba(var(--gem-glow), 0.6);
+}
+@keyframes win-pop {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

@@ -2,6 +2,7 @@ import { useReducer, useRef, useState, type CSSProperties } from 'react'
 import type { Account } from '../core/index.js'
 import { availableToWager } from '../core/index.js'
 import { GAMES, findGame } from './games.js'
+import { SoundToggle } from '../sound/index.js'
 
 /**
  * The app shell (CLAUDE.md §5). It owns the one shared account — the single
@@ -31,17 +32,20 @@ export function App() {
         <button className="brand" onClick={() => setRoute(null)}>
           DimeBag<span className="brand-dot">·</span>Bets
         </button>
-        <div className="figure">
-          <div className="figure-block">
-            <span className="figure-label">Balance</span>
-            <span className={`figure-value ${account.balance < 0 ? 'is-down' : ''}`}>
-              {formatPoints(account.balance)}
-            </span>
+        <div className="header-right">
+          <div className="figure">
+            <div className="figure-block">
+              <span className="figure-label">Balance</span>
+              <span className={`figure-value ${account.balance < 0 ? 'is-down' : ''}`}>
+                {formatPoints(account.balance)}
+              </span>
+            </div>
+            <div className="figure-block">
+              <span className="figure-label">To wager</span>
+              <span className="figure-value">{formatPoints(availableToWager(account))}</span>
+            </div>
           </div>
-          <div className="figure-block">
-            <span className="figure-label">To wager</span>
-            <span className="figure-value">{formatPoints(availableToWager(account))}</span>
-          </div>
+          <SoundToggle />
         </div>
       </header>
 

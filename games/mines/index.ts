@@ -8,7 +8,7 @@ export const minesMeta = {
   key: 'mines',
   name: 'Mines',
   tagline: 'Uncover gems, dodge the mines.',
-  accent: '#3dd68c',
+  accent: '#10b46d',
 } as const
 
 export {
