@@ -3,6 +3,14 @@
  * The clean UI slice and any caller import from here.
  */
 
+/** Self-declared identity for the games registry / casino hub. */
+export const crashMeta = {
+  key: 'crash',
+  name: 'Crash',
+  tagline: 'Cash out before the rocket crashes.',
+  accent: '#46c3ff',
+} as const
+
 export {
   MAX_CRASH_MULTIPLIER,
   BASE_EDGE,
