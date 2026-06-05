@@ -55,36 +55,109 @@ body {
   font-weight: 700;
   letter-spacing: 0.2px;
   font-size: 18px;
+  color: var(--text);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 .brand-dot {
   color: var(--green);
   margin: 0 2px;
 }
 
-.game-switch {
+/* ---- Casino lobby ---- */
+.lobby {
+  width: 100%;
+  max-width: 820px;
+}
+.lobby-head {
+  margin-bottom: 22px;
+}
+.lobby-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.lobby-sub {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.lobby-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.game-card {
+  --accent: var(--green);
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  padding: 20px;
+  border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 4px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
 }
-.game-tab {
+.game-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: var(--surface-2);
+}
+.card-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.card-icon svg {
+  width: 26px;
+  height: 26px;
+}
+.card-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+.card-tag {
+  font-size: 13px;
+  color: var(--muted);
+}
+.card-play {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ---- a single game page ---- */
+.game-page {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+.crumb {
+  align-self: flex-start;
+  background: none;
   border: none;
-  background: transparent;
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
-  padding: 6px 16px;
-  border-radius: 999px;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  padding: 0;
 }
-.game-tab:hover {
-  color: var(--text);
-}
-.game-tab.is-active {
-  background: var(--surface-2);
+.crumb:hover {
   color: var(--text);
 }
 
