@@ -13,6 +13,6 @@ Two newer shared siblings to `core/`: [sound/engine.ts](sound/engine.ts) (synthe
 
 Stack: TypeScript + Vite + React 18, vitest. `npm test` (141 tests), `npm run typecheck`, `npm run build` all green. No Supabase/Vercel wired yet.
 
-**Work in progress (uncommitted as of 2026-06-05):** Plinko game (untracked: games/plinko/, games/shared/, sound/), `resolveAtMultiplier` in core (+tests), and a Stake-style UI polish pass on Dice, Keno, Mines (+ theme.css, crash/limbo css). All builds/tests green. Not yet committed.
+**Consolidated onto main 2026-06-05:** all prior agent work (Plinko game, sound/ engine + SoundToggle, games/shared/WinPopup, core `resolveAtMultiplier` +tests, Stake-style UI polish + sound/WinPopup wiring across every game) is now committed via the `integrate-agent-work` branch merged into main. 141 tests / typecheck / build all green. main is ahead of origin/main (not pushed). Stale fully-merged branches still exist locally: phase0-core, phase0-crash, casino-split, games-dice-limbo-keno, integrate-agent-work.
 
 sportsbook/ and docs/ are still empty stubs (.gitkeep only) — sportsbook is Phase 1+.
