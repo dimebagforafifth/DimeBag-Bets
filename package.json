@@ -1,0 +1,16 @@
+{
+  "name": "dimebag-bets",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Points-based sportsbook + casino games on one shared credit/balance core.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
