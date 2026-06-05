@@ -1,0 +1,1 @@
+- [Project status](project-status.md) — current phase (past M0), 6 casino games on shared core (+sound, WinPopup), UI polish + Plinko uncommitted
