@@ -12,6 +12,8 @@ import {
   type LimboHouseConfig,
   type LimboRound,
 } from '../index.js'
+import { WinPopup } from '../../shared/WinPopup.js'
+import { play as playSound } from '../../../sound/index.js'
 import './limbo.css'
 
 interface LimboGameProps {
@@ -43,8 +45,9 @@ export function LimboGame({
 
   useEffect(() => () => cancelAnimationFrame(rafRef.current), [])
 
-  function animateTo(result: number) {
+  function animateTo(result: number, won: boolean) {
     cancelAnimationFrame(rafRef.current)
+    playSound('roll')
     const start = performance.now()
     const dur = 600
     const step = (now: number) => {
@@ -52,7 +55,10 @@ export function LimboGame({
       const eased = 1 - Math.pow(1 - t, 3)
       setDisplay(1 + (result - 1) * eased)
       if (t < 1) rafRef.current = requestAnimationFrame(step)
-      else setDisplay(result)
+      else {
+        setDisplay(result)
+        playSound(won ? 'win' : 'lose') // result chime lands with the multiplier
+      }
     }
     rafRef.current = requestAnimationFrame(step)
   }
@@ -71,7 +77,7 @@ export function LimboGame({
       setRound(r)
       setHistory((h) => [{ result: r.result, won: r.won }, ...h].slice(0, 16))
       onBalanceChange()
-      animateTo(r.result)
+      animateTo(r.result, r.won)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     }
@@ -104,6 +110,9 @@ export function LimboGame({
               : `Target ${target.toFixed(2)}×`}
           </div>
         </div>
+        {round?.won && (
+          <WinPopup multiplier={round.target} amount={Math.round(bet * (round.target - 1))} />
+        )}
       </section>
 
       <section className="limbo-panel">

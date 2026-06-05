@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { availableToWager } from '../../../core/index.js'
 import {
@@ -14,6 +14,8 @@ import {
   type KenoRisk,
   type KenoRound,
 } from '../index.js'
+import { play as playSound } from '../../../sound/index.js'
+import { WinPopup } from '../../shared/WinPopup.js'
 import './keno.css'
 
 interface KenoGameProps {
@@ -23,6 +25,7 @@ interface KenoGameProps {
 }
 
 const ALL_TILES = Array.from({ length: GRID_SIZE }, (_, i) => i + 1)
+const REVEAL_MS = 130 // gap between each drawn number popping in
 
 export function KenoGame({
   account,
@@ -36,8 +39,10 @@ export function KenoGame({
   const nonceRef = useRef(0)
 
   const [round, setRound] = useState<KenoRound | null>(null)
+  const [shown, setShown] = useState(0) // how many drawn numbers have popped in
   const [history, setHistory] = useState<{ multiplier: number; won: boolean }[]>([])
   const [error, setError] = useState<string | null>(null)
+  const timerRef = useRef(0)
 
   const available = availableToWager(account)
   const table = useMemo(
@@ -45,24 +50,34 @@ export function KenoGame({
     [picks.length, risk, houseConfig],
   )
   const maxMult = table ? Math.max(...table) : 0
-  const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available || picks.length < 1
+  const revealing = round != null && shown < round.drawn.length
+  const done = round != null && shown >= round.drawn.length
+  const betInvalid =
+    !Number.isInteger(bet) || bet < 1 || bet > available || picks.length < 1 || revealing
+
+  useEffect(() => () => clearTimeout(timerRef.current), [])
+
+  function reset() {
+    clearTimeout(timerRef.current)
+    setRound(null)
+    setShown(0)
+  }
 
   function toggle(n: number) {
-    setRound(null)
+    reset()
     setPicks((p) =>
       p.includes(n) ? p.filter((x) => x !== n) : p.length < MAX_PICKS ? [...p, n] : p,
     )
+    playSound('select')
   }
 
   function autoPick() {
-    setRound(null)
+    reset()
     const pool = [...ALL_TILES]
     const out: number[] = []
-    while (out.length < MAX_PICKS) {
-      const i = Math.floor(Math.random() * pool.length)
-      out.push(pool.splice(i, 1)[0])
-    }
+    while (out.length < MAX_PICKS) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
     setPicks(out.sort((a, b) => a - b))
+    playSound('select')
   }
 
   function play() {
@@ -77,12 +92,45 @@ export function KenoGame({
         nonce: nonceRef.current,
         config: houseConfig,
       })
+      clearTimeout(timerRef.current)
       setRound(r)
-      setHistory((h) => [{ multiplier: r.multiplier, won: r.won }, ...h].slice(0, 16))
-      onBalanceChange()
+      setShown(0)
+      playSound('bet')
+      // Pop the drawn numbers in one at a time; land the result + balance last.
+      let hitsSounded = 0
+      const step = (i: number) => {
+        setShown(i)
+        const num = r.drawn[i - 1]
+        if (num != null) {
+          // a hit (a number you picked) rings up the ascending ladder; a miss is a flat blip.
+          if (r.picks.includes(num)) playSound('reveal', { step: ++hitsSounded })
+          else playSound('draw', { step: i })
+        }
+        if (i < r.drawn.length) {
+          timerRef.current = window.setTimeout(() => step(i + 1), REVEAL_MS)
+        } else {
+          setHistory((h) => [{ multiplier: r.multiplier, won: r.won }, ...h].slice(0, 16))
+          onBalanceChange()
+          playSound(r.won ? 'win' : 'lose')
+        }
+      }
+      timerRef.current = window.setTimeout(() => step(1), REVEAL_MS)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     }
+  }
+
+  const drawnVisible = round ? round.drawn.slice(0, shown) : []
+  const hitsVisible = round ? round.picks.filter((n) => drawnVisible.includes(n)).length : 0
+
+  function tileKind(n: number): string {
+    if (!round) return picks.includes(n) ? 'picked' : 'idle'
+    const isPicked = round.picks.includes(n)
+    const isDrawn = drawnVisible.includes(n)
+    if (isPicked && isDrawn) return 'hit'
+    if (isDrawn) return 'drawn'
+    if (isPicked) return done ? 'miss' : 'picked'
+    return 'idle'
   }
 
   return (
@@ -117,7 +165,7 @@ export function KenoGame({
                 className={`chip ${risk === r ? 'is-on' : ''}`}
                 onClick={() => {
                   setRisk(r)
-                  setRound(null)
+                  reset()
                 }}
               >
                 {r[0].toUpperCase() + r.slice(1)}
@@ -133,8 +181,8 @@ export function KenoGame({
           <button
             className="chip"
             onClick={() => {
+              reset()
               setPicks([])
-              setRound(null)
             }}
           >
             Clear
@@ -147,9 +195,11 @@ export function KenoGame({
 
         <p className="keno-hint">
           {round
-            ? round.won
-              ? `${round.hits}/${round.picks.length} hits · ${round.multiplier.toFixed(2)}× — won ${formatPoints(Math.round(bet * (round.multiplier - 1)))}`
-              : `${round.hits}/${round.picks.length} hits — lost ${formatPoints(bet)}`
+            ? done
+              ? round.won
+                ? `${round.hits}/${round.picks.length} hits · ${round.multiplier.toFixed(2)}× — won ${formatPoints(Math.round(bet * (round.multiplier - 1)))}`
+                : `${round.hits}/${round.picks.length} hits — lost ${formatPoints(bet)}`
+              : `Drawing… ${hitsVisible} hit${hitsVisible === 1 ? '' : 's'}`
             : picks.length
               ? `${picks.length} picked · up to ${maxMult.toFixed(2)}× (${formatPoints(Math.round(bet * (maxMult - 1)))})`
               : 'Pick 1–10 numbers'}
@@ -171,44 +221,68 @@ export function KenoGame({
 
         <div className="keno-grid">
           {ALL_TILES.map((n) => {
-            const picked = picks.includes(n)
-            const drawn = round?.drawn.includes(n) ?? false
-            let kind = 'idle'
-            if (round) {
-              if (picked && drawn) kind = 'hit'
-              else if (picked) kind = 'miss'
-              else if (drawn) kind = 'drawn'
-            } else if (picked) kind = 'picked'
+            const kind = tileKind(n)
+            // The gem is the game's reward: it only appears once the draw hits
+            // one of your picks. Your picks themselves wear a flat purple cover.
+            const gem = kind === 'hit'
             return (
-              <button key={n} className={`keno-tile is-${kind}`} onClick={() => toggle(n)}>
-                {n}
+              <button
+                key={n}
+                className={`keno-tile is-${kind}`}
+                onClick={() => toggle(n)}
+                disabled={revealing}
+              >
+                {gem && <Gem />}
+                <span className="keno-num">{n}</span>
               </button>
             )
           })}
         </div>
 
-        {table && <Paytable table={table} hits={round?.hits ?? null} />}
+        {table && <Paytable table={table} hits={done ? round?.hits ?? null : null} />}
 
         <Fairness
-          round={round}
+          round={done ? round : null}
           clientSeed={clientSeed}
-          nextNonce={nonceRef.current + 1}
+          nextNonce={nonceRef.current + (round ? 0 : 1)}
           onClientSeed={setClientSeed}
         />
+
+        {done && round?.won && (
+          <WinPopup multiplier={round.multiplier} amount={Math.round(bet * (round.multiplier - 1))} />
+        )}
       </section>
     </div>
   )
 }
 
+/** A faceted green gem, sharing the one standard --gem palette (app/theme.css). */
+function Gem() {
+  return (
+    <svg className="keno-gem" viewBox="0 0 32 32" aria-hidden="true">
+      <polygon className="gem-crown" points="9,7 23,7 27,13 16,27 5,13" />
+      <polygon className="gem-table" points="9,7 23,7 24.5,13 7.5,13" />
+      <polygon className="gem-p1" points="7.5,13 16,27 5,13" />
+      <polygon className="gem-p4" points="24.5,13 16,27 27,13" />
+      <polygon className="gem-gloss" points="11,8.4 21,8.4 20,11 12,11" opacity="0.4" />
+      <polyline className="gem-girdle" points="7.5,13 24.5,13" fill="none" strokeWidth="0.6" opacity="0.5" />
+      <line className="gem-girdle" x1="16" y1="13" x2="16" y2="27" strokeWidth="0.5" opacity="0.4" />
+    </svg>
+  )
+}
+
 function Paytable({ table, hits }: { table: number[]; hits: number | null }) {
-  const tiers = table.map((m, h) => ({ h, m })).filter((t) => t.m > 0)
-  if (tiers.length === 0) return null
+  // Every tier 0..picks is shown (Stake-style), including the non-paying 0.00×
+  // ones, so the player sees the full shape. The live hit-count lights up green.
   return (
     <div className="keno-paytable">
-      {tiers.map((t) => (
-        <div key={t.h} className={`pay-tier ${hits === t.h ? 'is-current' : ''}`}>
-          <span className="pay-hits">{t.h}×</span>
-          <span className="pay-mult">{t.m.toFixed(2)}×</span>
+      {table.map((m, h) => (
+        <div
+          key={h}
+          className={`pay-tier ${hits === h ? 'is-current' : ''} ${m > 0 ? '' : 'is-zero'}`}
+        >
+          <span className="pay-mult">{m.toFixed(2)}×</span>
+          <span className="pay-hits">{h} hit{h === 1 ? '' : 's'}</span>
         </div>
       ))}
     </div>

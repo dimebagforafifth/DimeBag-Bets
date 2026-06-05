@@ -38,7 +38,7 @@
   transition: border-color 0.25s ease;
 }
 .crash-stage.is-running {
-  border-color: rgba(61, 214, 140, 0.4);
+  border-color: rgba(var(--gem-glow), 0.4);
 }
 .crash-stage.is-cashed {
   --trail: var(--gem);
@@ -216,7 +216,7 @@
 }
 .pill-win {
   color: var(--gem);
-  border-color: rgba(61, 214, 140, 0.35);
+  border-color: rgba(var(--gem-glow), 0.35);
 }
 .pill-low {
   color: var(--muted);
@@ -247,7 +247,7 @@
 .crash-stage.is-running .crash-multiplier,
 .crash-stage.is-cashed .crash-multiplier {
   color: var(--gem);
-  text-shadow: 0 0 30px rgba(61, 214, 140, 0.55), 0 2px 18px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 30px rgba(var(--gem-glow), 0.55), 0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .crash-stage.is-busted .crash-multiplier {
   color: var(--red);

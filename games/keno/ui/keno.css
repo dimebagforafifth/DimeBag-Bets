@@ -17,6 +17,7 @@
   gap: 14px;
 }
 .keno-stage {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -56,56 +57,142 @@
   gap: 8px;
 }
 .keno-tile {
+  position: relative;
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface-2);
   color: var(--muted);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: transform 0.08s ease, background 0.12s ease, color 0.12s ease;
+  transition: transform 0.1s ease, background 0.14s ease, color 0.14s ease,
+    box-shadow 0.14s ease, border-color 0.14s ease;
 }
-.keno-tile:hover {
-  transform: translateY(-1px);
+.keno-tile:hover:not(:disabled) {
+  transform: translateY(-2px);
   color: var(--text);
-  border-color: var(--muted);
+  border-color: #7c5cff;
+}
+.keno-tile:active:not(:disabled) {
+  transform: translateY(0) scale(0.95);
+}
+.keno-tile:disabled {
+  cursor: default;
+}
+.keno-num {
+  position: relative;
+  z-index: 1;
+}
+.keno-gem {
+  position: absolute;
+  inset: 12%;
+  z-index: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  /* the gem the game awards you — it springs in only when a pick is hit */
+  animation: keno-gem-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Your picks wear a flat purple cover (no gem yet) — same look before the draw
+   and for picks that don't get hit. The gem is the game's reward, not the pick. */
+.keno-tile.is-picked,
+.keno-tile.is-miss {
+  background: linear-gradient(180deg, #9b6bff 0%, #7c3aed 100%);
+  border-color: #b794ff;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .keno-tile.is-picked {
-  background: #123a52;
-  border-color: var(--accent, #22d3ee);
-  color: #eafaff;
-}
-.keno-tile.is-hit {
-  background: var(--gem);
-  border-color: var(--gem);
-  color: #04210a;
-  animation: pop 0.25s ease;
+  /* bouncy pop the instant you select it */
+  animation: keno-select 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .keno-tile.is-miss {
-  background: #123a52;
-  border-color: rgba(34, 211, 238, 0.4);
-  color: #7f9fb0;
-  opacity: 0.6;
+  /* picked but not drawn — same purple, a touch calmer */
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
+
+/* A hit: your pick was drawn. The purple gives way to a glowing green gem. */
+.keno-tile.is-hit {
+  background: linear-gradient(180deg, #123a2b 0%, #0c2a1f 100%);
+  border-color: var(--gem);
+  color: #fff;
+  box-shadow: 0 0 22px rgba(var(--gem-glow), 0.65);
+  z-index: 1;
+  /* the satisfying overshoot-bounce as it lands */
+  animation: keno-hit 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.keno-tile.is-hit .keno-num {
+  /* dark number for contrast against the green gem (Stake-style) */
+  color: #052b1b;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+/* A drawn number you didn't pick — number turns red on the bare tile. */
 .keno-tile.is-drawn {
   background: var(--surface-2);
-  border-color: var(--muted);
-  color: var(--text);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f4577a;
+  animation: keno-drawn 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-@keyframes pop {
+.keno-tile.is-drawn .keno-num {
+  text-shadow: 0 0 10px rgba(244, 87, 122, 0.45);
+}
+
+@keyframes keno-select {
   0% {
-    transform: scale(0.82);
+    transform: scale(0.8);
   }
   60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes keno-hit {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.24);
+  }
+  72% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes keno-gem-pop {
+  0% {
+    transform: scale(0) rotate(-25deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.18) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes keno-drawn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  70% {
     transform: scale(1.08);
   }
   100% {
     transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -113,33 +200,51 @@
 .keno-paytable {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 .pay-tier {
-  flex: 1;
-  min-width: 56px;
+  flex: 1 1 0;
+  min-width: 46px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
-  padding: 6px 4px;
-  border-radius: 8px;
+  gap: 2px;
+  padding: 7px 4px;
+  border-radius: 9px;
   background: var(--bg);
   border: 1px solid var(--line);
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.pay-tier.is-zero {
+  opacity: 0.5;
 }
 .pay-tier.is-current {
   border-color: var(--gem);
-  background: rgba(61, 214, 140, 0.1);
-}
-.pay-hits {
-  font-size: 11px;
-  color: var(--muted);
+  background: rgba(var(--gem-glow), 0.14);
+  box-shadow: 0 0 16px rgba(var(--gem-glow), 0.35);
+  transform: translateY(-2px);
+  opacity: 1;
 }
 .pay-mult {
   font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+}
+.pay-tier.is-zero .pay-mult {
+  color: var(--muted);
+}
+.pay-tier.is-current .pay-mult {
+  color: var(--gem);
+}
+.pay-hits {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pay-tier.is-current .pay-hits {
+  color: var(--gem);
 }
 
 @media (max-width: 640px) {

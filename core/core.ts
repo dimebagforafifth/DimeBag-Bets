@@ -97,6 +97,36 @@ export function resolveWager(
 }
 
 /**
+ * Settle a wager at an arbitrary return multiplier `m ≥ 0`: the player gets back
+ * `stake × m`, so the figure moves by the same generic rule as a win,
+ * `profit = stake × (m − 1)` — which is negative for `m < 1` (a partial loss),
+ * zero for `m = 1` (a push), and positive for `m > 1` (a win).
+ *
+ * This is the generic settlement casino games like Plinko need (most slots pay a
+ * fraction or a small multiple, not all-or-nothing) and that sportsbook cashouts
+ * will reuse. It releases the hold and tags the outcome to match `m`, keeping the
+ * money model in one place (§3). `resolveWager` stays the win/loss/push/void path.
+ */
+export function resolveAtMultiplier(account: Account, wager: Wager, m: number): void {
+  if (wager.status === 'resolved') {
+    throw new Error(`wager ${wager.id} is already resolved`)
+  }
+  if (wager.accountId !== account.id) {
+    throw new Error(`wager ${wager.id} does not belong to account ${account.id}`)
+  }
+  if (!Number.isFinite(m) || m < 0) {
+    throw new Error(`multiplier must be a finite number ≥ 0, got ${m}`)
+  }
+
+  account.pending -= wager.stake
+  account.balance += Math.round(wager.stake * (m - 1))
+
+  wager.status = 'resolved'
+  wager.outcome = m > 1 ? 'win' : m < 1 ? 'loss' : 'push'
+  wager.payoutMultiplier = m
+}
+
+/**
  * Weekly settlement: the account squares up (negative balances pay in, positive
  * balances get paid) and then resets to zero for the new week. Requires no open
  * wagers — settle only after the week's bets are graded.

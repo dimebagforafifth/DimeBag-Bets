@@ -59,7 +59,7 @@
 }
 .limbo-result.is-win .limbo-multiplier {
   color: var(--gem);
-  text-shadow: 0 0 32px rgba(61, 214, 140, 0.55), 0 2px 18px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 32px rgba(var(--gem-glow), 0.55), 0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .limbo-result.is-loss .limbo-multiplier {
   color: var(--red);

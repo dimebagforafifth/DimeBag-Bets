@@ -13,6 +13,8 @@ import {
   type CrashGame as CrashGameState,
   type CrashHouseConfig,
 } from '../index.js'
+import { WinPopup } from '../../shared/WinPopup.js'
+import { play } from '../../../sound/index.js'
 import './crash.css'
 
 interface CrashGameProps {
@@ -53,6 +55,7 @@ export function CrashGame({
   const gameRef = useRef<CrashGameState | null>(null)
   const startRef = useRef(0)
   const rafRef = useRef(0)
+  const lastTickRef = useRef(0) // highest climb "rung" we've sounded this flight
 
   const running = game?.status === 'active'
   const ended = game != null && game.status !== 'active'
@@ -76,13 +79,20 @@ export function CrashGame({
       crashRound(account, g)
       setLive(g.crashPoint)
       finish(g)
+      play('boom')
       return
     }
     if (cashoutAt && cashoutAt < g.crashPoint && m >= cashoutAt) {
       cashOut(account, g, cashoutAt)
       setLive(cashoutAt)
       finish(g)
+      play('win')
       return
+    }
+    const rung = Math.floor((m - 1) * 4) // a rising tick every 0.25× climbed
+    if (rung > lastTickRef.current) {
+      lastTickRef.current = rung
+      play('tick', { step: rung })
     }
     setLive(m)
     rafRef.current = requestAnimationFrame(tick)
@@ -101,7 +111,9 @@ export function CrashGame({
       gameRef.current = g
       setGame(g)
       setLive(1)
+      lastTickRef.current = 0
       onBalanceChange()
+      play('bet')
       startRef.current = performance.now()
       cancelAnimationFrame(rafRef.current)
       rafRef.current = requestAnimationFrame(tick)
@@ -119,6 +131,7 @@ export function CrashGame({
     cashOut(account, g, m)
     setLive(m)
     finish(g)
+    play('win')
   }
 
   const stakeTooHigh = bet > available
@@ -159,7 +172,20 @@ export function CrashGame({
         )}
       </section>
 
-      <Stage status={game?.status ?? 'idle'} live={live} caption={caption(game, bet)} history={history} />
+      <Stage
+        status={game?.status ?? 'idle'}
+        live={live}
+        caption={caption(game, bet)}
+        history={history}
+        win={
+          game && game.status === 'cashed'
+            ? {
+                multiplier: game.cashOutMultiplier ?? 1,
+                amount: Math.round(game.wager.stake * ((game.cashOutMultiplier ?? 1) - 1)),
+              }
+            : null
+        }
+      />
 
       <Fairness
         game={game}
@@ -199,11 +225,13 @@ function Stage({
   live,
   caption,
   history,
+  win,
 }: {
   status: CrashGameState['status'] | 'idle'
   live: number
   caption: string
   history: HistoryEntry[]
+  win: { multiplier: number; amount: number } | null
 }) {
   const progress = live > 1 ? 1 - 1 / live : 0
   const samples = 36
@@ -260,6 +288,7 @@ function Stage({
           {status === 'active' ? 'Current payout' : caption}
         </div>
       </div>
+      {win && <WinPopup multiplier={win.multiplier} amount={win.amount} />}
     </div>
   )
 }

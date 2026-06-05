@@ -12,6 +12,8 @@ import {
   type DiceHouseConfig,
   type DiceRound,
 } from '../index.js'
+import { WinPopup } from '../../shared/WinPopup.js'
+import { play } from '../../../sound/index.js'
 import './dice.css'
 
 interface DiceGameProps {
@@ -26,7 +28,7 @@ export function DiceGame({
   onBalanceChange,
 }: DiceGameProps) {
   const [bet, setBet] = useState(10)
-  const [target, setTarget] = useState(50)
+  const [target, setTarget] = useState(50.5)
   const [direction, setDirection] = useState<DiceDirection>('over')
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
@@ -56,6 +58,8 @@ export function DiceGame({
       setRound(r)
       setHistory((h) => [{ roll: r.roll, won: r.won }, ...h].slice(0, 16))
       onBalanceChange()
+      play('roll')
+      play(r.won ? 'win' : 'lose')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     }
@@ -63,41 +67,14 @@ export function DiceGame({
 
   return (
     <div className="dice">
-      <section className="dice-stage">
-        <div className="dice-history">
-          {history.map((h, i) => (
-            <span key={i} className={`pill ${h.won ? 'pill-win' : 'pill-loss'}`}>
-              {h.roll.toFixed(2)}
-            </span>
-          ))}
-        </div>
-
-        <Track target={target} direction={direction} roll={round?.roll ?? null} won={round?.won} />
-
-        <input
-          className="dice-slider"
-          type="range"
-          min={1}
-          max={99}
-          step={0.01}
-          value={target}
-          onChange={(e) => setTarget(Number(e.target.value))}
-        />
-
-        <div className="dice-readout">
-          <Stat label="Multiplier" value={`${multiplier.toFixed(4)}×`} />
-          <button
-            className="stat stat-button"
-            onClick={() => setDirection((d) => (d === 'over' ? 'under' : 'over'))}
-          >
-            <span className="stat-label">Roll {direction === 'over' ? 'over' : 'under'} ⇅</span>
-            <span className="stat-value">{target.toFixed(2)}</span>
-          </button>
-          <Stat label="Win chance" value={`${chance.toFixed(2)}%`} />
-        </div>
-      </section>
-
       <section className="dice-panel">
+        <div className="bet-tabs">
+          <button className="bet-tab is-active">Manual</button>
+          <button className="bet-tab" disabled title="Coming soon">
+            Auto
+          </button>
+        </div>
+
         <label className="field">
           <span className="field-label">Bet amount</span>
           <div className="field-bet">
@@ -112,12 +89,17 @@ export function DiceGame({
             <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.floor(b / 2)))}>
               ½
             </button>
-            <button
-              className="chip"
-              onClick={() => setBet((b) => Math.min(available, b * 2))}
-            >
+            <button className="chip" onClick={() => setBet((b) => Math.min(available, b * 2))}>
               2×
             </button>
+          </div>
+        </label>
+
+        <label className="field">
+          <span className="field-label">Profit on win</span>
+          <div className="field-bet is-readonly">
+            <span className="field-prefix">$</span>
+            <span className="field-static">{Math.abs(profit).toLocaleString('en-US')}</span>
           </div>
         </label>
 
@@ -130,58 +112,119 @@ export function DiceGame({
             ? round.won
               ? `Rolled ${round.roll.toFixed(2)} — won ${formatPoints(Math.round(bet * (round.multiplier - 1)))}`
               : `Rolled ${round.roll.toFixed(2)} — lost ${formatPoints(bet)}`
-            : `Win pays ${multiplier.toFixed(2)}× → ${formatPoints(profit)}`}
+            : 'Set your odds and roll'}
         </p>
         {error && <p className="dice-error">{error}</p>}
         {bet > available && !error && (
           <p className="dice-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
         )}
-
-        <Fairness
-          round={round}
-          clientSeed={clientSeed}
-          nextNonce={nonceRef.current + 1}
-          onClientSeed={setClientSeed}
-        />
       </section>
+
+      <section className="dice-stage">
+        <div className="dice-history">
+          {history.map((h, i) => (
+            <span key={i} className={`pill ${h.won ? 'pill-win' : 'pill-loss'}`}>
+              {h.roll.toFixed(2)}
+            </span>
+          ))}
+        </div>
+
+        <Board
+          target={target}
+          direction={direction}
+          roll={round?.roll ?? null}
+          won={round?.won}
+          onTarget={(t) => {
+            setTarget(t)
+            setRound(null)
+          }}
+        />
+
+        <div className="dice-fields">
+          <Field label="Multiplier" value={multiplier.toFixed(4)} suffix="×" />
+          <button
+            className="dice-field is-button"
+            onClick={() => {
+              setDirection((d) => (d === 'over' ? 'under' : 'over'))
+              setRound(null)
+            }}
+          >
+            <span className="dice-field-label">Roll {direction === 'over' ? 'over' : 'under'}</span>
+            <span className="dice-field-value">
+              {target.toFixed(2)}
+              <span className="dice-field-suffix">⇅</span>
+            </span>
+          </button>
+          <Field label="Win chance" value={chance.toFixed(4)} suffix="%" />
+        </div>
+        {round?.won && (
+          <WinPopup multiplier={round.multiplier} amount={Math.round(bet * (round.multiplier - 1))} />
+        )}
+      </section>
+
+      <Fairness
+        round={round}
+        clientSeed={clientSeed}
+        nextNonce={nonceRef.current + 1}
+        onClientSeed={setClientSeed}
+      />
     </div>
   )
 }
 
-function Track({
+function Board({
   target,
   direction,
   roll,
   won,
+  onTarget,
 }: {
   target: number
   direction: DiceDirection
   roll: number | null
   won?: boolean
+  onTarget: (t: number) => void
 }) {
-  const pct = (n: number) => `${n}%`
+  const pct = (n: number) => `${Math.max(0, Math.min(100, n))}%`
   return (
-    <div className={`dice-track dir-${direction}`}>
-      <span className="zone zone-lose" style={{ width: pct(target) }} />
-      <span className="zone zone-win" style={{ left: pct(target), right: 0 }} />
-      <span className="track-target" style={{ left: pct(target) }} />
-      {roll != null && (
-        <span
-          className={`track-marker ${won ? 'is-win' : 'is-loss'}`}
-          style={{ left: pct(roll) }}
-        >
-          <span className="marker-value">{roll.toFixed(2)}</span>
-        </span>
-      )}
+    <div className="dice-board">
+      <div className="dice-ticks">
+        {[0, 25, 50, 75, 100].map((t) => (
+          <span key={t}>{t}</span>
+        ))}
+      </div>
+      <div className={`dice-track dir-${direction}`}>
+        <span className="zone zone-lose" style={{ width: pct(target) }} />
+        <span className="zone zone-win" style={{ left: pct(target), right: 0 }} />
+        {roll != null && (
+          <span className={`roll-flag ${won ? 'is-win' : 'is-loss'}`} style={{ left: pct(roll) }}>
+            <span className="roll-flag-value">{roll.toFixed(2)}</span>
+          </span>
+        )}
+        <span className="dice-handle" style={{ left: pct(target) }} />
+        <input
+          className="dice-range"
+          type="range"
+          min={0}
+          max={100}
+          step={0.01}
+          value={target}
+          aria-label="target"
+          onChange={(e) => onTarget(Number(e.target.value))}
+        />
+      </div>
     </div>
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Field({ label, value, suffix }: { label: string; value: string; suffix: string }) {
   return (
-    <div className="stat">
-      <span className="stat-label">{label}</span>
-      <span className="stat-value">{value}</span>
+    <div className="dice-field">
+      <span className="dice-field-label">{label}</span>
+      <span className="dice-field-value">
+        {value}
+        <span className="dice-field-suffix">{suffix}</span>
+      </span>
     </div>
   )
 }

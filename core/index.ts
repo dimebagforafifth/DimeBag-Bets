@@ -8,5 +8,6 @@ export {
   availableToWager,
   placeWager,
   resolveWager,
+  resolveAtMultiplier,
   settleWeek,
 } from './core.js'

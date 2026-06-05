@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import type { Account } from './types.js'
-import { availableToWager, placeWager, resolveWager, settleWeek } from './core.js'
+import {
+  availableToWager,
+  placeWager,
+  resolveAtMultiplier,
+  resolveWager,
+  settleWeek,
+} from './core.js'
 
 /** A fresh account for each test. creditLimit 1000, flat figure, nothing pending. */
 function account(overrides: Partial<Account> = {}): Account {
@@ -126,6 +132,63 @@ describe('resolveWager', () => {
     const w = placeWager(a, 100)
     const other = account({ id: 'acct_2' })
     expect(() => resolveWager(other, w, 'loss')).toThrow(/does not belong/)
+  })
+})
+
+describe('resolveAtMultiplier — generic fractional settlement', () => {
+  it('m > 1 is a win: balance += stake × (m − 1), tagged win', () => {
+    const a = account()
+    const w = placeWager(a, 200)
+    resolveAtMultiplier(a, w, 2.5)
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(300)
+    expect(w.outcome).toBe('win')
+    expect(w.payoutMultiplier).toBe(2.5)
+  })
+
+  it('m = 1 is a push: stake returned, figure unchanged', () => {
+    const a = account({ balance: 50 })
+    const w = placeWager(a, 200)
+    resolveAtMultiplier(a, w, 1)
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(50)
+    expect(w.outcome).toBe('push')
+  })
+
+  it('0 < m < 1 is a partial loss: only the unreturned part leaves the figure', () => {
+    const a = account()
+    const w = placeWager(a, 200)
+    resolveAtMultiplier(a, w, 0.4) // get back 80, lose 120
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(-120)
+    expect(w.outcome).toBe('loss')
+  })
+
+  it('m = 0 is a total loss, equivalent to resolveWager loss', () => {
+    const a = account()
+    const w = placeWager(a, 200)
+    resolveAtMultiplier(a, w, 0)
+    expect(a.balance).toBe(-200)
+    expect(w.outcome).toBe('loss')
+  })
+
+  it('rounds the fractional figure change to whole points', () => {
+    const a = account()
+    const w = placeWager(a, 99)
+    resolveAtMultiplier(a, w, 0.5) // 99 × (−0.5) = −49.5 → −49 (Math.round ties toward +∞)
+    expect(a.balance).toBe(-49)
+  })
+
+  it('rejects negative or non-finite multipliers, double-resolve, and mismatch', () => {
+    const a = account()
+    expect(() => resolveAtMultiplier(a, placeWager(a, 50), -0.5)).toThrow(/≥ 0/)
+    expect(() => resolveAtMultiplier(a, placeWager(a, 50), Infinity)).toThrow(/finite/)
+    const w = placeWager(a, 50)
+    resolveAtMultiplier(a, w, 2)
+    expect(() => resolveAtMultiplier(a, w, 2)).toThrow(/already resolved/)
+    expect(() => resolveAtMultiplier(account({ id: 'other' }), placeWager(a, 50), 2)).toThrow(
+      /does not belong/,
+    )
   })
 })
 
