@@ -22,6 +22,8 @@ import { limboMeta } from '../games/limbo/index.js'
 import { LimboGame } from '../games/limbo/ui/LimboGame.js'
 import { kenoMeta } from '../games/keno/index.js'
 import { KenoGame } from '../games/keno/ui/KenoGame.js'
+import { plinkoMeta } from '../games/plinko/index.js'
+import { PlinkoGame } from '../games/plinko/ui/PlinkoGame.js'
 
 /** What every game view receives from the shell: the shared account + a signal
  *  to re-render the balance. (Games may also accept an optional per-game
@@ -45,6 +47,7 @@ export const GAMES: GameDef[] = [
   { ...diceMeta, Component: DiceGame },
   { ...limboMeta, Component: LimboGame },
   { ...kenoMeta, Component: KenoGame },
+  { ...plinkoMeta, Component: PlinkoGame },
 ]
 
 /** Look up a game by its key (used for routing to a game page). */
