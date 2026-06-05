@@ -11,6 +11,11 @@ describe('deriveMines', () => {
     expect(a).toEqual(b)
   })
 
+  it('matches the locked regression vector (guards the shared-crypto refactor)', () => {
+    // Captured from the original implementation; must never change silently.
+    expect(deriveMines('server-seed-abc123', 'player-seed-xyz', 7, 5)).toEqual([1, 8, 15, 17, 20])
+  })
+
   it('places exactly mineCount mines, all unique and in range', () => {
     for (const mineCount of [1, 3, 12, 24]) {
       const mines = deriveMines(SERVER, CLIENT, 7, mineCount)

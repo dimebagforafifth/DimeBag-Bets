@@ -1,0 +1,104 @@
+/* Crash view — the rising multiplier is the whole stage (CLAUDE.md §2).
+   Shared controls/fairness styles live in app/theme.css. */
+.crash {
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.crash-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.crash .fairness {
+  grid-column: 1 / -1;
+}
+
+/* ---- stage ---- */
+.crash-stage-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.crash-stage {
+  flex: 1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius);
+  background: radial-gradient(120% 90% at 50% 110%, #16323f 0%, var(--bg) 70%);
+  border: 1px solid var(--line);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.crash-stage.is-running {
+  border-color: rgba(61, 214, 140, 0.35);
+}
+.crash-stage.is-cashed {
+  border-color: var(--gem);
+}
+.crash-stage.is-busted {
+  background: radial-gradient(120% 90% at 50% 110%, #3a1622 0%, var(--bg) 70%);
+  border-color: var(--red);
+}
+.crash-multiplier {
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1;
+}
+.crash-stage.is-running .crash-multiplier {
+  color: var(--gem);
+}
+.crash-stage.is-cashed .crash-multiplier {
+  color: var(--gem);
+}
+.crash-stage.is-busted .crash-multiplier {
+  color: var(--red);
+}
+.crash-caption {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---- recent crashes ---- */
+.crash-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 24px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.pill-win {
+  color: var(--gem);
+  background: rgba(61, 214, 140, 0.1);
+  border-color: rgba(61, 214, 140, 0.3);
+}
+.pill-loss {
+  color: var(--red);
+  background: rgba(237, 65, 99, 0.1);
+  border-color: rgba(237, 65, 99, 0.3);
+}
+
+@media (max-width: 640px) {
+  .crash {
+    grid-template-columns: 1fr;
+  }
+}
