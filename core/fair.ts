@@ -62,6 +62,11 @@ export function firstUint32(serverSeed: string, clientSeed: string, nonce: numbe
   return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]) >>> 0
 }
 
+/** The first float in [0,1) — the single draw games like Dice/Limbo need. */
+export function firstFloat(serverSeed: string, clientSeed: string, nonce: number): number {
+  return floatStream(serverSeed, clientSeed, nonce).next().value
+}
+
 /** SHA-256 hex commitment of a server seed — shown before the round. */
 export function hashServerSeed(serverSeed: string): string {
   return bytesToHex(sha256(utf8ToBytes(serverSeed)))

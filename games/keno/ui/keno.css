@@ -1,0 +1,149 @@
+/* Keno view — the number grid is the stage (CLAUDE.md §2). Shared
+   controls/fairness live in app/theme.css. */
+.keno {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.keno-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.keno-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.keno-risks,
+.keno-actions {
+  display: flex;
+  gap: 6px;
+}
+.keno-risks .chip {
+  flex: 1;
+  text-align: center;
+  padding: 7px 0;
+}
+.keno-actions .chip {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+}
+.keno-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.keno-historybar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+}
+
+/* ---- the number grid ---- */
+.keno-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+.keno-tile {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.12s ease, color 0.12s ease;
+}
+.keno-tile:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+  border-color: var(--muted);
+}
+.keno-tile.is-picked {
+  background: #123a52;
+  border-color: var(--accent, #22d3ee);
+  color: #eafaff;
+}
+.keno-tile.is-hit {
+  background: var(--gem);
+  border-color: var(--gem);
+  color: #04210a;
+  animation: pop 0.25s ease;
+}
+.keno-tile.is-miss {
+  background: #123a52;
+  border-color: rgba(34, 211, 238, 0.4);
+  color: #7f9fb0;
+  opacity: 0.6;
+}
+.keno-tile.is-drawn {
+  background: var(--surface-2);
+  border-color: var(--muted);
+  color: var(--text);
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.82);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---- paytable strip ---- */
+.keno-paytable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pay-tier {
+  flex: 1;
+  min-width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.pay-tier.is-current {
+  border-color: var(--gem);
+  background: rgba(61, 214, 140, 0.1);
+}
+.pay-hits {
+  font-size: 11px;
+  color: var(--muted);
+}
+.pay-mult {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .keno {
+    grid-template-columns: 1fr;
+  }
+}

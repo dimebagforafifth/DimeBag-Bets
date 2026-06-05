@@ -26,28 +26,6 @@
   display: flex;
   gap: 10px;
 }
-.stat {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin: 0;
-}
-.stat-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.stat-value {
-  margin: 2px 0 0;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.stat-value.is-hot {
-  color: var(--green);
-}
 .readout-result {
   margin: 6px 0 0;
   font-weight: 600;
