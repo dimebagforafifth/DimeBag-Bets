@@ -1,0 +1,26 @@
+/* The header sound toggle — quiet by default, green when on (CLAUDE.md §2). */
+.sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.sound-toggle:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--green) 40%, var(--line));
+  background: var(--surface-2);
+}
+.sound-toggle.is-on {
+  color: var(--green);
+}
+.sound-toggle svg {
+  width: 18px;
+  height: 18px;
+}
