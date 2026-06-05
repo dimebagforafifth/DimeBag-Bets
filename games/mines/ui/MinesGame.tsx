@@ -5,6 +5,7 @@ import {
   cashOut,
   createMinesGame,
   currentMultiplier,
+  DEFAULT_HOUSE_CONFIG,
   minesMultiplier,
   nextMultiplier,
   randomServerSeed,
@@ -14,6 +15,7 @@ import {
   TOTAL_TILES,
   verifyMines,
   type MinesGame as MinesGameState,
+  type MinesHouseConfig,
 } from '../index.js'
 import './mines.css'
 
@@ -21,6 +23,8 @@ const MINE_OPTIONS = Array.from({ length: 24 }, (_, i) => i + 1) // 1..24
 
 interface MinesGameProps {
   account: Account
+  /** Manager-controlled house settings (vig); falls back to the default. */
+  houseConfig?: MinesHouseConfig
   /** Tell the shell the shared balance moved, so the header re-renders. */
   onBalanceChange: () => void
 }
@@ -29,7 +33,11 @@ interface MinesGameProps {
  * The Mines vertical slice (CLAUDE.md §7) — one clean view, one primary action.
  * All money flows through `core` via the engine; this component holds no points.
  */
-export function MinesGame({ account, onBalanceChange }: MinesGameProps) {
+export function MinesGame({
+  account,
+  houseConfig = DEFAULT_HOUSE_CONFIG,
+  onBalanceChange,
+}: MinesGameProps) {
   const [bet, setBet] = useState(10)
   const [mineCount, setMineCount] = useState(3)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
@@ -54,6 +62,7 @@ export function MinesGame({ account, onBalanceChange }: MinesGameProps) {
         mineCount,
         clientSeed,
         nonce: nonceRef.current,
+        config: houseConfig,
       })
       setBustTile(null)
       setGame(next)
@@ -128,7 +137,7 @@ export function MinesGame({ account, onBalanceChange }: MinesGameProps) {
           <p className="mines-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
         )}
 
-        <Readout game={game} bet={bet} mineCount={mineCount} />
+        <Readout game={game} bet={bet} mineCount={mineCount} houseConfig={houseConfig} />
       </section>
 
       <section className="mines-board-wrap">
@@ -192,17 +201,22 @@ function Readout({
   game,
   bet,
   mineCount,
+  houseConfig,
 }: {
   game: MinesGameState | null
   bet: number
   mineCount: number
+  houseConfig: MinesHouseConfig
 }) {
   // Before a round: preview the first-gem multiplier for the chosen mine count.
   if (!game) {
     return (
       <dl className="readout">
         <Stat label="Gems" value={`${safeTiles(mineCount)}`} />
-        <Stat label="Next tile" value={`${minesMultiplier(mineCount, 1).toFixed(2)}×`} />
+        <Stat
+          label="Next tile"
+          value={`${minesMultiplier(mineCount, 1, houseConfig).toFixed(2)}×`}
+        />
       </dl>
     )
   }

@@ -1,7 +1,16 @@
 import { useReducer, useRef } from 'react'
 import type { Account } from '../core/index.js'
 import { availableToWager } from '../core/index.js'
+import { DEFAULT_HOUSE_CONFIG, type MinesHouseConfig } from '../games/mines/index.js'
 import { MinesGame } from '../games/mines/ui/MinesGame.js'
+
+/**
+ * Manager-controlled house settings (the vig + rounding policy). Today this is
+ * the shipping default (1% edge, floored = slightly house-favorable). At roll-up
+ * an admin panel / Supabase settings row feeds this single source of truth —
+ * game logic never changes, only this value.
+ */
+const HOUSE_CONFIG: MinesHouseConfig = DEFAULT_HOUSE_CONFIG
 
 /**
  * The app shell (CLAUDE.md §5). For Phase 0 it owns the one shared account —
@@ -41,7 +50,7 @@ export function App() {
       </header>
 
       <main className="app-main">
-        <MinesGame account={account} onBalanceChange={refresh} />
+        <MinesGame account={account} houseConfig={HOUSE_CONFIG} onBalanceChange={refresh} />
       </main>
 
       <footer className="app-footer">

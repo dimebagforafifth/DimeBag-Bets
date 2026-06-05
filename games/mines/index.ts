@@ -6,11 +6,14 @@
 export {
   TOTAL_TILES,
   HOUSE_EDGE,
+  DEFAULT_HOUSE_CONFIG,
   safeTiles,
   rawMultiplier,
   displayMultiplier,
+  applyRounding,
   minesMultiplier,
 } from './multiplier.js'
+export type { MinesHouseConfig, PayoutRounding } from './multiplier.js'
 
 export { deriveMines, hashServerSeed, verifyMines } from './fair.js'
 

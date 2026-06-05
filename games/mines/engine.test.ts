@@ -10,7 +10,7 @@ import {
   revealProof,
 } from './engine.js'
 import { verifyMines } from './fair.js'
-import { minesMultiplier } from './multiplier.js'
+import { HOUSE_EDGE, minesMultiplier } from './multiplier.js'
 
 function account(overrides: Partial<Account> = {}): Account {
   return { id: 'acct_1', creditLimit: 1000, balance: 0, pending: 0, ...overrides }
@@ -130,6 +130,31 @@ describe('nextMultiplier', () => {
     const a = account()
     const { g } = game(a, 100, 3)
     expect(nextMultiplier(g)).toBe(minesMultiplier(3, 1))
+  })
+})
+
+describe('per-game house config (vig locked at bet time)', () => {
+  it('defaults to the shipping config when none is supplied', () => {
+    const { g } = game(account(), 100, 3)
+    expect(g.config).toEqual({ houseEdge: HOUSE_EDGE, rounding: 'floor2' })
+  })
+
+  it('an exact-parity config pays full precision through core', () => {
+    const a = account()
+    const g = createMinesGame(a, {
+      stake: 200,
+      mineCount: 3,
+      clientSeed: 'client',
+      nonce: 1,
+      serverSeed: 'srv',
+      config: { houseEdge: 0.01, rounding: 'exact' },
+    })
+    const firstSafe = Array.from({ length: 25 }, (_, i) => i).find((t) => !g.mines.includes(t))!
+    revealTile(a, g, firstSafe)
+    const mult = currentMultiplier(g) // 0.99 × 25/22 = 1.125, not floored to 1.12
+    expect(mult).toBeCloseTo(0.99 * (25 / 22), 10)
+    cashOut(a, g)
+    expect(a.balance).toBe(Math.round(200 * (mult - 1)))
   })
 })
 

@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import {
   HOUSE_EDGE,
+  DEFAULT_HOUSE_CONFIG,
   rawMultiplier,
   displayMultiplier,
   minesMultiplier,
   safeTiles,
+  type MinesHouseConfig,
 } from './multiplier.js'
 
 describe('safeTiles', () => {
@@ -69,5 +71,29 @@ describe('displayMultiplier / minesMultiplier', () => {
   it('the player-facing first-gem multipliers match Stake to 2 decimals', () => {
     expect(minesMultiplier(1, 1)).toBe(1.03) // 0.99 × 25/24 = 1.031…
     expect(minesMultiplier(3, 1)).toBe(1.12) // 0.99 × 25/22 = 1.125
+  })
+})
+
+describe('configurable house edge (manager-controlled vig)', () => {
+  it('defaults to the Stake-baseline 1% edge, floored', () => {
+    expect(DEFAULT_HOUSE_CONFIG).toEqual({ houseEdge: HOUSE_EDGE, rounding: 'floor2' })
+  })
+
+  it('a zero edge yields the fair (no-vig) multiplier', () => {
+    expect(rawMultiplier(3, 1, 0)).toBeCloseTo(25 / 22, 10)
+  })
+
+  it('a larger edge pays less; a smaller edge pays more', () => {
+    expect(rawMultiplier(3, 5, 0.05)).toBeLessThan(rawMultiplier(3, 5, 0.01))
+    expect(rawMultiplier(3, 5, 0.0)).toBeGreaterThan(rawMultiplier(3, 5, 0.01))
+  })
+
+  it("'exact' rounding pays full precision (exact Stake parity)", () => {
+    const exact: MinesHouseConfig = { houseEdge: 0.01, rounding: 'exact' }
+    expect(minesMultiplier(3, 1, exact)).toBeCloseTo(0.99 * (25 / 22), 10) // 1.125, not 1.12
+  })
+
+  it("'floor2' rounding stays slightly house-favorable (the shipping default)", () => {
+    expect(minesMultiplier(3, 1, DEFAULT_HOUSE_CONFIG)).toBe(1.12) // floored below 1.125
   })
 })

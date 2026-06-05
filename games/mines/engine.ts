@@ -12,10 +12,11 @@ import type { Account, Wager } from '../../core/index.js'
 import { placeWager, resolveWager } from '../../core/index.js'
 import { deriveMines, hashServerSeed } from './fair.js'
 import {
+  DEFAULT_HOUSE_CONFIG,
   TOTAL_TILES,
-  displayMultiplier,
-  rawMultiplier,
+  minesMultiplier,
   safeTiles,
+  type MinesHouseConfig,
 } from './multiplier.js'
 
 export type MinesStatus = 'active' | 'busted' | 'cashed' | 'cleared'
@@ -35,6 +36,8 @@ export interface MinesGame {
   serverSeed: string
   clientSeed: string
   nonce: number
+  /** House settings locked in at bet time — the vig can't move mid-round (§4). */
+  config: MinesHouseConfig
   /** Set once the round resolves as a win (cash-out or clear). */
   payoutMultiplier?: number
 }
@@ -47,6 +50,8 @@ export interface CreateMinesOptions {
   /** Optional explicit server seed (otherwise a random one is generated). */
   serverSeed?: string
   totalTiles?: number
+  /** Manager-controlled house settings; defaults to DEFAULT_HOUSE_CONFIG. */
+  config?: MinesHouseConfig
 }
 
 /** A fresh random server seed (hex). Uses the platform CSPRNG via @noble. */
@@ -56,15 +61,13 @@ export function randomServerSeed(): string {
 
 /** Total return multiplier the player would lock in by cashing out now. */
 export function currentMultiplier(game: MinesGame): number {
-  return displayMultiplier(rawMultiplier(game.mineCount, game.revealed.length, game.totalTiles))
+  return minesMultiplier(game.mineCount, game.revealed.length, game.config, game.totalTiles)
 }
 
 /** What the multiplier becomes after one more safe reveal (null if board is full). */
 export function nextMultiplier(game: MinesGame): number | null {
   if (game.revealed.length >= safeTiles(game.mineCount, game.totalTiles)) return null
-  return displayMultiplier(
-    rawMultiplier(game.mineCount, game.revealed.length + 1, game.totalTiles),
-  )
+  return minesMultiplier(game.mineCount, game.revealed.length + 1, game.config, game.totalTiles)
 }
 
 /**
@@ -92,6 +95,7 @@ export function createMinesGame(account: Account, opts: CreateMinesOptions): Min
     serverSeed,
     clientSeed: opts.clientSeed,
     nonce: opts.nonce,
+    config: opts.config ?? DEFAULT_HOUSE_CONFIG,
   }
 }
 
