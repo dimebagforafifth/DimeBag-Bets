@@ -26,6 +26,20 @@
   color: var(--muted);
 }
 
+/* ---- playback-speed picker ---- */
+.crash-speed {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.crash-speed-chip {
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
 /* ===================== the flight stage ===================== */
 .crash-stage {
   --trail: var(--gem);
@@ -164,7 +178,8 @@
 }
 .rocket-flame {
   fill: #ffb020;
-  animation: flicker 0.18s ease-in-out infinite alternate;
+  /* flicker quickens with playback speed (set per-flight on .crash-stage) */
+  animation: flicker var(--flame-flicker, 0.18s) ease-in-out infinite alternate;
 }
 @keyframes flicker {
   from {

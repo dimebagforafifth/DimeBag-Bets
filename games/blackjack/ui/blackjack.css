@@ -1,0 +1,754 @@
+/* Blackjack view — a clean felt table + crisp cards (CLAUDE.md §2, §7).
+   Shared controls/fairness/stat styles live in app/theme.css. */
+.bj {
+  /* a deep emerald felt — a professional blackjack table, tied to the game's green
+     accent. The brass `--rail` doubles as the felt-print gold. */
+  --felt: #1b6347;
+  --felt-2: #0a2c20;
+  --rail: #e2c16e;
+  /* Card + hand geometry as variables so the felt HOLDS FIRM. `--lane` is a fixed
+     width every hand fills; cards deal left→right inside it from a fixed anchor, so
+     a card already on the felt never moves when the next lands (no re-centering).
+     Overridden per breakpoint and for split hands below. */
+  --card-w: 100px;
+  --card-h: 142px;
+  --lane: 264px;
+  width: 100%;
+  max-width: 920px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  align-items: start;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+/* the bet controls sit in a panel on the left; the felt is the hero on the right */
+.bj-panel {
+  order: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bj-table {
+  order: 1;
+}
+/* a constant-height readout slot so the HUD doesn't shift when the in-play stats
+   (two columns) swap to the one-line settled result */
+.bj-panel .readout,
+.bj-panel .readout-result {
+  margin: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+/* rules + fairness run full width beneath both columns */
+.bj .rules {
+  order: 2;
+  grid-column: 1 / -1;
+}
+.bj .fairness {
+  order: 3;
+  grid-column: 1 / -1;
+}
+.bj-error {
+  color: var(--red);
+  font-size: 12.5px;
+  margin: 0;
+}
+
+/* a fixed-height slot so the HUD never jumps when the single Deal button swaps
+   to the two-row Hit/Stand/Double/Split grid */
+.bj-action-slot {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.bj-action-slot > .action {
+  width: 100%;
+}
+/* hit / stand / double row */
+.bj-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Hit · Stand / Double · Split */
+  gap: 8px;
+}
+/* All four moves share ONE neutral backdrop; a coloured icon tells them apart
+   (Hit green +, Stand red stop-hand, Split blue diverging cards, Double gold
+   chips). The icon carries the colour, so the buttons stay calm and uniform. */
+/* `.action.bj-act` (two classes) outranks the shared `.action` rule's dark text,
+   so the labels stay WHITE on every button regardless of stylesheet order. */
+.action.bj-act {
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--surface-2);
+  color: #fff;
+  border: 1px solid var(--line);
+}
+.action.bj-act:hover:not(:disabled) {
+  border-color: var(--muted);
+  background: #1d2935;
+}
+/* a disabled move keeps its white label (the icon dims to signal it's unavailable),
+   so the whole column reads white rather than greying out */
+.action.bj-act:disabled {
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.9);
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+.action.bj-act:disabled .bj-ico {
+  opacity: 0.4;
+}
+.bj-ico {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+/* ------------------------------- the table ------------------------------ */
+.bj-table {
+  position: relative;
+  isolation: isolate; /* own stacking context so the arc rings sit behind the cards */
+  overflow: hidden; /* clips the oversized betting-arc rings to the felt */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* dealer + you blocks centered on the felt */
+  gap: 14px;
+  justify-content: center;
+  border-radius: 18px;
+  padding: 20px 22px 26px;
+  min-height: 340px; /* the felt is the focus, but fits a screen */
+  /* layered felt: an overhead spotlight, a fine weave, and an edge vignette over a
+     deep emerald base. The gold betting arcs are the ::before / ::after rings. */
+  background:
+    radial-gradient(80% 58% at 50% 6%, rgba(150, 240, 195, 0.13) 0%, transparent 55%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.014) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.035) 0 2px, transparent 2px 5px),
+    radial-gradient(135% 120% at 50% 42%, transparent 50%, rgba(0, 0, 0, 0.5) 100%),
+    radial-gradient(125% 100% at 50% 0%, var(--felt) 0%, #134734 46%, var(--felt-2) 100%);
+  /* a brass rail + a sunken, lit-from-above depth */
+  border: 1px solid color-mix(in srgb, var(--rail) 45%, var(--line));
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -34px 64px rgba(0, 0, 0, 0.38),
+    0 16px 44px rgba(0, 0, 0, 0.45);
+}
+/* the gold betting arc — two oversized rings centred above the felt so their lower
+   edges curve across the player's side, like a real table layout. Behind the cards. */
+.bj-table::before,
+.bj-table::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+}
+.bj-table::before {
+  top: -78%;
+  width: 158%;
+  height: 166%;
+  border: 1.5px solid color-mix(in srgb, var(--rail) 52%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--rail) 16%, transparent);
+}
+.bj-table::after {
+  top: -71%;
+  width: 142%;
+  height: 154%;
+  border: 1px solid color-mix(in srgb, var(--rail) 26%, transparent);
+}
+.bj-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.bj-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 26px; /* reserved even when empty, so the total pill appearing never moves the felt */
+}
+.bj-side-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(233, 238, 242, 0.7);
+}
+.bj-total {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+/* the player's total reads in a red pill, Stake-style */
+.bj-side.is-player .bj-total {
+  background: #d8323f;
+}
+/* a stacked hand: cards cascade and overlap, like cards dealt onto the felt */
+.bj-hand {
+  display: flex;
+  /* Deal rightward from a fixed anchor inside a stable-width lane: a card that's
+     already down never moves when the next lands — the hand grows to the right
+     instead of re-centering, so the felt holds firm on every hit/stand/draw. */
+  justify-content: flex-start;
+  box-sizing: border-box;
+  min-width: var(--lane);
+  padding-left: calc((var(--lane) - var(--card-w)) / 2); /* first card sits centred in the lane */
+  min-height: calc(var(--card-h) + 6px); /* fits the card with no jump when the first lands */
+}
+.bj-hand .card + .card {
+  margin-left: calc(var(--card-w) * -0.6); /* overlap — only each card's left corner index shows */
+}
+
+/* the player's hand row — one hand normally, several side by side after a split */
+.bj-hands {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* NEVER wrap — split hands must always stay side by side, never stack on top of
+     one another no matter how many cards each is dealt */
+  flex-wrap: nowrap;
+  gap: 16px;
+  width: 100%;
+}
+.bj-hands .bj-side {
+  width: auto;
+  flex-shrink: 0; /* each hand keeps its full width — never squeezed so cards collide */
+  border-radius: 12px;
+  padding: 6px 8px;
+  transition: box-shadow 0.18s ease, background 0.18s ease;
+}
+/* the hand it's your turn to play (after a split) — a soft gold glow */
+.bj-side.is-active {
+  background: rgba(216, 186, 112, 0.08);
+  box-shadow: 0 0 0 1px rgba(216, 186, 112, 0.5), 0 0 18px rgba(216, 186, 112, 0.22);
+}
+/* per-hand result label — each split hand shows its own */
+.bj-hand-result {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  display: block;
+  min-height: 16px; /* reserved even when blank, so the result label doesn't shift the felt on settle */
+  text-align: center;
+}
+.bj-hand-result.is-win {
+  color: #6dffa6;
+}
+.bj-hand-result.is-loss {
+  color: #ff8197;
+}
+.bj-hand-result.is-push {
+  color: #cfd9e2;
+}
+/* split hands sit on a smaller card + tighter lane so two fit the felt comfortably
+   (the card size, lane, overlap and padding all derive from these) */
+.bj-hands.is-split {
+  --card-w: 84px;
+  --card-h: 118px;
+  --lane: 204px;
+}
+/* split hands pack tighter (more overlap, smaller anchor pad) so even a long hand
+   stays inside its own column and never spills into its neighbour */
+.bj-hands.is-split .bj-hand {
+  padding-left: 30px;
+}
+.bj-hands.is-split .bj-hand .card + .card {
+  margin-left: calc(var(--card-w) * -0.68);
+}
+/* Splitting a pair: the two hands slide out of the centre — the pair visibly
+   separating — and then each is dealt its own second card (driven in JS). */
+.bj-hands.is-splitting .bj-side:first-child {
+  animation: bj-split-left 0.42s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+.bj-hands.is-splitting .bj-side:last-child {
+  animation: bj-split-right 0.42s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+@keyframes bj-split-left {
+  from {
+    transform: translateX(58px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes bj-split-right {
+  from {
+    transform: translateX(-58px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.bj-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  border-top: 1px dashed rgba(226, 193, 110, 0.22);
+  border-bottom: 1px dashed rgba(226, 193, 110, 0.22);
+  padding: 6px 0;
+}
+.bj-outcome {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+.bj-outcome.is-win {
+  color: #6dffa6;
+}
+.bj-outcome.is-loss {
+  color: #ff8197;
+}
+.bj-outcome.is-push {
+  color: #cfd9e2;
+}
+/* short rules printed across the felt, like a real table */
+.bj-felt-legend {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  text-align: center;
+  color: rgba(231, 201, 128, 0.9); /* gold felt-print */
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); /* embossed into the felt */
+}
+
+/* --------------------------------- cards -------------------------------- */
+.card {
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+  border-radius: 11px;
+  background: linear-gradient(158deg, #ffffff 0%, #eaeff5 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    -4px 7px 16px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  /* glide the size change when a hand splits (cards step down to the split size)
+     instead of snapping */
+  transition: width 0.25s ease, height 0.25s ease;
+  /* a calm glide in from the shoe — no spin, no overshoot, so the felt feels still */
+  animation: card-in 0.3s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+/* a printed inner frame line, like a real card face */
+.card:not(.card-back)::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.07);
+  pointer-events: none;
+}
+/* corner index (rank over a small suit). The top-left peeks out from behind the
+   card stacked on top; the bottom-right is mirrored, like a real card. */
+.card-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.9;
+  z-index: 1;
+}
+.card-corner-tl {
+  top: 7px;
+  left: 8px;
+}
+.card-corner b {
+  font-size: 23px;
+  font-weight: 800;
+}
+.card-corner i {
+  font-style: normal;
+  font-size: 16px;
+  margin-top: 1px;
+}
+/* the big centre suit — only fully seen on the top (most recent) card */
+.card-pip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 50px;
+  line-height: 1;
+  opacity: 0.9;
+}
+/* the player's cards wear a red outline, Stake-style */
+.bj-side.is-player .card:not(.card-back) {
+  box-shadow:
+    inset 0 0 0 2px #e0414f,
+    -4px 7px 16px rgba(0, 0, 0, 0.5);
+}
+.card-red {
+  color: #d8323f;
+}
+.card-black {
+  color: #1b2733;
+}
+/* A classic playing-card back: a deep-red diamond lattice inside a white margin
+   with a thin inner frame line and a faint centre medallion — reads like a real
+   card instead of a flat fill. */
+.card-back {
+  background-color: #be1430;
+  background-image:
+    radial-gradient(ellipse 58% 66% at 50% 50%, rgba(255, 255, 255, 0.18) 0 36%, transparent 42%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px);
+  border: 3px solid #f6f7f9;
+  box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+/* a card pitched off the dealer's shoe and across the felt — it flies in from
+   the upper right with a flick of spin, skids, then settles square in the hand */
+@keyframes card-in {
+  0% {
+    transform: translate(24px, -16px) scale(0.97);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* --------------------------------- chips -------------------------------- */
+/* The bet rendered as clay chips, placed in a felt betting circle in front of you. */
+.bj-betspot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+/* the felt betting circle — a soft gold dashed ring that marks where bets go; the
+   chips stack inside it, or it shows a "Bet" hint when nothing's down */
+.bj-betcircle {
+  position: relative;
+  width: 146px;
+  height: 130px;
+  border-radius: 50%;
+  border: 2px dashed rgba(216, 186, 112, 0.38);
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 14px;
+}
+.bj-betcircle.is-empty {
+  align-items: center;
+  padding-bottom: 0;
+}
+.bj-betcircle-hint {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(216, 186, 112, 0.5);
+}
+.bj-chips {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+}
+.chip-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.chip-pile {
+  position: relative;
+  width: 46px;
+}
+/* a clean clay poker chip: a solid body with discrete edge dashes round the rim
+   and a flat inner disc — readable and tactile without the glossy "video-game"
+   plastic dome. Drops in when it's stacked. Piled face-on by absolute `bottom`. */
+.bj-chip {
+  position: absolute;
+  left: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-conic-gradient(from 0deg, var(--edge) 0deg 7deg, transparent 7deg 45deg),
+    var(--body);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  animation: bj-chip-drop 0.26s cubic-bezier(0.22, 1.4, 0.5, 1) backwards;
+}
+.bj-chip::before {
+  content: '';
+  position: absolute;
+  inset: 19%; /* a flat inner disc, leaving the dashed rim showing */
+  border-radius: 50%;
+  background: var(--body);
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--edge) 70%, transparent),
+    inset 0 1px 1px rgba(255, 255, 255, 0.22),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.16); /* minimal top-light / bottom-shadow, not glossy */
+}
+@keyframes bj-chip-drop {
+  from {
+    transform: translateY(-20px) scale(1.05);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+.bj-chip-label {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  color: var(--face);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+.chip-count {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(233, 238, 242, 0.65);
+}
+.bj-betspot-total {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 999px;
+  padding: 3px 12px;
+}
+
+/* ---- insurance: a card that pops up over the felt when the dealer shows an Ace ---- */
+.bj-await-insurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #f5c451;
+  text-align: center;
+}
+.bj-insurance-pop {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 14, 20, 0.55);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  border-radius: var(--radius);
+  animation: bj-ins-fade 0.2s ease both;
+}
+.bj-insurance-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(240px, 100%);
+  padding: 18px 20px;
+  border-radius: 16px;
+  text-align: center;
+  background: linear-gradient(180deg, #1f2e3c, #16222d);
+  border: 1px solid color-mix(in srgb, #f5c451 45%, var(--line));
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(245, 196, 81, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: bj-ins-pop 0.32s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.bj-insurance-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #f5c451;
+  letter-spacing: 0.3px;
+}
+.bj-insurance-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.bj-felt-legend.is-insurance {
+  color: #f5c451;
+  font-weight: 800;
+}
+.bj-insure-yes {
+  background: linear-gradient(180deg, #f7d164, #e7ac24);
+  color: #2a2105;
+  border: 1px solid #c8901a;
+  font-weight: 800;
+}
+.bj-insure-yes:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.bj-insure-no {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.bj-insure-no:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.bj-insurance-warn {
+  font-size: 11.5px;
+  color: var(--red);
+}
+.bj-insurance-result {
+  margin: 0;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.bj-insurance-result.is-won {
+  color: #6dffa6;
+}
+.bj-insurance-result.is-lost {
+  color: var(--muted);
+}
+@keyframes bj-ins-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes bj-ins-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- seats: per-seat bet chips, the table seat picker, multi-hand sizing ---- */
+.bj-seat-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+.bj-seat-total {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rail, #e2c16e);
+  font-variant-numeric: tabular-nums;
+}
+/* before a round: the three seats shown on the felt */
+.bj-seatpick {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 14px;
+  width: 100%;
+}
+.bj-seatpick-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 148px;
+  padding: 24px 10px;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(226, 193, 110, 0.28);
+  background: rgba(0, 0, 0, 0.16);
+}
+.bj-seatpick-slot.is-on {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--rail) 55%, transparent);
+  background: rgba(63, 185, 138, 0.12);
+  box-shadow: inset 0 0 22px rgba(63, 185, 138, 0.1);
+}
+.bj-seatpick-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.62);
+}
+.bj-seatpick-state {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+.bj-seatpick-slot:not(.is-on) .bj-seatpick-state {
+  color: var(--muted);
+  font-weight: 600;
+}
+/* card sizing shrinks as more hands sit on the felt (base .bj-hand reads the vars) */
+.bj-hands.is-2 {
+  --card-w: 84px;
+  --card-h: 118px;
+  --lane: 192px;
+}
+.bj-hands.is-3 {
+  --card-w: 68px;
+  --card-h: 96px;
+  --lane: 148px;
+  gap: 12px;
+}
+.bj-hands.is-many {
+  --card-w: 50px;
+  --card-h: 70px;
+  --lane: 96px;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .bj {
+    grid-template-columns: 1fr;
+    --card-w: 80px;
+    --card-h: 112px;
+    --lane: 216px;
+  }
+  .bj-table {
+    min-height: 280px;
+    padding: 16px 12px;
+  }
+  .bj-hands.is-split {
+    --card-w: 70px;
+    --card-h: 98px;
+    --lane: 184px;
+  }
+  .card-corner b {
+    font-size: 19px;
+  }
+  .card-corner i {
+    font-size: 14px;
+  }
+}

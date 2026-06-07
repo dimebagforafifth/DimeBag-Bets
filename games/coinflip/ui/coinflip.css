@@ -1,0 +1,616 @@
+/* Coin Flip view — gold (heads) / silver (tails) coins are the stage
+   (CLAUDE.md §2). Shared controls/fairness live in app/theme.css. */
+.coinflip {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.coinflip-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.coinflip-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.coinflip-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.coinflip-error {
+  color: var(--red);
+  font-size: 12.5px;
+  margin: 0;
+}
+.coinflip-total {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* true odds + the built-in house edge, shown plainly */
+.coinflip-odds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.coinflip-odds b {
+  color: var(--text);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* auto-mode controls */
+.coinflip-sidetabs {
+  display: flex;
+  gap: 6px;
+}
+.coinflip-sidetabs .chip {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-weight: 800;
+}
+.coinflip-sidetabs .chip.is-heads.is-on {
+  color: #f3c948;
+  border-color: rgba(243, 201, 72, 0.6);
+  background: rgba(243, 201, 72, 0.14);
+}
+.coinflip-sidetabs .chip.is-tails.is-on {
+  color: #d7dee6;
+  border-color: rgba(197, 207, 217, 0.6);
+  background: rgba(197, 207, 217, 0.14);
+}
+.coinflip-sidetabs .chip.is-random.is-on {
+  color: #b4a8ff;
+  border-color: rgba(155, 140, 255, 0.6);
+  background: rgba(155, 140, 255, 0.14);
+}
+.coinflip-autorow {
+  display: flex;
+  gap: 10px;
+}
+.coinflip-autorow .field {
+  flex: 1;
+}
+
+/* generic selected-chip look for the Reset/Increase toggles (the heads/tails/random
+   colour variants above are more specific, so they still win for the call chips) */
+.coinflip-sidetabs .chip.is-on {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- auto-bet panel ---- */
+/* label + target multiplier on one line */
+.coinflip-fieldhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.coinflip-target {
+  font-size: 11.5px;
+  color: var(--gem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.coinflip-sub {
+  color: var(--muted);
+  font-weight: 600;
+}
+/* On win / On loss: the Reset|Increase toggle beside its % field */
+.coinflip-progrow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.coinflip-progrow .coinflip-sidetabs {
+  flex: 1;
+}
+.coinflip-pct {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 96px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.coinflip-pct .field-input {
+  width: 100%;
+  text-align: right;
+  border: 0;
+  background: transparent;
+  padding: 8px 0;
+}
+.coinflip-pct.is-off {
+  opacity: 0.45;
+}
+/* running status line */
+.coinflip-autostatus {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.autostatus-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+}
+.autostatus-row.is-pos {
+  color: var(--green);
+}
+.autostatus-row.is-neg {
+  color: var(--red);
+}
+.autostatus-reason {
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 10.5px;
+}
+
+/* the two call buttons — Heads reads GOLD, Tails reads SILVER, to match the coin
+   so it's obvious which side you're calling. */
+/* odds-at-a-glance stat strip (win chance · per-flip multiplier) */
+.coinflip-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.coinflip-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.coinflip-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--muted);
+}
+.coinflip-stat-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.coinflip-stat:first-child .coinflip-stat-value {
+  color: #3fb98a; /* a positive tint on the win chance */
+}
+
+.coinflip-calls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.coinflip-call {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.coinflip-call:hover {
+  transform: translateY(-1px);
+}
+.coinflip-call-main {
+  font-size: 14px;
+  font-weight: 800;
+}
+.coinflip-call-mult {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+/* gold Heads */
+.coinflip-call.is-heads {
+  border-color: rgba(243, 201, 72, 0.45);
+  background: linear-gradient(180deg, rgba(243, 201, 72, 0.16), var(--surface-2));
+}
+.coinflip-call.is-heads:hover {
+  border-color: #f3c948;
+}
+.coinflip-call.is-heads .coinflip-call-main::before {
+  content: '● ';
+  color: #f3c948;
+}
+.coinflip-call.is-heads .coinflip-call-mult {
+  color: #f3c948;
+}
+/* silver Tails */
+.coinflip-call.is-tails {
+  border-color: rgba(197, 207, 217, 0.45);
+  background: linear-gradient(180deg, rgba(197, 207, 217, 0.16), var(--surface-2));
+}
+.coinflip-call.is-tails:hover {
+  border-color: #cdd6df;
+}
+.coinflip-call.is-tails .coinflip-call-main::before {
+  content: '● ';
+  color: #cdd6df;
+}
+.coinflip-call.is-tails .coinflip-call-mult {
+  color: #d7dee6;
+}
+/* violet Random — picks a fresh side each flip */
+.coinflip-call.is-random {
+  border-color: rgba(155, 140, 255, 0.45);
+  background: linear-gradient(180deg, rgba(155, 140, 255, 0.16), var(--surface-2));
+}
+.coinflip-call.is-random:hover {
+  border-color: #9b8cff;
+}
+.coinflip-call.is-random .coinflip-call-main::before {
+  content: '⇄ ';
+  color: #9b8cff;
+}
+.coinflip-call.is-random .coinflip-call-mult {
+  color: #b4a8ff;
+}
+
+/* history pill bar */
+.coinflip-historybar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+  justify-content: flex-end;
+}
+
+/* the stage: the coins tossed against a soft spotlight */
+.coinflip-coinwrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 280px;
+  background: radial-gradient(120% 120% at 50% 30%, var(--surface-2) 0%, var(--bg) 80%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px;
+}
+.coinflip-round {
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+/* fixed-height holder for the "Called" badge: keeps the stage the same height
+   whether or not a call has been made, so nothing below it shifts. */
+.coinflip-callslot {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* the side the latest flip actually called — makes a 'random' pick transparent */
+.coinflip-called {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 14px;
+  font-weight: 800;
+}
+.coinflip-called::before {
+  content: '●';
+  font-size: 12px;
+}
+.coinflip-called-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.coinflip-called.is-heads {
+  border-color: rgba(243, 201, 72, 0.5);
+}
+.coinflip-called.is-heads::before,
+.coinflip-called.is-heads strong {
+  color: #f3c948;
+}
+.coinflip-called.is-tails {
+  border-color: rgba(197, 207, 217, 0.5);
+}
+.coinflip-called.is-tails::before,
+.coinflip-called.is-tails strong {
+  color: #d7dee6;
+}
+/* small clarifier under the auto-call selector when Random is chosen */
+.coinflip-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* the streak track under the coin — one slot per flip, filled as you survive.
+   The wider gap leaves room for the rotated diamonds' points. */
+.coinflip-streak {
+  display: flex;
+  flex-wrap: nowrap; /* one long row, never stacked */
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+}
+/* each slot is a rhombus (a rotated square) — empty ones are faint dashed
+   outlines, filled ones carry just the coin's colour (no letter). Sized so all
+   20 sit in a single row. */
+.coinflip-slot {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  transform: rotate(45deg);
+}
+.coinflip-slot.is-empty {
+  border: 1.5px dashed var(--line);
+  background: transparent;
+}
+.coinflip-slot.is-heads {
+  background: radial-gradient(circle at 38% 30%, #ffe9a8, #f3c948 58%, #c79a2e);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+.coinflip-slot.is-tails {
+  background: radial-gradient(circle at 38% 30%, #f6f9fc, #cdd6df 58%, #98a4b0);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+}
+.coinflip-slot.is-lost {
+  box-shadow: 0 0 0 2px var(--red);
+  opacity: 0.9;
+}
+/* a little pop as each new slot fills (keeping the 45° rotation) */
+.coinflip-slot.is-won,
+.coinflip-slot.is-lost {
+  animation: coinflip-slot-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes coinflip-slot-in {
+  0% {
+    transform: rotate(45deg) scale(0.3);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+  }
+}
+.coinflip-coins {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px 18px;
+}
+.coinflip-coin-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  perspective: 800px;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.coinflip-coin-cell.is-busted {
+  opacity: 0.4;
+  filter: grayscale(0.5);
+}
+.coinflip-coin-mult {
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.coinflip-coin-cell.is-live .coinflip-coin-mult,
+.coinflip-coin-cell.is-cashed .coinflip-coin-mult {
+  color: var(--gem);
+}
+.coinflip-coin-cell.is-busted .coinflip-coin-mult {
+  color: var(--red);
+}
+
+/* the 3D coin. Size is set by the tier class (more coins → smaller); the face
+   glyphs are em-based so they scale with it. */
+.coinflip-coin {
+  position: relative;
+  transform-style: preserve-3d;
+}
+/* the toss: the coin leaps up, tumbles at a steady spin, then lands on the dealt
+   face with a small bounce. Heads lands on a whole number of turns; tails ends a
+   half-turn further so its face finishes forward. Re-keying the element in React
+   restarts this each flip; `forwards` holds the landed face. Lands by ~85% — just
+   before the streak slot fills, so nothing reveals the result early. */
+.coinflip-coin.is-toss-heads {
+  animation: coinflip-toss-heads 0.8s linear forwards;
+}
+.coinflip-coin.is-toss-tails {
+  animation: coinflip-toss-tails 0.8s linear forwards;
+}
+@keyframes coinflip-toss-heads {
+  0% { transform: translateY(0) rotateY(0) scale(0.97); }
+  12% { transform: translateY(-38px) rotateY(150deg) scale(1.04); }
+  24% { transform: translateY(-62px) rotateY(305deg) scale(1.07); }
+  42% { transform: translateY(-74px) rotateY(540deg) scale(1.08); }
+  60% { transform: translateY(-55px) rotateY(760deg) scale(1.06); }
+  74% { transform: translateY(-26px) rotateY(940deg) scale(1.03); }
+  85% { transform: translateY(0) rotateY(1080deg) scale(1); }
+  92% { transform: translateY(-9px) rotateY(1080deg) scale(1.02); }
+  100% { transform: translateY(0) rotateY(1080deg) scale(1); }
+}
+@keyframes coinflip-toss-tails {
+  0% { transform: translateY(0) rotateY(0) scale(0.97); }
+  12% { transform: translateY(-38px) rotateY(175deg) scale(1.04); }
+  24% { transform: translateY(-62px) rotateY(356deg) scale(1.07); }
+  42% { transform: translateY(-74px) rotateY(630deg) scale(1.08); }
+  60% { transform: translateY(-55px) rotateY(887deg) scale(1.06); }
+  74% { transform: translateY(-26px) rotateY(1097deg) scale(1.03); }
+  85% { transform: translateY(0) rotateY(1260deg) scale(1); }
+  92% { transform: translateY(-9px) rotateY(1260deg) scale(1.02); }
+  100% { transform: translateY(0) rotateY(1260deg) scale(1); }
+}
+.coinflip-coin.is-lg {
+  width: 150px;
+  height: 150px;
+  font-size: 16px;
+}
+.coinflip-coin.is-md {
+  width: 104px;
+  height: 104px;
+  font-size: 11px;
+}
+.coinflip-coin.is-sm {
+  width: 80px;
+  height: 80px;
+  font-size: 8px;
+}
+.coinflip-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05em;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 0.3em solid #7c5810; /* the coin's dark outer edge (gold by default) */
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 0.25em rgba(255, 255, 255, 0.28),
+    inset 0 0 0 0.38em rgba(110, 75, 12, 0.5),
+    inset 0 0.45em 1em rgba(255, 255, 255, 0.32),
+    inset 0 -0.55em 1.1em rgba(74, 47, 5, 0.42),
+    0 0 24px rgba(243, 201, 72, 0.45); /* gold glow — gamey token */
+  overflow: hidden; /* clip the shine sweep to the coin */
+}
+/* the milled (reeded) edge — a ring of fine ticks just inside the rim */
+.coinflip-face::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#6e4e0e 0 3deg, #e0bb5e 3deg 6deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 45%, #000 46% 49.5%, transparent 50%);
+  mask: radial-gradient(circle, transparent 0 45%, #000 46% 49.5%, transparent 50%);
+  z-index: 2;
+}
+/* a glossy shine that slowly sweeps across — sells it as a shiny game token */
+.coinflip-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.45) 50%, transparent 64%);
+  background-size: 250% 100%;
+  animation: coin-sheen 3.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes coin-sheen {
+  0% {
+    background-position: 130% 0;
+  }
+  100% {
+    background-position: -30% 0;
+  }
+}
+/* one clean emblem per face — gold crown for heads, silver star for tails. A
+   single mark reads instantly and keeps the coin uncluttered. */
+.coinflip-emblem {
+  position: relative;
+  z-index: 1;
+  font-size: 2.9em;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0.45em rgba(255, 255, 255, 0.4);
+}
+/* heads = gold */
+.coinflip-face.is-heads {
+  background: radial-gradient(circle at 38% 30%, #fff1ba 0%, #f3c948 48%, #b9831f 100%);
+  color: #5a3d05;
+  transform: rotateY(0deg);
+}
+/* tails = silver */
+.coinflip-face.is-tails {
+  background: radial-gradient(circle at 38% 30%, #ffffff 0%, #c5cfd9 48%, #7e8b99 100%);
+  color: #2a3744;
+  border-color: #66727f; /* silver edge */
+  transform: rotateY(180deg);
+}
+.coinflip-face.is-tails::before {
+  background: repeating-conic-gradient(#59636e 0 3deg, #cdd6df 3deg 6deg);
+}
+.coinflip-face.is-tails {
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 0.25em rgba(255, 255, 255, 0.45),
+    inset 0 0 0 0.38em rgba(70, 80, 92, 0.5),
+    inset 0 0.45em 1em rgba(255, 255, 255, 0.5),
+    inset 0 -0.55em 1.1em rgba(40, 50, 62, 0.4);
+}
+
+@media (max-width: 640px) {
+  .coinflip {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* respect reduced-motion: drop the toss tumble and the looping sheen — the coin
+   simply shows the dealt face. */
+@media (prefers-reduced-motion: reduce) {
+  .coinflip-coin.is-toss-heads,
+  .coinflip-coin.is-toss-tails {
+    animation: none;
+  }
+  .coinflip-coin.is-toss-tails {
+    transform: rotateY(180deg);
+  }
+  .coinflip-face::after {
+    animation: none;
+  }
+}

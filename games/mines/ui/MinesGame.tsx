@@ -1,6 +1,6 @@
 import { useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
-import { availableToWager } from '../../../core/index.js'
+import { maxBet, resolveAtMultiplier } from '../../../core/index.js'
 import {
   cashOut,
   createMinesGame,
@@ -18,10 +18,31 @@ import {
   type MinesHouseConfig,
 } from '../index.js'
 import { WinPopup } from '../../shared/WinPopup.js'
+import { useSettleOnExit } from '../../shared/useSettleOnExit.js'
+import { Rules } from '../../shared/Rules.js'
+import { useResolving } from '../../shared/useResolving.js'
+import { ProfitReadout } from '../../shared/ProfitReadout.js'
 import { play } from '../../../sound/index.js'
+import { NumberInput } from '../../shared/NumberInput.js'
+import { formatMoney, toCents } from '../../shared/money.js'
 import './mines.css'
 
+const MINES_RULES: ReactNode[] = [
+  'Set your bet and how many mines hide on the 25-tile grid (1–24), then hit Bet.',
+  'Click tiles to uncover gems. Each safe gem raises your multiplier — the more mines, the bigger each step.',
+  'Hit a mine and the round ends — you lose your bet.',
+  'Cash Out any time to bank bet × your current multiplier. Uncover every gem and it auto-pays the top.',
+  <>
+    <strong>Payout = bet × the multiplier you cash out at.</strong> The mine layout is provably fair,
+    fixed before you play.
+  </>,
+]
+
 const MINE_OPTIONS = Array.from({ length: 24 }, (_, i) => i + 1) // 1..24
+
+/** Cashing out is instant; give the gem-pop / board a brief beat to settle
+ *  before the win card appears. */
+const POPUP_DELAY_MS = 150
 
 interface MinesGameProps {
   account: Account
@@ -40,7 +61,7 @@ export function MinesGame({
   houseConfig = DEFAULT_HOUSE_CONFIG,
   onBalanceChange,
 }: MinesGameProps) {
-  const [bet, setBet] = useState(10)
+  const [bet, setBet] = useState(1000) // cents ($10.00)
   const [mineCount, setMineCount] = useState(3)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
@@ -53,7 +74,16 @@ export function MinesGame({
   const active = game?.status === 'active'
   const ended = game != null && game.status !== 'active'
   const idle = game == null || ended
-  const available = availableToWager(account)
+  const available = maxBet(account)
+
+  // If the player leaves with a live board, settle the open wager so its stake
+  // never strands in `pending`: cash out at the board's current value (a board
+  // with no safe reveals just refunds). Resolves through core in the background.
+  useSettleOnExit(() => {
+    if (game?.status === 'active') {
+      resolveAtMultiplier(account, game.wager, Math.max(1, currentMultiplier(game)))
+    }
+  })
 
   function start() {
     setError(null)
@@ -100,11 +130,15 @@ export function MinesGame({
 
   const stakeTooHigh = bet > available
   const betInvalid = !Number.isInteger(bet) || bet < 1 || stakeTooHigh
+  const resolving = useResolving(account.id)
 
   return (
     <div className="mines">
       <section className="mines-panel">
         <BetField value={bet} disabled={!idle} max={available} onChange={setBet} />
+        {active && game!.revealed.length >= 1 && (
+          <ProfitReadout total={Math.round(bet * currentMultiplier(game!))} multiplier={currentMultiplier(game!)} />
+        )}
 
         <label className="field">
           <span className="field-label">Mines</span>
@@ -128,18 +162,11 @@ export function MinesGame({
             onClick={cash}
             disabled={game!.revealed.length < 1}
           >
-            {game!.revealed.length < 1 ? (
-              'Pick a tile'
-            ) : (
-              <>
-                Cash Out{' '}
-                <strong>{formatPoints(Math.round(bet * (currentMultiplier(game!) - 1)))}</strong>
-              </>
-            )}
+            {game!.revealed.length < 1 ? 'Pick a tile' : 'Cash Out'}
           </button>
         ) : (
-          <button className="action action-bet" onClick={start} disabled={betInvalid}>
-            Bet
+          <button className="action action-bet" onClick={start} disabled={betInvalid || resolving}>
+            Play
           </button>
         )}
 
@@ -155,11 +182,15 @@ export function MinesGame({
         <Board game={game} bustTile={bustTile} interactive={active} onPick={pick} />
         {game && (game.status === 'cashed' || game.status === 'cleared') && (
           <WinPopup
+            key={game.wager.id}
             multiplier={currentMultiplier(game)}
-            amount={Math.round(game.wager.stake * (currentMultiplier(game) - 1))}
+            stake={game.wager.stake}
+            delayMs={POPUP_DELAY_MS}
           />
         )}
       </section>
+
+      <Rules points={MINES_RULES} />
 
       <Fairness
         game={game}
@@ -184,19 +215,18 @@ function BetField({
   max: number
   onChange: (n: number) => void
 }) {
-  const clamp = (n: number) => Math.max(1, Math.min(max, Math.floor(n)))
+  const clamp = (n: number) => Math.max(1, Math.min(max, Math.round(n)))
   return (
     <label className="field">
       <span className="field-label">Bet amount</span>
       <div className="field-bet">
         <span className="field-prefix">$</span>
-        <input
+        <NumberInput
           className="field-input"
-          type="number"
-          min={1}
-          value={value}
+          value={value / 100}
+          min={0.01}
           disabled={disabled}
-          onChange={(e) => onChange(Math.floor(Number(e.target.value)) || 0)}
+          onCommit={(d) => onChange(toCents(d ?? 0))}
         />
         <button className="chip" disabled={disabled} onClick={() => onChange(clamp(value / 2))}>
           ½
@@ -444,8 +474,7 @@ function Mine({ hit = false }: { hit?: boolean }) {
   )
 }
 
-/** Points displayed with "$" but no monetary value (§1). */
-function formatPoints(points: number): string {
-  const sign = points < 0 ? '−' : ''
-  return `${sign}$${Math.abs(points).toLocaleString('en-US')}`
+/** Money to the penny; carries no real value (§1). Stored as integer cents. */
+function formatPoints(cents: number): string {
+  return formatMoney(cents)
 }

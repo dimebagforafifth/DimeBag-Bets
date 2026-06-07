@@ -1,0 +1,126 @@
+/* Live / pre-match UI primitives (CLAUDE.md §2). Uses the shared theme vars so
+   they sit consistently inside the sportsbook view. */
+
+/* ---- status badge ---- */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.live-badge.is-live {
+  color: #fff;
+  background: var(--red);
+}
+.live-badge.is-final {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+.live-badge.is-upcoming {
+  color: var(--muted);
+  background: transparent;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  padding-left: 0;
+}
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---- score ---- */
+.live-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.live-score-sep {
+  color: var(--muted);
+}
+
+/* ---- odds tick / movement ---- */
+.odds-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 4px;
+  padding: 0 2px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.odds-tick.tick-up {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 16%, transparent);
+}
+.odds-tick.tick-down {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 16%, transparent);
+}
+.tick-arrow {
+  font-size: 9px;
+  line-height: 1;
+}
+
+/* ---- kickoff countdown ---- */
+.kickoff-countdown {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.kickoff-countdown.is-soon {
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* ---- feed status chip ---- */
+.feed-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.feed-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.feed-status.is-on .feed-dot {
+  background: var(--green);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--green) 70%, transparent);
+}
+.feed-status.is-off .feed-dot {
+  background: var(--muted);
+}
+.feed-label {
+  font-weight: 600;
+  color: var(--text);
+}
+.feed-quota {
+  font-variant-numeric: tabular-nums;
+}

@@ -20,6 +20,11 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  /* CRITICAL: as the grid's 1fr item, allow it to shrink below its content's
+     min-content. Without this the single-line (nowrap) history bar forces the
+     track — and the whole board — to grow to fit every pill, blowing past the
+     max-width and zooming the board. */
+  min-width: 0;
 }
 .plinko-risks {
   display: flex;
@@ -37,11 +42,24 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A SINGLE fixed-height row — never wraps, so the board below it never shifts
+   while auto-play streams results in. Newest pills sit on the left; older ones
+   run off the right edge under a soft fade (clipped, not wrapped to a new line,
+   which is what made the HUD bounce). */
 .plinko-historybar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
-  min-height: 22px;
+  height: 24px;
+  min-width: 0; /* clip the single row rather than letting it widen the column */
+  overflow: hidden;
+  align-items: center;
+  -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 88%, transparent 100%);
+}
+/* keep each pill its natural size — don't let nowrap squeeze them */
+.plinko-historybar .pill {
+  flex: 0 0 auto;
 }
 /* loss pill (paired with the shared .pill / .pill-win) */
 .pill-loss {
@@ -56,72 +74,109 @@
   background: radial-gradient(120% 120% at 50% 0%, var(--surface-2) 0%, var(--bg) 75%);
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 18px 10px 6px;
   overflow: hidden;
 }
-.plinko-pegs {
-  position: absolute;
-  inset: 18px 10px 6px;
+/* board + buckets are one unit, no gap between them */
+.plinko-arena {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 3px;
 }
-.plinko-pegrow {
-  display: flex;
-  justify-content: center;
-  gap: 6.5%;
+/* inset field so edge pegs/balls stay inside; sides match the bucket inset so a
+   ball lands dead-center over its bucket. bottom is small so the pegs reach
+   almost to the buckets. */
+.plinko-field {
+  position: absolute;
+  inset: 5% 5% 2% 5%;
 }
 .plinko-peg {
-  width: 6px;
-  height: 6px;
+  position: absolute;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #cdd9e3;
-  box-shadow: 0 0 4px rgba(205, 217, 227, 0.4);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 3px rgba(205, 217, 227, 0.35);
 }
 
-/* the falling ball — glides from peg row to peg row */
+/* faint binomial distribution behind the pegs */
+.plinko-dist {
+  position: absolute;
+  inset: 0;
+}
+.dist-bar {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  transform: translateX(-50%);
+  background: rgba(138, 160, 176, 0.12);
+  border-radius: 2px 2px 0 0;
+}
+
+/* the falling ball — NO transition; physics sets its position every frame */
 .plinko-ball {
   position: absolute;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ffd0db 0%, #ff4d6d 45%, #d61f48 100%);
+  background: radial-gradient(circle at 35% 28%, #ffd0db 0%, #ff4d6d 45%, #d61f48 100%);
   box-shadow: 0 0 12px rgba(255, 77, 109, 0.7);
-  transform: translate(-50%, -50%);
-  transition: left 0.095s ease-in-out, top 0.095s cubic-bezier(0.45, 0, 0.7, 1);
   z-index: 2;
+  will-change: left, top, transform;
 }
 
 /* ---- multiplier buckets ---- */
+/* padded 5% on each side to line up exactly under the peg field above */
 .plinko-buckets {
   display: flex;
   gap: 3px;
+  padding: 0 5%;
+  /* a query container so each label can size to its actual column width — with
+     many rows the columns get narrow and a fixed font overflowed (e.g. "1000×"
+     spilling past the box). The bucket font now shrinks to fit. */
+  container-type: inline-size;
 }
 .plinko-bucket {
+  position: relative;
   flex: 1 1 0;
   min-width: 0;
   text-align: center;
   padding: 6px 1px;
   border-radius: 6px 6px 7px 7px;
-  font-size: 11px;
+  /* fit the label to the column: total width minus gaps, divided across the
+     columns and by the longest label's length (--cols / --maxlen set inline).
+     Clamped 6–11px so it's crisp when there's room and never spills when there
+     isn't. */
+  font-size: clamp(
+    6px,
+    calc(((100cqw - (var(--cols, 17) - 1) * 3px) / var(--cols, 17) - 2px) / (var(--maxlen, 4) * 0.64)),
+    11px
+  );
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: #2a1206;
   box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
   transition: transform 0.1s ease;
 }
+/* when a ball drops in: press down, bounce back, and light up in the bucket's
+   own colour (var --bucket, set inline) — a satisfying "caught it" pop. */
 .plinko-bucket.is-hit {
-  animation: plinko-bucket-pop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+  animation: plinko-bucket-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 0 18px var(--bucket, #fff),
+    0 0 4px var(--bucket, #fff);
 }
 @keyframes plinko-bucket-pop {
   0% {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
-  40% {
-    transform: translateY(6px) scale(1.06);
+  35% {
+    transform: translateY(7px) scale(1.12);
+    filter: brightness(1.45);
   }
   100% {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
   }
 }
 

@@ -18,6 +18,19 @@ export const RISKS: PlinkoRisk[] = ['low', 'medium', 'high']
 export const MIN_ROWS = 8
 export const MAX_ROWS = 16
 
+/**
+ * Manager-configurable house edge (CLAUDE.md §4). Plinko ships *fixed* Stake
+ * tables for normal play (what players recognise). The 99% RTP base IS those
+ * clean numbers; when a manager changes the edge, `computePlinkoTable` scales
+ * every multiplier proportionally to the new RTP. The default 1% is only consulted
+ * once a manager opts in; until then the canonical tables are used unchanged.
+ */
+export interface PlinkoHouseConfig {
+  /** House edge, e.g. 0.01 = 1%. */
+  edge: number
+}
+export const DEFAULT_PLINKO_CONFIG: PlinkoHouseConfig = { edge: 0.01 }
+
 /** rows → risk → multiplier per landing slot (length `rows + 1`). */
 const TABLES: Record<number, Record<PlinkoRisk, number[]>> = {
   8: {
@@ -102,4 +115,34 @@ export function slotProbabilities(rows: number): number[] {
 export function rtpOf(rows: number, risk: PlinkoRisk): number {
   const p = slotProbabilities(rows)
   return payouts(rows, risk).reduce((acc, m, i) => acc + p[i] * m, 0)
+}
+
+/**
+ * The base RTP anchor. At exactly this RTP the payout table IS the canonical Stake
+ * table — its clean, recognisable (mostly whole) numbers. Every other RTP scales
+ * those multipliers proportionally.
+ */
+export const BASE_RTP = 0.99
+
+/**
+ * The payout table for a target edge. The 99% base is the canonical Stake table
+ * verbatim (clean numbers); any other RTP scales every multiplier proportionally:
+ *
+ *     m_i(rtp) = stake_i · (rtp / 0.99)        rtp = 1 − edge
+ *
+ * Because realized RTP is linear in the multipliers (RTP = Σ P·m), scaling them in
+ * proportion moves the return in lockstep with the dial — at 99% it's exactly the
+ * recognisable board, and as the edge rises (RTP falls toward 95%) every payout
+ * shrinks in the same proportion. Rounded to 2dp; at the 99% base that's a no-op,
+ * so the whole numbers are preserved. This is what the game settles on once a
+ * manager changes the edge (§3).
+ */
+export function computePlinkoTable(
+  rows: number,
+  risk: PlinkoRisk,
+  config: PlinkoHouseConfig = DEFAULT_PLINKO_CONFIG,
+): number[] {
+  const base = payouts(rows, risk) // canonical Stake table = the 99% anchor (validates rows)
+  const scale = (1 - config.edge) / BASE_RTP
+  return base.map((m) => Math.round(m * scale * 100) / 100)
 }

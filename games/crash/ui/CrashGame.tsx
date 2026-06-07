@@ -1,6 +1,6 @@
-import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
-import { availableToWager } from '../../../core/index.js'
+import { maxBet } from '../../../core/index.js'
 import {
   cashOut,
   crashRound,
@@ -14,8 +14,25 @@ import {
   type CrashHouseConfig,
 } from '../index.js'
 import { WinPopup } from '../../shared/WinPopup.js'
+import { Rules } from '../../shared/Rules.js'
+import { useResolving } from '../../shared/useResolving.js'
+import { useSettleOnExit } from '../../shared/useSettleOnExit.js'
+import { ProfitReadout } from '../../shared/ProfitReadout.js'
+import { NumberInput } from '../../shared/NumberInput.js'
 import { play } from '../../../sound/index.js'
+import { formatMoney, toCents } from '../../shared/money.js'
 import './crash.css'
+
+const CRASH_RULES: ReactNode[] = [
+  'Place your bet before the round starts.',
+  'A multiplier climbs from 1.00× and keeps rising — until it randomly crashes.',
+  'Hit Cash Out before the crash to win bet × the multiplier at that instant.',
+  'If it crashes before you cash out, you lose your bet.',
+  <>
+    <strong>Payout = bet × the multiplier when you cash out.</strong> The crash point is set from a
+    provably-fair seed before the round, so it can’t move.
+  </>,
+]
 
 interface CrashGameProps {
   account: Account
@@ -30,6 +47,20 @@ interface HistoryEntry {
   won: boolean
 }
 
+/** The flight stops the instant you cash out — the bet's session is closed
+ *  there — so the win card only needs a short beat after the climb halts. */
+const POPUP_DELAY_MS = 340
+
+/** The base pop-in length of the shared win card (matches theme.css's 0.4s). */
+const POPUP_POP_MS = 400
+
+/** Playback speeds the player can pick. The climb can feel slow at 1×; 2×/3×
+ *  compress the same flight in wall-clock time. This is presentation only — it
+ *  scales elapsed time, never the seed-derived crash point, so a round plays out
+ *  identically (same crash point, same fairness proof) at any speed. */
+const SPEEDS = [1, 2, 3] as const
+type Speed = (typeof SPEEDS)[number]
+
 /**
  * The Crash vertical slice (CLAUDE.md §7), modeled on Stake's Manual mode: two
  * inputs (Bet Amount, Cashout At) and a rocket that climbs a multiplier-vs-time
@@ -42,10 +73,12 @@ export function CrashGame({
   houseConfig = DEFAULT_CRASH_CONFIG,
   onBalanceChange,
 }: CrashGameProps) {
-  const [bet, setBet] = useState(10)
-  const [cashoutAt, setCashoutAt] = useState<number | null>(2)
+  const [bet, setBet] = useState(1000) // cents ($10.00)
+  const [cashoutAt, setCashoutAt] = useState<number | null>(null) // no auto-cashout preset — starts at 0/off
+  const [speed, setSpeed] = useState<Speed>(1)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const speedRef = useRef<Speed>(1) // read inside the rAF loop without a stale closure
 
   const [game, setGame] = useState<CrashGameState | null>(null)
   const [live, setLive] = useState(1)
@@ -60,7 +93,15 @@ export function CrashGame({
   const running = game?.status === 'active'
   const ended = game != null && game.status !== 'active'
   const idle = game == null || ended
-  const available = availableToWager(account)
+  const available = maxBet(account)
+
+  // If the player leaves mid-flight, the round crashes without them — settle the
+  // open bet as a loss in the background so the stake doesn't strand in pending.
+  // (Refunding would let players dodge a crash by navigating away.)
+  useSettleOnExit(() => {
+    const g = gameRef.current
+    if (g?.status === 'active') crashRound(account, g)
+  })
 
   useEffect(() => () => cancelAnimationFrame(rafRef.current), [])
 
@@ -73,7 +114,7 @@ export function CrashGame({
   function tick(now: number) {
     const g = gameRef.current
     if (!g || g.status !== 'active') return
-    const m = multiplierAt(now - startRef.current)
+    const m = multiplierAt((now - startRef.current) * speedRef.current)
 
     if (m >= g.crashPoint) {
       crashRound(account, g)
@@ -125,7 +166,7 @@ export function CrashGame({
   function manualCash() {
     const g = gameRef.current
     if (!g || g.status !== 'active') return
-    const m = multiplierAt(performance.now() - startRef.current)
+    const m = multiplierAt((performance.now() - startRef.current) * speedRef.current)
     if (m <= 1 || m >= g.crashPoint) return
     cancelAnimationFrame(rafRef.current)
     cashOut(account, g, m)
@@ -134,38 +175,41 @@ export function CrashGame({
     play('win')
   }
 
+  /** Switch playback speed, even mid-flight. We re-anchor the start time so the
+   *  virtual elapsed (and thus the multiplier on screen) stays continuous —
+   *  the rocket keeps climbing from where it is, just faster or slower. */
+  function changeSpeed(next: Speed) {
+    if (running) {
+      const now = performance.now()
+      const virtualElapsed = (now - startRef.current) * speedRef.current
+      startRef.current = now - virtualElapsed / next
+    }
+    speedRef.current = next
+    setSpeed(next)
+  }
+
   const stakeTooHigh = bet > available
   const betInvalid = !Number.isInteger(bet) || bet < 1 || stakeTooHigh
-  const targetProfit = cashoutAt ? Math.round(bet * (cashoutAt - 1)) : null
+  const resolving = useResolving(account.id)
 
   return (
     <div className="crash">
       <section className="crash-panel">
         <BetField value={bet} disabled={!idle} max={available} onChange={setBet} />
+        {running && live > 1 && <ProfitReadout total={Math.round(bet * live)} multiplier={live} />}
         <CashoutAtField value={cashoutAt} disabled={running} onChange={setCashoutAt} />
+        <SpeedField value={speed} onChange={changeSpeed} />
 
         {running ? (
           <button className="action action-cashout" onClick={manualCash} disabled={live <= 1}>
-            {live <= 1 ? (
-              'Cash Out'
-            ) : (
-              <>
-                Cash Out {live.toFixed(2)}× ·{' '}
-                <strong>{formatPoints(Math.round(bet * (live - 1)))}</strong>
-              </>
-            )}
+            Cash Out
           </button>
         ) : (
-          <button className="action action-bet" onClick={start} disabled={betInvalid}>
-            Bet
+          <button className="action action-bet" onClick={start} disabled={betInvalid || resolving}>
+            Play
           </button>
         )}
 
-        <p className="crash-hint">
-          {cashoutAt
-            ? `Auto cash out at ${cashoutAt.toFixed(2)}× → win ${formatPoints(targetProfit ?? 0)}`
-            : 'No target set — cash out by hand before it crashes'}
-        </p>
         {error && <p className="crash-error">{error}</p>}
         {stakeTooHigh && idle && !error && (
           <p className="crash-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
@@ -175,17 +219,20 @@ export function CrashGame({
       <Stage
         status={game?.status ?? 'idle'}
         live={live}
+        speed={speed}
         caption={caption(game, bet)}
         history={history}
         win={
           game && game.status === 'cashed'
             ? {
                 multiplier: game.cashOutMultiplier ?? 1,
-                amount: Math.round(game.wager.stake * ((game.cashOutMultiplier ?? 1) - 1)),
+                stake: game.wager.stake,
               }
             : null
         }
       />
+
+      <Rules points={CRASH_RULES} />
 
       <Fairness
         game={game}
@@ -223,15 +270,17 @@ function yForMultiplier(m: number): number {
 function Stage({
   status,
   live,
+  speed,
   caption,
   history,
   win,
 }: {
   status: CrashGameState['status'] | 'idle'
   live: number
+  speed: Speed
   caption: string
   history: HistoryEntry[]
-  win: { multiplier: number; amount: number } | null
+  win: { multiplier: number; stake: number } | null
 }) {
   const progress = live > 1 ? 1 - 1 / live : 0
   const samples = 36
@@ -249,7 +298,10 @@ function Stage({
   const showFlight = status === 'active' ? live > 1 : status === 'cashed' || status === 'busted'
 
   return (
-    <div className={`crash-stage ${stageMod(status, live)}`}>
+    <div
+      className={`crash-stage ${stageMod(status, live)}`}
+      style={{ '--flame-flicker': `${0.18 / speed}s` } as CSSProperties}
+    >
       <Scene />
 
       {history.length > 0 && (
@@ -288,7 +340,14 @@ function Stage({
           {status === 'active' ? 'Current payout' : caption}
         </div>
       </div>
-      {win && <WinPopup multiplier={win.multiplier} amount={win.amount} />}
+      {win && (
+        <WinPopup
+          multiplier={win.multiplier}
+          stake={win.stake}
+          delayMs={POPUP_DELAY_MS / speed}
+          popMs={POPUP_POP_MS / speed}
+        />
+      )}
     </div>
   )
 }
@@ -414,10 +473,28 @@ function stageMod(status: CrashGameState['status'] | 'idle', live: number): stri
   return ''
 }
 
+/* Rocket-themed bust lines, recycled per round instead of a flat "Crashed @".
+   Picked deterministically from the crash point so it stays put across re-renders
+   of the same bust but varies game to game. */
+const BUST_LINES = [
+  { icon: '💥', text: 'Blown to bits at' },
+  { icon: '🪦', text: 'Rekt at' },
+  { icon: '🚀', text: 'Rocket down at' },
+  { icon: '🔥', text: 'Crashed and burned at' },
+  { icon: '💨', text: 'Up in smoke at' },
+  { icon: '🌊', text: 'Splashdown at' },
+]
+
+function bustLine(crashPoint: number) {
+  return BUST_LINES[Math.floor(crashPoint * 100) % BUST_LINES.length]
+}
+
 function caption(game: CrashGameState | null, bet: number): string {
   if (!game) return 'Set your bet and launch'
-  if (game.status === 'busted')
-    return `Crashed @ ${game.crashPoint.toFixed(2)}× — lost ${formatPoints(bet)}`
+  if (game.status === 'busted') {
+    const b = bustLine(game.crashPoint)
+    return `${b.icon} ${b.text} ${game.crashPoint.toFixed(2)}× — lost ${formatPoints(bet)}`
+  }
   if (game.status === 'cashed') {
     const m = game.cashOutMultiplier ?? 1
     return `Cashed @ ${m.toFixed(2)}× — won ${formatPoints(Math.round(bet * (m - 1)))}`
@@ -470,19 +547,18 @@ function BetField({
   max: number
   onChange: (n: number) => void
 }) {
-  const clamp = (n: number) => Math.max(1, Math.min(max, Math.floor(n)))
+  const clamp = (n: number) => Math.max(1, Math.min(max, Math.round(n)))
   return (
     <label className="field">
       <span className="field-label">Bet amount</span>
       <div className="field-bet">
         <span className="field-prefix">$</span>
-        <input
+        <NumberInput
           className="field-input"
-          type="number"
-          min={1}
-          value={value}
+          value={value / 100}
+          min={0.01}
           disabled={disabled}
-          onChange={(e) => onChange(Math.floor(Number(e.target.value)) || 0)}
+          onCommit={(d) => onChange(Math.max(1, toCents(d ?? 0)))}
         />
         <button className="chip" disabled={disabled} onClick={() => onChange(clamp(value / 2))}>
           ½
@@ -519,24 +595,42 @@ function CashoutAtField({
           −
         </button>
         <div className="stepper-value">
-          <input
+          <NumberInput
             className="field-input"
-            type="number"
+            value={value}
             min={1.01}
-            step={0.5}
-            placeholder="Off"
-            value={value ?? ''}
+            allowEmpty
+            placeholder="0"
             disabled={disabled}
-            onChange={(e) => {
-              const n = round2(Number(e.target.value))
-              onChange(e.target.value.trim() !== '' && n > 1 ? n : null)
-            }}
+            onCommit={onChange}
           />
           <span className="field-suffix">×</span>
         </div>
         <button className="stepper-btn" disabled={disabled} onClick={() => step(0.5)}>
           +
         </button>
+      </div>
+    </div>
+  )
+}
+
+/** Playback-speed picker — three chips (1×/2×/3×). Switchable any time, even
+ *  mid-flight, since it only rescales time, not odds. */
+function SpeedField({ value, onChange }: { value: Speed; onChange: (s: Speed) => void }) {
+  return (
+    <div className="field">
+      <span className="field-label">Speed</span>
+      <div className="crash-speed">
+        {SPEEDS.map((s) => (
+          <button
+            key={s}
+            className={`chip crash-speed-chip ${s === value ? 'is-on' : ''}`}
+            onClick={() => onChange(s)}
+            aria-pressed={s === value}
+          >
+            {s}×
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -609,8 +703,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-/** Points displayed with "$" but no monetary value (§1). */
-function formatPoints(points: number): string {
-  const sign = points < 0 ? '−' : ''
-  return `${sign}$${Math.abs(points).toLocaleString('en-US')}`
+/** Money to the penny; carries no real value (§1). Stored as integer cents. */
+function formatPoints(cents: number): string {
+  return formatMoney(cents)
 }

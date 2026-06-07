@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
-import { availableToWager } from '../../../core/index.js'
+import { maxBet } from '../../../core/index.js'
 import {
   DEFAULT_LIMBO_CONFIG,
   MAX_MULTIPLIER,
@@ -13,8 +13,31 @@ import {
   type LimboRound,
 } from '../index.js'
 import { WinPopup } from '../../shared/WinPopup.js'
+import { Rules } from '../../shared/Rules.js'
+import { useResolving } from '../../shared/useResolving.js'
+import { signalReveal } from '../../shared/reveal-bus.js'
 import { play as playSound } from '../../../sound/index.js'
+import { NumberInput } from '../../shared/NumberInput.js'
+import { formatMoney, toCents } from '../../shared/money.js'
 import './limbo.css'
+
+const LIMBO_RULES: ReactNode[] = [
+  'Set your bet and a target multiplier, then hit Bet.',
+  'A random multiplier is drawn. Land at or above your target and you win; below it and you lose your bet.',
+  'A higher target is harder to hit but pays more.',
+  <>
+    <strong>Payout = bet × your target multiplier.</strong> The draw is provably fair.
+  </>,
+]
+
+/** How long the multiplier climbs to its result. */
+const CLIMB_MS = 500
+/** The ease-out puts the number on the result well before the exact settle; the
+ *  moment it's visually there (this fraction of the climb) we free up the bet
+ *  button so you can replay right away — slightly ahead of the final tick. */
+const RESULT_VISIBLE_AT = 0.66
+/** Pop the win card a beat after the climb has finished settling. */
+const POPUP_DELAY_MS = CLIMB_MS + 160
 
 interface LimboGameProps {
   account: Account
@@ -27,7 +50,7 @@ export function LimboGame({
   houseConfig = DEFAULT_LIMBO_CONFIG,
   onBalanceChange,
 }: LimboGameProps) {
-  const [bet, setBet] = useState(10)
+  const [bet, setBet] = useState(1000) // cents ($10.00)
   const [target, setTarget] = useState(2)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
@@ -38,22 +61,30 @@ export function LimboGame({
   const [error, setError] = useState<string | null>(null)
   const rafRef = useRef(0)
 
-  const available = availableToWager(account)
+  const available = maxBet(account)
   const chance = winChanceFor(target, houseConfig)
   const profit = Math.round(bet * (target - 1))
   const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available
+  const resolving = useResolving(account.id)
 
   useEffect(() => () => cancelAnimationFrame(rafRef.current), [])
 
   function animateTo(result: number, won: boolean) {
     cancelAnimationFrame(rafRef.current)
-    playSound('roll')
+    playSound('click') // a soft, satisfying click as the climb launches
     const start = performance.now()
-    const dur = 600
+    const dur = CLIMB_MS
+    let freed = false
     const step = (now: number) => {
       const t = Math.min(1, (now - start) / dur)
       const eased = 1 - Math.pow(1 - t, 3)
       setDisplay(1 + (result - 1) * eased)
+      // Free the bet button the instant the number has visually landed (a touch
+      // before the exact settle) so you can play again right away.
+      if (!freed && t >= RESULT_VISIBLE_AT) {
+        freed = true
+        signalReveal(account.id)
+      }
       if (t < 1) rafRef.current = requestAnimationFrame(step)
       else {
         setDisplay(result)
@@ -110,8 +141,16 @@ export function LimboGame({
               : `Target ${target.toFixed(2)}×`}
           </div>
         </div>
+
         {round?.won && (
-          <WinPopup multiplier={round.target} amount={Math.round(bet * (round.target - 1))} />
+          // key on the round so each Bet remounts it: the old card drops
+          // instantly, and a new one re-pops (after the climb) only on a win.
+          <WinPopup
+            key={round.nonce}
+            multiplier={round.target}
+            stake={bet}
+            delayMs={POPUP_DELAY_MS}
+          />
         )}
       </section>
 
@@ -120,14 +159,13 @@ export function LimboGame({
           <span className="field-label">Bet amount</span>
           <div className="field-bet">
             <span className="field-prefix">$</span>
-            <input
+            <NumberInput
               className="field-input"
-              type="number"
-              min={1}
-              value={bet}
-              onChange={(e) => setBet(Math.floor(Number(e.target.value)) || 0)}
+              value={bet / 100}
+              min={0.01}
+              onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
             />
-            <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.floor(b / 2)))}>
+            <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
               ½
             </button>
             <button className="chip" onClick={() => setBet((b) => Math.min(available, b * 2))}>
@@ -143,16 +181,12 @@ export function LimboGame({
               −
             </button>
             <div className="stepper-value">
-              <input
+              <NumberInput
                 className="field-input"
-                type="number"
-                min={MIN_TARGET}
-                step={0.5}
                 value={target}
-                onChange={(e) => {
-                  const n = Math.round(Number(e.target.value) * 100) / 100
-                  setTarget(Math.min(MAX_MULTIPLIER, Math.max(MIN_TARGET, n || MIN_TARGET)))
-                }}
+                min={MIN_TARGET}
+                max={MAX_MULTIPLIER}
+                onCommit={(n) => setTarget(n ?? MIN_TARGET)}
               />
               <span className="field-suffix">×</span>
             </div>
@@ -163,23 +197,25 @@ export function LimboGame({
         </div>
 
         <div className="limbo-readout">
-          <div className="stat">
+          <div className="limbo-stat">
             <span className="stat-label">Win chance</span>
             <span className="stat-value">{chance.toFixed(2)}%</span>
           </div>
-          <div className="stat">
-            <span className="stat-label">Win pays</span>
-            <span className="stat-value">{formatPoints(profit)}</span>
+          <div className="limbo-stat">
+            <span className="stat-label">Profit</span>
+            <span className="stat-value is-gain">{formatPoints(profit)}</span>
           </div>
         </div>
 
-        <button className="action action-bet" onClick={play} disabled={betInvalid}>
-          Bet
+        <button className="action action-bet" onClick={play} disabled={betInvalid || resolving}>
+          Play
         </button>
         {error && <p className="limbo-error">{error}</p>}
         {bet > available && !error && (
           <p className="limbo-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
         )}
+
+        <Rules points={LIMBO_RULES} />
 
         <Fairness
           round={round}
@@ -248,7 +284,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function formatPoints(points: number): string {
-  const sign = points < 0 ? '−' : ''
-  return `${sign}$${Math.abs(points).toLocaleString('en-US')}`
+function formatPoints(cents: number): string {
+  return formatMoney(cents)
 }

@@ -1,0 +1,186 @@
+/* HiLo view — a single card is the stage (CLAUDE.md §2). Shared
+   controls/fairness live in app/theme.css. */
+.hilo {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.hilo-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hilo-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.hilo-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* the two guess buttons */
+.hilo-guesses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hilo-guess {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.hilo-guess:hover {
+  transform: translateY(-1px);
+}
+.hilo-guess.is-hi:hover {
+  border-color: var(--gem);
+}
+.hilo-guess.is-lo:hover {
+  border-color: var(--red);
+}
+.hilo-guess-main {
+  font-size: 13px;
+  font-weight: 700;
+}
+.hilo-guess.is-hi .hilo-guess-main::before {
+  content: '▲ ';
+  color: var(--gem);
+}
+.hilo-guess.is-lo .hilo-guess-main::before {
+  content: '▼ ';
+  color: var(--red);
+}
+/* payout block on the right: big multiplier over a small win-chance pill */
+.hilo-guess-odds {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.hilo-guess-mult {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+}
+.hilo-guess.is-hi .hilo-guess-mult {
+  color: var(--gem);
+}
+.hilo-guess.is-lo .hilo-guess-mult {
+  color: var(--red);
+}
+.hilo-guess-pct {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.hilo-skip {
+  align-self: stretch;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* the stage card */
+.hilo-historybar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+  justify-content: flex-end;
+}
+.hilo-cardwrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 280px;
+  background: radial-gradient(120% 120% at 50% 30%, var(--surface-2) 0%, var(--bg) 80%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px;
+}
+.playing-card {
+  width: 132px;
+  height: 184px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #ffffff 0%, #eef2f6 100%);
+  color: #1d2733;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.9);
+}
+.playing-card.is-red {
+  color: #d52c48;
+}
+.playing-card.is-empty {
+  background: var(--surface-2);
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  box-shadow: none;
+}
+.playing-card.is-flash {
+  animation: hilo-deal 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.card-rank {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+}
+.card-suit {
+  font-size: 40px;
+  line-height: 1;
+}
+.card-back {
+  font-size: 64px;
+  font-weight: 800;
+}
+@keyframes hilo-deal {
+  0% {
+    transform: scale(0.7) rotateY(40deg);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1) rotateY(0);
+    opacity: 1;
+  }
+}
+.hilo-multiplier {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--gem);
+  text-shadow: 0 0 16px rgba(var(--gem-glow), 0.5);
+}
+
+@media (max-width: 640px) {
+  .hilo {
+    grid-template-columns: 1fr;
+  }
+}

@@ -5,6 +5,7 @@
 /** Self-declared identity for the games registry / casino hub. */
 export const diceMeta = {
   key: 'dice',
+  supportsAdjustableEdge: true,
   name: 'Dice',
   tagline: 'Roll over or under — set your own odds.',
   accent: '#f5a524',

@@ -21,6 +21,34 @@ export interface Account {
   balance: number
   /** Total of wagers currently at risk (placed but not yet graded). */
   pending: number
+  /**
+   * Optional per-head cap on a SINGLE wager (the operator's "max bet"), in the
+   * same unit as `stake`. Undefined = no per-bet cap, so only the credit limit
+   * bounds play. Set by the management/org layer and enforced in `placeWager`,
+   * so every game and the sportsbook honour it without their own checks.
+   */
+  maxWager?: number
+  /**
+   * Optional per-head MINIMUM on a single wager (the operator's "min bet"). Undefined
+   * = no floor beyond the 1-unit positivity rule. Enforced in `placeWager`, so every
+   * game and the sportsbook honour it without their own checks.
+   */
+  minWager?: number
+  /**
+   * Optional per-head MAX PAYOUT cap — the most a single winning bet may PROFIT
+   * (the win amount, on top of the returned stake). A win is capped to this; it never
+   * makes a win lose. Undefined = uncapped. Enforced in `resolveWager` /
+   * `resolveAtMultiplier`, so the cap holds across every game and the sportsbook.
+   */
+  maxPayout?: number
+  /**
+   * The operator's "no new action" switch. When true the account keeps its figure
+   * and can still be settled/cashed out, but `placeWager` refuses any NEW bet — so
+   * a manager can freeze a player's betting (hit their limit, late action, dispute)
+   * without taking them off the book. Enforced in `placeWager`, so every game and
+   * the sportsbook honour it with no per-module checks. Undefined/false = open.
+   */
+  bettingLocked?: boolean
 }
 
 /** How a wager is graded when it resolves. */

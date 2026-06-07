@@ -31,9 +31,15 @@ export function formatMoney(cents: number): string {
   return formatMoneyWith(cents, moneyDisplay())
 }
 
-/** Dollars (possibly fractional) → integer cents. */
+/** Dollars (possibly fractional) → integer cents, clamped to ≥ 0 (for bet stakes). */
 export function toCents(dollars: number): number {
   return Math.max(0, Math.round(dollars * CENTS))
+}
+
+/** Dollars → integer cents with the SIGN preserved (for a signed figure adjustment —
+ *  a debit is negative). Unlike `toCents`, this never clamps to zero. */
+export function toSignedCents(dollars: number): number {
+  return Math.round(dollars * CENTS)
 }
 
 /** Integer cents → dollars, for editing a bet field. */

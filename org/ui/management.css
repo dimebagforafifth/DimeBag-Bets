@@ -1,0 +1,794 @@
+/* Player-management console — the Manager → Sub-Agent → Agent → Player book
+   (CLAUDE.md §2). Shared field/action styles come from app/theme.css. */
+.org {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+/* The trading desk takes the whole console (no build panel beside it). */
+.org.is-trading {
+  grid-template-columns: 1fr;
+}
+
+/* ------------------------------ build panel ----------------------------- */
+.org-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  position: sticky;
+  top: 16px;
+}
+.org-panel-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+.org-panel-note {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.org-roletabs {
+  display: flex;
+  gap: 6px;
+}
+.org-roletabs .chip {
+  flex: 1;
+  text-align: center;
+  padding: 7px 0;
+  font-weight: 700;
+}
+.org-error {
+  color: var(--red);
+  font-size: 12.5px;
+  margin: 0;
+}
+
+/* -------------------------------- the tree ------------------------------ */
+.org-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.org-summary {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  flex-wrap: wrap;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+.org-settle-btn {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.org-settle-btn:hover {
+  border-color: var(--gem);
+}
+
+/* a rule-violation banner (blocked move / waterfall breach) */
+.org-banner {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--red);
+  background: rgba(237, 65, 99, 0.1);
+  border: 1px solid rgba(237, 65, 99, 0.35);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+/* the credit a member can still hand down */
+.org-grant {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* weekly settlement preview */
+.org-settle {
+  background: var(--surface);
+  border: 1px solid var(--gem);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.org-settle-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.org-settle-title {
+  font-size: 15px;
+  font-weight: 800;
+}
+.org-settle-net {
+  font-size: 13px;
+  color: var(--muted);
+}
+.org-settle-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.org-settle-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+.org-settle-apply {
+  margin-top: 0;
+  width: auto;
+  padding: 9px 16px;
+}
+
+/* settlement statement table */
+.org-players {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.org-players th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.org-players td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.org-players tr:last-child td {
+  border-bottom: none;
+}
+.org-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* a node row */
+.org-node {
+  min-width: 0;
+}
+.org-node.is-inactive > .org-row {
+  opacity: 0.5;
+}
+.org-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.org-row.is-manager {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border-color: rgba(var(--gem-glow), 0.4);
+}
+.org-node-name {
+  font-size: 14px;
+  font-weight: 800;
+  flex: 1 1 120px;
+  min-width: 0;
+}
+/* risk flag — a member deep into their credit line (collection risk) */
+.org-risk {
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #ffcaca;
+  background: rgba(237, 65, 99, 0.18);
+  border: 1px solid rgba(237, 65, 99, 0.5);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+/* the player you're currently playing as — highlighted in the tree */
+.org-row.is-current-player {
+  border-color: rgba(var(--gem-glow), 0.6);
+  box-shadow: 0 0 0 1px rgba(var(--gem-glow), 0.4), 0 0 14px rgba(var(--gem-glow), 0.15);
+}
+.org-playing-tag {
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #0c1116;
+  background: var(--gem);
+  border-radius: 999px;
+  padding: 2px 7px;
+  vertical-align: middle;
+}
+.org-toggle.is-play {
+  color: var(--gem);
+  border-color: rgba(var(--gem-glow), 0.5);
+}
+.org-toggle.is-play:hover {
+  background: rgba(var(--gem-glow), 0.12);
+  color: var(--gem);
+}
+
+/* children indent under their parent with a guide line */
+.org-children {
+  margin-left: 18px;
+  padding-left: 16px;
+  border-left: 2px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* badges per role */
+.org-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.org-badge.is-manager {
+  color: #0c1116;
+  background: var(--gem);
+}
+.org-badge.is-subagent {
+  color: #0c1116;
+  background: #e0b64a;
+}
+.org-badge.is-agent {
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.org-badge.is-player {
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+/* a labelled inline value (credit / figure / book) */
+.org-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-end;
+}
+.org-field-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+/* inline credit editor */
+.org-credit {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+.org-credit-prefix {
+  font-size: 12px;
+  color: var(--muted);
+}
+.org-credit-input {
+  width: 72px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding: 2px 2px;
+}
+.org-credit-input:focus {
+  outline: none;
+}
+
+/* move (reassign) control */
+.org-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.org-move-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.org-move-select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  max-width: 130px;
+}
+
+/* stats + figures */
+.org-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.org-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.org-stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.org-figure {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.org-figure.is-strong {
+  font-size: 16px;
+  font-weight: 800;
+}
+.org-figure.is-up {
+  color: #6dffa6;
+}
+.org-figure.is-down {
+  color: #ff8197;
+}
+.org-figure.is-even {
+  color: var(--muted);
+}
+
+/* small inline action */
+.org-toggle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+.org-toggle:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+.org-toggle.is-off {
+  color: var(--gem);
+  border-color: rgba(var(--gem-glow), 0.5);
+}
+
+/* inline rename — looks like text until focused */
+.org-name-input {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  width: 100%;
+  max-width: 170px;
+}
+.org-name-input:hover {
+  border-color: var(--line);
+}
+.org-name-input:focus {
+  outline: none;
+  border-color: rgba(var(--gem-glow), 0.6);
+  background: var(--surface-2);
+}
+
+/* remove action — reads as destructive on hover */
+.org-toggle.is-remove:hover {
+  color: #ffb4c0;
+  border-color: rgba(237, 65, 99, 0.6);
+}
+
+/* the report table */
+.org-report {
+  overflow-x: auto;
+}
+.org-report-table {
+  min-width: 660px;
+}
+.org-report-table tbody tr.is-inactive {
+  opacity: 0.5;
+}
+.org-report-table tbody tr.is-current-player td {
+  background: rgba(var(--gem-glow), 0.08);
+}
+.org-report-under {
+  color: var(--muted);
+}
+.org-risk-cell {
+  color: #ffb4c0;
+  font-weight: 800;
+}
+.org-sort {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+.org-sort:hover {
+  color: var(--text);
+}
+
+@media (max-width: 820px) {
+  .org {
+    grid-template-columns: 1fr;
+  }
+  .org-panel {
+    position: static;
+  }
+  .org-row {
+    gap: 8px;
+  }
+}
+
+/* ----------------------- scope: breadcrumb + dashboard ------------------ */
+
+/* which part of the book is in focus — also the section title */
+.org-crumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 13px;
+}
+.org-crumbs-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 4px;
+}
+.org-crumb-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.org-crumb {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.org-crumb:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.org-crumb.is-current {
+  color: var(--text);
+  cursor: default;
+}
+.org-crumb-sep {
+  color: var(--line);
+}
+
+/* dashboard action cluster (freeze book / settle) sits at the end of the stats */
+.org-summary-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.org-toggle.is-view {
+  color: var(--text);
+}
+.org-toggle.is-view:hover {
+  border-color: rgba(var(--gem-glow), 0.5);
+}
+.org-toggle.is-freeze:hover {
+  color: #ffd27a;
+  border-color: rgba(255, 196, 84, 0.55);
+}
+.org-toggle.is-locked {
+  color: #ffd27a;
+  border-color: rgba(255, 196, 84, 0.5);
+}
+
+/* a "locked" pill beside a player's name (mirrors .org-playing-tag) */
+.org-locked-tag {
+  margin-left: 8px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #0c1116;
+  background: #ffc454;
+  border-radius: 999px;
+  padding: 2px 7px;
+  vertical-align: middle;
+}
+
+/* report status pill */
+.org-status {
+  font-size: 11px;
+  font-weight: 700;
+}
+.org-status.is-ok {
+  color: var(--muted);
+}
+.org-status.is-locked {
+  color: #ffc454;
+}
+.org-status.is-suspended {
+  color: var(--red);
+}
+
+/* plain-language legend (a React-toggled <div>, shown from the header "?") */
+.org-legend {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.org-legend-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.org-legend-list strong {
+  color: var(--text);
+}
+
+/* -------------------- simplified console: header + drawer ---------------- */
+
+/* mode header — breadcrumb on the left, help + trading toggle on the right */
+.org-modehead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.org-modehead-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.org-modehead-title {
+  font-size: 16px;
+  font-weight: 800;
+}
+.org-help {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+.org-help:hover,
+.org-help.is-on {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+/* the resting member row: one figure + one chip, then the Manage toggle */
+.org-row-figs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.org-manage-toggle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.org-manage-toggle:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+.org-node.is-open > .org-row {
+  border-color: rgba(var(--gem-glow), 0.35);
+}
+.org-node.is-open > .org-row .org-manage-toggle {
+  color: var(--text);
+  border-color: rgba(var(--gem-glow), 0.4);
+}
+
+/* the per-member Manage drawer — controls grouped by intent */
+.org-manage {
+  margin: 6px 0 0 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.org-manage-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.org-manage-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--muted);
+  font-weight: 800;
+}
+.org-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+/* a destructive action awaiting its second tap */
+.org-toggle.is-confirm {
+  color: #ffb4c0;
+  border-color: rgba(237, 65, 99, 0.6);
+  background: rgba(237, 65, 99, 0.12);
+}
+
+/* dashboard headline — the one primary figure */
+.org-summary-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.org-summary-headline-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.org-summary-headline .org-figure {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+/* the flat report, demoted to an on-demand disclosure under the tree */
+.org-report-disclosure {
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.org-report-summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  list-style: none;
+  padding: 4px 0;
+}
+.org-report-summary::-webkit-details-marker {
+  display: none;
+}
+.org-report-summary::before {
+  content: '▸ ';
+}
+.org-report-disclosure[open] .org-report-summary::before {
+  content: '▾ ';
+}
+.org-report-summary:hover {
+  color: var(--text);
+}
+.org-report-disclosure[open] .org-report-summary {
+  margin-bottom: 8px;
+}
+
+/* ---- manual figure adjustment (Manage drawer) ---- */
+.org-adjust {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.org-adjust-amt,
+.org-adjust-reason {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+.org-adjust-amt {
+  width: 96px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.org-adjust-reason {
+  flex: 1;
+  min-width: 120px;
+}
+.org-adjust-amt:focus,
+.org-adjust-reason:focus {
+  outline: none;
+  border-color: var(--muted);
+}
+.org-adjust-apply {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2a2105;
+  background: linear-gradient(180deg, #f7d164, #e7ac24);
+  border: 1px solid #c8901a;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.org-adjust-apply:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.org-adjust-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}

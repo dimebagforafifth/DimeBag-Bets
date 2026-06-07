@@ -4,7 +4,7 @@
   width: 100%;
   max-width: 820px;
   display: grid;
-  grid-template-columns: 1fr 240px;
+  grid-template-columns: 240px 1fr;
   gap: 20px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -12,13 +12,44 @@
   padding: 20px;
 }
 .limbo-panel {
+  order: -1; /* the bet controls sit on the left (stage is second in the DOM) */
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
+/* Win chance / Net gain readout — a clean two-up box with a divider */
 .limbo-readout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.limbo-stat {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 14px;
+}
+.limbo-stat + .limbo-stat {
+  border-left: 1px solid var(--line);
+}
+.limbo-stat .stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.limbo-stat .stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.limbo-stat .stat-value.is-gain {
+  color: var(--gem);
 }
 
 .limbo-stage {

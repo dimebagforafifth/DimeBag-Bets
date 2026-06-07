@@ -1,0 +1,195 @@
+/* Wheel view — the spinning disc is the stage (CLAUDE.md §2). Shared
+   controls/fairness live in app/theme.css. */
+.wheel {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.wheel-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* visually hidden, but read by screen readers (spin-result live region) */
+.wheel .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.wheel-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.wheel-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.wheel-chips .chip {
+  flex: 1;
+  min-width: 34px;
+  text-align: center;
+  padding: 7px 0;
+}
+.wheel-hint {
+  margin: 0;
+  align-self: flex-start;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wheel-historybar {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+  justify-content: flex-end;
+}
+
+/* ---- the wheel: a hollow ring, colours only on the rim ---- */
+.wheel-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+}
+/* the wheel body: ONE solid dark disc with a single rim ring — no grey donut.
+   The colours sit on its edge as slim markers; everything inside is one colour. */
+.wheel-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--line), 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+/* the coloured segments (this is what spins). A SLIM band right at the rim — each
+   multiplier a little coloured marker, divided by thin outlines and spread around
+   the wheel; the 0× pockets share the body's dark colour so they read as the gaps
+   between colours, leaving the single rim ring to frame the whole thing. */
+.wheel-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  -webkit-mask: radial-gradient(circle, transparent 65%, #000 66%, #000 70%, transparent 71%);
+  mask: radial-gradient(circle, transparent 65%, #000 66%, #000 70%, transparent 71%);
+}
+/* the dark centre simply shows the result — no extra ring (just the one rim ring) */
+.wheel-hub {
+  position: absolute;
+  inset: 34%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wheel-hub-value {
+  font-size: 30px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+/* the centre glows in its own ring only when the spin lands a win */
+.wheel-hub.is-win {
+  border: 1px solid color-mix(in srgb, var(--gem) 70%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--gem) 45%, transparent);
+}
+/* a one-shot glow ring around the whole wheel on a winning spin */
+.wheel-wrap.is-win::after {
+  content: '';
+  position: absolute;
+  inset: -3%;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--gem),
+    0 0 26px 4px color-mix(in srgb, var(--gem) 55%, transparent);
+  animation: wheel-winpulse 0.9s ease-out forwards;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes wheel-winpulse {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+.wheel-pointer {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-top: 22px solid #ec4863; /* red marker, Stake-style */
+  z-index: 3;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* ---- multiplier legend: a row of pills with a colour-coded underline ---- */
+.wheel-legend {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.wheel-legend-item {
+  min-width: 60px;
+  padding: 8px 12px 6px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-bottom: 3px solid var(--swatch, var(--line));
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #fff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+/* the tier the spin just landed on lifts and glows in its own colour */
+.wheel-legend-item.is-hit {
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--swatch) 26%, var(--surface-2));
+  box-shadow: 0 0 0 1px var(--swatch), 0 0 14px color-mix(in srgb, var(--swatch) 50%, transparent);
+}
+
+@media (max-width: 640px) {
+  .wheel {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* respect reduced-motion: drop the decorative win flourishes (the spin itself
+   still resolves, just without the extra glow/lift animation) */
+@media (prefers-reduced-motion: reduce) {
+  .wheel-wrap.is-win::after {
+    animation: none;
+  }
+  .wheel-legend-item {
+    transition: none;
+  }
+}

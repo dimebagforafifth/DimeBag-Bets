@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
-import { availableToWager } from '../../../core/index.js'
+import { maxBet } from '../../../core/index.js'
 import {
   buildPaytable,
   DEFAULT_KENO_CONFIG,
@@ -16,7 +16,22 @@ import {
 } from '../index.js'
 import { play as playSound } from '../../../sound/index.js'
 import { WinPopup } from '../../shared/WinPopup.js'
+import { signalReveal } from '../../shared/reveal-bus.js'
+import { Rules } from '../../shared/Rules.js'
+import { useResolving } from '../../shared/useResolving.js'
+import { NumberInput } from '../../shared/NumberInput.js'
+import { formatMoney, toCents } from '../../shared/money.js'
 import './keno.css'
+
+const KENO_RULES: ReactNode[] = [
+  'Pick up to 10 numbers on the 40-number grid, choose a risk level, then hit Bet.',
+  '10 numbers are drawn at random. Your payout depends on how many of your picks are hit.',
+  'Picking more numbers and raising the risk shifts the table toward rarer, bigger multipliers.',
+  <>
+    <strong>Payout = bet × the multiplier for your hit count</strong> (shown in the paytable). The
+    draw is provably fair.
+  </>,
+]
 
 interface KenoGameProps {
   account: Account
@@ -25,14 +40,17 @@ interface KenoGameProps {
 }
 
 const ALL_TILES = Array.from({ length: GRID_SIZE }, (_, i) => i + 1)
-const REVEAL_MS = 130 // gap between each drawn number popping in
+const REVEAL_MS = 85 // gap between each drawn number popping in (snappy, so the result lands fast)
+/** The popup is gated on `done` (after all numbers reveal). A short beat after the
+ *  win lands so it registers before the payout card pops up. */
+const POPUP_DELAY_MS = 300
 
 export function KenoGame({
   account,
   houseConfig = DEFAULT_KENO_CONFIG,
   onBalanceChange,
 }: KenoGameProps) {
-  const [bet, setBet] = useState(10)
+  const [bet, setBet] = useState(1000) // cents ($10.00)
   const [risk, setRisk] = useState<KenoRisk>('classic')
   const [picks, setPicks] = useState<number[]>([])
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
@@ -44,12 +62,12 @@ export function KenoGame({
   const [error, setError] = useState<string | null>(null)
   const timerRef = useRef(0)
 
-  const available = availableToWager(account)
+  const available = maxBet(account)
+  const resolving = useResolving(account.id)
   const table = useMemo(
     () => (picks.length ? buildPaytable(picks.length, risk, houseConfig) : null),
     [picks.length, risk, houseConfig],
   )
-  const maxMult = table ? Math.max(...table) : 0
   const revealing = round != null && shown < round.drawn.length
   const done = round != null && shown >= round.drawn.length
   const betInvalid =
@@ -112,6 +130,7 @@ export function KenoGame({
           setHistory((h) => [{ multiplier: r.multiplier, won: r.won }, ...h].slice(0, 16))
           onBalanceChange()
           playSound(r.won ? 'win' : 'lose')
+          signalReveal(account.id) // all numbers are in — free the bet button now
         }
       }
       timerRef.current = window.setTimeout(() => step(1), REVEAL_MS)
@@ -121,7 +140,6 @@ export function KenoGame({
   }
 
   const drawnVisible = round ? round.drawn.slice(0, shown) : []
-  const hitsVisible = round ? round.picks.filter((n) => drawnVisible.includes(n)).length : 0
 
   function tileKind(n: number): string {
     if (!round) return picks.includes(n) ? 'picked' : 'idle'
@@ -140,14 +158,13 @@ export function KenoGame({
           <span className="field-label">Bet amount</span>
           <div className="field-bet">
             <span className="field-prefix">$</span>
-            <input
+            <NumberInput
               className="field-input"
-              type="number"
-              min={1}
-              value={bet}
-              onChange={(e) => setBet(Math.floor(Number(e.target.value)) || 0)}
+              value={bet / 100}
+              min={0.01}
+              onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
             />
-            <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.floor(b / 2)))}>
+            <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
               ½
             </button>
             <button className="chip" onClick={() => setBet((b) => Math.min(available, b * 2))}>
@@ -189,21 +206,10 @@ export function KenoGame({
           </button>
         </div>
 
-        <button className="action action-bet" onClick={play} disabled={betInvalid}>
-          Bet
+        <button className="action action-bet" onClick={play} disabled={betInvalid || resolving}>
+          Play
         </button>
 
-        <p className="keno-hint">
-          {round
-            ? done
-              ? round.won
-                ? `${round.hits}/${round.picks.length} hits · ${round.multiplier.toFixed(2)}× — won ${formatPoints(Math.round(bet * (round.multiplier - 1)))}`
-                : `${round.hits}/${round.picks.length} hits — lost ${formatPoints(bet)}`
-              : `Drawing… ${hitsVisible} hit${hitsVisible === 1 ? '' : 's'}`
-            : picks.length
-              ? `${picks.length} picked · up to ${maxMult.toFixed(2)}× (${formatPoints(Math.round(bet * (maxMult - 1)))})`
-              : 'Pick 1–10 numbers'}
-        </p>
         {error && <p className="keno-error">{error}</p>}
         {bet > available && !error && (
           <p className="keno-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
@@ -214,32 +220,41 @@ export function KenoGame({
         <div className="keno-historybar">
           {history.map((h, i) => (
             <span key={i} className={`pill ${h.won ? 'pill-win' : 'pill-loss'}`}>
-              {h.multiplier.toFixed(2)}×
+              {fmtMult(h.multiplier)}
             </span>
           ))}
         </div>
 
-        <div className="keno-grid">
-          {ALL_TILES.map((n) => {
-            const kind = tileKind(n)
-            // The gem is the game's reward: it only appears once the draw hits
-            // one of your picks. Your picks themselves wear a flat purple cover.
-            const gem = kind === 'hit'
-            return (
-              <button
-                key={n}
-                className={`keno-tile is-${kind}`}
-                onClick={() => toggle(n)}
-                disabled={revealing}
-              >
-                {gem && <Gem />}
-                <span className="keno-num">{n}</span>
-              </button>
-            )
-          })}
+        <div className="keno-grid-wrap">
+          <div className="keno-grid">
+            {ALL_TILES.map((n) => {
+              const kind = tileKind(n)
+              // The gem is the game's reward: it only appears once the draw hits
+              // one of your picks. Your picks themselves wear a flat purple cover.
+              const gem = kind === 'hit'
+              return (
+                <button
+                  key={n}
+                  className={`keno-tile is-${kind}`}
+                  onClick={() => toggle(n)}
+                  disabled={revealing}
+                >
+                  {gem && <Gem />}
+                  <span className="keno-num">{n}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* the win card centers over the grid — the visual middle of the play area */}
+          {done && round?.won && (
+            <WinPopup key={round.nonce} multiplier={round.multiplier} stake={bet} delayMs={POPUP_DELAY_MS} />
+          )}
         </div>
 
         {table && <Paytable table={table} hits={done ? round?.hits ?? null : null} />}
+
+        <Rules points={KENO_RULES} />
 
         <Fairness
           round={done ? round : null}
@@ -247,26 +262,53 @@ export function KenoGame({
           nextNonce={nonceRef.current + (round ? 0 : 1)}
           onClientSeed={setClientSeed}
         />
-
-        {done && round?.won && (
-          <WinPopup multiplier={round.multiplier} amount={Math.round(bet * (round.multiplier - 1))} />
-        )}
       </section>
     </div>
   )
 }
 
-/** A faceted green gem, sharing the one standard --gem palette (app/theme.css). */
+/** A big, bright square-cut green gem that fills the tile bar the rounded corners
+ *  — a near-square with only small corners cut off, beveled facets running in to a
+ *  flat table. Shares the one standard --gem palette (app/theme.css); the eight
+ *  ring facets are shaded for light from the top-left, the way a cut stone reads. */
 function Gem() {
   return (
     <svg className="keno-gem" viewBox="0 0 32 32" aria-hidden="true">
-      <polygon className="gem-crown" points="9,7 23,7 27,13 16,27 5,13" />
-      <polygon className="gem-table" points="9,7 23,7 24.5,13 7.5,13" />
-      <polygon className="gem-p1" points="7.5,13 16,27 5,13" />
-      <polygon className="gem-p4" points="24.5,13 16,27 27,13" />
-      <polygon className="gem-gloss" points="11,8.4 21,8.4 20,11 12,11" opacity="0.4" />
-      <polyline className="gem-girdle" points="7.5,13 24.5,13" fill="none" strokeWidth="0.6" opacity="0.5" />
-      <line className="gem-girdle" x1="16" y1="13" x2="16" y2="27" strokeWidth="0.5" opacity="0.4" />
+      {/* ring facets, clockwise from the top — each runs from an outer (near-edge)
+          octagon edge in to the table edge; light (top/left) → dark (right/bottom) */}
+      <polygon className="gem-cl" points="6,1 26,1 20,9 12,9" /> {/* top — light */}
+      <polygon className="gem-p1" points="26,1 31,6 23,12 20,9" /> {/* top-right cut */}
+      <polygon className="gem-cr" points="31,6 31,26 23,20 23,12" /> {/* right — dark */}
+      <polygon className="gem-p3" points="31,26 26,31 20,23 23,20" /> {/* bottom-right cut — darkest */}
+      <polygon className="gem-p3" points="26,31 6,31 12,23 20,23" /> {/* bottom — darkest */}
+      <polygon className="gem-p1" points="6,31 1,26 9,20 12,23" /> {/* bottom-left cut */}
+      <polygon className="gem-p2" points="1,26 1,6 9,12 9,20" /> {/* left — base */}
+      <polygon className="gem-table" points="1,6 6,1 12,9 9,12" /> {/* top-left cut — highlight */}
+      {/* the flat octagonal table */}
+      <polygon className="gem-table" points="12,9 20,9 23,12 23,20 20,23 12,23 9,20 9,12" />
+      {/* a concentric step line, for the stepped cut look */}
+      <polygon
+        className="gem-girdle"
+        points="8,4 24,4 28,8 28,24 24,28 8,28 4,24 4,8"
+        fill="none"
+        strokeWidth="0.7"
+        opacity="0.38"
+      />
+      {/* gloss + a bright four-point sparkle on the table */}
+      <polygon className="gem-gloss" points="11.4,10.6 17.8,10.6 15.4,13.2 11.4,13.2" opacity="0.4" />
+      <path
+        className="gem-spark"
+        d="M14.2 13 l0.9 2.1 2.1 0.9 -2.1 0.9 -0.9 2.1 -0.9 -2.1 -2.1 -0.9 2.1 -0.9 Z"
+        opacity="0.9"
+      />
+      {/* girdle outline around the whole octagon */}
+      <polygon
+        className="gem-girdle"
+        points="6,1 26,1 31,6 31,26 26,31 6,31 1,26 1,6"
+        fill="none"
+        strokeWidth="0.8"
+        opacity="0.55"
+      />
     </svg>
   )
 }
@@ -281,7 +323,7 @@ function Paytable({ table, hits }: { table: number[]; hits: number | null }) {
           key={h}
           className={`pay-tier ${hits === h ? 'is-current' : ''} ${m > 0 ? '' : 'is-zero'}`}
         >
-          <span className="pay-mult">{m.toFixed(2)}×</span>
+          <span className="pay-mult">{fmtMult(m)}</span>
           <span className="pay-hits">{h} hit{h === 1 ? '' : 's'}</span>
         </div>
       ))}
@@ -345,7 +387,18 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function formatPoints(points: number): string {
-  const sign = points < 0 ? '−' : ''
-  return `${sign}$${Math.abs(points).toLocaleString('en-US')}`
+function formatPoints(cents: number): string {
+  return formatMoney(cents)
+}
+
+/** Compact multiplier label for the paytable + history. Small payouts stay
+ *  precise (2dp), but the big high-risk ones are abbreviated (350×, 3.5k×) so the
+ *  number never overflows its paytable cell. */
+function fmtMult(m: number): string {
+  if (m >= 1_000_000) return `${(m / 1_000_000).toFixed(1)}M×`
+  if (m >= 10_000) return `${Math.round(m / 1000)}k×`
+  if (m >= 1000) return `${(m / 1000).toFixed(1)}k×`
+  if (m >= 100) return `${Math.round(m)}×`
+  if (m >= 10) return `${m.toFixed(1)}×`
+  return `${m.toFixed(2)}×`
 }

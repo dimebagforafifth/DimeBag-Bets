@@ -26,6 +26,10 @@ export interface ResolveEvent {
   /** Which account's figure moved — so a ledger / org roll-up can attribute it
    *  to the right player (without this, a subscriber can't tell whose bet it was). */
   accountId: string
+  /** The resolved wager's id — lets a subscriber match a resolution back to its
+   *  placement (e.g. to attribute it to the product it was PLACED on, not whatever
+   *  screen happens to be active when it grades). */
+  wagerId: string
   stake: number
   outcome: Outcome
   /** 0 for a loss, 1 for push/void, the multiplier for a win/settle. */
@@ -48,6 +52,40 @@ export function onWagerResolved(listener: ResolveListener): () => void {
 function emitResolved(e: ResolveEvent): void {
   // A logging listener must never be able to break settlement.
   for (const l of resolveListeners) {
+    try {
+      l(e)
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/* ------------------------- placement event ------------------------------ */
+
+/** Emitted when a wager is PLACED (the hold goes on). Pairs with `onWagerResolved`
+ *  by `wagerId`, so a subscriber can capture the product/context at placement time
+ *  (the screen the bet was actually made on) and carry it through to resolution —
+ *  what per-game exposure + accurate per-game attribution need. */
+export interface PlaceEvent {
+  accountId: string
+  wagerId: string
+  stake: number
+}
+
+type PlaceListener = (e: PlaceEvent) => void
+const placeListeners = new Set<PlaceListener>()
+
+/** Subscribe to wager placements. Returns an unsubscribe fn. */
+export function onWagerPlaced(listener: PlaceListener): () => void {
+  placeListeners.add(listener)
+  return () => {
+    placeListeners.delete(listener)
+  }
+}
+
+function emitPlaced(e: PlaceEvent): void {
+  // A logging listener must never be able to break placement.
+  for (const l of placeListeners) {
     try {
       l(e)
     } catch {
@@ -138,15 +176,20 @@ export function placeWager(account: Account, stake: number, id?: string): Wager 
     // Player-facing (games show this verbatim), so no raw cents in the text.
     throw new Error('stake exceeds the max bet')
   }
+  if (account.minWager != null && stake < account.minWager) {
+    throw new Error('stake is below the minimum bet')
+  }
 
   account.pending += stake
 
-  return {
+  const wager: Wager = {
     id: id ?? nextWagerId(),
     accountId: account.id,
     stake,
     status: 'open',
   }
+  emitPlaced({ accountId: account.id, wagerId: wager.id, stake })
+  return wager
 }
 
 /**
@@ -182,9 +225,14 @@ export function resolveWager(
       throw new Error(`a win needs a payoutMultiplier > 1, got ${payoutMultiplier}`)
     }
     profit = Math.round(wager.stake * (payoutMultiplier - 1))
+    let effMult = payoutMultiplier
+    if (account.maxPayout != null && profit > account.maxPayout) {
+      profit = account.maxPayout // operator cap on the win
+      effMult = wager.stake > 0 ? 1 + profit / wager.stake : payoutMultiplier // record the EFFECTIVE multiple
+    }
     account.balance += profit
-    wager.payoutMultiplier = payoutMultiplier
-    mult = payoutMultiplier
+    wager.payoutMultiplier = effMult
+    mult = effMult
   } else if (outcome === 'loss') {
     account.balance -= wager.stake
     profit = -wager.stake
@@ -194,7 +242,7 @@ export function resolveWager(
 
   wager.status = 'resolved'
   wager.outcome = outcome
-  emitResolved({ accountId: account.id, stake: wager.stake, outcome, payoutMultiplier: mult, profit })
+  emitResolved({ accountId: account.id, wagerId: wager.id, stake: wager.stake, outcome, payoutMultiplier: mult, profit })
 }
 
 /**
@@ -220,17 +268,23 @@ export function resolveAtMultiplier(account: Account, wager: Wager, m: number): 
   }
 
   account.pending -= wager.stake
-  const profit = Math.round(wager.stake * (m - 1))
+  let profit = Math.round(wager.stake * (m - 1))
+  let effMult = m
+  if (account.maxPayout != null && profit > account.maxPayout) {
+    profit = account.maxPayout // operator cap on the win
+    effMult = wager.stake > 0 ? 1 + profit / wager.stake : m // record the EFFECTIVE multiple
+  }
   account.balance += profit
 
   wager.status = 'resolved'
   wager.outcome = m > 1 ? 'win' : m < 1 ? 'loss' : 'push'
-  wager.payoutMultiplier = m
+  wager.payoutMultiplier = effMult
   emitResolved({
     accountId: account.id,
+    wagerId: wager.id,
     stake: wager.stake,
     outcome: wager.outcome,
-    payoutMultiplier: m,
+    payoutMultiplier: effMult,
     profit,
   })
 }
@@ -266,4 +320,19 @@ export function settleWeek(account: Account): void {
     )
   }
   account.balance = 0
+}
+
+/**
+ * Manually move an account's figure by `delta` — a manager re-credit, correction, or
+ * comp — OUTSIDE the wager flow, so it touches only `balance`, never `pending`. The
+ * `delta` may be negative (a debit). This is a deliberate operator override and is NOT
+ * bounded by the credit limit (a correction can legitimately push past it); the audit
+ * trail of who/why is recorded by the caller (the ledger), keeping core money-only.
+ * Throws on a non-integer delta.
+ */
+export function adjustBalance(account: Account, delta: number): void {
+  if (!Number.isInteger(delta)) {
+    throw new Error(`adjustment must be a whole number of points, got ${delta}`)
+  }
+  account.balance += delta
 }

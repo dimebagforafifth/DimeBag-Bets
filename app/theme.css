@@ -17,18 +17,68 @@
 
   --radius: 10px;
   --gap: 16px;
+  /* a soft, ROUNDED numeric font so every figure reads gamey, not statistical
+     (SF Pro Rounded on Apple via ui-rounded; falls back to the normal stack). */
+  --font-num: ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', 'Nunito',
+    system-ui, sans-serif;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Every number across the casino uses the rounded font — chunkier and softer,
+   never spreadsheet-like. Each class keeps its own tabular-nums so widths stay
+   stable as figures change; this only swaps the typeface + tightens it a touch. */
+.action-cashout strong, .axis-label, .baccarat-betchip-odds, .baccarat-hand-total,
+.baccarat-hint, .baccarat-result, .balloon-mult, .bj-betspot-total, .bj-chip-label,
+.bj-total, .cases-cell-mult, .cases-hint, .cases-pay-mult, .cases-pay-odds,
+.chick-spot-mult, .chip-count, .coinflip-call-mult, .coinflip-coin-mult,
+.coinflip-odds b, .coinflip-round, .coinflip-total, .crash-multiplier,
+.crash-speed-chip, .diamonds-hint, .diamonds-result, .diamonds-tier-mult,
+.dice-field-value, .dice-ticks, .fair-value, .field-input, .field-static,
+.figure-value, .hilo-guess-odds, .hilo-multiplier, .keno-tile, .limbo-multiplier,
+.pay-mult, .pill, .plinko-bucket, .plinko-hint, .rl-cell, .rl-chip-token-val,
+.rl-chipbtn, .rl-num b, .rl-readout-pill, .rl-staked-value, .sicbo .pill,
+.sicbo-chip-token-val, .sicbo-staked-value, .sicbo-total-n, .sicbo-total-odds,
+.sicbo-chipbtn-val, .sicbo-readout-total, .sicbo-readout-res, .sicbo-anytriple-odds,
+.slots-hint, .slots-pay-mult, .stat-value, .threecardpoker-card-rank,
+.threecardpoker-hint, .threecardpoker-paymult, .threecardpoker-resultamt,
+.tower-mult, .videopoker-card-rank, .videopoker-hint, .videopoker-paymult,
+.wheel-hint, .wheel-hub-value, .wheel-legend-item, .win-popup-amount,
+.win-popup-mult, .total-win-value, .roll-flag-value {
+  font-family: var(--font-num);
+  letter-spacing: -0.01em;
+  /* a whisker of same-colour stroke fattens every glyph a touch (a little more
+     bold) and rounds its edges (a little softer) — uniform regardless of each
+     class's own font-weight, so it can't be overridden by a game's CSS. */
+  -webkit-text-stroke: 0.4px currentColor;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Keyboard focus ring (CLAUDE.md §2 — accessible by default). `:focus-visible`
+   matches only when the browser judges a visible indicator appropriate (keyboard
+   / assistive tech), so mouse clicks stay clean. Nothing provided a focus
+   indicator before — every control's `:focus` rule removed the outline — leaving
+   keyboard users with nothing to track. The outline follows each element's own
+   border-radius, so it sits cleanly around buttons, cards, chips and selects. */
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
 html,
 body,
 #root {
   height: 100%;
+}
+/* Always reserve the scrollbar's width. Otherwise, when content height crosses
+   the viewport (e.g. Plinko auto-play streaming results), the scrollbar toggles
+   on/off and the content width jumps — which makes width-relative views like the
+   Plinko board (and its container-query bucket labels) appear to zoom in/out. */
+html {
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -69,6 +119,34 @@ body {
   color: var(--green);
   margin: 0 2px;
 }
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+/* top-level section switch: Casino / Sportsbook */
+.nav {
+  display: flex;
+  gap: 4px;
+}
+.nav-tab {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.nav-tab:hover {
+  color: var(--text);
+}
+.nav-tab.is-on {
+  color: var(--text);
+  background: var(--surface-2);
+}
 
 /* ---- Casino lobby ---- */
 .lobby {
@@ -91,55 +169,99 @@ body {
 }
 .lobby-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-auto-rows: 1fr; /* even card heights per row despite varying descriptions */
   gap: 16px;
 }
 .game-card {
   --accent: var(--green);
+  position: relative;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
   text-align: left;
-  padding: 20px;
+  padding: 0;
   border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--line);
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+  overflow: hidden;
+  transition: transform 0.14s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 .game-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  background: var(--surface-2);
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+  box-shadow: 0 12px 30px -14px color-mix(in srgb, var(--accent) 75%, transparent);
 }
-.card-icon {
-  width: 44px;
-  height: 44px;
+/* the art tile: the game's icon over an accent-tinted gradient */
+.card-art {
+  position: relative;
+  height: 116px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  margin-bottom: 6px;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  background: radial-gradient(
+    125% 100% at 50% 0%,
+    color-mix(in srgb, var(--accent) 32%, var(--surface-2)) 0%,
+    var(--surface-2) 72%
+  );
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
 }
-.card-icon svg {
-  width: 26px;
-  height: 26px;
+/* a soft accent glow rising from a bottom corner, for depth */
+.card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    65% 65% at 82% 116%,
+    color-mix(in srgb, var(--accent) 26%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+.card-art svg {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  filter: drop-shadow(0 5px 12px color-mix(in srgb, var(--accent) 55%, transparent));
+  transition: transform 0.2s ease;
+}
+.game-card:hover .card-art svg {
+  transform: scale(1.09) translateY(-1px);
+}
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 14px 14px;
 }
 .card-name {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  color: #ffffff;
 }
 .card-tag {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--muted);
+  line-height: 1.35;
 }
 .card-play {
-  margin-top: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--accent);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.game-card:hover .card-play {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* ---- a single game page ---- */
@@ -188,10 +310,50 @@ body {
 }
 .figure-value {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 800;
 }
 .figure-value.is-down {
   color: var(--red);
+}
+.figure-value.is-up {
+  color: var(--green);
+}
+.figure-value.is-even {
+  color: var(--muted);
+  font-weight: 600;
+}
+/* The headline number — what you can bet right now — leads the pair. */
+.figure-block.is-primary .figure-value {
+  font-size: 17px;
+}
+
+/* "Playing as" — who in the book is at the table (every bet moves their figure) */
+.player-switch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.2;
+}
+.player-switch-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.player-switch-select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  max-width: 170px;
+}
+.player-switch-select:hover {
+  border-color: var(--muted);
 }
 
 .app-main {
@@ -200,6 +362,32 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding: 40px 24px;
+}
+
+/* shown when there's no player to play as */
+.no-player {
+  max-width: 460px;
+  margin: 40px auto;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+}
+.no-player-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+}
+.no-player-sub {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.no-player-cta {
+  width: auto;
+  padding: 10px 20px;
 }
 
 .app-footer {
@@ -257,6 +445,29 @@ body {
 .field-suffix {
   color: var(--muted);
 }
+
+/* a read-only figure inside a .field-bet box (e.g. the shared Total profit field):
+   styled to read exactly like the bet input, but it's a static, unselectable value */
+.field-static {
+  flex: 1;
+  padding: 10px 4px;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  user-select: none;
+}
+/* the Total profit field carries the running multiplier in its label */
+.profit-readout .field-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.profit-readout-mult {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--gem);
+}
 .chip {
   background: var(--surface-2);
   border: 1px solid var(--line);
@@ -305,10 +516,20 @@ body {
   background: var(--green-press);
 }
 .action-cashout {
-  background: var(--gem);
+  background: var(--green);
+}
+.action-cashout:hover:not(:disabled) {
+  background: var(--green-press);
 }
 .action-cashout strong {
   font-variant-numeric: tabular-nums;
+}
+.action-stop {
+  background: var(--red);
+  color: #fff;
+}
+.action-stop:hover:not(:disabled) {
+  background: #d6324f;
 }
 
 .mines-error,
@@ -316,7 +537,10 @@ body {
 .dice-error,
 .limbo-error,
 .keno-error,
-.plinko-error {
+.plinko-error,
+.wheel-error,
+.hilo-error,
+.chick-error {
   color: var(--red);
   font-size: 12.5px;
   margin: 0;
@@ -341,7 +565,7 @@ body {
 .stat-value {
   display: block;
   margin: 2px 0 0;
-  font-weight: 700;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 .stat-value.is-hot {
@@ -394,14 +618,61 @@ body {
   background: transparent;
   text-align: center;
   padding: 10px 4px;
+}
+/* Hide the native number spinner (the funky up/down stepper) on EVERY number
+   input across all games — we use our own −/+ buttons / plain text fields. */
+input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
-/* hide the native number spinner — the −/+ buttons replace it */
-.stepper-value .field-input::-webkit-outer-spin-button,
-.stepper-value .field-input::-webkit-inner-spin-button {
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* ---- "How to play" rules panel (shared across every game) ---- */
+.rules {
+  /* spans full width in the grid-layout games; ignored by flex layouts */
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.rules summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  user-select: none;
+}
+.rules summary:hover {
+  color: var(--text);
+}
+.rules-body {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 640px;
+}
+.rules-body li::marker {
+  color: color-mix(in srgb, var(--accent, var(--green)) 60%, var(--muted));
+}
+.rules-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+/* underline the core action in a rule so newcomers can scan the "what to do" */
+.rules-body u {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--accent, var(--green));
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
 }
 
 /* ---- provably-fair panel ---- */
@@ -511,38 +782,38 @@ body {
   animation: win-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .win-popup {
-  min-width: 180px;
+  min-width: 150px;
   text-align: center;
-  padding: 22px 40px;
-  border-radius: 16px;
+  padding: 16px 30px;
+  border-radius: 14px;
   background: rgba(8, 18, 24, 0.86);
-  border: 3px solid color-mix(in srgb, var(--gem) 68%, #6dff9d);
-  box-shadow: 0 0 36px rgba(var(--gem-glow), 0.55), inset 0 0 22px rgba(var(--gem-glow), 0.18),
-    0 16px 50px rgba(0, 0, 0, 0.55);
+  border: 2px solid color-mix(in srgb, var(--gem) 68%, #6dff9d);
+  box-shadow: 0 0 30px rgba(var(--gem-glow), 0.5), inset 0 0 18px rgba(var(--gem-glow), 0.16),
+    0 12px 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(3px);
 }
 .win-popup-mult {
-  font-size: 44px;
-  font-weight: 800;
-  letter-spacing: -1.5px;
+  font-size: 35px;
+  font-weight: 900;
+  letter-spacing: -1px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, var(--gem) 45%, #8effbe);
-  text-shadow: 0 0 18px rgba(var(--gem-glow), 0.7);
+  text-shadow: 0 0 16px rgba(var(--gem-glow), 0.7);
 }
 .win-popup-divider {
   height: 2px;
-  width: 64%;
-  margin: 14px auto;
+  width: 58%;
+  margin: 11px auto;
   border-radius: 2px;
   background: rgba(var(--gem-glow), 0.4);
 }
 .win-popup-amount {
-  font-size: 19px;
-  font-weight: 700;
+  font-size: 16.5px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, var(--gem) 45%, #8effbe);
-  text-shadow: 0 0 14px rgba(var(--gem-glow), 0.6);
+  text-shadow: 0 0 12px rgba(var(--gem-glow), 0.6);
 }
 @keyframes win-pop {
   0% {
@@ -552,5 +823,56 @@ body {
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* ===== responsive: keep the shell clean on smaller screens (CLAUDE.md §2) =====
+   The shell was the one part with no breakpoints — every game CSS already has
+   them. On a phone the header (brand + 4 tabs + player select + two figures +
+   sound) overflowed; let it wrap gracefully and tighten the lobby grid. */
+@media (max-width: 760px) {
+  .app-header {
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    padding: 14px 16px;
+  }
+  .header-left {
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .header-right {
+    gap: 16px;
+    margin-left: auto;
+  }
+  .figure {
+    gap: 18px;
+  }
+  .nav {
+    flex-wrap: wrap;
+  }
+  .app-main {
+    padding: 28px 14px;
+  }
+}
+@media (max-width: 460px) {
+  .app-header {
+    padding: 12px;
+  }
+  .nav-tab {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  .figure {
+    gap: 14px;
+  }
+  .player-switch-select {
+    max-width: 130px;
+  }
+  .lobby-title {
+    font-size: 22px;
+  }
+  .lobby-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
   }
 }

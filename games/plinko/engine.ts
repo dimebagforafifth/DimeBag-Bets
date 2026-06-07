@@ -11,7 +11,7 @@ import { bytesToHex, randomBytes } from '@noble/hashes/utils'
 import type { Account } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { dropBall, hashServerSeed } from './fair.js'
-import { payouts, type PlinkoRisk } from './payouts.js'
+import { payouts, computePlinkoTable, type PlinkoHouseConfig, type PlinkoRisk } from './payouts.js'
 
 export interface PlinkoRound {
   rows: number
@@ -35,6 +35,8 @@ export interface PlayPlinkoOptions {
   clientSeed: string
   nonce: number
   serverSeed?: string
+  /** Manager house edge; when set, the table is scaled to its RTP. Omit = native. */
+  config?: PlinkoHouseConfig
 }
 
 export function randomServerSeed(): string {
@@ -44,7 +46,11 @@ export function randomServerSeed(): string {
 /** Play one round: hold the stake, drop the ball, settle at the slot multiplier. */
 export function playPlinko(account: Account, opts: PlayPlinkoOptions): PlinkoRound {
   const serverSeed = opts.serverSeed ?? randomServerSeed()
-  const table = payouts(opts.rows, opts.risk) // also validates rows
+  // A manager edge switches to the generated edge-true table; otherwise the
+  // canonical Stake table for normal play.
+  const table = opts.config
+    ? computePlinkoTable(opts.rows, opts.risk, opts.config)
+    : payouts(opts.rows, opts.risk) // also validates rows
 
   const wager = placeWager(account, opts.stake)
   const { path, slot } = dropBall(serverSeed, opts.clientSeed, opts.nonce, opts.rows)

@@ -1,0 +1,615 @@
+/* Cases view — a long horizontal reel slides to the landing multiplier under a
+   fixed pointer (CLAUDE.md §2, §7). Shared controls/fairness live in
+   app/theme.css. */
+.cases {
+  /* closed cases are this bland steel; a tile only takes its tier colour when it opens */
+  --case-neutral: #4a5d70;
+  width: 100%;
+  max-width: 940px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  /* a faint warm glow washes down from the top so the whole view feels lit */
+  background:
+    radial-gradient(
+      130% 120% at 50% -30%,
+      color-mix(in srgb, var(--accent, #ffb84d) 9%, transparent) 0%,
+      transparent 55%
+    ),
+    var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.cases-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* visually hidden, but read by screen readers (open-result live region) */
+.cases .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.cases-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.cases-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cases-chips .chip {
+  flex: 1;
+  min-width: 34px;
+  text-align: center;
+  padding: 7px 0;
+}
+.cases-hint {
+  margin: 0;
+  align-self: flex-start;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cases-error {
+  color: var(--red);
+  font-size: 12.5px;
+  margin: 0;
+}
+
+/* ---- payout colours under the reel (a small row; tap any for the full odds) ---- */
+.cases-payouts {
+  position: relative;
+  align-self: center;
+  display: flex;
+  justify-content: center;
+  /* lift the whole payouts block (incl. the pop-up odds menu) above the reel so
+     the menu opens OVER the result multiplier pill, never behind it */
+  z-index: 8;
+}
+.cases-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.cases-swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--swatch) 94%, #fff) 0%,
+    color-mix(in srgb, var(--swatch) 74%, #0b141c) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--swatch) 60%, #000);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.cases-swatch:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.cases-swatch.is-blank {
+  /* the "no match" (0×) outcome reads muted, not like a prize */
+  background: linear-gradient(160deg, #3a4754 0%, #232e39 100%);
+  border-color: var(--line);
+}
+.cases-swatch.is-active,
+.cases-swatch.is-hit {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--swatch) 80%, #fff),
+    0 0 12px color-mix(in srgb, var(--swatch) 65%, transparent);
+}
+/* the full odds table — every outcome's multiplier + % chance — floated above the
+   row so the row itself stays compact */
+.cases-odds {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 5px 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+  background: #0d1822;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+}
+/* each row spills its three cells straight into the parent grid, so columns align */
+.cases-odds-row {
+  display: contents;
+}
+.cases-odds-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--swatch);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--swatch) 60%, transparent);
+}
+.cases-odds-dot.is-blank {
+  background: #3a4754;
+  box-shadow: none;
+}
+.cases-odds-mult {
+  font-size: 12.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+.cases-odds-pct {
+  font-size: 12px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cases-odds-word {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: normal;
+}
+/* the honest house-edge readout, derived straight from the odds listed above it */
+.cases-odds-edge {
+  grid-column: 1 / -1;
+  margin-top: 5px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.cases-odds-edge strong {
+  color: #fff;
+  font-weight: 800;
+}
+.cases-odds::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #0d1822;
+}
+
+/* ---- history pills (top of the stage) ---- */
+.cases-historybar {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+  justify-content: flex-end;
+}
+.pill {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.pill-win {
+  color: var(--accent, #ffb84d);
+  border-color: color-mix(in srgb, var(--accent, #ffb84d) 55%, transparent);
+  background: color-mix(in srgb, var(--accent, #ffb84d) 16%, var(--surface-2));
+}
+.pill-loss {
+  color: var(--red, #ec4863);
+  border-color: color-mix(in srgb, var(--red, #ec4863) 40%, transparent);
+}
+
+/* ---- the reel: a long horizontal strip that slides under a fixed marker ---- */
+.cases-reel {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  height: 124px;
+  overflow: hidden;
+  border-radius: 16px;
+  /* a luminous well: a soft gold spotlight at the centre over a brighter base */
+  background:
+    radial-gradient(
+      85% 130% at 50% 50%,
+      color-mix(in srgb, var(--accent, #ffb84d) 16%, transparent) 0%,
+      transparent 62%
+    ),
+    linear-gradient(180deg, #1a3550 0%, #0b1620 100%);
+  border: 1px solid color-mix(in srgb, var(--accent, #ffb84d) 24%, var(--line));
+  box-shadow:
+    inset 0 2px 18px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 10px 34px rgba(0, 0, 0, 0.35);
+}
+/* edge fade via static overlay gradients instead of a CSS mask: a mask on the reel
+   forces the sliding strip to REPAINT every frame (the glitch). These overlays
+   never move, so they composite once and the slide stays a pure GPU transform. */
+.cases-reel-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  z-index: 2;
+  pointer-events: none;
+}
+.cases-reel-edge.is-l {
+  left: 0;
+  background: linear-gradient(90deg, #0e2034 0%, rgba(14, 32, 52, 0) 100%);
+}
+.cases-reel-edge.is-r {
+  right: 0;
+  background: linear-gradient(270deg, #0e2034 0%, rgba(14, 32, 52, 0) 100%);
+}
+/* a glassy top sheen across the whole window */
+.cases-reel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 42%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+/* a slow specular glint that sweeps across, so the reel always feels alive.
+   It sweeps with transform (GPU-composited) — NEVER `left` — so this always-on
+   animation can't trigger layout every frame and jank the reel. */
+.cases-reel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36%;
+  left: -45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.13), transparent);
+  pointer-events: none;
+  z-index: 2;
+  will-change: transform, opacity;
+  animation: cases-sheen 5.5s ease-in-out infinite;
+}
+@keyframes cases-sheen {
+  0% {
+    transform: translateX(0) skewX(-18deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  42% {
+    transform: translateX(430%) skewX(-18deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(430%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+/* on a win the whole reel frame lights up BRIGHT in the result's own colour */
+.cases-reel.is-win {
+  border-color: color-mix(in srgb, var(--win-color, var(--accent, #ffb84d)) 60%, var(--line));
+  box-shadow:
+    inset 0 2px 18px rgba(0, 0, 0, 0.5),
+    0 0 0 2px var(--win-color, var(--accent, #ffb84d)),
+    0 0 40px 4px color-mix(in srgb, var(--win-color, var(--accent, #ffb84d)) 60%, transparent),
+    0 10px 34px rgba(0, 0, 0, 0.35);
+}
+
+/* the marker: a single pointer at the BOTTOM, pointing UP at the centred case —
+   no full-height line running through the whole window */
+.cases-marker {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 13px solid var(--win-color, var(--accent, #ffb84d));
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--win-color, var(--accent, #ffb84d)) 80%, transparent));
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* the sliding strip of cells */
+.cases-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  /* a cell is 96px wide + 8px gap; the JS sets translateX to land the winner */
+  padding-left: calc(50% - 48px); /* so index 0 starts centred under the marker */
+  gap: 8px;
+  /* promote to a GPU layer so the long slide is a pure composited transform
+     (rasterized once, then just moved) — not repainted every frame */
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.cases-cell {
+  position: relative;
+  flex: 0 0 96px;
+  width: 96px;
+  height: 92px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* bland by default — every closed case looks the same; the tile only takes its
+     tier colour when it opens (see .is-landed), keeping the prize a mystery */
+  background: linear-gradient(180deg, #163049 0%, #0b1722 100%);
+  border: 1px solid var(--line);
+  border-bottom: 3px solid color-mix(in srgb, var(--case-neutral) 40%, var(--line));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ====================================================================
+   The brown wooden treasure chest (two overlaid SVGs sharing one viewBox).
+   Wood/brass are uniform; only var(--swatch) tints the spilling light.
+   ==================================================================== */
+.cases-chest-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cases-chest {
+  position: relative;
+  width: 92px;
+  height: 57px;
+  /* a gentle perspective — the lid only tilts back a little before it fades away,
+     so we avoid the distorted full-flip that looked weird at this small size */
+  perspective: 560px;
+  perspective-origin: 50% 32%;
+}
+.cases-chest-body,
+.cases-chest-lid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* the lid is its OWN element; on open it tilts back a touch then fades out */
+.cases-chest-lid {
+  transform-origin: 50% 46.8%; /* hinge at the seam (viewBox y=78) */
+  /* no base transform — a no-op rotateX(0) would force each closed lid onto its own
+     3D layer (52 of them). The open animation sets the rotateX when it's time. */
+}
+/* soft elliptical contact shadow grounding the chest */
+.cases-chest-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 66px;
+  height: 11px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+}
+/* tier-coloured light that blooms out of the opened chest (over body, under lid) */
+.cases-chest-bloom {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 84px;
+  height: 60px;
+  transform: translate(-50%, -50%) scale(0.3);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--swatch) 85%, #fff) 0%,
+    color-mix(in srgb, var(--swatch) 60%, transparent) 40%,
+    transparent 72%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+/* the interior fan + glow, hidden until open */
+.cases-chest-interior {
+  opacity: 0;
+}
+.cases-chest-rays {
+  transform-box: view-box;
+  transform-origin: 100px 92px;
+}
+.cases-chest-rays polygon {
+  fill: color-mix(in srgb, var(--swatch) 70%, #fff);
+  opacity: 0.5;
+}
+.cases-chest-innerlight {
+  mix-blend-mode: screen;
+}
+
+/* ---- open: a quick rattle, then the lid hinges up-and-back, light blooms ---- */
+.cases-chest.is-open {
+  animation: cases-chest-rattle 0.26s ease-in-out;
+}
+.cases-chest.is-open .cases-chest-lid {
+  /* a little tip back on the hinge, then the lid lifts and fades away entirely */
+  animation: cases-lid-open 0.5s ease-out 0.18s both;
+}
+.cases-chest.is-open .cases-chest-interior {
+  animation: cases-chest-interior-in 0.5s ease-out 0.36s both;
+}
+.cases-chest.is-open .cases-chest-rays {
+  animation: cases-chest-rays 0.85s ease-out 0.42s both;
+}
+.cases-chest.is-open .cases-chest-bloom {
+  animation: cases-chest-bloom 0.9s ease-out 0.3s both;
+}
+@keyframes cases-chest-rattle {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-1.5px); }
+  45% { transform: translateX(1.5px); }
+  70% { transform: translateX(-1px); }
+  85% { transform: translateX(1px); }
+}
+@keyframes cases-chest-interior-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes cases-chest-bloom {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  45% { opacity: 0.92; transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 0.42; transform: translate(-50%, -50%) scale(1.4); }
+}
+@keyframes cases-chest-rays {
+  0% { opacity: 0; transform: scaleY(0.2); }
+  45% { opacity: 0.6; transform: scaleY(1.05); }
+  100% { opacity: 0; transform: scaleY(1.15); }
+}
+@keyframes cases-lid-open {
+  0% { transform: rotateX(0deg) translateY(0); opacity: 1; }
+  45% { transform: rotateX(40deg) translateY(-2px); opacity: 1; }
+  100% { transform: rotateX(50deg) translateY(-10px); opacity: 0; }
+}
+
+/* ---- the prize result, popped up OVER the marker/cursor (no popup card) ---- */
+.cases-reel-result {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 7; /* above the marker/cursor (z-index 3), so it's never covered */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.2px;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--swatch) 28%, rgba(8, 16, 22, 0.95)) 0%,
+    color-mix(in srgb, var(--swatch) 48%, rgba(8, 16, 22, 0.95)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--swatch) 80%, #fff);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 14px color-mix(in srgb, var(--swatch) 85%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 0 1px color-mix(in srgb, var(--swatch) 45%, transparent),
+    0 6px 20px color-mix(in srgb, var(--swatch) 72%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: cases-result-rise 0.55s cubic-bezier(0.2, 1.45, 0.4, 1) 0.5s both;
+}
+.cases-reel-result.is-loss {
+  opacity: 0.92; /* a blank (0×) reads quiet, not celebratory */
+}
+.cases-reel-result::before {
+  content: '';
+  position: absolute;
+  inset: 1px 1px auto 1px;
+  height: 45%;
+  border-radius: 999px 999px 40% 40%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent);
+  pointer-events: none;
+}
+@keyframes cases-result-rise {
+  0% { opacity: 0; transform: translate(-50%, -50%) translateY(20px) scale(0.5); }
+  55% { opacity: 1; transform: translate(-50%, -50%) translateY(-15px) scale(1.18); }
+  100% { opacity: 1; transform: translate(-50%, -50%) translateY(-16px) scale(1); }
+}
+
+/* the winning tile gets a soft tier glow + a richer contact shadow to seat the prize */
+.cases-cell.is-landed {
+  background:
+    radial-gradient(
+      66% 70% at 50% 44%,
+      color-mix(in srgb, var(--swatch) 26%, transparent) 0%,
+      transparent 72%
+    ),
+    linear-gradient(180deg, #163049 0%, #0b1722 100%);
+  border-color: color-mix(in srgb, var(--swatch) 45%, var(--line));
+}
+/* a winning case blazes BRIGHT in its result colour — this is the payoff (no popup) */
+.cases-cell.is-landed.is-win {
+  background:
+    radial-gradient(
+      74% 82% at 50% 44%,
+      color-mix(in srgb, var(--swatch) 58%, transparent) 0%,
+      transparent 72%
+    ),
+    linear-gradient(180deg, #173a52 0%, #0b1722 100%);
+  border-color: color-mix(in srgb, var(--swatch) 72%, var(--line));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--swatch) 62%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--swatch) 48%, transparent);
+}
+.cases-cell.is-landed .cases-chest-shadow {
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--swatch) 45%, rgba(0, 0, 0, 0.5)) 0%,
+    rgba(0, 0, 0, 0) 72%
+  );
+}
+
+@media (max-width: 720px) {
+  .cases {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cases-reel::after,
+  .cases-chest.is-open .cases-chest-lid,
+  .cases-chest.is-open,
+  .cases-chest.is-open .cases-chest-interior,
+  .cases-chest.is-open .cases-chest-rays,
+  .cases-chest.is-open .cases-chest-bloom,
+  .cases-reel-result {
+    animation: none;
+  }
+  /* static reveal: the lid is simply gone, interior lit, result shown */
+  .cases-chest.is-open .cases-chest-lid {
+    opacity: 0;
+  }
+  .cases-chest.is-open .cases-chest-interior {
+    opacity: 1;
+  }
+  .cases-chest.is-open .cases-chest-bloom {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+  .cases-chest.is-open .cases-chest-rays {
+    opacity: 0.5;
+  }
+  .cases-reel-result {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-16px) scale(1);
+  }
+}

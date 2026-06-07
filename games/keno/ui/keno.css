@@ -51,6 +51,11 @@
 }
 
 /* ---- the number grid ---- */
+/* the win card overlays this wrapper, so it centers over the grid (the visual
+   middle of the play area) rather than the whole tall stage */
+.keno-grid-wrap {
+  position: relative;
+}
 .keno-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -90,9 +95,9 @@
 }
 .keno-gem {
   position: absolute;
-  inset: 12%;
+  inset: 1%; /* the gem fills the whole tile bar the rounded corners — thin bezel */
   z-index: 0;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
   /* the gem the game awards you — it springs in only when a pick is hit */
   animation: keno-gem-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -115,20 +120,30 @@
   box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-/* A hit: your pick was drawn. The purple gives way to a glowing green gem. */
+/* A hit: your pick was drawn. A bright-green gem nearly fills the tile, ringed in
+   a matching green rim and glow; the number stays white over the gem. */
 .keno-tile.is-hit {
-  background: linear-gradient(180deg, #123a2b 0%, #0c2a1f 100%);
-  border-color: var(--gem);
+  /* a brighter emerald for this tile — the shared gem facets + glow derive from
+     --gem, so bumping it here lights the whole gem up green without touching
+     mines/diamonds */
+  --gem: #1fd964;
+  --gem-glow: 31, 217, 100;
+  /* a thin dark well so the gem edge reads as set in; mostly covered by the gem */
+  background: radial-gradient(circle at 50% 42%, #0c2018 0%, #060d09 100%);
+  border: 3px solid color-mix(in srgb, var(--gem) 60%, #b9ffd6); /* bright green rim */
   color: #fff;
-  box-shadow: 0 0 22px rgba(var(--gem-glow), 0.65);
+  box-shadow: 0 0 0 1px rgba(var(--gem-glow), 0.5), 0 0 26px rgba(var(--gem-glow), 0.65),
+    0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   z-index: 1;
   /* the satisfying overshoot-bounce as it lands */
   animation: keno-hit 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .keno-tile.is-hit .keno-num {
-  /* dark number for contrast against the green gem (Stake-style) */
-  color: #052b1b;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+  /* bolder white number with a dark halo so it pops over the bright gem table */
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 7px rgba(0, 0, 0, 0.65);
 }
 
 /* A drawn number you didn't pick — number turns red on the bare tile. */
@@ -231,6 +246,9 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+  white-space: nowrap; /* keep the multiplier on one line — never wrap a big number */
+  letter-spacing: -0.2px;
+  max-width: 100%;
 }
 .pay-tier.is-zero .pay-mult {
   color: var(--muted);

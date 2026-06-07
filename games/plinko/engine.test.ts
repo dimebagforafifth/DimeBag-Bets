@@ -66,4 +66,29 @@ describe('playPlinko', () => {
     expect(r.serverSeedHash).toMatch(/^[0-9a-f]{64}$/)
     expect(verifyDrop(r.serverSeed, r.clientSeed, r.nonce, r.rows, r.slot)).toBe(true)
   })
+
+  it('the house profits end-to-end: realized return < stake over many real drops', () => {
+    // Drop tens of thousands of balls through the REAL engine on a fixed seed
+    // sequence, sweeping every board, and total what actually comes back. It must
+    // land UNDER what was staked — the baked-in edge delivered end to end
+    // (seed → slot → paytable → core settlement), not just in theory. Low risk keeps
+    // the variance tight so the realized figure converges cleanly; the EXACT edge of
+    // every risk level (incl. the high-variance tables) is proven in payouts.test.ts.
+    // Deterministic seeds → a stable proof, never a flaky sample.
+    const a = account({ creditLimit: 1e15 })
+    const stake = 1000
+    let staked = 0
+    let returned = 0
+    for (let nonce = 1; nonce <= 24000; nonce++) {
+      a.balance = 0
+      a.pending = 0
+      const rows = 8 + (nonce % 9) // sweep 8..16
+      const r = playPlinko(a, { stake, rows, risk: 'low', clientSeed: 'edge', nonce, serverSeed: 'edge-srv' })
+      staked += stake
+      returned += stake + r.profit // = stake × multiplier
+    }
+    const realizedRtp = returned / staked
+    expect(realizedRtp).toBeLessThan(1) // the house wins in the long run
+    expect(realizedRtp).toBeGreaterThan(0.95) // and it's the ~1% edge, not a fluke
+  })
 })

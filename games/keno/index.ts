@@ -5,6 +5,7 @@
 /** Self-declared identity for the games registry / casino hub. */
 export const kenoMeta = {
   key: 'keno',
+  supportsAdjustableEdge: true,
   name: 'Keno',
   tagline: 'Pick your numbers, watch the draw.',
   accent: '#22d3ee',

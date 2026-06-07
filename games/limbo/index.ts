@@ -5,6 +5,7 @@
 /** Self-declared identity for the games registry / casino hub. */
 export const limboMeta = {
   key: 'limbo',
+  supportsAdjustableEdge: true,
   name: 'Limbo',
   tagline: 'Set a target — will the multiplier clear it?',
   accent: '#a78bfa',

@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
-import { availableToWager } from '../../../core/index.js'
+import { maxBet } from '../../../core/index.js'
 import {
   DEFAULT_DICE_CONFIG,
   multiplierFor,
@@ -12,9 +12,22 @@ import {
   type DiceHouseConfig,
   type DiceRound,
 } from '../index.js'
-import { WinPopup } from '../../shared/WinPopup.js'
+import { Rules } from '../../shared/Rules.js'
+import { useResolving } from '../../shared/useResolving.js'
 import { play } from '../../../sound/index.js'
+import { NumberInput } from '../../shared/NumberInput.js'
+import { formatMoney, toCents } from '../../shared/money.js'
 import './dice.css'
+
+const DICE_RULES: ReactNode[] = [
+  'Set your bet, then drag the line and choose to roll Over or Under it.',
+  'A number from 0.00 to 100.00 is rolled. You win if it lands on your chosen side of the line.',
+  'A narrower target is less likely but pays more; a wider one wins often but pays less.',
+  <>
+    <strong>Payout = bet × multiplier</strong> — a narrower target pays a higher multiplier. The roll is
+    provably fair.
+  </>,
+]
 
 interface DiceGameProps {
   account: Account
@@ -22,12 +35,15 @@ interface DiceGameProps {
   onBalanceChange: () => void
 }
 
+/** ms between auto rolls — fast enough to feel live, slow enough to read each. */
+const AUTO_INTERVAL = 320
+
 export function DiceGame({
   account,
   houseConfig = DEFAULT_DICE_CONFIG,
   onBalanceChange,
 }: DiceGameProps) {
-  const [bet, setBet] = useState(10)
+  const [bet, setBet] = useState(1000) // cents ($10.00)
   const [target, setTarget] = useState(50.5)
   const [direction, setDirection] = useState<DiceDirection>('over')
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
@@ -36,14 +52,19 @@ export function DiceGame({
   const [round, setRound] = useState<DiceRound | null>(null)
   const [history, setHistory] = useState<{ roll: number; won: boolean }[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<'manual' | 'auto'>('manual')
+  const [autoOn, setAutoOn] = useState(false)
+  const autoTimerRef = useRef(0)
+  const rollRef = useRef<() => boolean>(() => false)
 
-  const available = availableToWager(account)
+  const available = maxBet(account)
   const chance = winChance(target, direction)
   const multiplier = multiplierFor(chance, houseConfig)
   const profit = Math.round(bet * (multiplier - 1))
   const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available
+  const resolving = useResolving(account.id)
 
-  function roll() {
+  function roll(): boolean {
     setError(null)
     try {
       nonceRef.current += 1
@@ -58,19 +79,49 @@ export function DiceGame({
       setRound(r)
       setHistory((h) => [{ roll: r.roll, won: r.won }, ...h].slice(0, 16))
       onBalanceChange()
-      play('roll')
+      play('dice') // a soft tumble of the dice, not a hard whoosh
       play(r.won ? 'win' : 'lose')
+      return true
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+      return false
     }
   }
+  rollRef.current = roll
+
+  function startAuto() {
+    setAutoOn(true)
+    clearInterval(autoTimerRef.current)
+    autoTimerRef.current = window.setInterval(() => {
+      if (!rollRef.current()) stopAuto() // out of funds → stop
+    }, AUTO_INTERVAL)
+  }
+  function stopAuto() {
+    setAutoOn(false)
+    clearInterval(autoTimerRef.current)
+  }
+  useEffect(() => () => clearInterval(autoTimerRef.current), [])
+  useEffect(() => {
+    if (mode === 'manual') stopAuto()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
 
   return (
     <div className="dice">
       <section className="dice-panel">
         <div className="bet-tabs">
-          <button className="bet-tab is-active">Manual</button>
-          <button className="bet-tab" disabled title="Coming soon">
+          <button
+            className={`bet-tab ${mode === 'manual' ? 'is-active' : ''}`}
+            disabled={autoOn}
+            onClick={() => setMode('manual')}
+          >
+            Manual
+          </button>
+          <button
+            className={`bet-tab ${mode === 'auto' ? 'is-active' : ''}`}
+            disabled={autoOn}
+            onClick={() => setMode('auto')}
+          >
             Auto
           </button>
         </div>
@@ -79,14 +130,13 @@ export function DiceGame({
           <span className="field-label">Bet amount</span>
           <div className="field-bet">
             <span className="field-prefix">$</span>
-            <input
+            <NumberInput
               className="field-input"
-              type="number"
-              min={1}
-              value={bet}
-              onChange={(e) => setBet(Math.floor(Number(e.target.value)) || 0)}
+              value={bet / 100}
+              min={0.01}
+              onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
             />
-            <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.floor(b / 2)))}>
+            <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
               ½
             </button>
             <button className="chip" onClick={() => setBet((b) => Math.min(available, b * 2))}>
@@ -99,21 +149,29 @@ export function DiceGame({
           <span className="field-label">Profit on win</span>
           <div className="field-bet is-readonly">
             <span className="field-prefix">$</span>
-            <span className="field-static">{Math.abs(profit).toLocaleString('en-US')}</span>
+            <span className="field-static">
+              {(Math.abs(profit) / 100).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
         </label>
 
-        <button className="action action-bet" onClick={roll} disabled={betInvalid}>
-          Bet
-        </button>
+        {mode === 'manual' ? (
+          <button className="action action-bet" onClick={roll} disabled={betInvalid || resolving}>
+            Play
+          </button>
+        ) : autoOn ? (
+          <button className="action action-stop" onClick={stopAuto}>
+            Stop Auto
+          </button>
+        ) : (
+          <button className="action action-bet" onClick={startAuto} disabled={betInvalid || resolving}>
+            Start Auto
+          </button>
+        )}
 
-        <p className="dice-hint">
-          {round
-            ? round.won
-              ? `Rolled ${round.roll.toFixed(2)} — won ${formatPoints(Math.round(bet * (round.multiplier - 1)))}`
-              : `Rolled ${round.roll.toFixed(2)} — lost ${formatPoints(bet)}`
-            : 'Set your odds and roll'}
-        </p>
         {error && <p className="dice-error">{error}</p>}
         {bet > available && !error && (
           <p className="dice-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
@@ -157,10 +215,9 @@ export function DiceGame({
           </button>
           <Field label="Win chance" value={chance.toFixed(4)} suffix="%" />
         </div>
-        {round?.won && (
-          <WinPopup multiplier={round.multiplier} amount={Math.round(bet * (round.multiplier - 1))} />
-        )}
       </section>
+
+      <Rules points={DICE_RULES} />
 
       <Fairness
         round={round}
@@ -285,7 +342,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function formatPoints(points: number): string {
-  const sign = points < 0 ? '−' : ''
-  return `${sign}$${Math.abs(points).toLocaleString('en-US')}`
+function formatPoints(cents: number): string {
+  return formatMoney(cents)
 }

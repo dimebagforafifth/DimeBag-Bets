@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Account } from './types.js'
 import {
+  adjustBalance,
   availableToWager,
   placeWager,
   resolveAtMultiplier,
@@ -225,5 +226,61 @@ describe('settleWeek', () => {
     const a = account()
     placeWager(a, 100)
     expect(() => settleWeek(a)).toThrow(/still pending/)
+  })
+})
+
+describe('per-head min bet + max payout', () => {
+  it('rejects a stake below the min bet, accepts at the floor', () => {
+    const a = account({ minWager: 500 })
+    expect(() => placeWager(a, 100)).toThrow(/below the minimum/)
+    expect(placeWager(a, 500).stake).toBe(500)
+  })
+
+  it('caps a winning profit at maxPayout (resolveWager)', () => {
+    const a = account({ creditLimit: 100_000, maxPayout: 1000 })
+    resolveWager(a, placeWager(a, 1000), 'win', 10) // natural +9000, capped to +1000
+    expect(a.balance).toBe(1000)
+  })
+
+  it('caps profit at maxPayout (resolveAtMultiplier), but never caps a loss/partial', () => {
+    const a = account({ creditLimit: 100_000, maxPayout: 1000 })
+    resolveAtMultiplier(a, placeWager(a, 1000), 5) // +4000 → capped +1000
+    expect(a.balance).toBe(1000)
+    const b = account({ creditLimit: 100_000, maxPayout: 1000 })
+    resolveAtMultiplier(b, placeWager(b, 1000), 0.5) // partial loss −500, cap irrelevant
+    expect(b.balance).toBe(-500)
+  })
+
+  it('records the EFFECTIVE multiplier when a payout is capped (display stays truthful)', () => {
+    const a = account({ creditLimit: 100_000, maxPayout: 1000 })
+    const w = a && placeWager(a, 1000)
+    resolveWager(a, w, 'win', 10) // natural 10× → profit 9000 capped to 1000 → effective 2×
+    expect(w.payoutMultiplier).toBe(2)
+
+    const b = account({ creditLimit: 100_000, maxPayout: 1000 })
+    const w2 = placeWager(b, 1000)
+    resolveAtMultiplier(b, w2, 5) // +4000 capped 1000 → effective 2×
+    expect(w2.payoutMultiplier).toBe(2)
+  })
+})
+
+describe('adjustBalance (manual figure adjustment)', () => {
+  it('credits and debits the figure without touching pending', () => {
+    const a = account({ balance: 0, pending: 50 })
+    adjustBalance(a, 5000) // a re-credit / comp
+    expect(a.balance).toBe(5000)
+    adjustBalance(a, -2000) // a debit / correction
+    expect(a.balance).toBe(3000)
+    expect(a.pending).toBe(50) // holds are untouched
+  })
+
+  it('is a deliberate override — not bounded by the credit limit', () => {
+    const a = account({ creditLimit: 1000, balance: 0 })
+    adjustBalance(a, -5000) // can push past the credit limit (an operator correction)
+    expect(a.balance).toBe(-5000)
+  })
+
+  it('rejects a non-integer delta', () => {
+    expect(() => adjustBalance(account(), 12.5)).toThrow(/whole number/)
   })
 })

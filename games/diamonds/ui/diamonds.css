@@ -1,0 +1,189 @@
+/* Diamonds view — five gems pop-reveal across the stage (CLAUDE.md §2, §7).
+   Shared controls/fairness live in app/theme.css. */
+.diamonds {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.diamonds-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.diamonds-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.diamonds-hint {
+  margin: 0;
+  align-self: flex-start;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.diamonds-error {
+  color: var(--red);
+  font-size: 12.5px;
+  margin: 0;
+}
+
+/* ---- history pills (top of the stage) ---- */
+.diamonds-historybar {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+  justify-content: flex-end;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(8, 18, 26, 0.7);
+  color: var(--muted);
+}
+.pill-win {
+  color: var(--gem);
+  border-color: rgba(var(--gem-glow), 0.4);
+}
+.pill-loss {
+  color: var(--muted);
+}
+
+/* ---- the five gem slots ---- */
+.diamonds-gems-wrap {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 6px;
+}
+.diamonds-gems {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.diamonds-slot {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.diamonds-slot.is-revealed {
+  background: color-mix(in srgb, var(--gem-color) 16%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--gem-color) 55%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--gem-color) 35%, transparent);
+}
+.diamonds-slot-empty {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.diamonds-gem {
+  width: 44px;
+  height: 44px;
+  animation: diamonds-pop 0.32s cubic-bezier(0.18, 1.4, 0.4, 1) both;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+}
+@keyframes diamonds-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+/* gem facets — tinted to the gem's `color`, shaded for top-left light */
+.gem-light {
+  fill: color-mix(in srgb, currentColor 55%, #ffffff);
+}
+.gem-mid {
+  fill: currentColor;
+}
+.gem-dark {
+  fill: color-mix(in srgb, currentColor 70%, #000000);
+}
+.gem-table {
+  fill: color-mix(in srgb, currentColor 40%, #ffffff);
+}
+.gem-spark {
+  fill: #ffffff;
+}
+
+/* ---- the dealt pattern name + multiplier ---- */
+.diamonds-result {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  min-height: 22px;
+  text-align: center;
+  color: var(--text);
+}
+
+/* ---- paytable legend: pattern → multiplier, current row highlighted ---- */
+.diamonds-paytable {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+.diamonds-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.diamonds-tier-name {
+  font-size: 12px;
+  color: var(--muted);
+}
+.diamonds-tier-mult {
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.diamonds-tier.is-zero .diamonds-tier-mult {
+  color: var(--muted);
+}
+.diamonds-tier.is-current {
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--gem) 22%, var(--surface-2));
+  box-shadow: 0 0 0 1px var(--gem), 0 0 14px rgba(var(--gem-glow), 0.45);
+}
+.diamonds-tier.is-current.is-zero {
+  background: color-mix(in srgb, var(--red) 18%, var(--surface-2));
+  box-shadow: 0 0 0 1px var(--red), 0 0 14px rgba(237, 65, 99, 0.35);
+}
+
+@media (max-width: 640px) {
+  .diamonds {
+    grid-template-columns: 1fr;
+  }
+}

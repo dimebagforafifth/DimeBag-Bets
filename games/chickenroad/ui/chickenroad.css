@@ -1,0 +1,550 @@
+/* Chicken Road view — a real road the chicken crosses (CLAUDE.md §2). Shared
+   controls/fairness live in app/theme.css. */
+.chick {
+  width: 100%;
+  max-width: 860px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.chick-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chick-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.chick-diffs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chick-diffs .chip {
+  flex: 1 1 40%;
+  text-align: center;
+  padding: 7px 0;
+}
+.chick-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.chick-historybar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+  justify-content: flex-end;
+}
+
+/* ---- the road ---- */
+.chick-scroll {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  scrollbar-width: thin;
+}
+/* the shared <defs> svg takes no layout space */
+.chick-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.chick-road {
+  position: relative;
+  height: 264px;
+  /* real asphalt: a fine grain (SVG fractal-noise tile) over a faint shoulder
+     gradient, with an inset vignette so the road reads lit from above. */
+  background-color: #23292f;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #2f373f 0%, #262d34 50%, #2f373f 100%);
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.5);
+}
+.chick-road::before,
+.chick-road::after {
+  /* solid white road edges, top and bottom */
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(233, 238, 242, 0.55);
+}
+.chick-road::before {
+  top: 30px;
+}
+.chick-road::after {
+  bottom: 30px;
+}
+
+/* the concrete sidewalk the chicken starts on — paver seams + a raised curb edge
+   that casts a soft shadow onto the asphalt */
+.chick-kerb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: repeating-linear-gradient(180deg, transparent 0 40px, rgba(0, 0, 0, 0.16) 40px 42px),
+    linear-gradient(180deg, #8a9099, #757b84);
+  border-right: 4px solid #cfd6dd;
+  box-shadow: inset -10px 0 14px rgba(0, 0, 0, 0.28), 3px 0 9px rgba(0, 0, 0, 0.45);
+  z-index: 1;
+}
+
+/* the roadside traffic light, standing at the head of the street */
+.chick-trafficlight {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  width: 24px;
+  height: 80px;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
+}
+.chick-trafficlight svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* the lanes */
+.chick-lanes {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+}
+.chick-lane {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  cursor: default;
+  transition: background 0.15s ease;
+}
+.chick-lane.is-next {
+  cursor: pointer;
+  background: rgba(var(--gem-glow), 0.12);
+}
+.chick-lane.is-next:hover {
+  background: rgba(var(--gem-glow), 0.2);
+}
+.chick-lane.is-current {
+  background: rgba(255, 178, 58, 0.1);
+}
+.chick-lane.is-passed {
+  background: rgba(var(--gem-glow), 0.05);
+}
+.chick-lane.is-crash {
+  background: rgba(237, 65, 99, 0.16);
+}
+/* worn white dashed lane line down each lane divider (right edge) */
+.chick-lane-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -2px;
+  width: 4px;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(236, 238, 232, 0.5) 0 16px,
+    transparent 16px 40px
+  );
+  border-radius: 2px;
+}
+
+/* the landing spot the chicken jumps onto — one per lane, at the chicken's row,
+   showing that lane's multiplier. The chicken sits on its current spot; spots
+   ahead read as targets (next glows green), spots behind dim once cleared. */
+.chick-spot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 18, 24, 0.5);
+  border: 2px dashed rgba(233, 238, 242, 0.22);
+  z-index: 1;
+}
+.chick-spot-mult {
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.chick-lane.is-next .chick-spot {
+  border-style: solid;
+  border-color: rgba(var(--gem-glow), 0.75);
+  background: rgba(var(--gem-glow), 0.16);
+  box-shadow: 0 0 14px rgba(var(--gem-glow), 0.35);
+}
+.chick-lane.is-next .chick-spot-mult {
+  color: var(--gem);
+}
+.chick-lane.is-current .chick-spot {
+  border-style: solid;
+  border-color: rgba(255, 178, 58, 0.7);
+}
+.chick-lane.is-passed .chick-spot {
+  opacity: 0.45;
+}
+.chick-lane.is-crash .chick-spot {
+  border-style: solid;
+  border-color: rgba(237, 65, 99, 0.75);
+  background: rgba(237, 65, 99, 0.18);
+}
+.chick-lane.is-crash .chick-spot-mult {
+  color: var(--red);
+}
+
+/* ---- the chicken ---- */
+.chick-runner {
+  position: absolute;
+  top: 50%;
+  /* the bird's drawn silhouette sits slightly right of its SVG centre (it faces
+     right), so nudge left to centre it on the lane; the extra upward offset lifts
+     it a little above the spot circle while its horizontal jump path is unchanged */
+  transform: translate(calc(-50% - 2px), calc(-50% - 14px));
+  z-index: 4;
+  transition: left 0.4s cubic-bezier(0.34, 1.3, 0.5, 1);
+  pointer-events: none;
+}
+.chick-svg {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.45));
+}
+.chick-svg svg {
+  width: 100%;
+  height: 100%;
+}
+.chick-svg.is-walk {
+  animation: chick-hop 0.42s ease;
+}
+.chick-svg.is-walk .chick-legs {
+  animation: chick-step 0.42s ease;
+}
+/* the animated death: brace → SLAM flat (≈0.26s, as the car passes over) →
+   rebound → rest squashed. transform-origin bottom so it flattens onto the road. */
+.chick-svg.is-roadkill {
+  transform-origin: center bottom;
+  animation: chick-roadkill 0.64s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+/* the settled roadkill splat — a small squish-in so the swap from the slam is seamless */
+.chick-svg.is-splat {
+  transform-origin: center bottom;
+  animation: chick-settle 0.2s ease-out;
+}
+@keyframes chick-roadkill {
+  0% {
+    transform: scaleX(1) scaleY(1) rotate(0deg);
+  }
+  22% {
+    transform: scaleX(0.9) scaleY(1.16) rotate(-6deg);
+  } /* flinch up as the car bears down */
+  40% {
+    transform: scaleX(1.62) scaleY(0.16) rotate(0deg);
+  } /* SLAM — run flat */
+  56% {
+    transform: scaleX(1.34) scaleY(0.42);
+  } /* rebound */
+  72% {
+    transform: scaleX(1.5) scaleY(0.24);
+  } /* squash again */
+  100% {
+    transform: scaleX(1.42) scaleY(0.3);
+  } /* rest flat */
+}
+@keyframes chick-settle {
+  0% {
+    transform: scaleX(1.3) scaleY(0.55);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scaleX(1) scaleY(1);
+    opacity: 1;
+  }
+}
+@keyframes chick-hop {
+  0% {
+    transform: translateY(0) scaleY(1);
+  }
+  35% {
+    transform: translateY(-16px) scaleY(1.06);
+  }
+  70% {
+    transform: translateY(0) scaleY(0.92);
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+}
+@keyframes chick-step {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+@keyframes chick-pop {
+  0% {
+    transform: translateX(-50%) scale(0.2);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.chick-car-body {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* ---- the bust: a car drives straight THROUGH the chicken ----
+   On a bust the chicken has stepped onto the crash spot; a car barrels down that
+   lane (over the chicken, z5) and drives clean off the bottom at a steady speed —
+   it never stops, it just runs through as the chicken flattens beneath it. */
+.chick-hitcar {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 42px;
+  margin-left: -21px;
+  z-index: 5;
+  animation: chick-hit 0.45s linear forwards;
+}
+.chick-hitcar .chick-car-body {
+  width: 100%;
+}
+@keyframes chick-hit {
+  0% {
+    transform: translateY(-130px);
+  }
+  100% {
+    transform: translateY(300px); /* drives clean off the bottom — never stops */
+  }
+}
+
+/* ---- ambient traffic: vehicles driving by on lanes you can't reach yet ----
+   Each future lane runs one looping vehicle straight down the road. Duration +
+   delay are set inline per lane so the traffic flows at varied speeds, scattered. */
+.chick-traffic {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 36px;
+  margin-left: -18px;
+  z-index: 2; /* on the road, under the chicken (z4) */
+  pointer-events: none;
+  animation-name: chick-drive-by;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.chick-traffic.is-truck {
+  width: 38px;
+  margin-left: -19px;
+}
+
+/* ---- flashing police light bar ---- */
+.chick-flash-a {
+  animation: chick-flash-a 0.66s steps(1, end) infinite;
+}
+.chick-flash-b {
+  animation: chick-flash-b 0.66s steps(1, end) infinite;
+}
+.chick-glow-a {
+  animation: chick-glow-a 0.66s steps(1, end) infinite;
+}
+.chick-glow-b {
+  animation: chick-glow-b 0.66s steps(1, end) infinite;
+}
+@keyframes chick-flash-a {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0.12; }
+}
+@keyframes chick-flash-b {
+  0%, 45% { opacity: 0.12; }
+  50%, 100% { opacity: 1; }
+}
+@keyframes chick-glow-a {
+  0%, 45% { opacity: 0.5; }
+  50%, 100% { opacity: 0.05; }
+}
+@keyframes chick-glow-b {
+  0%, 45% { opacity: 0.05; }
+  50%, 100% { opacity: 0.5; }
+}
+.chick-veh {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+/* in from above the road, clean off the bottom, then loop */
+@keyframes chick-drive-by {
+  0% {
+    transform: translateY(-96px);
+  }
+  100% {
+    transform: translateY(280px);
+  }
+}
+
+/* ---- the stone block dropped beside a cleared spot ----
+   A heavy boulder falls out of the sky and lands to the LEFT of the spot's
+   multiplier circle (on the boundary the chicken just crossed), blocking the
+   lane behind without covering the multiplier. */
+.chick-block {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  margin-left: -27px; /* sits just left of the circle */
+  margin-top: -82px; /* raised up the lane */
+  z-index: 3;
+  transform-origin: center bottom;
+  /* the fall STARTS on the click and LANDS at ~0.32s — a hair before the chicken
+     reaches the next spot (~0.4s), and after it has slid clear of this one, so it
+     reads as "sealed behind me" without ever dropping on the bird. */
+  animation: chick-drop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+}
+.chick-block-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5));
+}
+@keyframes chick-drop {
+  0% {
+    transform: translateY(-240px) rotate(-8deg);
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  64% {
+    transform: translateY(0) rotate(0deg); /* SLAM down (~0.32s) — just before the chicken reaches the next spot */
+  }
+  78% {
+    transform: translateY(-6px) rotate(1deg); /* bounce */
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* ---- the asphalt cracks + dust kicked up where the stone slams down ----
+   Both are children of .chick-block, so they ride along as you reposition it.
+   They stay hidden through the fall and burst in at the slam (~64% of the drop),
+   the cracks then remaining while the dust expands and fades. */
+.chick-impact-cracks,
+.chick-impact-dust {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 56px;
+  margin-left: -28px;
+  transform-origin: center bottom;
+  pointer-events: none;
+  z-index: -1; /* behind the stone within its own stacking context */
+}
+.chick-impact-cracks {
+  animation: chick-impact-crack 0.5s ease-out forwards;
+}
+.chick-impact-dust {
+  animation: chick-impact-dust 0.5s ease-out forwards;
+}
+.chick-impact-cracks svg,
+.chick-impact-dust svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+@keyframes chick-impact-crack {
+  0%,
+  60% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes chick-impact-dust {
+  0%,
+  60% {
+    opacity: 0;
+    transform: scale(0.4) translateY(2px);
+  }
+  72% {
+    opacity: 0.85;
+    transform: scale(1) translateY(-1px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7) translateY(-8px);
+  }
+}
+
+/* respect reduced-motion: stop the strobing light bar and the looping traffic;
+   keep both lamps lit so the cruiser still reads as a police car */
+@media (prefers-reduced-motion: reduce) {
+  .chick-flash-a,
+  .chick-flash-b,
+  .chick-glow-a,
+  .chick-glow-b,
+  .chick-traffic {
+    animation: none;
+  }
+  .chick-flash-a,
+  .chick-flash-b {
+    opacity: 1;
+  }
+  .chick-glow-a,
+  .chick-glow-b {
+    opacity: 0.35;
+  }
+  /* skip the dust puff; leave the cracks shown statically */
+  .chick-impact-dust {
+    animation: none;
+    opacity: 0;
+  }
+  .chick-impact-cracks {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .chick {
+    grid-template-columns: 1fr;
+  }
+}

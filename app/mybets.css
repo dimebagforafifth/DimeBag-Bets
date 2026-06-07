@@ -1,0 +1,189 @@
+/* The player dashboard (My Bets). Reuses the shared theme tokens and the
+   .ledger-* table/stat classes; this file only adds the figure strip, the
+   section headings, and the per-game breakdown. Clean-above-all (CLAUDE.md §2). */
+.mybets {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.mybets-head {
+  margin-bottom: 6px;
+}
+.mybets-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.mybets-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.mybets-section {
+  margin: 22px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+/* the figure strip — the player's standing, four blocks */
+.mybets-figure {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.mybets-fig {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.mybets-fig-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.mybets-fig-value {
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+.mybets-fig-value.is-win {
+  color: #4fd18a;
+}
+.mybets-fig-value.is-loss {
+  color: #ff6b81;
+}
+.mybets-fig-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* the statistics grid auto-fits so 8 stats wrap cleanly */
+.mybets-stats {
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 14px;
+}
+
+/* per-game breakdown table */
+.mybets-games {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.mybets-game-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1.2fr;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--line);
+}
+.mybets-game-row:last-child {
+  border-bottom: none;
+}
+.mybets-game-row.is-head {
+  background: var(--surface-2);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.mybets-game-name {
+  font-weight: 700;
+}
+.mybets-net.is-win {
+  color: #4fd18a;
+  font-weight: 800;
+}
+.mybets-net.is-loss {
+  color: #ff6b81;
+  font-weight: 800;
+}
+
+/* by-side summary — two cards answering "is the casino or the sportsbook up?" */
+.mybets-sides {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.mybets-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.mybets-side-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.mybets-side-name {
+  font-size: 14px;
+  font-weight: 800;
+}
+.mybets-side-count {
+  font-size: 11px;
+  color: var(--muted);
+}
+.mybets-side-net {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+.mybets-side-net.is-win {
+  color: #4fd18a;
+}
+.mybets-side-net.is-loss {
+  color: #ff6b81;
+}
+.mybets-side-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* side filter — chips scope the stats/breakdown/feed to one side */
+.mybets-filter {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+/* the bet feed reuses .ledger-table / .ledger-row; just give it top room */
+.mybets .ledger-table {
+  margin-top: 12px;
+  max-height: 420px;
+}
+
+@media (max-width: 720px) {
+  .mybets-figure {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mybets-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mybets-game-row {
+    grid-template-columns: 1.6fr 0.8fr 1fr 1fr;
+  }
+}

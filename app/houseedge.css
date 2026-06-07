@@ -1,0 +1,154 @@
+/* House edge / RTP manager control — a clean card consistent with the rest of
+   the management section (CLAUDE.md §2). */
+.houseedge {
+  width: 100%;
+  max-width: 720px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.houseedge-head {
+  margin-bottom: 8px;
+}
+.houseedge-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+.houseedge-sub {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.houseedge-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* one game per row: name · slider+input · readout · reset, with an optional
+   warning line spanning underneath */
+.houseedge-row {
+  display: grid;
+  grid-template-columns: 140px 1fr auto auto;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.houseedge-row:first-child {
+  border-top: none;
+}
+.houseedge-game {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.houseedge-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.houseedge-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.houseedge-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.houseedge-range {
+  flex: 1 1 auto;
+  min-width: 80px;
+  accent-color: var(--accent, #ffb84d);
+  cursor: pointer;
+}
+.houseedge-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.houseedge-input .field-input {
+  width: 56px;
+  text-align: right;
+}
+.houseedge-pct {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.houseedge-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+  min-width: 64px;
+}
+.houseedge-rtp {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.houseedge-rtp.is-warn {
+  color: var(--red, #ec4863);
+}
+.houseedge-edge {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.houseedge-reset {
+  flex: none;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.houseedge-reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.houseedge-reset:not(:disabled):hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+.houseedge-warn-line,
+.houseedge-hint-line {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.houseedge-warn-line {
+  color: var(--red, #ec4863);
+}
+.houseedge-hint-line {
+  color: var(--muted);
+}
+
+@media (max-width: 620px) {
+  .houseedge-row {
+    grid-template-columns: 1fr auto;
+    gap: 8px 10px;
+  }
+  .houseedge-control {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}

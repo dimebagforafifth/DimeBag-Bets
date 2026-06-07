@@ -1,0 +1,198 @@
+/* the casino column: the game (or lobby) with the ledger stacked underneath */
+.casino-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* The casino ledger — a clean transaction table under the games. Uses the
+   shared theme tokens so it sits naturally in the shell. */
+.ledger {
+  width: 100%;
+  max-width: 920px;
+  margin: 4px auto 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px 20px;
+}
+.ledger-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ledger-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+.ledger-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.ledger-clear {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.ledger-clear:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+/* summary strip */
+.ledger-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+.ledger-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+.ledger-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.ledger-stat-value {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.ledger-stat-value.is-win {
+  color: #4fd18a;
+}
+.ledger-stat-value.is-loss {
+  color: #ff6b81;
+}
+
+.ledger-empty {
+  margin: 16px 0 2px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--muted);
+}
+
+/* the table */
+.ledger-table {
+  margin-top: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.ledger-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.1fr 1fr 1fr 0.9fr;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ledger-row:last-child {
+  border-bottom: none;
+}
+/* a game-specific ledger drops the (redundant) Game column */
+.ledger-table.is-scoped .ledger-row {
+  grid-template-columns: 1fr 1.1fr 1fr 1fr 0.9fr;
+}
+.ledger-row-head {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  font-weight: 700;
+  z-index: 1;
+}
+.ledger-num {
+  text-align: right;
+}
+.ledger-game {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ledger-profit.is-win {
+  color: #4fd18a;
+  font-weight: 800;
+}
+.ledger-profit.is-loss {
+  color: #ff6b81;
+  font-weight: 800;
+}
+.ledger-profit.is-push {
+  color: var(--muted);
+}
+
+/* result chip */
+.ledger-result {
+  justify-self: end;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.ledger-row-head .ledger-result {
+  background: none;
+  padding: 0;
+  color: var(--muted);
+  letter-spacing: 0.6px;
+}
+.ledger-result.is-win {
+  color: #4fd18a;
+  background: rgba(79, 209, 138, 0.14);
+}
+.ledger-result.is-loss {
+  color: #ff6b81;
+  background: rgba(255, 107, 129, 0.14);
+}
+.ledger-result.is-push {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+@media (max-width: 720px) {
+  .ledger-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* drop the Payout column on narrow screens to keep it readable */
+  .ledger-table:not(.is-scoped) .ledger-row {
+    grid-template-columns: 1.3fr 1fr 1fr 1fr 0.9fr;
+  }
+  .ledger-table:not(.is-scoped) .ledger-row > .ledger-num:nth-child(4) {
+    display: none;
+  }
+  /* scoped (no Game column): Payout is the 3rd cell here */
+  .ledger-table.is-scoped .ledger-row {
+    grid-template-columns: 1fr 1fr 1fr 0.9fr;
+  }
+  .ledger-table.is-scoped .ledger-row > .ledger-num:nth-child(3) {
+    display: none;
+  }
+}

@@ -1,0 +1,97 @@
+.sh {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.sh-head {
+  margin-bottom: 10px;
+}
+.sh-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+.sh-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.sh-empty {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.sh-list {
+  display: flex;
+  flex-direction: column;
+}
+.sh-row {
+  display: grid;
+  grid-template-columns: 160px 90px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 4px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.sh-row:first-child {
+  border-top: none;
+}
+.sh-when {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sh-net {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.sh-net.is-up {
+  color: #3fb98a;
+}
+.sh-net.is-down {
+  color: var(--red);
+}
+.sh-meta {
+  color: var(--muted);
+}
+.sh-status {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.sh-status.is-collected {
+  color: #3fb98a;
+}
+.sh-actions {
+  display: flex;
+  gap: 6px;
+}
+.sh-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sh-btn:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+
+@media (max-width: 720px) {
+  .sh-row {
+    grid-template-columns: 1fr auto;
+    row-gap: 4px;
+  }
+  .sh-actions {
+    grid-column: 1 / -1;
+  }
+}

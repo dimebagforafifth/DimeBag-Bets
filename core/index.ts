@@ -11,8 +11,10 @@ export {
   resolveWager,
   resolveAtMultiplier,
   settleWeek,
+  adjustBalance,
   grant,
   onWagerResolved,
+  onWagerPlaced,
   onGrant,
 } from './core.js'
-export type { ResolveEvent, GrantEvent } from './core.js'
+export type { ResolveEvent, PlaceEvent, GrantEvent } from './core.js'

@@ -6,6 +6,7 @@
 /** Self-declared identity for the games registry / casino hub. */
 export const minesMeta = {
   key: 'mines',
+  supportsAdjustableEdge: true,
   name: 'Mines',
   tagline: 'Uncover gems, dodge the mines.',
   accent: '#10b46d',

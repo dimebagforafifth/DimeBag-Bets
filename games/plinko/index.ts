@@ -5,6 +5,7 @@
 /** Self-declared identity for the games registry / casino hub. */
 export const plinkoMeta = {
   key: 'plinko',
+  supportsAdjustableEdge: true,
   name: 'Plinko',
   tagline: 'Drop the ball — ride it down the pegs.',
   accent: '#ff4d6d',
@@ -15,10 +16,13 @@ export {
   MAX_ROWS,
   RISKS,
   payouts,
+  computePlinkoTable,
+  BASE_RTP,
   slotProbabilities,
   rtpOf,
+  DEFAULT_PLINKO_CONFIG,
 } from './payouts.js'
-export type { PlinkoRisk } from './payouts.js'
+export type { PlinkoRisk, PlinkoHouseConfig } from './payouts.js'
 
 export { dropBall, verifyDrop, hashServerSeed } from './fair.js'
 export type { PlinkoDrop } from './fair.js'

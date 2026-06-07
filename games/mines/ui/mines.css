@@ -108,12 +108,20 @@
   box-shadow: none; /* revealed = flat, no outlines */
   background: var(--bg);
 }
-.tile-gem {
+/* Mines gems run brighter & greener than the shared treasure-green: re-point the
+   two gem variables locally and every facet (which derives from them) lights up
+   at once — a lively, jewel-bright emerald that pops on the dark board. Scoped to
+   .tile-gem so the rest of the app (buttons, win text, Keno's gem) is untouched. */
+.tile-gem,
+.tile-gem-dim {
+  --gem: #1fe06b;
+  --gem-glow: 31, 224, 107;
   color: var(--gem);
 }
 /* make the gem look precious: strong green glow + a satisfying reveal pop */
 .tile-gem .gem {
-  filter: drop-shadow(0 0 8px rgba(var(--gem-glow), 0.65));
+  filter: drop-shadow(0 0 10px rgba(var(--gem-glow), 0.8))
+    drop-shadow(0 0 3px rgba(var(--gem-glow), 0.9));
   animation: gem-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .gem-sparkle {

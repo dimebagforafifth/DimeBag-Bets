@@ -4,6 +4,6 @@
  * shell mounts <SoundToggle/> for the one mute control.
  */
 
-export { play, isSoundEnabled, setSoundEnabled, toggleSound, subscribeSound } from './engine.js'
+export { play, isSoundEnabled, setSoundEnabled, toggleSound, subscribeSound, startTraffic, stopTraffic } from './engine.js'
 export type { SoundName, PlayOptions } from './engine.js'
 export { SoundToggle, useSoundEnabled } from './SoundToggle.js'

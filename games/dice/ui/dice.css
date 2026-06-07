@@ -87,7 +87,7 @@
 }
 
 .dice-board {
-  padding: 0 11px; /* room for the handle to reach the ends */
+  padding: 76px 11px 0; /* top room for the dice cube to float above the bar */
 }
 .dice-ticks {
   display: flex;
@@ -109,6 +109,8 @@
   position: absolute;
   top: 0;
   height: 100%;
+  /* glide the colour when the over/under side flips, for a smooth swap */
+  transition: background 0.28s ease;
 }
 .zone-lose {
   left: 0;
@@ -168,41 +170,71 @@
   cursor: pointer;
 }
 
-/* the rolled value drops onto the bar */
+/* The rolled value rides above the bar as a clean white chip with a small
+   pointer aiming at the exact spot it landed, gliding smoothly into place.
+   The number is tinted green on a win, red on a loss. (This replaces the win
+   popup for Dice — the result reads right on the slider.) */
 .roll-flag {
   position: absolute;
-  bottom: 20px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transform: translateX(-50%);
-  transition: left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-  z-index: 2;
+  /* a longer, eased "expo-out" glide so the chip slides smoothly to its spot */
+  transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 3;
+  pointer-events: none;
 }
 .roll-flag-value {
-  display: block;
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 58px;
+  padding: 7px 15px;
+  /* a pill, not a square — reads clearly as the rolled value, never a die */
+  border-radius: 999px;
+  font-size: 16px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  padding: 4px 8px;
-  border-radius: 7px;
+  letter-spacing: -0.2px;
   color: #fff;
-  background: var(--bg);
-  border: 1px solid var(--line);
+  background: var(--rollc, #6b7a89);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 0 20px var(--rollglow, transparent);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  animation: roll-flag-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+/* a colour-matched caret pointing straight down to the exact spot on the bar */
 .roll-flag::after {
   content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -5px;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: var(--bg);
+  margin-top: -1px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 9px solid var(--rollc, #6b7a89);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
 }
-.roll-flag.is-win .roll-flag-value {
-  color: var(--gem);
-  border-color: var(--gem);
+/* the marker is tinted by the result: green when the roll wins, red when it loses */
+.roll-flag.is-win {
+  --rollc: var(--gem);
+  --rollglow: rgba(var(--gem-glow), 0.5);
 }
-.roll-flag.is-loss .roll-flag-value {
-  color: var(--red);
-  border-color: var(--red);
+.roll-flag.is-loss {
+  --rollc: var(--red);
+  --rollglow: rgba(237, 65, 99, 0.45);
+}
+@keyframes roll-flag-in {
+  0% {
+    transform: translateY(6px) scale(0.86);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 /* ---- the three Stake-style fields ---- */

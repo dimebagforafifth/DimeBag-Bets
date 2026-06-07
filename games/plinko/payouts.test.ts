@@ -63,14 +63,27 @@ describe('slotProbabilities', () => {
   })
 })
 
-describe('rtpOf — the edge is whatever Stake’s table yields, shown honestly', () => {
-  it('every table lands in a sane ~96–99.5% RTP band', () => {
+describe('house edge — every table is guaranteed −EV for the player', () => {
+  // RTP = Σ P(slot)·multiplier(slot) over the binomial. RTP < 1 means a player gets
+  // back LESS than they stake on average, so the house wins in the long run. This is
+  // an EXACT computation (a proof, not a sample), checked for every table — so the
+  // baked-in edge can never be silently erased by a future paytable edit.
+  it('every (rows × risk) table favours the house with a real edge', () => {
+    let maxRtp = 0
+    let minRtp = 1
     for (const rows of ALL_ROWS) {
       for (const risk of RISKS as PlinkoRisk[]) {
         const rtp = rtpOf(rows, risk)
-        expect(rtp).toBeGreaterThan(0.95)
-        expect(rtp).toBeLessThan(1.0)
+        // a real, meaningful edge on EVERY table — never razor-thin, never negative:
+        expect(rtp).toBeGreaterThan(0.97) // edge ≤ 3% (sane ceiling)
+        expect(rtp).toBeLessThan(0.995) // edge ≥ 0.5% (a genuine baked-in edge)
+        maxRtp = Math.max(maxRtp, rtp)
+        minRtp = Math.min(minRtp, rtp)
       }
     }
+    // The single strongest guarantee: even the MOST player-friendly table still
+    // favours the house. (Observed band ≈ 0.989–0.992 → 0.8%–1.1% edge.)
+    expect(maxRtp).toBeLessThan(1)
+    expect(minRtp).toBeGreaterThan(0.98)
   })
 })
