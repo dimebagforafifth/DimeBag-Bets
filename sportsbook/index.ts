@@ -1,0 +1,75 @@
+/**
+ * Sportsbook module public surface (CLAUDE.md §4, §5). The app shell and any
+ * caller import from here. Separate from the casino `games/` — its own section,
+ * sharing only the one `core` balance.
+ */
+
+/** Self-declared identity for the section nav. */
+export const sportsbookMeta = {
+  key: 'sportsbook',
+  name: 'Sportsbook',
+  tagline: 'Moneyline, spreads, totals & parlays — one balance.',
+  accent: '#3aa0ff',
+} as const
+
+export {
+  MAX_PARLAY_DECIMAL,
+  decimalFromAmerican,
+  americanFromDecimal,
+  impliedProbability,
+  formatAmerican,
+  parlayDecimal,
+  potentialReturn,
+} from './odds.js'
+
+export {
+  EVENTS,
+  LEAGUES,
+  findEvent,
+  gradeSelection,
+} from './markets.js'
+export type { MarketKind, Pick, Selection, MatchResult, GameEvent, EventStatus } from './markets.js'
+
+export {
+  priceTicket,
+  hasRelatedLegs,
+  placeTicket,
+  gradeTicket,
+  cashOutValue,
+  cashOutTicket,
+  CASHOUT_MARGIN,
+} from './engine.js'
+export type { TicketKind, TicketStatus, Ticket, PlaceTicketOptions } from './engine.js'
+
+export { liveWinProb, liveSelections, liveAmerican, liveDecimal, LIVE_MARGIN } from './live.js'
+
+export type { SportsbookFeed, FeedStatus, FeedHealth } from './provider.js'
+export { createMockFeed, stateAt } from './mockFeed.js'
+export { createStore } from './store.js'
+export type { SportsbookStore, SportsbookState, CreateStoreOptions } from './store.js'
+
+// The book overlay — the operator's line management (suspend / move line / set
+// vig) applied over the feed before players bet it. The trading desk edits it;
+// every player store reads it (see book/overlay.ts).
+export {
+  applyOverlay,
+  subscribeOverlay,
+  getOverlayVersion,
+  getAdjustment,
+  isEventSuspended,
+  isMarketSuspended,
+  isMarketAdjusted,
+  setMarketSuspended,
+  setEventSuspended,
+  nudgeLine,
+  setMargin,
+  resetMarket,
+  resetOverlay,
+} from './book/overlay.js'
+export type { MarketAdjustment } from './book/overlay.js'
+
+// Additional bet types (round robins, teasers, futures, boosts) layered on top
+// of the core ticket flow. The player slip uses the round-robin combinatorics to
+// expand a set of picks into its constituent parlays; all of it settles through
+// the same `core` figure (see ./bets).
+export { combinations, roundRobinParlayCount } from './bets/index.js'
