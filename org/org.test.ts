@@ -78,7 +78,7 @@ describe('tier placement rules', () => {
   })
 
   it('puts sub-agents directly under the manager', () => {
-    const { org, sa1 } = seedOrg()
+    const { sa1 } = seedOrg()
     expect(sa1.role).toBe('subagent')
     expect(sa1.parentId).toBe('mgr')
   })

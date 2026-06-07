@@ -6,11 +6,14 @@
   "description": "Points-based sportsbook + casino games on one shared credit/balance core.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "devDependencies": {
     "@types/node": "^20.19.41",
