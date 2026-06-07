@@ -1,4 +1,4 @@
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { getBook, getBookVersion, subscribeBook } from '../../../app/book-store.js'
 import { NumberInput } from '../../../games/shared/NumberInput.js'
 import { formatMoney, toCents } from '../../../games/shared/money.js'
@@ -6,6 +6,9 @@ import type { Role } from '../../../org/index.js'
 import { planBonus, type BonusType } from '../promotions.js'
 import { sendBonus } from '../send.js'
 import { promoStore } from '../promo-store.js'
+import { scheduleStore } from '../schedule-store.js'
+import { startScheduleRunner } from '../schedule-runner.js'
+import type { Recurrence } from '../schedule.js'
 import './promotions.css'
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -41,6 +44,16 @@ export function PromotionsPage() {
   const [note, setNote] = useState('')
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<'now' | 'schedule'>('now')
+  const [whenStr, setWhenStr] = useState('')
+  const [recurrence, setRecurrence] = useState<Recurrence>('once')
+
+  // Keep the schedule runner ticking while this page is open (the shell can also
+  // boot it; startScheduleRunner is idempotent).
+  useEffect(() => startScheduleRunner(), [])
+
+  const schedV = useSyncExternalStore(scheduleStore.subscribe, scheduleStore.version)
+  const upcoming = useMemo(() => scheduleStore.schedules().filter((s) => s.active), [schedV])
 
   // A live preview of who'd be credited (and the total), or why it can't send.
   const { plan, planError } = useMemo(() => {
@@ -51,16 +64,31 @@ export function PromotionsPage() {
     }
   }, [org, targetId, cents, type])
 
-  function send() {
+  const kind = type === 'freeplay' ? 'free play' : 'bonus'
+
+  function submit() {
     setResult(null)
     setError(null)
     try {
-      const r = sendBonus({ targetId, cents, type, note: note.trim() || undefined })
-      setResult(
-        `Sent ${formatMoney(r.perPlayer)} ${type === 'freeplay' ? 'free play' : 'bonus'} to ${r.players} player${
-          r.players === 1 ? '' : 's'
-        } — ${formatMoney(r.total)} total.`,
-      )
+      const draft = { targetId, cents, type, note: note.trim() || undefined }
+      if (mode === 'schedule') {
+        const fireAt = whenStr ? new Date(whenStr).getTime() : NaN
+        if (!Number.isFinite(fireAt)) throw new Error('pick a date & time to schedule')
+        if (fireAt < Date.now()) throw new Error('schedule a time in the future')
+        scheduleStore.add(draft, fireAt, recurrence)
+        setResult(
+          `Scheduled ${formatMoney(cents)} ${kind} ${recurrence === 'once' ? 'for' : 'starting'} ${new Date(
+            fireAt,
+          ).toLocaleString()}${recurrence === 'once' ? '' : ` · repeats ${recurrence}`}.`,
+        )
+      } else {
+        const r = sendBonus(draft)
+        setResult(
+          `Sent ${formatMoney(r.perPlayer)} ${kind} to ${r.players} player${r.players === 1 ? '' : 's'} — ${formatMoney(
+            r.total,
+          )} total.`,
+        )
+      }
       setNote('')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -138,6 +166,43 @@ export function PromotionsPage() {
           />
         </div>
 
+        <div className="mgr-field">
+          <span className="mgr-label">When</span>
+          <div className="mgr-toggle">
+            <button className={mode === 'now' ? 'is-on' : ''} onClick={() => setMode('now')}>
+              Send now
+            </button>
+            <button className={mode === 'schedule' ? 'is-on' : ''} onClick={() => setMode('schedule')}>
+              Schedule
+            </button>
+          </div>
+        </div>
+        {mode === 'schedule' && (
+          <div className="mgr-row">
+            <div className="mgr-field">
+              <span className="mgr-label">Date &amp; time</span>
+              <input
+                type="datetime-local"
+                className="mgr-input"
+                value={whenStr}
+                onChange={(e) => setWhenStr(e.target.value)}
+              />
+            </div>
+            <div className="mgr-field">
+              <span className="mgr-label">Repeat</span>
+              <select
+                className="mgr-select"
+                value={recurrence}
+                onChange={(e) => setRecurrence(e.target.value as Recurrence)}
+              >
+                <option value="once">Once</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className="mgr-promo-foot">
           <p className="mgr-plan">
             {planError ? (
@@ -150,14 +215,48 @@ export function PromotionsPage() {
               </>
             ) : null}
           </p>
-          <button className="mgr-send" onClick={send} disabled={!plan}>
-            Send bonus
+          <button className="mgr-send" onClick={submit} disabled={!plan}>
+            {mode === 'schedule' ? 'Schedule' : 'Send bonus'}
           </button>
         </div>
 
         {result && <p className="mgr-result is-ok">{result}</p>}
         {error && <p className="mgr-result is-err">{error}</p>}
       </section>
+
+      {upcoming.length > 0 && (
+        <section aria-label="Scheduled bonuses">
+          <h2 className="mgr-h2">Scheduled</h2>
+          <table className="mgr-table">
+            <thead>
+              <tr>
+                <th>Target</th>
+                <th>Type</th>
+                <th className="num">Each</th>
+                <th>Repeat</th>
+                <th>Next fire</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {upcoming.map((s) => (
+                <tr key={s.id}>
+                  <td>{org.members[s.draft.targetId]?.name ?? s.draft.targetId}</td>
+                  <td>{s.draft.type === 'freeplay' ? 'Free play' : 'Bonus'}</td>
+                  <td className="num">{formatMoney(s.draft.cents)}</td>
+                  <td>{s.recurrence}</td>
+                  <td className="mgr-dim">{new Date(s.fireAt).toLocaleString()}</td>
+                  <td className="num">
+                    <button className="mgr-mini" onClick={() => scheduleStore.cancel(s.id)}>
+                      Cancel
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <section aria-label="Sent campaigns">
         <h2 className="mgr-h2">Recent bonuses</h2>

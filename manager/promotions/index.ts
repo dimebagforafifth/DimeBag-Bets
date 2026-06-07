@@ -13,4 +13,7 @@ export {
   type PromoCampaign,
   type PromoLogDoc,
 } from './promo-store.js'
+export { nextFireAt, dueSchedules, type Recurrence, type ScheduledBonus } from './schedule.js'
+export { scheduleStore, createScheduleStore, type ScheduleStore, type ScheduleDoc } from './schedule-store.js'
+export { runDue, startScheduleRunner, type RunResult } from './schedule-runner.js'
 export { PromotionsPage } from './ui/PromotionsPage.js'
