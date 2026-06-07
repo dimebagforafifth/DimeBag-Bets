@@ -41,6 +41,11 @@ async function post(
   url: string,
   payload: unknown,
 ): Promise<{ ok: boolean; status: number }> {
+  // TODO(api): real outbound delivery plugs in HERE. Today this is the injected-fetch
+  // stub path — tests pass a fake fetch, and the live UI only fires if a manager has
+  // pasted their own webhook URL/token. Production Discord/Telegram delivery should
+  // move behind a server-side relay (CORS, retries, secret storage) instead of these
+  // client-side POSTs; keep this signature stable so that relay drops in unchanged.
   const res = await fetchImpl(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

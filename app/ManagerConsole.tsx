@@ -7,15 +7,25 @@ import { GamesPanel } from './GamesPanel.js'
 import { RiskPanel } from './RiskPanel.js'
 import { SettlementHistory } from './SettlementHistory.js'
 import { AuditPanel } from './AuditPanel.js'
+import {
+  ReportingPage,
+  CopilotPage,
+  PromotionsPage,
+  LoyaltyPage,
+  CommunicationPage,
+  BrandingPage,
+} from '../manager/index.js'
 import './manager-console.css'
 
 /**
  * The manager console shell (CLAUDE.md §2, §4) — one container with a sub-nav that
  * organizes the operator panels into sections instead of one long inline scroll. The
  * "Book" tab is the org console (players/agents/settlement/risk-flags + the sportsbook
- * Lines via its trading toggle); the rest are the durable-record + config panels this
- * backbone added. It owns layout only; each panel reads its own store and money still
- * flows through core (§3). (Auth/role-gating the console is deferred to the auth phase.)
+ * Lines via its trading toggle); the next tabs are the durable-record + config panels
+ * this backbone added; and the final group mounts the manager/* growth & insight suite
+ * (Reporting, Copilot, Promotions, Loyalty, Communication, Branding). It owns layout
+ * only — each page is self-contained and reads its own store, and money still flows
+ * through core (§3). (Auth/role-gating the console is deferred to the auth phase.)
  */
 export interface ManagerConsoleProps {
   org: Org
@@ -27,14 +37,35 @@ export interface ManagerConsoleProps {
   players: { id: string; name: string }[]
 }
 
-type Tab = 'book' | 'risk' | 'settlement' | 'games' | 'vip' | 'audit'
+type Tab =
+  | 'book'
+  | 'risk'
+  | 'settlement'
+  | 'games'
+  | 'vip'
+  | 'audit'
+  | 'reporting'
+  | 'copilot'
+  | 'promotions'
+  | 'loyalty'
+  | 'communication'
+  | 'branding'
 const TABS: { key: Tab; label: string }[] = [
+  // Operational backbone (players, money, risk, audit).
   { key: 'book', label: 'Players & Agents' },
   { key: 'risk', label: 'Risk' },
   { key: 'settlement', label: 'Settlement' },
   { key: 'games', label: 'Games & Edge' },
   { key: 'vip', label: 'VIP' },
   { key: 'audit', label: 'Audit' },
+  // Growth, insight & configuration suite (manager/*). Each page is self-contained
+  // and reads its own store; money still moves only through core.
+  { key: 'reporting', label: 'Reporting' },
+  { key: 'copilot', label: 'Copilot' },
+  { key: 'promotions', label: 'Promotions' },
+  { key: 'loyalty', label: 'Loyalty' },
+  { key: 'communication', label: 'Communication' },
+  { key: 'branding', label: 'Branding' },
 ]
 
 export function ManagerConsole(props: ManagerConsoleProps) {
@@ -76,6 +107,13 @@ export function ManagerConsole(props: ManagerConsoleProps) {
         )}
         {tab === 'vip' && <VipPanel players={props.players} />}
         {tab === 'audit' && <AuditPanel />}
+        {/* Growth, insight & configuration pages — each reads its own manager/* store. */}
+        {tab === 'reporting' && <ReportingPage />}
+        {tab === 'copilot' && <CopilotPage />}
+        {tab === 'promotions' && <PromotionsPage />}
+        {tab === 'loyalty' && <LoyaltyPage />}
+        {tab === 'communication' && <CommunicationPage />}
+        {tab === 'branding' && <BrandingPage />}
       </div>
     </div>
   )
