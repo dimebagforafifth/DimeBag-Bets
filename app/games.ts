@@ -32,6 +32,7 @@ import { videoPokerMeta } from '../games/videopoker/index.js'
 import { casesMeta } from '../games/cases/index.js'
 import { sicBoMeta } from '../games/sicbo/index.js'
 import { threeCardPokerMeta } from '../games/threecardpoker/index.js'
+import { slotsMeta } from '../games/slots/index.js'
 
 /** What every game view receives from the shell: the shared account + a signal
  *  to re-render the balance. (Games may also accept an optional per-game
@@ -89,6 +90,7 @@ export const GAMES: GameDef[] = [
   { ...casesMeta, Component: lazyView(() => import('../games/cases/ui/CasesGame.js').then((m) => ({ default: m.CasesGame }))) },
   { ...sicBoMeta, Component: lazyView(() => import('../games/sicbo/ui/SicBoGame.js').then((m) => ({ default: m.SicBoGame }))) },
   { ...threeCardPokerMeta, Component: lazyView(() => import('../games/threecardpoker/ui/ThreeCardPokerGame.js').then((m) => ({ default: m.ThreeCardPokerGame }))) },
+  { ...slotsMeta, Component: lazyView(() => import('../games/slots/ui/SlotsGame.js').then((m) => ({ default: m.SlotsGame }))) },
 ]
 
 /** Look up a game by its key (used for routing to a game page). */
