@@ -68,6 +68,22 @@ export {
 } from './book/overlay.js'
 export type { MarketAdjustment } from './book/overlay.js'
 
+// The futures book — outright markets placed/graded through core, settled by the
+// operator (or a real feed later). See book/futures.ts.
+export {
+  getFutures,
+  getFutureMarket,
+  settleFuture,
+  resetFutures,
+  subscribeFutures,
+  getFuturesVersion,
+  placeFutureTicket,
+  gradeFutureTicket,
+} from './book/futures.js'
+export type { FutureTicket, FutureTicketStatus } from './book/futures.js'
+export { FUTURES, futureDecimal, futureOverround, findFutureOutcome } from './bets/futures.js'
+export type { FutureMarket, FutureOutcome, FutureStatus } from './bets/futures.js'
+
 // Additional bet types (round robins, teasers, futures, boosts) layered on top
 // of the core ticket flow. The player slip uses the round-robin combinatorics to
 // expand a set of picks into its constituent parlays; all of it settles through

@@ -987,3 +987,136 @@
   padding: 1px 8px;
   border-radius: 999px;
 }
+
+/* ============================ futures view ============================ */
+.sb-tabs {
+  display: flex;
+  gap: 4px;
+}
+.sb-futures {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* a futures market reuses the event card; its outcomes are a responsive grid */
+.sb-fut-book {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sb-fut-settled {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.sb-fut-outcomes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.sb-fut-out {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s ease, transform 0.1s ease, background 0.12s ease;
+}
+.sb-fut-out:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--sb, #3aa0ff) 55%, var(--line));
+  transform: translateY(-1px);
+}
+.sb-fut-out.is-on {
+  border-color: var(--sb, #3aa0ff);
+  background: color-mix(in srgb, var(--sb, #3aa0ff) 16%, var(--surface-2));
+  box-shadow: inset 0 0 0 1px var(--sb, #3aa0ff);
+}
+.sb-fut-out.is-winner {
+  border-color: color-mix(in srgb, var(--green) 55%, var(--line));
+  background: color-mix(in srgb, var(--green) 12%, var(--surface-2));
+}
+.sb-fut-out:disabled {
+  cursor: default;
+}
+.sb-fut-out-label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* the place-a-future bar */
+.sb-futbar {
+  position: sticky;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--sb, #3aa0ff) 45%, var(--line));
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+}
+.sb-futbar-pick {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sb-futbar-out {
+  font-size: 14px;
+  font-weight: 800;
+}
+.sb-futbar-mkt {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.sb-futbar-stake {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.sb-futbar-stake input {
+  width: 84px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+.sb-futbar-ret {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.sb-futbar-ret b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.sb-futbar-place {
+  margin-left: auto;
+  padding: 9px 22px;
+}
+.sb-fut-error {
+  color: var(--red);
+  font-size: 12.5px;
+  margin: 4px 0 0;
+}

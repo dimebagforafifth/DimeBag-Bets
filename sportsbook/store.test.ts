@@ -4,6 +4,7 @@ import { createStore } from './store.js'
 import { EVENTS, type GameEvent, type Selection } from './markets.js'
 import type { SportsbookFeed } from './provider.js'
 import { nudgeLine, resetOverlay, setMarketSuspended } from './book/overlay.js'
+import { resetFutures, settleFuture } from './book/futures.js'
 
 function account(overrides: Partial<Account> = {}): Account {
   return { id: 'acct_1', creditLimit: 100000, balance: 0, pending: 0, ...overrides }
@@ -136,6 +137,44 @@ describe('book line management (overlay)', () => {
       .selections.find((s) => s.id === 'nba-lal-bos-total-over')!
     expect(over.line).toBe(226.5)
     expect(over.label).toBe('Over 226.5')
+    store.destroy()
+  })
+})
+
+describe('futures', () => {
+  beforeEach(() => resetFutures())
+  afterEach(() => resetFutures())
+
+  it('places a futures bet through core and grades it when the operator settles', () => {
+    const a = account()
+    const m = manualFeed(slate())
+    let balanceChanges = 0
+    const store = createStore(a, { feed: m.feed, onBalanceChange: () => (balanceChanges += 1) })
+
+    store.placeFuture('nba-champ-2026', 'bos', 1000) // Celtics +350 → 4.5×
+    expect(a.pending).toBe(1000)
+    expect(store.getState().futureTickets).toHaveLength(1)
+    expect(balanceChanges).toBe(1)
+
+    // the operator declares the winner → the player's open future grades through core
+    settleFuture('nba-champ-2026', 'bos')
+    const t = store.getState().futureTickets[0]
+    expect(t.status).toBe('won')
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(3500)
+    expect(balanceChanges).toBe(2) // placement + settlement
+    expect(store.getState().futures.find((f) => f.id === 'nba-champ-2026')?.status).toBe('settled')
+    store.destroy()
+  })
+
+  it('a losing future settles to a full loss when another outcome wins', () => {
+    const a = account()
+    const m = manualFeed(slate())
+    const store = createStore(a, { feed: m.feed })
+    store.placeFuture('nba-champ-2026', 'okc', 1000)
+    settleFuture('nba-champ-2026', 'bos')
+    expect(store.getState().futureTickets[0].status).toBe('lost')
+    expect(a.balance).toBe(-1000)
     store.destroy()
   })
 })

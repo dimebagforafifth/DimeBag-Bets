@@ -32,9 +32,15 @@ import {
   nudgeLine,
   setMargin,
   resetMarket,
+  getFutures,
+  futureOverround,
+  settleFuture,
+  subscribeFutures,
+  getFuturesVersion,
   type GameEvent,
   type MarketKind,
   type Selection,
+  type FutureMarket,
 } from '../../index.js'
 import {
   pricePlayerProp,
@@ -143,7 +149,12 @@ export function TradingDesk() {
       </div>
 
       <div className="td-grid">
-        {tab === 'lines' && <LinesCard />}
+        {tab === 'lines' && (
+          <>
+            <LinesCard />
+            <FuturesCard />
+          </>
+        )}
         {tab === 'markets' && (
           <>
             <DevigCard />
@@ -333,6 +344,71 @@ function MarketLine({ event, market }: { event: GameEvent; market: MarketKind })
           ↺
         </button>
       </span>
+    </div>
+  )
+}
+
+/** Settle outright/futures markets — declares a winner, grading every player's
+ *  open futures bet on it through the shared figure. */
+function FuturesCard() {
+  useSyncExternalStore(subscribeFutures, getFuturesVersion)
+  const markets = getFutures()
+  return (
+    <div className="td-card td-lines td-futures">
+      <h3 className="td-card-title">Futures / outrights</h3>
+      <p className="td-card-hint">
+        Settle an outright once it’s decided — every player’s open futures bet on it grades through
+        the shared figure at once. (A real feed would flip the winner here later.)
+      </p>
+      <div className="td-lines-list">
+        {markets.map((m) => (
+          <FutureRow key={m.id} market={m} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FutureRow({ market }: { market: FutureMarket }) {
+  const [winner, setWinner] = useState(market.outcomes[0].id)
+  const settled = market.status === 'settled'
+  const wonLabel = market.outcomes.find((o) => o.id === market.winnerId)?.label
+  return (
+    <div className={`td-evt ${settled ? 'is-settled' : ''}`}>
+      <div className="td-evt-head td-future-head">
+        <div className="td-evt-name">
+          <span className="td-evt-league">{market.league}</span>
+          <span className="td-evt-teams">{market.name}</span>
+          <span className="td-evt-time">
+            {market.outcomes.length} runners · {(futureOverround(market) * 100).toFixed(0)}% book
+          </span>
+        </div>
+        {settled ? (
+          <span className="td-future-won">Winner: {wonLabel}</span>
+        ) : (
+          <span className="td-future-settle">
+            <select
+              className="td-select"
+              aria-label={`Winner of ${market.name}`}
+              value={winner}
+              onChange={(e) => setWinner(e.target.value)}
+            >
+              {market.outcomes.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label} ({formatAmerican(o.american)})
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="td-settle-btn"
+              onClick={() => settleFuture(market.id, winner)}
+            >
+              Settle
+            </button>
+          </span>
+        )}
+      </div>
     </div>
   )
 }

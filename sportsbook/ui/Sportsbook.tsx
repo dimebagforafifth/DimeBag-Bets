@@ -14,6 +14,8 @@ import {
   americanFromDecimal,
   decimalFromAmerican,
   formatAmerican,
+  futureDecimal,
+  futureOverround,
   hasRelatedLegs,
   LEAGUES,
   liveSelections,
@@ -22,6 +24,8 @@ import {
   priceTicket,
   type FeedHealth,
   type FeedStatus,
+  type FutureMarket,
+  type FutureTicket,
   type GameEvent,
   type MarketKind,
   type PlaceTicketOptions,
@@ -138,7 +142,9 @@ function useStore(store: SportsbookStore) {
 }
 
 export function Sportsbook({ account, store }: SportsbookProps) {
-  const { events, tickets, health } = useStore(store)
+  const { events, tickets, futures, futureTickets, health } = useStore(store)
+  const [tab, setTab] = useState<'games' | 'futures'>('games')
+  const [futuresError, setFuturesError] = useState<string | null>(null)
   const [slip, setSlip] = useState<Selection[]>([])
   const [mode, setMode] = useState<SlipMode>('single')
   const [rrSizes, setRrSizes] = useState<number[]>([2]) // round-robin combination sizes
@@ -309,6 +315,21 @@ export function Sportsbook({ account, store }: SportsbookProps) {
     play('win')
   }
 
+  /** Back a futures outcome through the store/core. Returns an error string (also
+   *  surfaced in the futures board) or null on success. */
+  function placeFuture(marketId: string, outcomeId: string, stake: number): string | null {
+    try {
+      store.placeFuture(marketId, outcomeId, stake)
+      setFuturesError(null)
+      play('bet')
+      return null
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setFuturesError(msg)
+      return msg
+    }
+  }
+
   // First load (no confirmed slate yet) vs degraded-with-cached-data — different
   // UI: a skeleton / a "can't reach" panel when we've never had prices, vs a
   // banner over the held prices when a live feed merely dropped.
@@ -332,17 +353,31 @@ export function Sportsbook({ account, store }: SportsbookProps) {
         </div>
 
         <div className="sb-toolbar">
-          <div className="sb-leagues">
-            {['All', ...LEAGUES].map((l) => (
+          <div className="sb-tabs" role="group" aria-label="Sportsbook section">
+            {(['games', 'futures'] as const).map((t) => (
               <button
-                key={l}
-                className={`chip ${league === l ? 'is-on' : ''}`}
-                onClick={() => setLeague(l)}
+                key={t}
+                className={`chip ${tab === t ? 'is-on' : ''}`}
+                aria-pressed={tab === t}
+                onClick={() => setTab(t)}
               >
-                {l}
+                {t === 'games' ? 'Games' : 'Futures'}
               </button>
             ))}
           </div>
+          {tab === 'games' && (
+            <div className="sb-leagues">
+              {['All', ...LEAGUES].map((l) => (
+                <button
+                  key={l}
+                  className={`chip ${league === l ? 'is-on' : ''}`}
+                  onClick={() => setLeague(l)}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="sb-oddsfmt" role="group" aria-label="Odds format">
             {(['american', 'decimal'] as OddsFormat[]).map((f) => (
               <button
@@ -364,7 +399,9 @@ export function Sportsbook({ account, store }: SportsbookProps) {
           </div>
         )}
 
-        {connecting ? (
+        {tab === 'futures' ? (
+          <FuturesBoard markets={futures} available={available} error={futuresError} onPlace={placeFuture} />
+        ) : connecting ? (
           <BoardSkeleton />
         ) : failedFirstLoad ? (
           <div className="sb-empty" role="status">
@@ -458,7 +495,13 @@ export function Sportsbook({ account, store }: SportsbookProps) {
           />
         </div>
 
-        <MyBets open={open} settled={settled} cashouts={cashouts} onCashOut={cashOut} />
+        <MyBets
+          open={open}
+          settled={settled}
+          futureTickets={futureTickets}
+          cashouts={cashouts}
+          onCashOut={cashOut}
+        />
       </aside>
     </div>
 
@@ -935,33 +978,188 @@ function BetSlip({
   )
 }
 
+/* -------------------------------- futures -------------------------------- */
+
+function FuturesBoard({
+  markets,
+  available,
+  error,
+  onPlace,
+}: {
+  markets: FutureMarket[]
+  available: number
+  error: string | null
+  onPlace: (marketId: string, outcomeId: string, stake: number) => string | null
+}) {
+  const fmtOdds = useFmtOdds()
+  const [pick, setPick] = useState<{
+    marketId: string
+    outcomeId: string
+    label: string
+    marketName: string
+    decimal: number
+  } | null>(null)
+  const [stake, setStake] = useState(1000)
+  const [localError, setLocalError] = useState<string | null>(null)
+
+  function choose(market: FutureMarket, outcomeId: string, label: string, decimal: number) {
+    setLocalError(null)
+    setPick({ marketId: market.id, outcomeId, label, marketName: market.name, decimal })
+  }
+  function submit() {
+    if (!pick) return
+    const err = onPlace(pick.marketId, pick.outcomeId, stake)
+    if (err) setLocalError(err)
+    else {
+      setPick(null)
+      setLocalError(null)
+    }
+  }
+
+  if (markets.length === 0) {
+    return (
+      <div className="sb-empty">
+        <p className="sb-empty-title">No futures on the board</p>
+        <p className="sb-empty-sub">Outright markets will appear here.</p>
+      </div>
+    )
+  }
+
+  const ret = pick ? potentialReturn(stake, pick.decimal) : 0
+  const overStake = stake > available
+
+  return (
+    <div className="sb-board sb-futures">
+      {markets.map((m) => (
+        <FutureMarketCard key={m.id} market={m} fmtOdds={fmtOdds} pick={pick} onChoose={choose} />
+      ))}
+
+      {pick && (
+        <div className="sb-futbar" role="form" aria-label="Place a futures bet">
+          <div className="sb-futbar-pick">
+            <span className="sb-futbar-out">{pick.label}</span>
+            <span className="sb-futbar-mkt">{pick.marketName}</span>
+          </div>
+          <label className="sb-futbar-stake">
+            <span className="field-prefix">$</span>
+            <input
+              type="number"
+              min={0.01}
+              step={0.01}
+              aria-label="Futures stake"
+              value={stake / 100}
+              onChange={(e) => setStake(Math.max(0, toCents(Number(e.target.value) || 0)))}
+            />
+          </label>
+          <span className="sb-futbar-ret">
+            Returns <b>{formatMoney(ret)}</b>
+          </span>
+          <button
+            type="button"
+            className="action action-bet sb-futbar-place"
+            disabled={stake <= 0 || overStake}
+            onClick={submit}
+          >
+            Place
+          </button>
+        </div>
+      )}
+      {(localError ?? error) && <p className="sb-error sb-fut-error">{localError ?? error}</p>}
+    </div>
+  )
+}
+
+function FutureMarketCard({
+  market,
+  fmtOdds,
+  pick,
+  onChoose,
+}: {
+  market: FutureMarket
+  fmtOdds: (a: number) => string
+  pick: { marketId: string; outcomeId: string } | null
+  onChoose: (market: FutureMarket, outcomeId: string, label: string, decimal: number) => void
+}) {
+  const settled = market.status === 'settled'
+  return (
+    <section className={`sb-event sb-futmkt ${settled ? 'is-final' : ''}`}>
+      <header className="sb-event-head">
+        <div className="sb-teams">
+          <span className="sb-team">{market.name}</span>
+        </div>
+        <div className="sb-meta">
+          <span className="sb-league">{market.league}</span>
+          {settled ? (
+            <span className="sb-fut-settled">Settled</span>
+          ) : (
+            <span className="sb-fut-book">{(futureOverround(market) * 100).toFixed(0)}% book</span>
+          )}
+        </div>
+      </header>
+      <div className="sb-fut-outcomes">
+        {market.outcomes.map((o) => {
+          const isWinner = settled && market.winnerId === o.id
+          const selected = pick?.marketId === market.id && pick?.outcomeId === o.id
+          return (
+            <button
+              key={o.id}
+              type="button"
+              className={`sb-fut-out ${selected ? 'is-on' : ''} ${isWinner ? 'is-winner' : ''}`}
+              disabled={settled}
+              onClick={() => onChoose(market, o.id, o.label, futureDecimal(o))}
+            >
+              <span className="sb-fut-out-label">{o.label}</span>
+              <span className="sb-price-odds">
+                {settled ? (isWinner ? 'Winner ✓' : '—') : fmtOdds(o.american)}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 /* --------------------------------- my bets ------------------------------- */
 
 function MyBets({
   open,
   settled,
+  futureTickets,
   cashouts,
   onCashOut,
 }: {
   open: Ticket[]
   settled: Ticket[]
+  futureTickets: FutureTicket[]
   cashouts: Map<string, number>
   onCashOut: (id: string) => void
 }) {
-  if (open.length === 0 && settled.length === 0) return null
+  const openF = futureTickets.filter((t) => t.status === 'open')
+  const settledF = futureTickets.filter((t) => t.status !== 'open')
+  if (open.length === 0 && settled.length === 0 && futureTickets.length === 0) return null
 
-  // Running accounting across settled tickets: record + net P&L, plus what's
+  // Running accounting across game + futures bets: record + net P&L, plus what's
   // still at risk in open bets.
-  const atRisk = open.reduce((sum, t) => sum + t.stake, 0)
-  const net = settled.reduce((sum, t) => sum + ((t.returned ?? 0) - t.stake), 0)
-  const won = settled.filter((t) => (t.returned ?? 0) > t.stake).length
-  const lost = settled.filter((t) => (t.returned ?? 0) < t.stake).length
+  const atRisk =
+    open.reduce((sum, t) => sum + t.stake, 0) + openF.reduce((sum, t) => sum + t.stake, 0)
+  const net =
+    settled.reduce((sum, t) => sum + ((t.returned ?? 0) - t.stake), 0) +
+    settledF.reduce((sum, t) => sum + ((t.returned ?? 0) - t.stake), 0)
+  const won =
+    settled.filter((t) => (t.returned ?? 0) > t.stake).length +
+    settledF.filter((t) => t.status === 'won').length
+  const lost =
+    settled.filter((t) => (t.returned ?? 0) < t.stake).length +
+    settledF.filter((t) => t.status === 'lost').length
+  const openCount = open.length + openF.length
+  const settledCount = settled.length + settledF.length
 
   return (
     <section className="sb-mybets">
       <header className="sb-mybets-head">
         <span className="sb-slip-title">My bets</span>
-        {open.length > 0 && <span className="sb-open-count">{open.length} open</span>}
+        {openCount > 0 && <span className="sb-open-count">{openCount} open</span>}
       </header>
 
       <dl className="sb-betstats">
@@ -971,7 +1169,7 @@ function MyBets({
         </div>
         <div>
           <dt>Record</dt>
-          <dd>{settled.length === 0 ? '—' : `${won}–${lost}`}</dd>
+          <dd>{settledCount === 0 ? '—' : `${won}–${lost}`}</dd>
         </div>
         <div>
           <dt>Net</dt>
@@ -982,25 +1180,65 @@ function MyBets({
         </div>
       </dl>
 
-      {open.length > 0 && (
+      {(open.length > 0 || openF.length > 0) && (
         <ul className="sb-tickets">
           {open.map((t) => (
             <TicketRow key={t.id} ticket={t} cashout={cashouts.get(t.id) ?? 0} onCashOut={onCashOut} />
           ))}
+          {openF.map((t) => (
+            <FutureTicketRow key={t.id} ticket={t} />
+          ))}
         </ul>
       )}
 
-      {settled.length > 0 && (
+      {(settled.length > 0 || settledF.length > 0) && (
         <>
           <p className="sb-settled-label">Settled</p>
           <ul className="sb-tickets">
             {settled.map((t) => (
               <TicketRow key={t.id} ticket={t} />
             ))}
+            {settledF.map((t) => (
+              <FutureTicketRow key={t.id} ticket={t} />
+            ))}
           </ul>
         </>
       )}
     </section>
+  )
+}
+
+/** A futures bet in My Bets — mirrors a single game ticket's layout. */
+function FutureTicketRow({ ticket }: { ticket: FutureTicket }) {
+  const fmtOdds = useFmtOdds()
+  const odds = americanFromDecimal(ticket.oddsDecimal)
+  return (
+    <li className={`sb-ticket is-${ticket.status}`}>
+      <div className="sb-ticket-top">
+        <span className="sb-ticket-kind">Future · {fmtOdds(odds)}</span>
+        <span className={`sb-ticket-status is-${ticket.status}`}>
+          {{ open: 'Open', won: 'Won', lost: 'Lost', void: 'Void' }[ticket.status]}
+        </span>
+      </div>
+      <ul className="sb-ticket-legs">
+        <li className={ticket.status === 'open' ? '' : `leg-${ticket.status === 'won' ? 'win' : ticket.status}`}>
+          {ticket.outcomeLabel}
+          <span className="sb-ticket-leg-odds">{ticket.marketName}</span>
+        </li>
+      </ul>
+      <div className="sb-ticket-foot">
+        <span>Stake {formatMoney(ticket.stake)}</span>
+        <span>
+          {ticket.status === 'open'
+            ? `To return ${formatMoney(potentialReturn(ticket.stake, ticket.oddsDecimal))}`
+            : ticket.status === 'won'
+              ? `Returned ${formatMoney(ticket.returned ?? 0)}`
+              : ticket.status === 'void'
+                ? 'Stake returned'
+                : `Lost ${formatMoney(ticket.stake)}`}
+        </span>
+      </div>
+    </li>
   )
 }
 

@@ -26,10 +26,23 @@ import {
 import { gradeSelection, type GameEvent, type MatchResult } from './markets.js'
 import type { FeedHealth, SportsbookFeed } from './provider.js'
 import { applyOverlay, subscribeOverlay } from './book/overlay.js'
+import {
+  getFutures,
+  getFutureMarket,
+  gradeFutureTicket,
+  placeFutureTicket,
+  subscribeFutures,
+  type FutureTicket,
+} from './book/futures.js'
+import type { FutureMarket } from './bets/futures.js'
 
 export interface SportsbookState {
   events: GameEvent[]
   tickets: Ticket[]
+  /** The futures slate (outright markets), with any settlements applied. */
+  futures: FutureMarket[]
+  /** The player's futures bets. */
+  futureTickets: FutureTicket[]
   /** Feed connection health (status + freshness), for the live indicator. */
   health: FeedHealth
 }
@@ -41,6 +54,9 @@ export interface SportsbookStore {
    *  is no longer open or the stake doesn't fit; nothing is placed on a throw of
    *  the first ticket. */
   place(reqs: PlaceTicketOptions[]): Ticket[]
+  /** Back a futures outcome — a single wager held through core, graded when the
+   *  market settles. Throws if the market is settled or the stake doesn't fit. */
+  placeFuture(marketId: string, outcomeId: string, stake: number): FutureTicket
   /** The current cash-out value (cents) of an open ticket, 0 if not cashable. */
   cashOutValueOf(ticketId: string): number
   /** Cash out an open ticket at its current value. */
@@ -69,10 +85,27 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
   let rawEvents = feed.snapshot()
   let events = applyOverlay(rawEvents)
   let tickets: Ticket[] = []
+  let futures = getFutures()
+  let futureTickets: FutureTicket[] = []
   // A feed may not implement the health channel; treat such feeds as always-live.
   let health: FeedHealth = feed.getHealth?.() ?? { status: 'live', lastUpdated: null }
   const listeners = new Set<() => void>()
   const notify = () => listeners.forEach((l) => l())
+
+  /** Grade every open futures ticket whose market has now settled. Returns true if
+   *  any settled (so the figure refresh fires). */
+  function settleFutures(): boolean {
+    let changed = false
+    for (const t of futureTickets) {
+      if (t.status !== 'open') continue
+      const market = getFutureMarket(t.marketId)
+      if (market?.status === 'settled') {
+        gradeFutureTicket(account, t, market)
+        changed = true
+      }
+    }
+    return changed
+  }
 
   /**
    * Settle every open ticket that is now decided: all legs final, OR a parlay
@@ -118,10 +151,18 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
     events = applyOverlay(rawEvents)
     notify()
   })
+  // The operator (or a real feed later) declared a futures winner — grade this
+  // player's open futures tickets through core and refresh the slate.
+  const unsubscribeFutures = subscribeFutures(() => {
+    const settled = settleFutures()
+    futures = getFutures()
+    if (settled) onBalanceChange?.()
+    notify()
+  })
   feed.start()
 
   return {
-    getState: () => ({ events, tickets, health }),
+    getState: () => ({ events, tickets, futures, futureTickets, health }),
 
     subscribe(listener) {
       listeners.add(listener)
@@ -149,6 +190,16 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
       return placed
     },
 
+    placeFuture(marketId, outcomeId, stake) {
+      const market = getFutureMarket(marketId)
+      if (!market) throw new Error(`unknown futures market ${marketId}`)
+      const ticket = placeFutureTicket(account, market, outcomeId, stake)
+      futureTickets = [ticket, ...futureTickets]
+      onBalanceChange?.()
+      notify()
+      return ticket
+    },
+
     cashOutValueOf(ticketId) {
       const t = tickets.find((x) => x.id === ticketId)
       return t ? cashOutValue(t, events) : 0
@@ -166,6 +217,7 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
       unsubscribe()
       unsubscribeHealth?.()
       unsubscribeOverlay()
+      unsubscribeFutures()
       feed.stop()
       listeners.clear()
     },

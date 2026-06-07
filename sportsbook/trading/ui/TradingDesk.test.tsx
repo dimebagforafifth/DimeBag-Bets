@@ -14,14 +14,22 @@ import { TradingDesk } from './TradingDesk.js'
 import {
   EVENTS,
   getAdjustment,
+  getFutures,
   isMarketSuspended,
+  resetFutures,
   resetOverlay,
 } from '../../index.js'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-beforeEach(() => resetOverlay())
-afterEach(() => resetOverlay())
+beforeEach(() => {
+  resetOverlay()
+  resetFutures()
+})
+afterEach(() => {
+  resetOverlay()
+  resetFutures()
+})
 
 function mount() {
   const host = document.createElement('div')
@@ -35,7 +43,8 @@ const click = (el: Element | null | undefined) => act(() => (el as HTMLElement).
 describe('TradingDesk — Lines tab', () => {
   it('lists every event and its three markets, defaulting to the Lines tab', () => {
     const { host, teardown } = mount()
-    expect(host.querySelectorAll('.td-evt').length).toBe(EVENTS.length)
+    // the games line-management card (the futures card is a separate .td-futures)
+    expect(host.querySelectorAll('.td-lines:not(.td-futures) .td-evt').length).toBe(EVENTS.length)
     expect(host.querySelectorAll('.td-mkt').length).toBe(EVENTS.length * 3)
     teardown()
   })
@@ -71,6 +80,18 @@ describe('TradingDesk — Lines tab', () => {
     // base home spread is −3.5 → +0.5 step shows −3
     const spreadRow = host.querySelectorAll('.td-mkt')[1] // moneyline, SPREAD, total
     expect(spreadRow.querySelector('.td-line-val')?.textContent).toBe('-3')
+    teardown()
+  })
+
+  it('settling a future declares the winner in the shared futures book', () => {
+    const { host, teardown } = mount()
+    expect(getFutures()[0].status).toBe('open')
+    // the first futures market's Settle button (default-selects its first outcome)
+    const settle = host.querySelector('.td-futures .td-settle-btn')
+    click(settle)
+    const m = getFutures().find((f) => f.id === 'nba-champ-2026')!
+    expect(m.status).toBe('settled')
+    expect(m.winnerId).toBe(m.outcomes[0].id)
     teardown()
   })
 })
