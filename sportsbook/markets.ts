@@ -48,6 +48,10 @@ export interface MatchResult {
 
 export interface GameEvent {
   id: string
+  /** The top-level sport (e.g. "Basketball", "Soccer") — the browse tier above
+   *  the league. The feed provides it (The Odds API's sport_key); the mock declares
+   *  it per game. */
+  sport: string
   league: string
   home: string
   away: string
@@ -71,6 +75,7 @@ const STD = -110 // standard spread/total juice
 function makeEvent(
   e: {
     id: string
+    sport: string
     league: string
     home: string
     away: string
@@ -93,6 +98,7 @@ function makeEvent(
   const sgn = (n: number) => (n > 0 ? `+${n}` : `${n}`)
   return {
     id: e.id,
+    sport: e.sport,
     league: e.league,
     home: e.home,
     away: e.away,
@@ -109,10 +115,12 @@ function makeEvent(
   }
 }
 
-/** The initial slate, all upcoming. A feed sets each event's status/score. */
+/** The initial slate, all upcoming. A feed sets each event's status/score. Ordered
+ *  by sport so the browse tiers read cleanly (Basketball → Football → Soccer → …). */
 export const EVENTS: GameEvent[] = [
   makeEvent({
     id: 'nba-lal-bos',
+    sport: 'Basketball',
     league: 'NBA',
     home: 'Lakers',
     away: 'Celtics',
@@ -124,6 +132,7 @@ export const EVENTS: GameEvent[] = [
   }),
   makeEvent({
     id: 'nba-gsw-den',
+    sport: 'Basketball',
     league: 'NBA',
     home: 'Warriors',
     away: 'Nuggets',
@@ -134,7 +143,20 @@ export const EVENTS: GameEvent[] = [
     total: 231.5,
   }),
   makeEvent({
+    id: 'eul-oly-fcb',
+    sport: 'Basketball',
+    league: 'EuroLeague',
+    home: 'Olympiacos',
+    away: 'Barcelona',
+    startsAt: 'Thu 1:45 PM',
+    mlHome: -150,
+    mlAway: +130,
+    spread: -2.5,
+    total: 158.5,
+  }),
+  makeEvent({
     id: 'nfl-kc-buf',
+    sport: 'Football',
     league: 'NFL',
     home: 'Chiefs',
     away: 'Bills',
@@ -146,6 +168,7 @@ export const EVENTS: GameEvent[] = [
   }),
   makeEvent({
     id: 'nfl-sf-dal',
+    sport: 'Football',
     league: 'NFL',
     home: '49ers',
     away: 'Cowboys',
@@ -157,6 +180,7 @@ export const EVENTS: GameEvent[] = [
   }),
   makeEvent({
     id: 'epl-ars-mci',
+    sport: 'Soccer',
     league: 'EPL',
     home: 'Arsenal',
     away: 'Man City',
@@ -167,7 +191,32 @@ export const EVENTS: GameEvent[] = [
     total: 2.5,
   }),
   makeEvent({
+    id: 'laliga-rma-fcb',
+    sport: 'Soccer',
+    league: 'La Liga',
+    home: 'Real Madrid',
+    away: 'Barcelona',
+    startsAt: 'Sun 3:00 PM',
+    mlHome: -135,
+    mlAway: +145,
+    spread: -0.5,
+    total: 2.5,
+  }),
+  makeEvent({
+    id: 'ucl-bay-int',
+    sport: 'Soccer',
+    league: 'UEFA Champions League',
+    home: 'Bayern Munich',
+    away: 'Inter Milan',
+    startsAt: 'Wed 3:00 PM',
+    mlHome: -150,
+    mlAway: +170,
+    spread: -0.5,
+    total: 2.5,
+  }),
+  makeEvent({
     id: 'nhl-col-veg',
+    sport: 'Hockey',
     league: 'NHL',
     home: 'Avalanche',
     away: 'Golden Knights',
@@ -181,6 +230,14 @@ export const EVENTS: GameEvent[] = [
 
 /** The distinct leagues on the slate, in first-seen order (for the filter). */
 export const LEAGUES: string[] = [...new Set(EVENTS.map((e) => e.league))]
+
+/** The distinct sports on the slate, in first-seen order — the top browse tier. */
+export const SPORTS: string[] = [...new Set(EVENTS.map((e) => e.sport))]
+
+/** The leagues within a sport, in first-seen order (the second browse tier). */
+export function leaguesInSport(sport: string): string[] {
+  return [...new Set(EVENTS.filter((e) => e.sport === sport).map((e) => e.league))]
+}
 
 /** Quick lookup of an event by id. */
 export function findEvent(id: string): GameEvent | undefined {

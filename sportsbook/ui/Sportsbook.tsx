@@ -17,7 +17,8 @@ import {
   futureDecimal,
   futureOverround,
   hasRelatedLegs,
-  LEAGUES,
+  SPORTS,
+  leaguesInSport,
   liveSelections,
   liveWinProb,
   potentialReturn,
@@ -149,7 +150,8 @@ export function Sportsbook({ account, store }: SportsbookProps) {
   const [mode, setMode] = useState<SlipMode>('single')
   const [rrSizes, setRrSizes] = useState<number[]>([2]) // round-robin combination sizes
   const [stake, setStake] = useState(1000) // cents ($10.00)
-  const [league, setLeague] = useState<string>('All')
+  const [sport, setSport] = useState<string>('All') // top browse tier
+  const [league, setLeague] = useState<string>('All') // refinement within a sport
   const [error, setError] = useState<string | null>(null)
   const [slipOpen, setSlipOpen] = useState(false) // mobile bet-slip drawer
   const dockRef = useRef<HTMLDivElement>(null) // the mobile sheet, for focus mgmt
@@ -210,7 +212,18 @@ export function Sportsbook({ account, store }: SportsbookProps) {
     return { totalStake: stake * freshSlip.length, totalReturn: ret, parlayCount: freshSlip.length }
   }, [freshSlip, slipSels, effectiveMode, stake, activeRrSizes.join(',')])
 
-  const shownEvents = league === 'All' ? events : events.filter((e) => e.league === league)
+  // Browse drill-down: filter by sport, then (when a sport has several leagues)
+  // refine by league. The leagues offered are scoped to the chosen sport.
+  const sportLeagues = sport === 'All' ? [] : leaguesInSport(sport)
+  const shownEvents = events.filter(
+    (e) =>
+      (sport === 'All' || e.sport === sport) && (league === 'All' || e.league === league),
+  )
+  /** Pick a sport — resets the league refinement (its leagues just changed). */
+  function chooseSport(s: string) {
+    setSport(s)
+    setLeague('All')
+  }
 
   // Track how each live price moved since the last tick, for the ▲/▼ flash.
   const prevOddsRef = useRef<Map<string, number>>(new Map())
@@ -366,14 +379,15 @@ export function Sportsbook({ account, store }: SportsbookProps) {
             ))}
           </div>
           {tab === 'games' && (
-            <div className="sb-leagues">
-              {['All', ...LEAGUES].map((l) => (
+            <div className="sb-sports" role="group" aria-label="Sport">
+              {['All', ...SPORTS].map((s) => (
                 <button
-                  key={l}
-                  className={`chip ${league === l ? 'is-on' : ''}`}
-                  onClick={() => setLeague(l)}
+                  key={s}
+                  className={`chip ${sport === s ? 'is-on' : ''}`}
+                  aria-pressed={sport === s}
+                  onClick={() => chooseSport(s)}
                 >
-                  {l}
+                  {s === 'All' ? 'All sports' : s}
                 </button>
               ))}
             </div>
@@ -390,6 +404,21 @@ export function Sportsbook({ account, store }: SportsbookProps) {
             ))}
           </div>
         </div>
+
+        {tab === 'games' && sportLeagues.length >= 2 && (
+          <div className="sb-leagues" role="group" aria-label={`${sport} leagues`}>
+            {['All', ...sportLeagues].map((l) => (
+              <button
+                key={l}
+                className={`chip chip-sm ${league === l ? 'is-on' : ''}`}
+                aria-pressed={league === l}
+                onClick={() => setLeague(l)}
+              >
+                {l === 'All' ? `All ${sport}` : l}
+              </button>
+            ))}
+          </div>
+        )}
 
         {degraded && (
           <div className="sb-feedbanner" role="status">
@@ -414,9 +443,11 @@ export function Sportsbook({ account, store }: SportsbookProps) {
             <div className="sb-empty">
               <p className="sb-empty-title">No games on the board</p>
               <p className="sb-empty-sub">
-                {league === 'All'
+                {sport === 'All' && league === 'All'
                   ? 'The slate is between cycles — games will be back on the board shortly.'
-                  : `No ${league} games right now. Pick another league.`}
+                  : `No ${league !== 'All' ? league : sport} games right now. Try another ${
+                      league !== 'All' ? 'league' : 'sport'
+                    }.`}
               </p>
             </div>
           ) : (

@@ -25,6 +25,8 @@ export {
 export {
   EVENTS,
   LEAGUES,
+  SPORTS,
+  leaguesInSport,
   findEvent,
   gradeSelection,
 } from './markets.js'
