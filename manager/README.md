@@ -25,9 +25,10 @@ These pages are ready to mount under **Management**. Proposed: a sub-nav within 
 | Page | Import | Status |
 |------|--------|--------|
 | Reporting & analytics | `import { ReportingPage } from '../manager'` → `<ReportingPage />` | **built** |
-| Promotions & loyalty | `import { PromotionsPage } from '../manager'` → `<PromotionsPage />` | **built** (bonuses; loyalty/referral/scheduling next) |
+| Promotions | `import { PromotionsPage } from '../manager'` → `<PromotionsPage />` | **built** (bonuses: single / bulk / scheduled) |
+| Loyalty & progression | `import { LoyaltyPage } from '../manager'` → `<LoyaltyPage />` | **built** (tier ladder over the VIP program) |
 | Branding / white-label & Presentation | `import { BrandingPage } from '../manager'` → `<BrandingPage />` | **built** |
-| Communication | `import { CommunicationPage } from '../manager'` → `<CommunicationPage />` | **built** (announcements + webhooks) |
+| Communication | `import { CommunicationPage } from '../manager'` → `<CommunicationPage />` | **built** (announcements + webhooks + in-app messages) |
 | AI Manager Copilot | `import { CopilotPage } from '../manager'` → `<CopilotPage />` | **built** (advisory) |
 
 `ReportingPage` is propless — it reads the durable analytics store directly.
@@ -56,8 +57,11 @@ initAnalyticsCapture() // idempotent
   analytics without polluting turnover/win-rate or VIP-wagered. `manager/promotions`
   drafts + validates (`planBonus`), credits each target through `grant` inside
   `book-store.mutateBook` (single player or a whole downline), and logs each campaign
-  (`promoStore`). *Next*: scheduled/recurring sends, loyalty-rate config on `vip/`,
-  and a referral program.
+  (`promoStore`). **Scheduled / recurring** sends are built too (`schedule-store` +
+  a `runDue` runner; fires while a tab is open — backend cron for production).
+  **Loyalty/progression** config is its own page (`manager/loyalty`) over the VIP
+  program. **Referral** is the one piece blocked on an `org` schema field — see
+  `BLOCKED-ON-ORG.md`.
 - **Branding / white-label & Presentation** — *built*: one persisted per-book
   config (`manager/branding`: name, logo, accent, domain, money display, timezone).
   The store applies it on load + on change — runtime theming overrides the `--gem`
@@ -73,11 +77,14 @@ initAnalyticsCapture() // idempotent
 - **Communication** — *built (announcements + webhooks)*: `manager/communication`
   authors book-wide announcements (severity, expiry, active toggle), persisted in
   `commsStore`, and pushes them to Discord/Telegram via a testable injected-fetch
-  `dispatch` (sportsdata pattern). **Shell binding to wire:** render
-  `activeAnnouncements(commsStore.announcements(), Date.now())` as a player banner.
-  *Still open:* per-player DMs + in-app notification center need a **contact field on
-  org `Member`** (that workstream's to add) and player-shell rendering — flagged, not
-  assumed. Webhook POSTs are client-side; some setups may need a CORS proxy.
+  `dispatch` (sportsdata pattern). **In-app messages** are built too
+  (`messages-store`): a DM to one player or a `*` broadcast notification; the shell
+  renders each inbox via `inboxFor`. **Shell bindings to wire:** render
+  `activeAnnouncements(commsStore.announcements(), Date.now())` as a player banner,
+  and `inboxFor(messagesStore.messages(), playerId)` as the player's inbox.
+  *Blocked:* **off-platform** per-player DMs need a **contact field on org `Member`** —
+  see `BLOCKED-ON-ORG.md`. Webhook POSTs are client-side; some setups may need a CORS
+  proxy.
 - **AI Manager Copilot** — *built (advisory)*: `manager/copilot` composes a
   READ-ONLY `buildSnapshot` from the reporting rollups + org read-models, and a pure
   `analyze(snapshot)` rules engine returns ranked, explained recommendations (risk /
