@@ -20,5 +20,6 @@ jobs:
       # npm ci installs exactly from package-lock.json (reproducible), unlike npm install.
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
       - run: npm run build

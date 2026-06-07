@@ -577,7 +577,11 @@ function Scoreboard({ road }: { road: RoadEntry[] }) {
     let p = 0,
       b = 0,
       t = 0
-    for (const e of road) e.winner === 'player' ? p++ : e.winner === 'banker' ? b++ : t++
+    for (const e of road) {
+      if (e.winner === 'player') p++
+      else if (e.winner === 'banker') b++
+      else t++
+    }
     return { p, b, t }
   }, [road])
 
