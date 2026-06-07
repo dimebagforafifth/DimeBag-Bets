@@ -10,9 +10,11 @@
  *          promotions/  — free-play / point bonuses via core.grant (single + bulk).
  *          branding/    — white-label + presentation (name/logo/accent/domain,
  *                         points symbol/format, timezone) with runtime theming.
- * Planned: communication/, copilot/ — see README.md for the phased plan.
+ *          communication/ — book-wide announcements + Discord/Telegram webhooks.
+ * Planned: copilot/ — see README.md for the phased plan.
  */
 
 export { ReportingPage } from './reporting/index.js'
 export { PromotionsPage } from './promotions/index.js'
 export { BrandingPage } from './branding/index.js'
+export { CommunicationPage } from './communication/index.js'

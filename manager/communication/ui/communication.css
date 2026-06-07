@@ -1,0 +1,251 @@
+/* Communication — announcements + webhooks. Whitespace-first (CLAUDE.md §2).
+   Scoped under .mgr-comms; reuses app/theme.css tokens. */
+.mgr-comms {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: var(--text);
+}
+.mgr-comms-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mgr-comms-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+.mgr-comms-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mgr-comms-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.mgr-input,
+.mgr-select,
+.mgr-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.mgr-textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+.mgr-input:focus,
+.mgr-select:focus,
+.mgr-textarea:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+.mgr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.mgr-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.mgr-comms-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.mgr-select-auto {
+  width: auto;
+}
+.mgr-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.mgr-toggle button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.mgr-toggle button.is-on {
+  background: var(--gem);
+  color: #fff;
+}
+
+/* banner preview + severity */
+.mgr-banner {
+  --c: var(--gem);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line));
+  background: color-mix(in srgb, var(--c) 14%, var(--surface));
+  font-size: 13px;
+}
+.mgr-banner.is-info {
+  --c: var(--gem);
+}
+.mgr-banner.is-success {
+  --c: var(--green);
+}
+.mgr-banner.is-warning {
+  --c: #e0b64a;
+}
+.mgr-banner strong {
+  font-size: 13.5px;
+}
+
+.mgr-comms-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mgr-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+.mgr-check.is-off {
+  color: var(--muted);
+}
+.mgr-comms-status {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.mgr-comms-empty {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* posted list */
+.mgr-anns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mgr-ann {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.mgr-ann.is-inactive {
+  opacity: 0.5;
+}
+.mgr-ann-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--gem);
+}
+.mgr-ann-dot.is-success {
+  background: var(--green);
+}
+.mgr-ann-dot.is-warning {
+  background: #e0b64a;
+}
+.mgr-ann-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: auto;
+  font-size: 13px;
+}
+.mgr-ann-body strong {
+  font-size: 13.5px;
+}
+.mgr-ann-body span {
+  color: var(--muted);
+}
+
+.mgr-h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+.mgr-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.mgr-send {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--gem);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+.mgr-send:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.mgr-mini {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mgr-mini:hover:not(:disabled) {
+  border-color: var(--gem);
+}
+.mgr-mini:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 560px) {
+  .mgr-comms-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

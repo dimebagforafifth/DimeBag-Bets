@@ -27,7 +27,7 @@ These pages are ready to mount under **Management**. Proposed: a sub-nav within 
 | Reporting & analytics | `import { ReportingPage } from '../manager'` → `<ReportingPage />` | **built** |
 | Promotions & loyalty | `import { PromotionsPage } from '../manager'` → `<PromotionsPage />` | **built** (bonuses; loyalty/referral/scheduling next) |
 | Branding / white-label & Presentation | `import { BrandingPage } from '../manager'` → `<BrandingPage />` | **built** |
-| Communication | `manager/communication` | planned |
+| Communication | `import { CommunicationPage } from '../manager'` → `<CommunicationPage />` | **built** (announcements + webhooks) |
 | AI Manager Copilot | `manager/copilot` | planned |
 
 `ReportingPage` is propless — it reads the durable analytics store directly.
@@ -70,10 +70,14 @@ initAnalyticsCapture() // idempotent
   `App.tsx` today). Custom domain is stored for reference; DNS is a Vercel step.
   *Note:* this touched the shared `games/shared/money.ts` formatter (the only seam
   for an app-wide symbol) — additively, defaults preserved.
-- **Communication** — book-wide announcements + in-app notifications (player
-  identity via `org` `Member.id`); outbound Discord/Telegram webhooks modeled on
-  the `sportsdata/` injected-fetch pattern. (Off-platform per-player DMs need a
-  contact field the `org` workstream would add — flagged, not assumed.)
+- **Communication** — *built (announcements + webhooks)*: `manager/communication`
+  authors book-wide announcements (severity, expiry, active toggle), persisted in
+  `commsStore`, and pushes them to Discord/Telegram via a testable injected-fetch
+  `dispatch` (sportsdata pattern). **Shell binding to wire:** render
+  `activeAnnouncements(commsStore.announcements(), Date.now())` as a player banner.
+  *Still open:* per-player DMs + in-app notification center need a **contact field on
+  org `Member`** (that workstream's to add) and player-shell rendering — flagged, not
+  assumed. Webhook POSTs are client-side; some setups may need a CORS proxy.
 - **AI Manager Copilot** — compose a read-only book snapshot from the reporting
   rollups; advisory-only (returns recommendations, the manager approves any action).
 
