@@ -1,6 +1,10 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
+import { getBook, getBookVersion, subscribeBook } from '../../../app/book-store.js'
+import { membersByRole } from '../../../org/index.js'
 import type { Severity } from '../announcements.js'
 import { commsStore } from '../comms-store.js'
+import { ALL_PLAYERS } from '../messages.js'
+import { messagesStore } from '../messages-store.js'
 import { announcementText, configuredChannels, dispatch } from '../webhooks.js'
 import './communication.css'
 
@@ -27,6 +31,11 @@ export function CommunicationPage() {
   const webhooks = useMemo(() => commsStore.webhooks(), [v])
   const channels = configuredChannels(webhooks)
 
+  const bookV = useSyncExternalStore(subscribeBook, getBookVersion)
+  const players = useMemo(() => membersByRole(getBook(), 'player'), [bookV])
+  const msgV = useSyncExternalStore(messagesStore.subscribe, messagesStore.version)
+  const sentMessages = useMemo(() => messagesStore.messages().slice(), [msgV])
+
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [severity, setSeverity] = useState<Severity>('info')
@@ -34,6 +43,25 @@ export function CommunicationPage() {
   const [alsoPush, setAlsoPush] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+
+  // direct-message / notification composer
+  const [msgTarget, setMsgTarget] = useState(ALL_PLAYERS)
+  const [msgTitle, setMsgTitle] = useState('')
+  const [msgBody, setMsgBody] = useState('')
+  const [msgStatus, setMsgStatus] = useState<string | null>(null)
+
+  function sendMessage() {
+    setMsgStatus(null)
+    try {
+      const name = msgTarget === ALL_PLAYERS ? 'All players' : getBook().members[msgTarget]?.name ?? msgTarget
+      messagesStore.send(msgTarget, name, msgTitle, msgBody)
+      setMsgBody('')
+      setMsgTitle('')
+      setMsgStatus(`Sent to ${name}.`)
+    } catch (e) {
+      setMsgStatus(e instanceof Error ? e.message : String(e))
+    }
+  }
 
   const fmtResults = (res: { channel: string; ok: boolean; error?: string }[]): string =>
     res.length ? res.map((r) => `${r.channel}: ${r.ok ? 'sent ✓' : r.error}`).join(' · ') : 'no channels configured'
@@ -152,6 +180,56 @@ export function CommunicationPage() {
                 <button className="mgr-mini" onClick={() => commsStore.setActive(an.id, !an.active)}>
                   {an.active ? 'Deactivate' : 'Reactivate'}
                 </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mgr-comms-card" aria-label="Message a player">
+        <h2 className="mgr-h2">Message a player</h2>
+        <p className="mgr-hint">A direct in-app message to one player, or a notification to everyone. Players see it in their inbox.</p>
+        <div className="mgr-comms-row">
+          <select className="mgr-select" value={msgTarget} onChange={(e) => setMsgTarget(e.target.value)}>
+            <option value={ALL_PLAYERS}>All players (notification)</option>
+            {players.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <input
+            className="mgr-input"
+            placeholder="Subject (optional)"
+            maxLength={80}
+            value={msgTitle}
+            onChange={(e) => setMsgTitle(e.target.value)}
+          />
+        </div>
+        <textarea
+          className="mgr-textarea"
+          placeholder="Message…"
+          maxLength={500}
+          rows={2}
+          value={msgBody}
+          onChange={(e) => setMsgBody(e.target.value)}
+        />
+        <div className="mgr-comms-foot">
+          {msgStatus && <span className="mgr-comms-status">{msgStatus}</span>}
+          <button className="mgr-send" onClick={sendMessage} disabled={!msgBody.trim()}>
+            Send message
+          </button>
+        </div>
+        {sentMessages.length > 0 && (
+          <ul className="mgr-anns">
+            {sentMessages.slice(0, 8).map((mm) => (
+              <li key={mm.id} className="mgr-ann">
+                <span className="mgr-ann-dot is-success" aria-hidden="true" />
+                <div className="mgr-ann-body">
+                  {mm.title && <strong>{mm.title}</strong>}
+                  <span>{mm.body}</span>
+                </div>
+                <span className="mgr-hint">→ {mm.recipientName}</span>
               </li>
             ))}
           </ul>
