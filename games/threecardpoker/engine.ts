@@ -18,7 +18,7 @@
 
 import { bytesToHex, randomBytes } from '@noble/hashes/utils'
 import type { Account, Wager } from '../../core/index.js'
-import { placeWager, resolveAtMultiplier } from '../../core/index.js'
+import { placeWager, placeWagers, resolveAtMultiplier } from '../../core/index.js'
 import { deal3, hashServerSeed, type Card, type Deal } from './fair.js'
 import {
   anteBonusOdds,
@@ -82,17 +82,20 @@ export function randomServerSeed(): string {
 }
 
 /**
- * Create a round: hold the ANTE (and the PAIR PLUS, if any) as separate core
- * wagers and deal both hands. Both bets are placed before any cards are graded —
- * if the pair-plus stake would exceed what's available, it throws AFTER the ante
- * is already held, so callers should size both within `availableToWager`.
+ * Create a round: hold the ANTE (and the PAIR PLUS, if any) and deal both hands.
+ * The two bets are placed as ONE all-or-nothing batch (core.placeWagers): if the
+ * pair-plus stake wouldn't fit, the ante hold is rolled back too, so a round can
+ * never strand the ante in `pending`.
  */
 export function createGame(account: Account, opts: CreateGameOptions): ThreeCardGame {
   const serverSeed = opts.serverSeed ?? randomServerSeed()
   const pairPlus = opts.pairPlus ?? 0
 
-  const anteWager = placeWager(account, opts.ante)
-  const pairPlusWager = pairPlus > 0 ? placeWager(account, pairPlus) : undefined
+  // Ante + pair plus held together (or neither): a pair-plus that doesn't fit can
+  // never leave the ante stranded in pending.
+  const wagers = placeWagers(account, pairPlus > 0 ? [opts.ante, pairPlus] : [opts.ante])
+  const anteWager = wagers[0]
+  const pairPlusWager = wagers[1] // undefined when there's no pair plus
 
   const deal: Deal = deal3(serverSeed, opts.clientSeed, opts.nonce)
   return {

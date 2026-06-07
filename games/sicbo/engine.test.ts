@@ -358,7 +358,7 @@ describe('playSicBo settlement through core', () => {
     expect(a.balance).toBe(0)
   })
 
-  it('exposes a verifiable roll and rejects an over-limit stack', () => {
+  it('exposes a verifiable roll and rejects an over-limit stack atomically', () => {
     const r = playSicBo(account(), {
       bets: [{ type: 'anyTriple', stake: 100 }],
       ...BASE,
@@ -376,7 +376,10 @@ describe('playSicBo settlement through core', () => {
         ...BASE,
       }),
     ).toThrow(/exceeds availableToWager/)
-    expect(availableToWager(a)).toBe(500) // first 1000 stayed held (pending)
+    // The stack is placed atomically (core.placeWagers): when the second bet
+    // doesn't fit, the first 1000 hold is rolled back too — nothing strands.
+    expect(a.pending).toBe(0)
+    expect(availableToWager(a)).toBe(1500)
   })
 
   it('rejects an empty bet list', () => {

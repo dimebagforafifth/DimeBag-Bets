@@ -4,6 +4,7 @@ import {
   adjustBalance,
   availableToWager,
   placeWager,
+  placeWagers,
   resolveAtMultiplier,
   resolveWager,
   settleWeek,
@@ -237,6 +238,38 @@ describe('full lifecycle', () => {
     expect(a.pending).toBe(0)
     expect(a.balance).toBe(100)
     expect(availableToWager(a)).toBe(1100)
+  })
+})
+
+describe('placeWagers — atomic multi-bet placement', () => {
+  it('holds every stake when the whole batch fits', () => {
+    const a = account() // creditLimit 1000
+    const ws = placeWagers(a, [300, 200, 100])
+    expect(ws).toHaveLength(3)
+    expect(ws.every((w) => w.status === 'open')).toBe(true)
+    expect(a.pending).toBe(600)
+    expect(availableToWager(a)).toBe(400)
+  })
+
+  it('rolls back ALL holds if a later stake does not fit — account untouched', () => {
+    const a = account() // creditLimit 1000
+    // 600 + 500 = 1100 > 1000: the second placement fails, so the first must release.
+    expect(() => placeWagers(a, [600, 500])).toThrow(/exceeds availableToWager/)
+    expect(a.pending).toBe(0) // the 600 hold was rolled back — nothing stranded
+    expect(a.balance).toBe(0)
+    expect(availableToWager(a)).toBe(1000)
+  })
+
+  it('rolls back when a stake trips a per-head max bet', () => {
+    const a = account({ maxWager: 400 })
+    expect(() => placeWagers(a, [300, 500])).toThrow(/max bet/)
+    expect(a.pending).toBe(0)
+  })
+
+  it('rolls back when a stake is invalid (non-integer), leaving nothing held', () => {
+    const a = account()
+    expect(() => placeWagers(a, [200, 10.5])).toThrow(/whole number/)
+    expect(a.pending).toBe(0)
   })
 })
 

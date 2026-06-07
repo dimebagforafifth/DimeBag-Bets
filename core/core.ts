@@ -193,6 +193,31 @@ export function placeWager(account: Account, stake: number, id?: string): Wager 
 }
 
 /**
+ * Place several wagers as ONE all-or-nothing batch — hold every stake or none.
+ * If any stake fails `placeWager`'s checks (doesn't fit `availableToWager`, trips
+ * a per-head min/max, betting is locked, non-integer …), the holds already taken
+ * in this call are released and the original error is rethrown, leaving the
+ * account exactly as it started. The release goes through the normal void path,
+ * so any place/resolve subscriber (exposure, ledger) stays balanced.
+ *
+ * This is the safe way for a multi-leg round (Sic Bo's bets, Three Card Poker's
+ * ante + pair plus) to place its legs: without it, a stake that doesn't fit after
+ * earlier legs were held would strand those holds in `pending` forever.
+ */
+export function placeWagers(account: Account, stakes: number[]): Wager[] {
+  const placed: Wager[] = []
+  try {
+    for (const stake of stakes) placed.push(placeWager(account, stake))
+    return placed
+  } catch (err) {
+    // Roll back every hold taken in THIS batch (void releases pending, no balance
+    // change), so a partial failure is invisible to the figure.
+    for (const w of placed) resolveWager(account, w, 'void')
+    throw err
+  }
+}
+
+/**
  * Grade a wager and adjust the figure:
  *  - release the hold (pending −= stake), then
  *  - win:  balance += profit  (profit = stake × (payoutMultiplier − 1))

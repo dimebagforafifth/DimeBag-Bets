@@ -8,6 +8,7 @@ export {
   availableToWager,
   maxBet,
   placeWager,
+  placeWagers,
   resolveWager,
   resolveAtMultiplier,
   settleWeek,

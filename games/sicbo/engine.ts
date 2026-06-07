@@ -15,7 +15,7 @@
 
 import { bytesToHex, randomBytes } from '@noble/hashes/utils'
 import type { Account, Wager } from '../../core/index.js'
-import { placeWager, resolveAtMultiplier } from '../../core/index.js'
+import { placeWagers, resolveAtMultiplier } from '../../core/index.js'
 import { hashServerSeed, rollDice, type Dice } from './fair.js'
 import { betReturn, validateBetSpec, type BetSpec, type BetType } from './payouts.js'
 
@@ -71,10 +71,11 @@ export function randomServerSeed(): string {
 }
 
 /**
- * Play one roll: place every bet, roll, settle each. Each bet is validated by
- * core (stake > 0, integer, fits availableToWager) as it is placed; if a later
- * placeWager throws (e.g. the stack of bets exceeds the credit limit), the
- * already-placed wagers stay held — the caller (UI) guards the total beforehand.
+ * Play one roll: place every bet, roll, settle each. The whole stack of bets is
+ * placed as ONE all-or-nothing batch (core.placeWagers): each is validated by
+ * core (stake > 0, integer, fits availableToWager, per-head limits) and if any
+ * one doesn't fit, every hold already taken is rolled back — so a round can never
+ * strand part of its stake in `pending`.
  */
 export function playSicBo(account: Account, opts: PlaySicBoOptions): SicBoRound {
   if (opts.bets.length === 0) throw new Error('at least one bet is required')
@@ -87,9 +88,10 @@ export function playSicBo(account: Account, opts: PlaySicBoOptions): SicBoRound 
 
   const serverSeed = opts.serverSeed ?? randomServerSeed()
 
-  // Place each bet as its own core wager FIRST, so the full stack is validated /
-  // held before we touch the dice (and the roll is independent of this anyway).
-  const wagers: Wager[] = opts.bets.map((b) => placeWager(account, b.stake))
+  // Place the full stack as one atomic batch FIRST, so it's all validated / held
+  // (or none held, on a roll-back) before we touch the dice — and the roll is
+  // independent of this anyway.
+  const wagers: Wager[] = placeWagers(account, opts.bets.map((b) => b.stake))
 
   const dice = rollDice(serverSeed, opts.clientSeed, opts.nonce)
 

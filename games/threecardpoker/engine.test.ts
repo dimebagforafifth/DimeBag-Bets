@@ -216,6 +216,18 @@ describe('createGame + settlement through core', () => {
     expect(availableToWager(a)).toBe(500)
   })
 
+  it('holds ante + pair plus atomically — a pair plus that does not fit rolls back the ante', () => {
+    const a = account({ creditLimit: 1000 })
+    // ante 600 fits, but ante + pairPlus = 1200 > 1000, so the pair plus can't be
+    // held — and the ante hold must roll back too (no stranded hold).
+    expect(() =>
+      createGame(a, { ante: 600, pairPlus: 600, clientSeed: 'C', nonce: 1, serverSeed: 'S' }),
+    ).toThrow(/exceeds availableToWager/)
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(0)
+    expect(availableToWager(a)).toBe(1000)
+  })
+
   it('FOLD: forfeits the ante, no play wager, but still settles pair plus', () => {
     // nonce 11 → player flush (pair plus pays 4×).
     const a = account()
