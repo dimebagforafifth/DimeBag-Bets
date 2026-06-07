@@ -26,15 +26,20 @@ function click(host: HTMLElement, selector: string, text: RegExp): boolean {
   act(() => el.click())
   return true
 }
-function openPlinkoAndDrop(host: HTMLElement): void {
+async function openPlinkoAndDrop(host: HTMLElement): Promise<void> {
   // From wherever we are, get to the casino lobby, open Plinko, drop a ball.
   click(host, 'button.nav-tab', /^casino$/i)
   if (!click(host, 'button.game-card', /plinko/i)) throw new Error('no Plinko card')
+  // The game view is a lazy() chunk: await its dynamic import (the same module
+  // promise React.lazy is suspended on) so React can commit it, then click Play.
+  await act(async () => {
+    await import('../games/plinko/ui/PlinkoGame.js')
+  })
   if (!click(host, 'button.action', /^play$/i)) throw new Error('no Play button')
 }
 
 describe('leaving Plinko by any route keeps the balance change', () => {
-  it('every nav route shows the post-drop figure, and the change is persisted', () => {
+  it('every nav route shows the post-drop figure, and the change is persisted', async () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
     const root: Root = createRoot(host)
@@ -54,7 +59,7 @@ describe('leaving Plinko by any route keeps the balance change', () => {
     ]
 
     for (const route of routes) {
-      openPlinkoAndDrop(host)
+      await openPlinkoAndDrop(host)
       const balanceAfterDrop = acct.balance
       // The header now leads with Balance (what you can bet = availableToWager),
       // which moves with the figure since a Plinko drop settles immediately

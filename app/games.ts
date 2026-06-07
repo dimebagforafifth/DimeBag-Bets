@@ -10,48 +10,28 @@
  * game without touching any game's code.
  */
 
-import type { ComponentType } from 'react'
+import { lazy, type ComponentType } from 'react'
 import type { Account } from '../core/index.js'
 import { minesMeta } from '../games/mines/index.js'
-import { MinesGame } from '../games/mines/ui/MinesGame.js'
 import { crashMeta } from '../games/crash/index.js'
-import { CrashGame } from '../games/crash/ui/CrashGame.js'
 import { diceMeta } from '../games/dice/index.js'
-import { DiceGame } from '../games/dice/ui/DiceGame.js'
 import { limboMeta } from '../games/limbo/index.js'
-import { LimboGame } from '../games/limbo/ui/LimboGame.js'
 import { kenoMeta } from '../games/keno/index.js'
-import { KenoGame } from '../games/keno/ui/KenoGame.js'
 import { plinkoMeta } from '../games/plinko/index.js'
-import { PlinkoGame } from '../games/plinko/ui/PlinkoGame.js'
 import { wheelMeta } from '../games/wheel/index.js'
-import { WheelGame } from '../games/wheel/ui/WheelGame.js'
 import { hiloMeta } from '../games/hilo/index.js'
-import { HiloGame } from '../games/hilo/ui/HiloGame.js'
 import { chickenRoadMeta } from '../games/chickenroad/index.js'
-import { ChickenRoadGame } from '../games/chickenroad/ui/ChickenRoadGame.js'
 import { dragonTowerMeta } from '../games/dragon-tower/index.js'
-import { DragonTowerGame } from '../games/dragon-tower/ui/DragonTowerGame.js'
 import { pumpMeta } from '../games/pump/index.js'
-import { PumpGame } from '../games/pump/ui/PumpGame.js'
 import { rouletteMeta } from '../games/roulette/index.js'
-import { RouletteGame } from '../games/roulette/ui/RouletteGame.js'
 import { blackjackMeta } from '../games/blackjack/index.js'
-import { BlackjackGame } from '../games/blackjack/ui/BlackjackGame.js'
 import { baccaratMeta } from '../games/baccarat/index.js'
-import { BaccaratGame } from '../games/baccarat/ui/BaccaratGame.js'
 import { coinFlipMeta } from '../games/coinflip/index.js'
-import { CoinFlipGame } from '../games/coinflip/ui/CoinFlipGame.js'
 import { diamondsMeta } from '../games/diamonds/index.js'
-import { DiamondsGame } from '../games/diamonds/ui/DiamondsGame.js'
 import { videoPokerMeta } from '../games/videopoker/index.js'
-import { VideoPokerGame } from '../games/videopoker/ui/VideoPokerGame.js'
 import { casesMeta } from '../games/cases/index.js'
-import { CasesGame } from '../games/cases/ui/CasesGame.js'
 import { sicBoMeta } from '../games/sicbo/index.js'
-import { SicBoGame } from '../games/sicbo/ui/SicBoGame.js'
 import { threeCardPokerMeta } from '../games/threecardpoker/index.js'
-import { ThreeCardPokerGame } from '../games/threecardpoker/ui/ThreeCardPokerGame.js'
 
 /** What every game view receives from the shell: the shared account + a signal
  *  to re-render the balance. (Games may also accept an optional per-game
@@ -77,27 +57,38 @@ export interface GameDef {
   Component: ComponentType<GameProps>
 }
 
+/**
+ * Lazy-load a game's view so each game UI ships as its OWN chunk, fetched only
+ * when the player opens that game — instead of bundling all 20 game UIs (the bulk
+ * of the app) into the initial download. The shell stays small; a game's code
+ * (and its CSS) arrives on first open and is cached thereafter. The lobby cards
+ * use the static `*Meta` above, so the hub renders with no game chunk loaded.
+ */
+function lazyView(load: () => Promise<{ default: ComponentType<GameProps> }>): ComponentType<GameProps> {
+  return lazy(load) as unknown as ComponentType<GameProps>
+}
+
 export const GAMES: GameDef[] = [
-  { ...minesMeta, Component: MinesGame },
-  { ...crashMeta, Component: CrashGame },
-  { ...diceMeta, Component: DiceGame },
-  { ...limboMeta, Component: LimboGame },
-  { ...kenoMeta, Component: KenoGame },
-  { ...plinkoMeta, Component: PlinkoGame },
-  { ...wheelMeta, Component: WheelGame },
-  { ...hiloMeta, Component: HiloGame },
-  { ...chickenRoadMeta, Component: ChickenRoadGame },
-  { ...dragonTowerMeta, Component: DragonTowerGame },
-  { ...pumpMeta, Component: PumpGame },
-  { ...rouletteMeta, Component: RouletteGame },
-  { ...blackjackMeta, Component: BlackjackGame },
-  { ...baccaratMeta, Component: BaccaratGame },
-  { ...coinFlipMeta, Component: CoinFlipGame },
-  { ...diamondsMeta, Component: DiamondsGame },
-  { ...videoPokerMeta, Component: VideoPokerGame },
-  { ...casesMeta, Component: CasesGame },
-  { ...sicBoMeta, Component: SicBoGame },
-  { ...threeCardPokerMeta, Component: ThreeCardPokerGame },
+  { ...minesMeta, Component: lazyView(() => import('../games/mines/ui/MinesGame.js').then((m) => ({ default: m.MinesGame }))) },
+  { ...crashMeta, Component: lazyView(() => import('../games/crash/ui/CrashGame.js').then((m) => ({ default: m.CrashGame }))) },
+  { ...diceMeta, Component: lazyView(() => import('../games/dice/ui/DiceGame.js').then((m) => ({ default: m.DiceGame }))) },
+  { ...limboMeta, Component: lazyView(() => import('../games/limbo/ui/LimboGame.js').then((m) => ({ default: m.LimboGame }))) },
+  { ...kenoMeta, Component: lazyView(() => import('../games/keno/ui/KenoGame.js').then((m) => ({ default: m.KenoGame }))) },
+  { ...plinkoMeta, Component: lazyView(() => import('../games/plinko/ui/PlinkoGame.js').then((m) => ({ default: m.PlinkoGame }))) },
+  { ...wheelMeta, Component: lazyView(() => import('../games/wheel/ui/WheelGame.js').then((m) => ({ default: m.WheelGame }))) },
+  { ...hiloMeta, Component: lazyView(() => import('../games/hilo/ui/HiloGame.js').then((m) => ({ default: m.HiloGame }))) },
+  { ...chickenRoadMeta, Component: lazyView(() => import('../games/chickenroad/ui/ChickenRoadGame.js').then((m) => ({ default: m.ChickenRoadGame }))) },
+  { ...dragonTowerMeta, Component: lazyView(() => import('../games/dragon-tower/ui/DragonTowerGame.js').then((m) => ({ default: m.DragonTowerGame }))) },
+  { ...pumpMeta, Component: lazyView(() => import('../games/pump/ui/PumpGame.js').then((m) => ({ default: m.PumpGame }))) },
+  { ...rouletteMeta, Component: lazyView(() => import('../games/roulette/ui/RouletteGame.js').then((m) => ({ default: m.RouletteGame }))) },
+  { ...blackjackMeta, Component: lazyView(() => import('../games/blackjack/ui/BlackjackGame.js').then((m) => ({ default: m.BlackjackGame }))) },
+  { ...baccaratMeta, Component: lazyView(() => import('../games/baccarat/ui/BaccaratGame.js').then((m) => ({ default: m.BaccaratGame }))) },
+  { ...coinFlipMeta, Component: lazyView(() => import('../games/coinflip/ui/CoinFlipGame.js').then((m) => ({ default: m.CoinFlipGame }))) },
+  { ...diamondsMeta, Component: lazyView(() => import('../games/diamonds/ui/DiamondsGame.js').then((m) => ({ default: m.DiamondsGame }))) },
+  { ...videoPokerMeta, Component: lazyView(() => import('../games/videopoker/ui/VideoPokerGame.js').then((m) => ({ default: m.VideoPokerGame }))) },
+  { ...casesMeta, Component: lazyView(() => import('../games/cases/ui/CasesGame.js').then((m) => ({ default: m.CasesGame }))) },
+  { ...sicBoMeta, Component: lazyView(() => import('../games/sicbo/ui/SicBoGame.js').then((m) => ({ default: m.SicBoGame }))) },
+  { ...threeCardPokerMeta, Component: lazyView(() => import('../games/threecardpoker/ui/ThreeCardPokerGame.js').then((m) => ({ default: m.ThreeCardPokerGame }))) },
 ]
 
 /** Look up a game by its key (used for routing to a game page). */

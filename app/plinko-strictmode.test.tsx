@@ -29,7 +29,7 @@ function click(host: HTMLElement, selector: string, text: RegExp): boolean {
 }
 
 describe('Plinko under StrictMode (matches the real app shell)', () => {
-  it('the Figure matches the true balance in-game and after clicking outside Plinko', () => {
+  it('the Figure matches the true balance in-game and after clicking outside Plinko', async () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
     const root = createRoot(host)
@@ -37,6 +37,12 @@ describe('Plinko under StrictMode (matches the real app shell)', () => {
 
     const acct = getCurrentPlayer()!.account
     expect(click(host, 'button.game-card', /plinko/i)).toBe(true)
+    // The game view is a lazy() chunk: await its dynamic import (the same module
+    // promise React.lazy is suspended on) so Plinko mounts (under StrictMode's
+    // mount→unmount→mount) before we drive its Play button.
+    await act(async () => {
+      await import('../games/plinko/ui/PlinkoGame.js')
+    })
 
     // Drop several balls; the headline Balance (availableToWager) must track the
     // real balance after each (a drop settles immediately, so pending stays 0).

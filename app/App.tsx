@@ -1,4 +1,5 @@
 import {
+  Suspense,
   useEffect,
   useMemo,
   useReducer,
@@ -250,7 +251,12 @@ export function App() {
                 <button className="crumb" onClick={() => setRoute(null)}>
                   ← Casino
                 </button>
-                <GameMount game={liveGame} account={account} onBalanceChange={refresh} />
+                {/* Each game's view is a lazy chunk (app/games.ts); show a light
+                    placeholder while it loads on first open. The crumb + Ledger
+                    stay outside the boundary so leaving is always instant. */}
+                <Suspense fallback={<GameLoading />}>
+                  <GameMount game={liveGame} account={account} onBalanceChange={refresh} />
+                </Suspense>
                 {/* the ledger lives only inside a game — its own per-game history,
                     scoped to the player you're currently playing as. */}
                 <Ledger gameKey={liveGame.key} gameName={liveGame.name} accountId={account.id} />
@@ -277,6 +283,15 @@ export function App() {
  * edge (the "keep current edges" ship default). The single contained cast lets us
  * pass a per-game-shaped config through the shared GameProps boundary.
  */
+/** Placeholder shown while a game's lazy chunk loads on first open. */
+function GameLoading() {
+  return (
+    <div className="game-loading" aria-busy="true" style={{ padding: '4rem', textAlign: 'center', opacity: 0.55 }}>
+      Loading…
+    </div>
+  )
+}
+
 function GameMount({
   game,
   account,
