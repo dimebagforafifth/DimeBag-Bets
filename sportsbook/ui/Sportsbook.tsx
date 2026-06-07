@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Account } from '../../core/index.js'
-import { availableToWager } from '../../core/index.js'
+import { availableToWager, maxBet } from '../../core/index.js'
 import {
   americanFromDecimal,
   decimalFromAmerican,
@@ -127,6 +127,8 @@ const SPORTSBOOK_RULES: ReactNode[] = [
   'Bet them as Singles (each its own wager) or combine them into a Parlay — one stake, every leg must win, the odds multiply.',
   'Once a game kicks off, its pre-game markets close but a Live moneyline opens — its price moves with the score, so you can bet in-play right up to the final whistle. Odds lock the moment you place.',
   'A tie on a spread or total is a push — stake back. In a parlay, a push or void leg drops out and it re-prices on the rest; one losing leg settles it immediately. Two picks from one game can’t be parlayed.',
+  'A bet only stands if the game goes far enough to be official (e.g. an NFL full game, 43 of 48 minutes in the NBA, 5 innings in MLB). A postponed, abandoned or shortened game voids the affected bets — your stake comes back.',
+  'Lines move. If one of your picks re-prices while it’s in the slip, we ask you to accept the new price before placing — your bet always locks at the price you confirm.',
   'Cash Out any open bet while a game is live — we buy it back at its live value (the win-probability bar shows how the game’s leaning). The only haircut is a 5% cash-out margin, shown up front, nothing hidden.',
   <>
     <strong>Payout = stake × the locked decimal odds; parlays cap at 299:1.</strong> Games here run on
@@ -180,6 +182,21 @@ export function Sportsbook({ account, store }: SportsbookProps) {
   const closedLegs = freshSlip.filter((s) => !placeableNow(s, statusById))
   // A leg the book has suspended since it was added — can't be placed until restored.
   const suspendedLegs = freshSlip.filter((s) => s.suspended)
+  // §4 acceptance: a PRE-GAME leg whose posted price moved since it was added — the
+  // book shifted the line or re-vigged it. The player must accept the new price
+  // before placing (no silent re-quote). Live legs are expected to drift, so they're
+  // excluded; they re-quote on their own. Aligned by index (freshSlip = slip mapped).
+  const movedIds = useMemo(() => {
+    const ids = new Set<string>()
+    freshSlip.forEach((s, i) => {
+      const orig = slip[i]
+      if (orig && !s.live && (s.odds !== orig.odds || s.line !== orig.line)) ids.add(s.id)
+    })
+    return ids
+  }, [freshSlip, slip])
+  const linesMoved = movedIds.size > 0
+  // The most a single wager may be (credit limit, capped by any per-head max bet).
+  const perBetMax = maxBet(account)
   const related = hasRelatedLegs(freshSlip)
 
   // Which bet types the slip supports, via the bets/ module (single ≥1, parlay ≥2
@@ -275,6 +292,13 @@ export function Sportsbook({ account, store }: SportsbookProps) {
     play('select')
   }
 
+  /** §4 acceptance: lock the slip to the book's current prices, accepting any leg
+   *  whose line moved since it was added. */
+  function acceptMoves() {
+    setSlip(freshSlip)
+    setError(null)
+  }
+
   function place() {
     if (slip.length === 0 || totalStake === 0) return
     if (closedLegs.length > 0) {
@@ -283,6 +307,14 @@ export function Sportsbook({ account, store }: SportsbookProps) {
     }
     if (suspendedLegs.length > 0) {
       setError('The book has suspended a pick on your slip — remove it to place your bet.')
+      return
+    }
+    if (linesMoved) {
+      setError('A price moved — review and accept the new line to place your bet.')
+      return
+    }
+    if (stake > perBetMax) {
+      setError(`Each wager is capped at the max bet (${formatMoney(perBetMax)}).`)
       return
     }
     if (totalStake > available) {
@@ -505,9 +537,11 @@ export function Sportsbook({ account, store }: SportsbookProps) {
             parlayCount={parlayCount}
             rrSizes={activeRrSizes}
             rrValidSizes={rrValidSizes}
+            movedIds={movedIds}
             error={error}
             onMode={setMode}
             onStake={setStake}
+            onAccept={acceptMoves}
             onToggleRrSize={(k) =>
               setRrSizes(() => {
                 const has = activeRrSizes.includes(k)
@@ -829,6 +863,7 @@ function BetSlip({
   parlayCount,
   rrSizes,
   rrValidSizes,
+  movedIds,
   error,
   onMode,
   onStake,
@@ -836,6 +871,7 @@ function BetSlip({
   onRemove,
   onClear,
   onPlace,
+  onAccept,
   onClose,
 }: {
   slip: Selection[]
@@ -851,6 +887,8 @@ function BetSlip({
   parlayCount: number
   rrSizes: number[]
   rrValidSizes: number[]
+  /** Legs whose posted price moved since they were added (§4 — must be accepted). */
+  movedIds: Set<string>
   error: string | null
   onMode: (m: SlipMode) => void
   onStake: (n: number) => void
@@ -858,12 +896,15 @@ function BetSlip({
   onRemove: (id: string) => void
   onClear: () => void
   onPlace: () => void
+  /** Accept any moved prices (§4 acceptance), re-locking the slip to the live line. */
+  onAccept: () => void
   /** Dismiss the mobile bottom-sheet (rendered as a ✕, mobile only). */
   onClose?: () => void
 }) {
   const fmtOdds = useFmtOdds()
   const profit = totalReturn - totalStake
   const closedIds = new Set(closedLegs.map((s) => s.id))
+  const linesMoved = movedIds.size > 0
   const stakeLabel =
     mode === 'parlay' ? 'Parlay stake' : mode === 'roundRobin' ? 'Stake (per parlay)' : 'Stake (each)'
   const placeLabel =
@@ -934,12 +975,18 @@ function BetSlip({
 
           <ul className="sb-legs">
             {slip.map((s) => (
-              <li key={s.id} className={`sb-leg ${closedIds.has(s.id) ? 'is-closed' : ''}`}>
+              <li
+                key={s.id}
+                className={`sb-leg ${closedIds.has(s.id) ? 'is-closed' : ''} ${
+                  movedIds.has(s.id) ? 'is-moved' : ''
+                }`}
+              >
                 <div className="sb-leg-main">
                   <span className="sb-leg-label">
                     {s.label}
                     {s.live && !closedIds.has(s.id) && <span className="sb-leg-live">live</span>}
                     {closedIds.has(s.id) && <span className="sb-leg-closed">closed</span>}
+                    {movedIds.has(s.id) && <span className="sb-leg-moved">moved</span>}
                   </span>
                   <span className="sb-leg-odds">{fmtOdds(s.odds)}</span>
                 </div>
@@ -994,15 +1041,26 @@ function BetSlip({
             </div>
           </dl>
 
+          {linesMoved && (
+            <p className="sb-note sb-moved-note">
+              A price moved since you added it — accept the new line to place at the current price.
+            </p>
+          )}
           {error && <p className="sb-error">{error}</p>}
 
-          <button
-            className="action action-bet"
-            onClick={onPlace}
-            disabled={totalStake === 0 || totalStake > available || closedLegs.length > 0}
-          >
-            {placeLabel}
-          </button>
+          {linesMoved ? (
+            <button className="action action-accept" onClick={onAccept}>
+              Accept new prices
+            </button>
+          ) : (
+            <button
+              className="action action-bet"
+              onClick={onPlace}
+              disabled={totalStake === 0 || totalStake > available || closedLegs.length > 0}
+            >
+              {placeLabel}
+            </button>
+          )}
         </>
       )}
     </section>

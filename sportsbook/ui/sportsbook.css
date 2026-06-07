@@ -2,6 +2,10 @@
    (CLAUDE.md §2, §4). Shared controls (.field, .chip, .action) live in app/theme.css. */
 .sb {
   --sb: #3aa0ff;
+  --sb-loss: #ff5a5f;
+  --sb-loss-2: #ff7a7e;
+  --sb-win: #4ade80;
+  --sb-gold: #f6c350;
   width: 100%;
   max-width: 1040px;
   display: grid;
@@ -61,7 +65,7 @@
   color: var(--muted);
 }
 .sb-group-head.is-live .sb-group-title {
-  color: #ff5a5f;
+  color: var(--sb-loss);
 }
 .sb-group-head.is-final {
   opacity: 0.7;
@@ -151,14 +155,14 @@
   gap: 5px;
   font-size: 11.5px;
   font-weight: 700;
-  color: #ff5a5f;
+  color: var(--sb-loss);
   font-variant-numeric: tabular-nums;
 }
 .sb-live-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ff5a5f;
+  background: var(--sb-loss);
   animation: sb-pulse 1.1s ease-in-out infinite;
 }
 @keyframes sb-pulse {
@@ -177,7 +181,7 @@
   font-variant-numeric: tabular-nums;
 }
 .sb-event.is-live {
-  border-color: color-mix(in srgb, #ff5a5f 35%, var(--line));
+  border-color: color-mix(in srgb, var(--sb-loss) 35%, var(--line));
 }
 .sb-livepanel {
   display: flex;
@@ -193,21 +197,21 @@
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.5px;
-  color: #ff5a5f;
+  color: var(--sb-loss);
 }
 /* in-play price chips read with a red edge to signal a live, moving line */
 .sb-price-live {
-  border-color: color-mix(in srgb, #ff5a5f 32%, var(--line));
+  border-color: color-mix(in srgb, var(--sb-loss) 32%, var(--line));
 }
 .sb-price-live:hover {
-  border-color: color-mix(in srgb, #ff5a5f 60%, var(--line));
+  border-color: color-mix(in srgb, var(--sb-loss) 60%, var(--line));
 }
 .sb-price-live.is-on {
-  border-color: #ff5a5f;
-  background: color-mix(in srgb, #ff5a5f 16%, var(--bg));
+  border-color: var(--sb-loss);
+  background: color-mix(in srgb, var(--sb-loss) 16%, var(--bg));
 }
 .sb-price-live .sb-price-odds {
-  color: #ff7a7e;
+  color: var(--sb-loss-2);
 }
 .sb-closed-note {
   margin: 0;
@@ -245,7 +249,7 @@
   background: var(--bg);
 }
 .sb-winbar-away {
-  background: #8aa0b0;
+  background: var(--muted);
 }
 .sb-winbar-home {
   background: var(--sb);
@@ -366,7 +370,7 @@
 .sb-note {
   margin: 0 0 10px;
   font-size: 11.5px;
-  color: #f6c350;
+  color: var(--sb-gold);
   line-height: 1.4;
 }
 
@@ -457,7 +461,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: #ff5a5f;
+  color: var(--sb-loss);
 }
 
 .sb-stake {
@@ -713,38 +717,38 @@
   font-variant-numeric: tabular-nums;
 }
 .sb-feed.is-live {
-  color: #4ade80;
-  border-color: color-mix(in srgb, #4ade80 35%, var(--line));
+  color: var(--sb-win);
+  border-color: color-mix(in srgb, var(--sb-win) 35%, var(--line));
 }
 .sb-feed.is-live .sb-feed-dot {
-  background: #4ade80;
+  background: var(--sb-win);
   animation: sb-pulse 1.1s ease-in-out infinite;
 }
 .sb-feed.is-connecting,
 .sb-feed.is-reconnecting {
-  color: #f6c350;
-  border-color: color-mix(in srgb, #f6c350 35%, var(--line));
+  color: var(--sb-gold);
+  border-color: color-mix(in srgb, var(--sb-gold) 35%, var(--line));
 }
 .sb-feed.is-connecting .sb-feed-dot,
 .sb-feed.is-reconnecting .sb-feed-dot {
-  background: #f6c350;
+  background: var(--sb-gold);
   animation: sb-pulse 1.1s ease-in-out infinite;
 }
 .sb-feed.is-error {
-  color: #ff7a7e;
-  border-color: color-mix(in srgb, #ff5a5f 35%, var(--line));
+  color: var(--sb-loss-2);
+  border-color: color-mix(in srgb, var(--sb-loss) 35%, var(--line));
 }
 .sb-feed.is-error .sb-feed-dot {
-  background: #ff5a5f;
+  background: var(--sb-loss);
 }
 
 /* a stale/offline notice over the board — the last prices stay shown beneath */
 .sb-feedbanner {
   padding: 9px 12px;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, #f6c350 40%, var(--line));
-  background: color-mix(in srgb, #f6c350 12%, var(--bg));
-  color: #f6c350;
+  border: 1px solid color-mix(in srgb, var(--sb-gold) 40%, var(--line));
+  background: color-mix(in srgb, var(--sb-gold) 12%, var(--bg));
+  color: var(--sb-gold);
   font-size: 12.5px;
   font-weight: 600;
 }
@@ -825,11 +829,11 @@
   padding: 0 4px;
 }
 .sb-price-odds.sb-move-up {
-  color: #4ade80 !important;
+  color: var(--sb-win) !important;
   animation: sb-flash-up 0.7s ease-out;
 }
 .sb-price-odds.sb-move-down {
-  color: #ff7a7e !important;
+  color: var(--sb-loss-2) !important;
   animation: sb-flash-down 0.7s ease-out;
 }
 @keyframes sb-flash-up {
@@ -1135,4 +1139,30 @@
 }
 .sb-leagues .chip-sm.is-on {
   color: var(--text);
+}
+
+/* ---- §4 acceptance: a price moved since you added the leg ---- */
+.sb-leg.is-moved {
+  border-color: color-mix(in srgb, var(--sb-gold) 50%, var(--line));
+}
+.sb-leg-moved {
+  margin-left: 6px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sb-gold);
+  background: color-mix(in srgb, var(--sb-gold) 16%, transparent);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.sb-moved-note {
+  color: var(--sb-gold);
+}
+.action-accept {
+  background: var(--sb-gold);
+  color: #07121d;
+}
+.action-accept:hover:not(:disabled) {
+  filter: brightness(1.06);
 }

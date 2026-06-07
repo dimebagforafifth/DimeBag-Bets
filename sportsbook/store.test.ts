@@ -256,6 +256,25 @@ describe('auto-settlement', () => {
     expect(a.balance).toBe(value - 1000)
   })
 
+  it('voids a bet and returns the stake when a game finals NOT official (§7)', () => {
+    const a = account()
+    const m = manualFeed(slate())
+    const store = createStore(a, { feed: m.feed })
+    store.place([{ kind: 'single', legs: [sel('nba-lal-bos', 'moneyline-home')], stake: 1000 }])
+    expect(a.pending).toBe(1000)
+
+    // the game ends but isn't official (postponed/abandoned/shortened) → void.
+    m.push(
+      slate({ 'nba-lal-bos': { status: 'final', score: { home: 55, away: 50, official: false } } }),
+    )
+    const t = store.getState().tickets[0]
+    expect(t.status).toBe('void')
+    expect(t.returned).toBe(1000) // stake back
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(0) // figure unchanged — no win, no loss
+    store.destroy()
+  })
+
   it('does not re-settle when the looped slate re-opens a game', () => {
     const a = account()
     const m = manualFeed(slate())
