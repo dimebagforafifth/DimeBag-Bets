@@ -8,9 +8,11 @@
  *
  * Built:   reporting/   — read-only analytics (turnover, hold, engagement, export).
  *          promotions/  — free-play / point bonuses via core.grant (single + bulk).
- * Planned: communication/, branding/, settings/ (presentation), copilot/ — see
- *          README.md for the phased plan.
+ *          branding/    — white-label + presentation (name/logo/accent/domain,
+ *                         points symbol/format, timezone) with runtime theming.
+ * Planned: communication/, copilot/ — see README.md for the phased plan.
  */
 
 export { ReportingPage } from './reporting/index.js'
 export { PromotionsPage } from './promotions/index.js'
+export { BrandingPage } from './branding/index.js'

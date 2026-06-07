@@ -26,9 +26,8 @@ These pages are ready to mount under **Management**. Proposed: a sub-nav within 
 |------|--------|--------|
 | Reporting & analytics | `import { ReportingPage } from '../manager'` → `<ReportingPage />` | **built** |
 | Promotions & loyalty | `import { PromotionsPage } from '../manager'` → `<PromotionsPage />` | **built** (bonuses; loyalty/referral/scheduling next) |
+| Branding / white-label & Presentation | `import { BrandingPage } from '../manager'` → `<BrandingPage />` | **built** |
 | Communication | `manager/communication` | planned |
-| Branding / white-label | `manager/branding` | planned |
-| Presentation settings | `manager/settings` | planned |
 | AI Manager Copilot | `manager/copilot` | planned |
 
 `ReportingPage` is propless — it reads the durable analytics store directly.
@@ -59,10 +58,18 @@ initAnalyticsCapture() // idempotent
   `book-store.mutateBook` (single player or a whole downline), and logs each campaign
   (`promoStore`). *Next*: scheduled/recurring sends, loyalty-rate config on `vip/`,
   and a referral program.
-- **Branding / white-label & Presentation** — a persisted per-book config doc
-  (name, logo, colors, custom domain, points symbol, number format, timezone) +
-  a runtime theming seam; thread the points symbol/format into
-  `games/shared/money.ts` rather than forking a formatter.
+- **Branding / white-label & Presentation** — *built*: one persisted per-book
+  config (`manager/branding`: name, logo, accent, domain, money display, timezone).
+  The store applies it on load + on change — runtime theming overrides the `--gem`
+  accent token + the page title (`theme.ts`, no shared CSS edit), and the points
+  symbol/format thread through `games/shared/presentation.ts` → `formatMoney`
+  (defaults reproduce "$1,234.56" exactly, so nothing changes until configured).
+  **Two shell bindings to wire** (the shell workstream): (1) `import` the config
+  store at boot so branding applies from first paint; (2) bind the header
+  brand/title and lobby tagline to `bookConfigStore.config()` (they're hardcoded in
+  `App.tsx` today). Custom domain is stored for reference; DNS is a Vercel step.
+  *Note:* this touched the shared `games/shared/money.ts` formatter (the only seam
+  for an app-wide symbol) — additively, defaults preserved.
 - **Communication** — book-wide announcements + in-app notifications (player
   identity via `org` `Member.id`); outbound Discord/Telegram webhooks modeled on
   the `sportsdata/` injected-fetch pattern. (Off-platform per-player DMs need a
