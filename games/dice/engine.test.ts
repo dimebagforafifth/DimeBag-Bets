@@ -41,6 +41,27 @@ describe('playDice', () => {
     expect(availableToWager(a)).toBe(1000)
   })
 
+  it('refuses an unwinnable bet (multiplier ≤ 1) without holding any stake', () => {
+    const a = account()
+    // target 2 / over → 98% win chance (clamped). At a 5% house edge the payout
+    // prices to 0.97× — a bet a "win" can't profit on. The engine must refuse it
+    // BEFORE placing, or core would release a hold it never graded (corruption).
+    expect(() =>
+      playDice(a, { stake: 100, target: 2, direction: 'over', ...BASE, config: { edge: 0.05 } }),
+    ).toThrow(/no profit/)
+    expect(a.pending).toBe(0) // nothing held — no leaked hold
+    expect(a.balance).toBe(0)
+    expect(availableToWager(a)).toBe(1000)
+  })
+
+  it('accepts that same near-certain target at the default edge (price stays > 1×)', () => {
+    const a = account()
+    // 98% win chance at the default ~1% edge → 1.0102× (> 1), so it grades cleanly.
+    const r = playDice(a, { stake: 100, target: 2, direction: 'over', ...BASE })
+    expect(r.multiplier).toBeGreaterThan(1)
+    expect(a.pending).toBe(0) // resolved, hold released
+  })
+
   it('exposes a verifiable provably-fair proof', () => {
     const a = account()
     const r = playDice(a, { stake: 10, target: 50, direction: 'over', ...BASE })

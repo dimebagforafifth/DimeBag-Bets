@@ -114,11 +114,23 @@ describe('resolveWager', () => {
     expect(a.balance).toBe(50)
   })
 
-  it('throws on a win without a valid (> 1) multiplier', () => {
+  it('throws on a win without a valid (> 1) multiplier — atomically, leaving the account untouched', () => {
     const a = account()
     const w = placeWager(a, 100)
+    expect(a.pending).toBe(100)
     expect(() => resolveWager(a, w, 'win')).toThrow(/payoutMultiplier > 1/)
     expect(() => resolveWager(a, w, 'win', 1)).toThrow(/payoutMultiplier > 1/)
+    // A failed grade must NOT half-settle: the hold is still on, the figure unmoved,
+    // and the wager still open. (Before the fix the throw fired AFTER releasing
+    // pending, so the hold leaked and the wager was left dangling.)
+    expect(a.pending).toBe(100)
+    expect(a.balance).toBe(0)
+    expect(w.status).toBe('open')
+    // …and it can then be graded correctly, proving nothing was corrupted.
+    resolveWager(a, w, 'win', 2)
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(100)
+    expect(w.status).toBe('resolved')
   })
 
   it('throws on double-resolve', () => {
@@ -203,6 +215,25 @@ describe('full lifecycle', () => {
     resolveWager(a, w1, 'win', 2) // +300
     resolveWager(a, w2, 'loss') // −200
 
+    expect(a.pending).toBe(0)
+    expect(a.balance).toBe(100)
+    expect(availableToWager(a)).toBe(1100)
+  })
+
+  it('simultaneous bets: holds stack, available enforces them together, and each grades independently', () => {
+    const a = account() // creditLimit 1000
+    const w1 = placeWager(a, 300)
+    const w2 = placeWager(a, 200)
+    const w3 = placeWager(a, 500)
+    // Every live hold counts against availableToWager at once.
+    expect(a.pending).toBe(1000)
+    expect(availableToWager(a)).toBe(0)
+    // A further bet can't fit while all three are at risk.
+    expect(() => placeWager(a, 1)).toThrow(/exceeds availableToWager/)
+    // They settle independently, each moving only its own stake.
+    resolveWager(a, w1, 'win', 2) // +300
+    resolveWager(a, w2, 'loss') // −200
+    resolveWager(a, w3, 'push') // 0, stake returned
     expect(a.pending).toBe(0)
     expect(a.balance).toBe(100)
     expect(availableToWager(a)).toBe(1100)

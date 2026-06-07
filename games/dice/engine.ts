@@ -55,6 +55,12 @@ export function playDice(account: Account, opts: PlayDiceOptions): DiceRound {
   const serverSeed = opts.serverSeed ?? randomServerSeed()
   const chance = winChance(opts.target, opts.direction)
   const multiplier = multiplierFor(chance, config)
+  if (multiplier <= 1) {
+    // A win must pay back more than the stake. At a high house edge a near-certain
+    // target prices at or below 1× — an unwinnable bet. Refuse it BEFORE holding
+    // any stake (no pending leak); the player lowers their win chance to fix it.
+    throw new Error('this bet offers no profit — lower your win chance')
+  }
 
   const wager = placeWager(account, opts.stake)
   const roll = rollFromSeeds(serverSeed, opts.clientSeed, opts.nonce)

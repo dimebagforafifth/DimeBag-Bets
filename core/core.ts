@@ -215,20 +215,25 @@ export function resolveWager(
     throw new Error(`wager ${wager.id} does not belong to account ${account.id}`)
   }
 
+  // A win must carry a valid multiplier. Validate this BEFORE touching the
+  // account, so a bad call can never half-settle the wager — release the hold
+  // (pending) without grading it, which would silently corrupt the figure.
+  if (outcome === 'win' && (payoutMultiplier === undefined || payoutMultiplier <= 1)) {
+    throw new Error(`a win needs a payoutMultiplier > 1, got ${payoutMultiplier}`)
+  }
+
   // Release the hold regardless of outcome.
   account.pending -= wager.stake
 
   let profit = 0
   let mult = 1 // push / void return the stake (1×)
   if (outcome === 'win') {
-    if (payoutMultiplier === undefined || payoutMultiplier <= 1) {
-      throw new Error(`a win needs a payoutMultiplier > 1, got ${payoutMultiplier}`)
-    }
-    profit = Math.round(wager.stake * (payoutMultiplier - 1))
-    let effMult = payoutMultiplier
+    // payoutMultiplier is guaranteed > 1 by the guard above.
+    profit = Math.round(wager.stake * (payoutMultiplier! - 1))
+    let effMult = payoutMultiplier!
     if (account.maxPayout != null && profit > account.maxPayout) {
       profit = account.maxPayout // operator cap on the win
-      effMult = wager.stake > 0 ? 1 + profit / wager.stake : payoutMultiplier // record the EFFECTIVE multiple
+      effMult = wager.stake > 0 ? 1 + profit / wager.stake : payoutMultiplier! // record the EFFECTIVE multiple
     }
     account.balance += profit
     wager.payoutMultiplier = effMult

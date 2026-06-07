@@ -112,6 +112,33 @@ describe('grading parlays', () => {
     expect(t.oddsDecimal).toBeCloseTo(4) // 2.0 × 2.0, not 8.0
     expect(a.balance).toBe(3000)
   })
+  it('a voided leg drops out and the parlay re-prices on the rest', () => {
+    const a = account()
+    const t = placeTicket(a, {
+      kind: 'parlay',
+      legs: [leg('a', 100), leg('b', 100), leg('c', 100)],
+      stake: 1000,
+    })
+    // b's game never went official (no result) → void; it drops out and the parlay
+    // re-prices on the winners a,c only (CLAUDE.md §4).
+    gradeTicket(a, t, { a: win, b: null, c: win })
+    expect(t.legOutcomes).toEqual(['win', 'void', 'win'])
+    expect(t.status).toBe('won')
+    expect(t.oddsDecimal).toBeCloseTo(4) // 2.0 × 2.0, not 8.0
+    expect(a.balance).toBe(3000) // +3.0× profit on the re-priced odds
+    expect(a.pending).toBe(0)
+  })
+
+  it('a single void returns the stake (no win/loss)', () => {
+    const a = account()
+    const t = placeTicket(a, { kind: 'single', legs: [leg('a', 150)], stake: 1000 })
+    gradeTicket(a, t, { a: null }) // game never official → void
+    expect(t.status).toBe('void')
+    expect(a.balance).toBe(0)
+    expect(t.returned).toBe(1000)
+    expect(a.pending).toBe(0)
+  })
+
   it('pushes when every leg pushes/voids', () => {
     const a = account()
     const t = placeTicket(a, { kind: 'parlay', legs: [leg('a', 100), leg('b', 100)], stake: 1000 })

@@ -61,7 +61,9 @@ export function DiceGame({
   const chance = winChance(target, direction)
   const multiplier = multiplierFor(chance, houseConfig)
   const profit = Math.round(bet * (multiplier - 1))
-  const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available
+  // multiplier ≤ 1 means a "win" couldn't pay a profit (a near-certain target at a
+  // high house edge) — the engine refuses it, so don't let the player place it.
+  const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available || multiplier <= 1
   const resolving = useResolving(account.id)
 
   function roll(): boolean {

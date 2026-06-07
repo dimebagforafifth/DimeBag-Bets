@@ -8,7 +8,7 @@ import {
   type ComponentType,
   type CSSProperties,
 } from 'react'
-import { availableToWager, type Account } from '../core/index.js'
+import { availableToWager, grant, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
 import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
 import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook/index.js'
@@ -201,7 +201,12 @@ export function App() {
             <VipBadge
               playerId={player.id}
               playerName={player.name}
-              onRedeem={(cents) => mutateBook(() => { account.balance += cents })}
+              onRedeem={(cents) =>
+                // Credit free play through core's sanctioned grant() — NOT a raw
+                // balance poke — so it's validated and fires a GrantEvent the
+                // operator's bonus analytics record (manager/reporting).
+                cents > 0 && mutateBook(() => grant(account, cents, { promo: 'vip-freeplay' }))
+              }
             />
           )}
           <SoundToggle />
