@@ -11,14 +11,16 @@
  *          branding/    — white-label + presentation (name/logo/accent/domain,
  *                         points symbol/format, timezone) with runtime theming.
  *          communication/ — book-wide announcements + Discord/Telegram webhooks.
+ *          loyalty/     — rank-ladder / progression config over the VIP program.
  *          copilot/     — advisory insights over a read-only book snapshot.
  *
- * All six manager feature areas are now built. See README.md for the per-area
- * status and the shell bindings still to wire.
+ * All six manager feature areas are built. See README.md for the per-area status
+ * and the shell bindings still to wire.
  */
 
 export { ReportingPage } from './reporting/index.js'
 export { PromotionsPage } from './promotions/index.js'
 export { BrandingPage } from './branding/index.js'
 export { CommunicationPage } from './communication/index.js'
+export { LoyaltyPage } from './loyalty/index.js'
 export { CopilotPage } from './copilot/index.js'
