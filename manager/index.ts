@@ -11,10 +11,14 @@
  *          branding/    — white-label + presentation (name/logo/accent/domain,
  *                         points symbol/format, timezone) with runtime theming.
  *          communication/ — book-wide announcements + Discord/Telegram webhooks.
- * Planned: copilot/ — see README.md for the phased plan.
+ *          copilot/     — advisory insights over a read-only book snapshot.
+ *
+ * All six manager feature areas are now built. See README.md for the per-area
+ * status and the shell bindings still to wire.
  */
 
 export { ReportingPage } from './reporting/index.js'
 export { PromotionsPage } from './promotions/index.js'
 export { BrandingPage } from './branding/index.js'
 export { CommunicationPage } from './communication/index.js'
+export { CopilotPage } from './copilot/index.js'

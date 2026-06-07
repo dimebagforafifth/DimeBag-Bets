@@ -1,0 +1,203 @@
+/* AI Manager Copilot — advisory insights. Whitespace-first (CLAUDE.md §2). Scoped
+   under .mgr-cop; reuses app/theme.css tokens. */
+.mgr-cop {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: var(--text);
+}
+.mgr-cop-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.mgr-cop-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mgr-cop-tag {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #1d1500;
+  background: #e0b64a;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+.mgr-cop-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mgr-cop-range {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.mgr-cop-range button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.mgr-cop-range button.is-on {
+  background: var(--gem);
+  color: #fff;
+}
+
+/* snapshot figures */
+.mgr-cop-snap {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+.mgr-fig {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.mgr-fig-value {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-fig.is-up .mgr-fig-value {
+  color: var(--green);
+}
+.mgr-fig.is-down .mgr-fig-value {
+  color: var(--red);
+}
+.mgr-fig-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
+/* recommendations */
+.mgr-cop-recs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mgr-h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mgr-cop-count {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.mgr-rec {
+  --c: var(--gem);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--c);
+  border-radius: 12px;
+}
+.mgr-rec.is-high {
+  --c: var(--red);
+}
+.mgr-rec.is-medium {
+  --c: #e0b64a;
+}
+.mgr-rec.is-low {
+  --c: var(--muted);
+}
+.mgr-rec-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mgr-rec-pri {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: var(--c);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.mgr-rec-pri.is-low {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.mgr-rec-area {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.mgr-rec-title {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+}
+.mgr-rec-detail {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+.mgr-rec-action {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.mgr-rec-action-label {
+  font-weight: 800;
+  color: var(--c);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.4px;
+  margin-right: 4px;
+}
+.mgr-cop-foot {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .mgr-cop-snap {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

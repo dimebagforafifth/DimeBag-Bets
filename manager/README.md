@@ -28,7 +28,7 @@ These pages are ready to mount under **Management**. Proposed: a sub-nav within 
 | Promotions & loyalty | `import { PromotionsPage } from '../manager'` → `<PromotionsPage />` | **built** (bonuses; loyalty/referral/scheduling next) |
 | Branding / white-label & Presentation | `import { BrandingPage } from '../manager'` → `<BrandingPage />` | **built** |
 | Communication | `import { CommunicationPage } from '../manager'` → `<CommunicationPage />` | **built** (announcements + webhooks) |
-| AI Manager Copilot | `manager/copilot` | planned |
+| AI Manager Copilot | `import { CopilotPage } from '../manager'` → `<CopilotPage />` | **built** (advisory) |
 
 `ReportingPage` is propless — it reads the durable analytics store directly.
 
@@ -78,8 +78,13 @@ initAnalyticsCapture() // idempotent
   *Still open:* per-player DMs + in-app notification center need a **contact field on
   org `Member`** (that workstream's to add) and player-shell rendering — flagged, not
   assumed. Webhook POSTs are client-side; some setups may need a CORS proxy.
-- **AI Manager Copilot** — compose a read-only book snapshot from the reporting
-  rollups; advisory-only (returns recommendations, the manager approves any action).
+- **AI Manager Copilot** — *built (advisory)*: `manager/copilot` composes a
+  READ-ONLY `buildSnapshot` from the reporting rollups + org read-models, and a pure
+  `analyze(snapshot)` rules engine returns ranked, explained recommendations (risk /
+  promotions / communication), each with a suggested next step the MANAGER performs.
+  Advisory by construction — the engine has no write access and executes nothing.
+  *Premium upgrade:* swap the rules engine for an LLM behind the same
+  `analyze(snapshot) → Recommendation[]` interface (still advisory, still approved).
 
 ## Tests
 
