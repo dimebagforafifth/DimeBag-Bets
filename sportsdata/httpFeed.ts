@@ -95,15 +95,31 @@ export function createHttpFeed(opts: HttpFeedOptions): HttpFeed {
   }
 }
 
+/** Abort a poll if the vendor hasn't answered in this long, so a hung connection
+ *  can't stall the feed indefinitely (the next interval starts a fresh poll). */
+export const DEFAULT_FETCH_TIMEOUT_MS = 12000
+
 /**
  * Build a `fetchSlate` that GETs JSON from a URL — the production default. Throws
  * if `fetch` is unavailable (Node without polyfill); inject your own otherwise.
+ * The request is aborted after `timeoutMs` so a stalled connection surfaces as a
+ * failed poll (kept-last-good + 'reconnecting') rather than hanging forever.
  */
-export function fetchJsonSlate(url: string, init?: RequestInit): () => Promise<ApiEvent[]> {
+export function fetchJsonSlate(
+  url: string,
+  init?: RequestInit,
+  timeoutMs: number = DEFAULT_FETCH_TIMEOUT_MS,
+): () => Promise<ApiEvent[]> {
   return async () => {
     if (typeof fetch === 'undefined') throw new Error('fetch is not available in this environment')
-    const res = await fetch(url, init)
-    if (!res.ok) throw new Error(`odds feed responded ${res.status}`)
-    return (await res.json()) as ApiEvent[]
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const res = await fetch(url, { ...init, signal: controller.signal })
+      if (!res.ok) throw new Error(`odds feed responded ${res.status}`)
+      return (await res.json()) as ApiEvent[]
+    } finally {
+      clearTimeout(timer)
+    }
   }
 }

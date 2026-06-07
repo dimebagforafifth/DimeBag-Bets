@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createHttpFeed } from './httpFeed.js'
+import { createHttpFeed, fetchJsonSlate } from './httpFeed.js'
 import type { ApiEvent } from './types.js'
 
 const ev: ApiEvent = {
@@ -74,5 +74,22 @@ describe('createHttpFeed', () => {
     await p
     expect(n).toBe(0)
     expect(feed.snapshot()).toEqual([])
+  })
+})
+
+describe('fetchJsonSlate', () => {
+  it('aborts a hung request after the timeout instead of stalling the feed', async () => {
+    const orig = globalThis.fetch
+    // A fetch that never resolves on its own, but rejects when its signal aborts.
+    globalThis.fetch = ((_url: string, init: { signal?: AbortSignal }) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+      })) as unknown as typeof fetch
+    try {
+      const slate = fetchJsonSlate('https://odds.example/slate', undefined, 10)
+      await expect(slate()).rejects.toThrow()
+    } finally {
+      globalThis.fetch = orig
+    }
   })
 })

@@ -49,6 +49,17 @@ describe('dispatch', () => {
     expect(res[0]).toMatchObject({ ok: false, error: 'offline' })
   })
 
+  it('times out a hung webhook instead of waiting forever', async () => {
+    // A fetch that never resolves on its own, but rejects when its signal aborts —
+    // mirrors how the real fetch behaves once the timeout fires.
+    const hung = ((_url: string, init: { signal?: AbortSignal }) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+      })) as unknown as typeof fetch
+    const res = await dispatch(cfg({ discordUrl: 'https://d' }), 'm', hung, 10)
+    expect(res[0]).toMatchObject({ channel: 'discord', ok: false })
+  })
+
   it('sends to nothing when unconfigured', async () => {
     const { fn, calls } = mockFetch({ ok: true, status: 200 })
     expect(await dispatch(cfg(), 'm', fn)).toEqual([])
