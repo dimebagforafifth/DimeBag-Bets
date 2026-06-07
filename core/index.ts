@@ -6,8 +6,13 @@
 export type { Account, Wager, Outcome, WagerStatus } from './types.js'
 export {
   availableToWager,
+  maxBet,
   placeWager,
   resolveWager,
   resolveAtMultiplier,
   settleWeek,
+  grant,
+  onWagerResolved,
+  onGrant,
 } from './core.js'
+export type { ResolveEvent, GrantEvent } from './core.js'

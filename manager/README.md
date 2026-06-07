@@ -25,7 +25,7 @@ These pages are ready to mount under **Management**. Proposed: a sub-nav within 
 | Page | Import | Status |
 |------|--------|--------|
 | Reporting & analytics | `import { ReportingPage } from '../manager'` → `<ReportingPage />` | **built** |
-| Promotions & loyalty | `manager/promotions` | planned |
+| Promotions & loyalty | `import { PromotionsPage } from '../manager'` → `<PromotionsPage />` | **built** (bonuses; loyalty/referral/scheduling next) |
 | Communication | `manager/communication` | planned |
 | Branding / white-label | `manager/branding` | planned |
 | Presentation settings | `manager/settings` | planned |
@@ -51,10 +51,14 @@ initAnalyticsCapture() // idempotent
   ledger (`analytics-store.ts` + `capture.ts`), pure rollups (`analytics.ts`:
   turnover, per-game hold/GGR, engagement/retention/churn, date-range), and the
   read-only dashboard (`ui/ReportingPage.tsx`) with CSV export.
-- **Promotions & loyalty** — *next*: a `core.grant(account, cents, meta)` primitive
-  (approved — replaces today's raw `balance += cents`), free-play/point bonuses
-  (single → bulk via `org` downline → scheduled), loyalty-rate config on top of
-  `vip/`, and a referral program.
+- **Promotions & loyalty** — *built (bonuses)*: `core.grant(account, cents, meta)`
+  is the sanctioned credit primitive (replaces the raw `balance += cents`); it fires
+  a dedicated `onGrant` channel (NOT `onWagerResolved`), so bonuses are recorded by
+  analytics without polluting turnover/win-rate or VIP-wagered. `manager/promotions`
+  drafts + validates (`planBonus`), credits each target through `grant` inside
+  `book-store.mutateBook` (single player or a whole downline), and logs each campaign
+  (`promoStore`). *Next*: scheduled/recurring sends, loyalty-rate config on `vip/`,
+  and a referral program.
 - **Branding / white-label & Presentation** — a persisted per-book config doc
   (name, logo, colors, custom domain, points symbol, number format, timezone) +
   a runtime theming seam; thread the points symbol/format into

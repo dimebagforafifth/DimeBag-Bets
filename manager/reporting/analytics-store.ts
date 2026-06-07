@@ -33,6 +33,9 @@ export interface LedgerLike {
 export interface AnalyticsDoc {
   /** Highest ledger id already ingested — the dedupe high-water mark. */
   lastId: number
+  /** Decrementing id space for bonuses, which arrive off the grant channel (no
+   *  ledger id) — kept negative so it never collides with a ledger id. */
+  bonusSeq?: number
   records: AnalyticsRecord[]
 }
 
@@ -51,6 +54,8 @@ export interface AnalyticsStore {
   records(): AnalyticsRecord[]
   /** Append the genuinely-new entries from a ledger snapshot (dedupe by id). */
   ingest(entries: LedgerLike[]): void
+  /** Record a bonus grant (off the core grant channel — no ledger id). */
+  recordBonus(accountId: string, cents: number, time: number): void
   /** Subscribe to appends (for useSyncExternalStore). */
   subscribe(listener: () => void): () => void
   /** A changing snapshot value for useSyncExternalStore. */
@@ -96,6 +101,27 @@ export function createAnalyticsStore(doc: DocLike<AnalyticsDoc>): AnalyticsStore
         state.records.push(toRecord(e))
         if (e.id > state.lastId) state.lastId = e.id
       }
+      if (state.records.length > MAX_RECORDS) {
+        state.records.splice(0, state.records.length - MAX_RECORDS)
+      }
+      doc.save(state)
+      notify()
+    },
+
+    recordBonus(accountId, cents, time) {
+      state.bonusSeq = (state.bonusSeq ?? 0) - 1
+      state.records.push({
+        seq: state.bonusSeq, // negative — never collides with a ledger id
+        time,
+        accountId,
+        gameKey: 'bonus',
+        game: 'Bonus',
+        kind: 'bonus',
+        stake: 0,
+        profit: cents,
+        multiplier: 1,
+        outcome: 'win',
+      })
       if (state.records.length > MAX_RECORDS) {
         state.records.splice(0, state.records.length - MAX_RECORDS)
       }

@@ -69,6 +69,19 @@ describe('createAnalyticsStore', () => {
     expect(b.records().map((r) => r.seq)).toEqual([1, 2, 3, 4]) // old id ignored
   })
 
+  it('recordBonus appends a bonus record with a negative (non-colliding) seq', () => {
+    const { store } = freshStore()
+    store.ingest([led(1), led(2)])
+    store.recordBonus('B', 5000, 1234)
+    const recs = store.records()
+    expect(recs).toHaveLength(3)
+    expect(recs[2]).toMatchObject({ accountId: 'B', kind: 'bonus', gameKey: 'bonus', stake: 0, profit: 5000, time: 1234 })
+    expect(recs[2].seq).toBeLessThan(0) // never collides with a ledger id
+    // a later ledger ingest still works (bonus seq lives in its own space)
+    store.ingest([led(3)])
+    expect(store.records().map((r) => r.kind)).toEqual(['wager', 'wager', 'bonus', 'wager'])
+  })
+
   it('clear() empties the log and resets the dedupe mark', () => {
     const { store } = freshStore()
     store.ingest([led(1), led(2)])

@@ -12,6 +12,7 @@
  */
 
 import { createLocalStore, persistedDoc } from '../../persistence/index.js'
+import { onGrant } from '../../core/index.js'
 import { getLedger, subscribeLedger } from '../../app/ledger-store.js'
 import { createAnalyticsStore, type AnalyticsDoc } from './analytics-store.js'
 
@@ -32,6 +33,9 @@ export function initAnalyticsCapture(): void {
   wired = true
   analytics.ingest(getLedger())
   subscribeLedger(() => analytics.ingest(getLedger()))
+  // Bonuses ride the core grant channel (not the wager ledger), so capture them
+  // straight into the durable feed as bonus records.
+  onGrant((e) => analytics.recordBonus(e.accountId, e.cents, Date.now()))
 }
 
 // Self-wire on import so capture begins the moment the manager layer loads.
