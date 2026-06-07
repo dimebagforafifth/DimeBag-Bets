@@ -1,0 +1,218 @@
+/* Reporting & analytics — operator insight surface. Whitespace-first, restrained
+   palette (CLAUDE.md §2). Scoped under .mgr-report; reuses the shared theme tokens
+   from app/theme.css so it matches the rest of the app. */
+.mgr-report {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: var(--text);
+}
+
+.mgr-report-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.mgr-report-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+.mgr-report-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mgr-report-empty {
+  margin: 8px 0;
+  padding: 28px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+/* range tabs */
+.mgr-range {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.mgr-range-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mgr-range-btn:hover {
+  color: var(--text);
+}
+.mgr-range-btn.is-on {
+  background: var(--gem);
+  color: #fff;
+}
+
+/* KPI cards */
+.mgr-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+.mgr-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.mgr-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.mgr-kpi-value {
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-kpi.is-up .mgr-kpi-value {
+  color: var(--green);
+}
+.mgr-kpi.is-down .mgr-kpi-value {
+  color: var(--red);
+}
+.mgr-kpi-hint {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+/* engagement strip */
+.mgr-engage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mgr-h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+.mgr-h2-note {
+  font-weight: 600;
+  color: var(--muted);
+}
+.mgr-engage-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+.mgr-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.mgr-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-stat.is-down .mgr-stat-value {
+  color: var(--red);
+}
+.mgr-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* tables */
+.mgr-tablehead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.mgr-export {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.mgr-export:hover:not(:disabled) {
+  border-color: var(--gem);
+}
+.mgr-export:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.mgr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-table th,
+.mgr-table td {
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.mgr-table th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-table th.num,
+.mgr-table td.num {
+  text-align: right;
+}
+.mgr-table tbody tr:hover {
+  background: var(--surface-2);
+}
+.mgr-table .pos {
+  color: var(--green);
+}
+.mgr-table .neg {
+  color: var(--red);
+}
+.mgr-dim {
+  color: var(--muted);
+}
+
+@media (max-width: 760px) {
+  .mgr-kpis,
+  .mgr-engage-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
