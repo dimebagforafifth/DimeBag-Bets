@@ -1,4 +1,5 @@
 import { formatMoney } from './money.js'
+import { InfoDot } from './GlossaryTerm.js'
 
 /**
  * A "Total profit" field for the cash-out games. It's the bet-amount field's twin
@@ -15,7 +16,9 @@ export function ProfitReadout({ total, multiplier }: { total: number; multiplier
     <label className="field profit-readout">
       <span className="field-label">
         <span>Total profit</span>
-        <span className="profit-readout-mult">{multiplier.toFixed(2)}×</span>
+        <span className="profit-readout-mult">
+          {multiplier.toFixed(2)}×<InfoDot id="multiplier" />
+        </span>
       </span>
       <div className="field-bet">
         <span className="field-prefix">$</span>

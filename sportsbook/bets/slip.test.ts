@@ -84,10 +84,11 @@ describe('availableBetTypes', () => {
     expect(availableBetTypes(s)).toEqual(['single', 'parlay', 'roundRobin', 'teaser'])
     expect(teaserEligible(s)).toBe(true)
   })
-  it('related legs cannot parlay/teaser', () => {
+  it('related legs cannot parlay/teaser — but can be a same-game parlay', () => {
     let s = addSelection(emptySlip(), spread('a', 'g1', 1.9, -3))
     s = addSelection(s, spread('b', 'g1', 1.9, 3)) // same event
-    expect(availableBetTypes(s)).toEqual(['single'])
+    // no straight parlay/round robin/teaser (related), but the bet builder offers SGP
+    expect(availableBetTypes(s)).toEqual(['single', 'sameGameParlay'])
   })
 })
 

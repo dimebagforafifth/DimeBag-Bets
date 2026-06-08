@@ -30,6 +30,9 @@ import {
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
 import { setActiveGame } from './ledger-store.js'
+import { ActivityTicker } from './ActivityTicker.js'
+import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
+import { ResponsiblePlayPanel } from './ResponsiblePlayPanel.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
 import { settleAndRecord } from './settlement-store.js'
@@ -262,7 +265,9 @@ export function App() {
           />
         ) : activeSection === 'sportsbook' ? (
           account && player ? (
-            <Sportsbook account={account} store={sbStoreFor(player)} />
+            <ResponsiblePlayGate playerId={account.id}>
+              <Sportsbook account={account} store={sbStoreFor(player)} />
+            </ResponsiblePlayGate>
           ) : (
             <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} canManage={canManage(role)} />
           )
@@ -284,15 +289,17 @@ export function App() {
                 {/* Each game's view is a lazy chunk (app/games.ts); show a light
                     placeholder while it loads on first open. The crumb + Ledger
                     stay outside the boundary so leaving is always instant. */}
-                <Suspense fallback={<GameLoading />}>
-                  <GameMount game={liveGame} account={account} onBalanceChange={refresh} />
-                </Suspense>
+                <ResponsiblePlayGate playerId={account.id}>
+                  <Suspense fallback={<GameLoading />}>
+                    <GameMount game={liveGame} account={account} onBalanceChange={refresh} />
+                  </Suspense>
+                </ResponsiblePlayGate>
                 {/* the ledger lives only inside a game — its own per-game history,
                     scoped to the player you're currently playing as. */}
                 <Ledger gameKey={liveGame.key} gameName={liveGame.name} accountId={account.id} />
               </div>
             ) : (
-              <Lobby onPlay={setRoute} />
+              <Lobby onPlay={setRoute} playerId={account.id} />
             )}
           </div>
         )}
@@ -463,13 +470,14 @@ const STAKE_DESC: Record<string, string> = {
 }
 
 /** The Casino hub: every registered game as a card. One tap opens its page. */
-function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
+function Lobby({ onPlay, playerId }: { onPlay: (key: string) => void; playerId: string }) {
   return (
     <div className="lobby">
       <div className="lobby-head">
         <h1 className="lobby-title">Casino</h1>
         <p className="lobby-sub">Provably-fair originals — one balance across every game.</p>
       </div>
+      <ActivityTicker />
       <div className="lobby-grid">
         {GAMES.filter((g) => isGameEnabled(g.key)).map((g) => (
           <button
@@ -489,6 +497,7 @@ function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
           </button>
         ))}
       </div>
+      <ResponsiblePlayPanel playerId={playerId} />
     </div>
   )
 }
