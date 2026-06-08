@@ -107,3 +107,35 @@
   gap: 16px;
   width: 100%;
 }
+
+/* A plain-language intro to the active section (sits under the section nav). */
+.mc-blurb {
+  margin: -6px 2px 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 860px;
+}
+
+/* What the active tool does — a friendly description strip above the tool itself. */
+.mc-toolnote {
+  align-self: stretch;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gem);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.mc-toolnote-name {
+  font-weight: 800;
+}
+.mc-toolnote-name::after {
+  content: ' — ';
+  font-weight: 600;
+  color: var(--muted);
+}

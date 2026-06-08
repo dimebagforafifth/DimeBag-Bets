@@ -23,7 +23,6 @@ import { SegmentsPanel } from './console/SegmentsPanel.js'
 import { AlertsPanel } from './console/AlertsPanel.js'
 import { NotesPanel } from './console/NotesPanel.js'
 import { GamificationConfigPage } from '../gamification/index.js'
-import { HelpDot } from './console/HelpDot.js'
 import { can, type Capability } from './console/permissions.js'
 import {
   getGrants,
@@ -63,13 +62,13 @@ export interface ManagerConsoleProps {
 
 type SectionKey = 'dashboard' | 'ops' | 'players' | 'risk' | 'growth' | 'settings'
 
-const SECTIONS: { key: SectionKey; label: string; help: string }[] = [
-  { key: 'dashboard', label: 'Dashboard', help: 'Your whole book at a glance — figures, exposure, and recent activity.' },
-  { key: 'ops', label: 'Daily ops', help: 'The day-to-day running of the book: settle the week and message your players.' },
-  { key: 'players', label: 'Players', help: 'Your people — add and manage players and agents, group them, and keep notes.' },
-  { key: 'risk', label: 'Risk', help: 'Keep the book safe: live exposure, alerts on big swings, and the audit trail.' },
-  { key: 'growth', label: 'Growth', help: 'Grow the book: reporting, promotions and bonuses, and AI insights.' },
-  { key: 'settings', label: 'Settings', help: 'Configure the book: setup, games and edge, permissions, branding, and events.' },
+const SECTIONS: { key: SectionKey; label: string; blurb: string }[] = [
+  { key: 'dashboard', label: 'Dashboard', blurb: 'Your whole book at a glance — figures, exposure, and recent activity.' },
+  { key: 'ops', label: 'Daily ops', blurb: 'The day-to-day running of the book: settle the week and talk to your players.' },
+  { key: 'players', label: 'Players', blurb: 'Your people — add and manage players and agents, group them, and keep notes.' },
+  { key: 'risk', label: 'Risk', blurb: 'Keep the book safe: live exposure, alerts on big swings, and the audit trail.' },
+  { key: 'growth', label: 'Growth', blurb: 'Grow the book: reporting, promotions and bonuses, and AI insights.' },
+  { key: 'settings', label: 'Settings', blurb: 'Configure the book: setup, games and edge, permissions, branding, and events.' },
 ]
 
 interface ToolDef {
@@ -280,6 +279,7 @@ export function ManagerConsole(props: ManagerConsoleProps) {
   const section = visibleSections.some((s) => s.key === sectionState)
     ? sectionState
     : (visibleSections[0]?.key ?? 'dashboard')
+  const sectionMeta = visibleSections.find((s) => s.key === section)
   const sectionTools = visibleTools.filter((t) => t.section === section)
   const activeTool =
     sectionTools.find((t) => t.cap === toolState) ??
@@ -313,35 +313,35 @@ export function ManagerConsole(props: ManagerConsoleProps) {
     <div className="mc">
       <nav className="mc-sections" role="tablist" aria-label="Console sections">
         {visibleSections.map((s) => (
-          <span key={s.key} className="mc-navitem" role="presentation">
-            <button
-              role="tab"
-              aria-selected={s.key === section}
-              className={`mc-section ${s.key === section ? 'is-active' : ''}`}
-              onClick={() => selectSection(s.key)}
-            >
-              {s.label}
-            </button>
-            <HelpDot title={s.label} text={s.help} />
-          </span>
+          <button
+            key={s.key}
+            role="tab"
+            aria-selected={s.key === section}
+            className={`mc-section ${s.key === section ? 'is-active' : ''}`}
+            onClick={() => selectSection(s.key)}
+          >
+            {s.label}
+          </button>
         ))}
       </nav>
+
+      {/* A friendly one-line intro to the active section, so the operator knows what
+          this group of tools is for at a glance — no hover needed. */}
+      {sectionMeta && <p className="mc-blurb">{sectionMeta.blurb}</p>}
 
       {/* Second level: the tools in this section. A single tool needs no sub-nav. */}
       {(sectionTools.length > 1 || hasAdvanced) && (
         <nav className="mc-tools" role="tablist" aria-label={`${section} tools`}>
           {navTools.map((t) => (
-            <span key={t.cap} className="mc-navitem" role="presentation">
-              <button
-                role="tab"
-                aria-selected={t.cap === activeTool?.cap}
-                className={`mc-tab ${t.cap === activeTool?.cap ? 'is-active' : ''}`}
-                onClick={() => setToolState(t.cap)}
-              >
-                {t.label}
-              </button>
-              <HelpDot title={t.label} text={t.help} />
-            </span>
+            <button
+              key={t.cap}
+              role="tab"
+              aria-selected={t.cap === activeTool?.cap}
+              className={`mc-tab ${t.cap === activeTool?.cap ? 'is-active' : ''}`}
+              onClick={() => setToolState(t.cap)}
+            >
+              {t.label}
+            </button>
           ))}
           {hasAdvanced && (
             <button
@@ -355,7 +355,16 @@ export function ManagerConsole(props: ManagerConsoleProps) {
         </nav>
       )}
 
-      <div className="mc-body">{activeTool?.render()}</div>
+      <div className="mc-body">
+        {/* What this specific tool does, in plain language — always shown above it. */}
+        {activeTool && (
+          <p className="mc-toolnote">
+            <span className="mc-toolnote-name">{activeTool.label}</span>
+            {activeTool.help}
+          </p>
+        )}
+        {activeTool?.render()}
+      </div>
     </div>
   )
 }
