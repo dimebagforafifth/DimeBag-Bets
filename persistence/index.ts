@@ -15,6 +15,18 @@ export { createMemoryStore, createLocalStore } from './store.js'
 export type { Doc } from './doc.js'
 export { persistedDoc } from './doc.js'
 
+// Multi-tenant context: scopes every store's namespace to the active book (CLAUDE.md
+// §5). Default tenant === today's exact behaviour; a real tenant gets its own keyspace.
+export {
+  DEFAULT_TENANT,
+  getActiveTenant,
+  hasTenant,
+  setActiveTenant,
+  subscribeTenant,
+  tenantNamespace,
+  __resetTenant,
+} from './tenant.js'
+
 // Supabase backend (off until env keys are present; falls back to localStorage).
 export { createStore, type CreateStoreOpts } from './select.js'
 export { createSupabaseStore, type SupabaseStore, type SupabaseStoreOpts } from './supabase-store.js'

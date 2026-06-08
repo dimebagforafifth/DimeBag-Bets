@@ -15,13 +15,13 @@
  * multiple books/managers ever coexist, key the doc by `org.managerId`.
  */
 
-import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { clampRtp } from '../games/shared/edge.js'
 
 /** gameKey → RTP override in [MIN, MAX]. Absent ⇒ the game's native edge. */
 export type EdgeConfig = Record<string, number>
 
-const store = createLocalStore({ namespace: 'dimebag' })
+const store = createStore({ namespace: 'dimebag' })
 const EDGE_DOC: Doc<EdgeConfig> = persistedDoc<EdgeConfig>(store, 'edge.config', {
   version: 1,
   initial: {},

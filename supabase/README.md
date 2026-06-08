@@ -14,6 +14,7 @@ keys and the same code switches over (see `persistence/README.md`).
 | `0001_schema.sql` | Tables mirroring `core`/`org`/`vip`: `accounts`, `wagers`, `ledger`, `settlements`, `org_members`, `vip_config`, `vip_players`, plus the opaque `kv_documents` blob store. All money is integer cents → `bigint`. |
 | `0002_rls.sql` | Row Level Security. Players **read only their own rows**; **no client write grant** on the money tables; `kv_documents` is owner-scoped CRUD. |
 | `0003_money_rpcs.sql` | The SECURITY DEFINER functions — `place_wager`, `resolve_wager`, `resolve_at_multiplier`, `grant_bonus`, `adjust_balance`, `settle_week` — the only path that moves a figure. Same arithmetic as `core/core.ts`. |
+| `0004_tenancy.sql` | Per-book (tenant) scoping: an additive `tenant_id` on the book-owned tables + an `active_tenant()` claim helper. Documents how isolation holds (owner-scoping already isolates one-operator-per-book; `tenant_id` is the explicit book key + the multi-user-book future). Backward-compatible (nullable). |
 
 ## The guarantee
 
@@ -31,8 +32,18 @@ pending) before writing, exactly as core does. This is asserted offline by
 ```bash
 supabase start                 # local stack, or use a hosted project
 supabase db push               # apply migrations/
-# or: psql "$DATABASE_URL" -f migrations/0001_schema.sql  (then 0002, 0003)
+# or: psql "$DATABASE_URL" -f migrations/0001_schema.sql  (then 0002, 0003, 0004)
 ```
+
+## Tenant isolation
+
+A tenant = one manager's book. **Locally** the client encodes the tenant in the storage
+namespace (`dimebag~t~<tenant>`, see `persistence/tenant.ts`), so two operators' books
+never share a keyspace. **Under Supabase** the same separation holds two ways: the
+per-book `namespace` on `kv_documents`, and owner-scoped RLS on the money tables (one
+operator authenticates as one `auth.uid()` and sees only their rows). `0004_tenancy.sql`
+adds the explicit `tenant_id` and sketches the membership-based policy for a future where
+many auth users share one book.
 
 Then set the two env vars the app reads (either name works):
 

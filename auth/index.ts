@@ -5,7 +5,7 @@
 
 export { AuthProvider, useAuth } from './AuthProvider.js'
 export { Login } from './Login.js'
-export { memberForUser } from './accountLink.js'
+export { memberForUser, accountForUser, accountIdForUser } from './accountLink.js'
 export {
   allowedSections,
   canReach,

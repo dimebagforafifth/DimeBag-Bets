@@ -16,7 +16,7 @@
  * `org.managerId` if multiple books ever coexist.
  */
 
-import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import type { RiskThresholds } from './risk.js'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -47,7 +47,7 @@ const DEFAULTS: BookSettings = {
   riskExposureCap: null,
 }
 
-const store = createLocalStore({ namespace: 'dimebag' })
+const store = createStore({ namespace: 'dimebag' })
 const SETTINGS_DOC: Doc<BookSettings> = persistedDoc<BookSettings>(store, 'settings.config', {
   // Do NOT bump this version for purely additive fields — the load-merge over
   // DEFAULTS below backfills them. Bumping without a `migrate` makes load() fall back

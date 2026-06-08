@@ -15,6 +15,7 @@ import { createLocalStore } from './store.js'
 import { createSupabaseStore } from './supabase-store.js'
 import { createRestKvTransport, type FetchLike } from './supabase/kv-transport.js'
 import { getSupabaseEnv, type EnvSource } from './supabase/env.js'
+import { tenantNamespace } from './tenant.js'
 
 export interface CreateStoreOpts {
   /** Document namespace — scopes keys in every backend (default `'dimebag'`). */
@@ -33,16 +34,19 @@ export interface CreateStoreOpts {
  * localStorage, then reconciled with the server in the background).
  */
 export function createStore(opts: CreateStoreOpts = {}): KVStore {
-  const namespace = opts.namespace ?? 'dimebag'
+  const base = opts.namespace ?? 'dimebag'
   const env = getSupabaseEnv(opts.envSource)
   if (!env) {
-    return createLocalStore({ namespace })
+    // createLocalStore resolves the active tenant itself (default → unchanged).
+    return createLocalStore({ namespace: base })
   }
-  // Keys present → Supabase, with localStorage as the offline fallback/cache.
-  const fallback = createLocalStore({ namespace })
+  // Keys present → Supabase, with localStorage as the offline fallback/cache. The
+  // fallback resolves the tenant internally; the transport must use the SAME resolved
+  // namespace so both halves of the cache target one tenant's keyspace.
+  const fallback = createLocalStore({ namespace: base })
   const transport = createRestKvTransport({
     env,
-    namespace,
+    namespace: tenantNamespace(base),
     accessToken: opts.accessToken,
     fetchImpl: opts.fetchImpl,
   })

@@ -15,7 +15,7 @@
  */
 
 import { bookFigure, type Settlement } from '../org/index.js'
-import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { getBook, settleBook } from './book-store.js'
 import { recordBookEntry } from './book-ledger.js'
@@ -82,7 +82,7 @@ export function settlementToCsv(record: SettlementRecord): string {
   return [...meta, '', head.join(','), ...rows].join('\n')
 }
 
-const store = createLocalStore({ namespace: 'dimebag' })
+const store = createStore({ namespace: 'dimebag' })
 const HISTORY_DOC: Doc<SettlementRecord[]> = persistedDoc<SettlementRecord[]>(
   store,
   'settlement.history',
