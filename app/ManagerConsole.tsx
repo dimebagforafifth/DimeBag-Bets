@@ -23,6 +23,7 @@ import { SegmentsPanel } from './console/SegmentsPanel.js'
 import { AlertsPanel } from './console/AlertsPanel.js'
 import { NotesPanel } from './console/NotesPanel.js'
 import { GamificationConfigPage } from '../gamification/index.js'
+import { HelpDot } from './console/HelpDot.js'
 import { can, type Capability } from './console/permissions.js'
 import {
   getGrants,
@@ -62,19 +63,21 @@ export interface ManagerConsoleProps {
 
 type SectionKey = 'dashboard' | 'ops' | 'players' | 'risk' | 'growth' | 'settings'
 
-const SECTIONS: { key: SectionKey; label: string }[] = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'ops', label: 'Daily ops' },
-  { key: 'players', label: 'Players' },
-  { key: 'risk', label: 'Risk' },
-  { key: 'growth', label: 'Growth' },
-  { key: 'settings', label: 'Settings' },
+const SECTIONS: { key: SectionKey; label: string; help: string }[] = [
+  { key: 'dashboard', label: 'Dashboard', help: 'Your whole book at a glance — figures, exposure, and recent activity.' },
+  { key: 'ops', label: 'Daily ops', help: 'The day-to-day running of the book: settle the week and message your players.' },
+  { key: 'players', label: 'Players', help: 'Your people — add and manage players and agents, group them, and keep notes.' },
+  { key: 'risk', label: 'Risk', help: 'Keep the book safe: live exposure, alerts on big swings, and the audit trail.' },
+  { key: 'growth', label: 'Growth', help: 'Grow the book: reporting, promotions and bonuses, and AI insights.' },
+  { key: 'settings', label: 'Settings', help: 'Configure the book: setup, games and edge, permissions, branding, and events.' },
 ]
 
 interface ToolDef {
   cap: Capability
   label: string
   section: SectionKey
+  /** One-line, plain-language explanation shown on the tool's "?" help dot. */
+  help: string
   /** Hidden behind the section's "Advanced" toggle until revealed. */
   advanced?: boolean
   render: () => ReactNode
@@ -100,14 +103,27 @@ export function ManagerConsole(props: ManagerConsoleProps) {
   // The tool registry — built per render so the prop-bound tools (Players, VIP) stay
   // current. Order within a section is the display order.
   const TOOLS: ToolDef[] = [
-    { cap: 'dashboard', label: 'Overview', section: 'dashboard', render: () => <Dashboard /> },
+    {
+      cap: 'dashboard',
+      label: 'Overview',
+      section: 'dashboard',
+      help: 'Your book at a glance — total figure, live exposure, top movers, and recent bets.',
+      render: () => <Dashboard />,
+    },
 
     // Daily ops
-    { cap: 'settlement', label: 'Settlement', section: 'ops', render: () => <SettlementHistory /> },
+    {
+      cap: 'settlement',
+      label: 'Settlement',
+      section: 'ops',
+      help: 'Run the weekly square-up (everyone settles to zero) and review past settlement sheets.',
+      render: () => <SettlementHistory />,
+    },
     {
       cap: 'communication',
       label: 'Communication',
       section: 'ops',
+      help: 'Post announcements and send messages or notifications to players (in-app, with optional Discord/Telegram).',
       render: () => <CommunicationPage />,
     },
 
@@ -116,6 +132,7 @@ export function ManagerConsole(props: ManagerConsoleProps) {
       cap: 'players',
       label: 'Players & agents',
       section: 'players',
+      help: 'Build your agent→player tree: recruit members, set credit limits and bet caps, lock betting, move, or suspend.',
       render: () => (
         <Management
           org={props.org}
@@ -127,13 +144,26 @@ export function ManagerConsole(props: ManagerConsoleProps) {
         />
       ),
     },
-    { cap: 'segments', label: 'Segments', section: 'players', render: () => <SegmentsPanel /> },
-    { cap: 'notes', label: 'Notes & tags', section: 'players', render: () => <NotesPanel /> },
+    {
+      cap: 'segments',
+      label: 'Segments',
+      section: 'players',
+      help: 'Group players by behaviour (high rollers, dormant, deep in the red…) so you can act on a whole cohort.',
+      render: () => <SegmentsPanel />,
+    },
+    {
+      cap: 'notes',
+      label: 'Notes & tags',
+      section: 'players',
+      help: 'Free-form notes and tags on any member — collection notes, VIP flags, anything you want to remember.',
+      render: () => <NotesPanel />,
+    },
     {
       cap: 'vip',
       label: 'VIP',
       section: 'players',
       advanced: true,
+      help: 'The VIP program — rank ladder, leaderboard, and free-play rewards players redeem.',
       render: () => <VipPanel players={props.players} />,
     },
     {
@@ -141,37 +171,71 @@ export function ManagerConsole(props: ManagerConsoleProps) {
       label: 'Loyalty',
       section: 'players',
       advanced: true,
+      help: 'Tune the loyalty ladder: the lifetime-wagered threshold for each rank and the reward it earns.',
       render: () => <LoyaltyPage />,
     },
 
     // Risk
-    { cap: 'risk', label: 'Risk & exposure', section: 'risk', render: () => <RiskPanel /> },
-    { cap: 'alerts', label: 'Alerts', section: 'risk', render: () => <AlertsPanel /> },
+    {
+      cap: 'risk',
+      label: 'Risk & exposure',
+      section: 'risk',
+      help: 'Live at-risk money across the book, and the players sitting closest to their credit limit.',
+      render: () => <RiskPanel />,
+    },
+    {
+      cap: 'alerts',
+      label: 'Alerts',
+      section: 'risk',
+      help: 'Automatic flags for big wins, fast losses, and players bumping their limits.',
+      render: () => <AlertsPanel />,
+    },
     {
       cap: 'audit',
       label: 'Audit log',
       section: 'risk',
       advanced: true,
+      help: 'Every operator action — who changed what, when, and why — for a tamper-evident trail.',
       render: () => <AuditPanel />,
     },
 
     // Growth
-    { cap: 'reporting', label: 'Reporting', section: 'growth', render: () => <ReportingPage /> },
-    { cap: 'promotions', label: 'Promotions', section: 'growth', render: () => <PromotionsPage /> },
+    {
+      cap: 'reporting',
+      label: 'Reporting',
+      section: 'growth',
+      help: 'Player activity, per-game hold, and engagement/retention — with CSV export.',
+      render: () => <ReportingPage />,
+    },
+    {
+      cap: 'promotions',
+      label: 'Promotions',
+      section: 'growth',
+      help: 'Send free-play / point bonuses to one player or a whole downline — now or on a schedule.',
+      render: () => <PromotionsPage />,
+    },
     {
       cap: 'copilot',
       label: 'Copilot',
       section: 'growth',
       advanced: true,
+      help: 'Advisory AI insights over your book — ranked recommendations you review and approve (it never acts on its own).',
       render: () => <CopilotPage />,
     },
 
     // Settings
-    { cap: 'setup', label: 'Setup', section: 'settings', render: () => <SetupWizard /> },
+    {
+      cap: 'setup',
+      label: 'Setup',
+      section: 'settings',
+      help: 'A first-run wizard to name the book and set sensible defaults.',
+      render: () => <SetupWizard />,
+    },
     {
       cap: 'games',
       label: 'Games & edge',
       section: 'settings',
+      help: 'Turn individual games on or off and tune each game’s house edge (RTP).',
       render: () => (
         <div className="mc-stack">
           <GamesPanel />
@@ -183,6 +247,7 @@ export function ManagerConsole(props: ManagerConsoleProps) {
       cap: 'permissions',
       label: 'Permissions',
       section: 'settings',
+      help: 'Grant sub-agents access to specific console tools — they see only what you allow.',
       render: () => <PermissionsPanel />,
     },
     {
@@ -190,6 +255,7 @@ export function ManagerConsole(props: ManagerConsoleProps) {
       label: 'Branding',
       section: 'settings',
       advanced: true,
+      help: 'White-label the book: name, logo, accent colour, and how points are displayed.',
       render: () => <BrandingPage />,
     },
     {
@@ -197,6 +263,7 @@ export function ManagerConsole(props: ManagerConsoleProps) {
       label: 'Tournaments & wheel',
       section: 'settings',
       advanced: true,
+      help: 'Configure gamification — missions, achievements, the daily prize wheel, and tournaments.',
       render: () => <GamificationConfigPage />,
     },
   ]
@@ -246,15 +313,17 @@ export function ManagerConsole(props: ManagerConsoleProps) {
     <div className="mc">
       <nav className="mc-sections" role="tablist" aria-label="Console sections">
         {visibleSections.map((s) => (
-          <button
-            key={s.key}
-            role="tab"
-            aria-selected={s.key === section}
-            className={`mc-section ${s.key === section ? 'is-active' : ''}`}
-            onClick={() => selectSection(s.key)}
-          >
-            {s.label}
-          </button>
+          <span key={s.key} className="mc-navitem" role="presentation">
+            <button
+              role="tab"
+              aria-selected={s.key === section}
+              className={`mc-section ${s.key === section ? 'is-active' : ''}`}
+              onClick={() => selectSection(s.key)}
+            >
+              {s.label}
+            </button>
+            <HelpDot title={s.label} text={s.help} />
+          </span>
         ))}
       </nav>
 
@@ -262,15 +331,17 @@ export function ManagerConsole(props: ManagerConsoleProps) {
       {(sectionTools.length > 1 || hasAdvanced) && (
         <nav className="mc-tools" role="tablist" aria-label={`${section} tools`}>
           {navTools.map((t) => (
-            <button
-              key={t.cap}
-              role="tab"
-              aria-selected={t.cap === activeTool?.cap}
-              className={`mc-tab ${t.cap === activeTool?.cap ? 'is-active' : ''}`}
-              onClick={() => setToolState(t.cap)}
-            >
-              {t.label}
-            </button>
+            <span key={t.cap} className="mc-navitem" role="presentation">
+              <button
+                role="tab"
+                aria-selected={t.cap === activeTool?.cap}
+                className={`mc-tab ${t.cap === activeTool?.cap ? 'is-active' : ''}`}
+                onClick={() => setToolState(t.cap)}
+              >
+                {t.label}
+              </button>
+              <HelpDot title={t.label} text={t.help} />
+            </span>
           ))}
           {hasAdvanced && (
             <button
