@@ -37,6 +37,7 @@ import './book-ledger.js' // side-effect: the durable, persisted transaction rec
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
 import { settleAndRecord } from './settlement-store.js'
 import { adjustFigure, auditedMutate } from './manager-actions.js'
+import { startTournamentAutoSettle } from './tournament-settle.js'
 import { Leaderboard, VipBadge } from '../vip/ui/index.js'
 import { GamificationPanel } from '../gamification/index.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
@@ -147,6 +148,11 @@ export function App() {
       stores.clear()
     }
   }, [])
+
+  // Auto-settle any tournament whose window has closed: pay in-the-money players from
+  // their book account (free-play via core) on boot + after each wager. A no-op until a
+  // window actually closes (the demo tournament runs open), so demo behaviour is unchanged.
+  useEffect(() => startTournamentAutoSettle(), [])
 
   // Tag new ledger entries with whatever's on screen, so each logged bet shows
   // which game (or the sportsbook) it came from.
