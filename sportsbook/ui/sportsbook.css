@@ -144,20 +144,8 @@
   text-transform: uppercase;
   color: var(--sb);
 }
-.sb-time {
-  font-size: 11.5px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-.sb-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--sb-loss);
-  font-variant-numeric: tabular-nums;
-}
+/* The event status line (LIVE/FINAL badge, score, kickoff label) is now the
+   shared <LiveBadge>/<LiveScore> from ./live — styled in live.css. */
 .sb-live-dot {
   width: 7px;
   height: 7px;
@@ -173,12 +161,6 @@
   50% {
     opacity: 1;
   }
-}
-.sb-final {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 .sb-event.is-live {
   border-color: color-mix(in srgb, var(--sb-loss) 35%, var(--line));
@@ -691,56 +673,7 @@
   justify-content: space-between;
   gap: 12px;
 }
-.sb-feed {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.sb-feed-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--muted);
-}
-.sb-feed-ago {
-  color: var(--muted);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.sb-feed.is-live {
-  color: var(--sb-win);
-  border-color: color-mix(in srgb, var(--sb-win) 35%, var(--line));
-}
-.sb-feed.is-live .sb-feed-dot {
-  background: var(--sb-win);
-  animation: sb-pulse 1.1s ease-in-out infinite;
-}
-.sb-feed.is-connecting,
-.sb-feed.is-reconnecting {
-  color: var(--sb-gold);
-  border-color: color-mix(in srgb, var(--sb-gold) 35%, var(--line));
-}
-.sb-feed.is-connecting .sb-feed-dot,
-.sb-feed.is-reconnecting .sb-feed-dot {
-  background: var(--sb-gold);
-  animation: sb-pulse 1.1s ease-in-out infinite;
-}
-.sb-feed.is-error {
-  color: var(--sb-loss-2);
-  border-color: color-mix(in srgb, var(--sb-loss) 35%, var(--line));
-}
-.sb-feed.is-error .sb-feed-dot {
-  background: var(--sb-loss);
-}
+/* The feed-status pill is now <FeedStatus> from ./live (styled in live.css). */
 
 /* a stale/offline notice over the board — the last prices stay shown beneath */
 .sb-feedbanner {
@@ -795,7 +728,6 @@
   .sb-skel-line,
   .sb-skel-cell,
   .sb-skel-pill,
-  .sb-feed-dot,
   .sb-live-dot {
     animation: none;
   }
@@ -817,41 +749,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* live odds movement: a ▲/▼ tick + a brief flash when an in-play price shifts */
-.sb-move-arrow {
-  font-size: 9px;
-  margin-right: 2px;
-  vertical-align: middle;
-}
-.sb-price-odds.sb-move-up,
-.sb-price-odds.sb-move-down {
-  border-radius: 4px;
-  padding: 0 4px;
-}
-.sb-price-odds.sb-move-up {
-  color: var(--sb-win) !important;
-  animation: sb-flash-up 0.7s ease-out;
-}
-.sb-price-odds.sb-move-down {
-  color: var(--sb-loss-2) !important;
-  animation: sb-flash-down 0.7s ease-out;
-}
-@keyframes sb-flash-up {
-  from {
-    background: rgba(74, 222, 128, 0.35);
-  }
-  to {
-    background: transparent;
-  }
-}
-@keyframes sb-flash-down {
-  from {
-    background: rgba(255, 90, 95, 0.35);
-  }
-  to {
-    background: transparent;
-  }
-}
+/* live odds movement (the ▲/▼ tick + flash) is now <OddsTick> from ./live,
+   styled as .odds-tick in live.css. */
 
 /* mobile bet-slip drawer — hidden on desktop, where the aside is always shown */
 .sb-mobilebar,

@@ -23,8 +23,6 @@ import {
   liveWinProb,
   potentialReturn,
   priceTicket,
-  type FeedHealth,
-  type FeedStatus,
   type FutureMarket,
   type FutureTicket,
   type GameEvent,
@@ -34,6 +32,10 @@ import {
   type SportsbookStore,
   type Ticket,
 } from '../index.js'
+// Live board primitives — one source of truth for the LIVE/FINAL badge, the
+// score, the price-movement tick, and the feed-status chip. Pure props in; the
+// store feeds them the mock slate today and a real odds API later, unchanged.
+import { LiveBadge, LiveScore, OddsTick, FeedStatus } from './live/index.js'
 import { availableBetTypes, combinations, priceRoundRobin, type SlipSelection } from '../bets/index.js'
 import { createLocalStore, persistedDoc, type Doc } from '../../persistence/index.js'
 import { Rules } from '../../games/shared/Rules.js'
@@ -66,9 +68,6 @@ function useFmtOdds(): (american: number) => string {
   const fmt = useContext(OddsFormatContext)
   return (american: number) => formatOdds(american, fmt)
 }
-
-/** Which way a live price last moved (for the ▲/▼ tick + flash). */
-type Move = 'up' | 'down'
 
 /** How the current slip is being bet. A teaser mode arrives with the engine's
  *  teaser kind; round robin places as every N-leg parlay combination. */
@@ -242,24 +241,8 @@ export function Sportsbook({ account, store }: SportsbookProps) {
     setLeague('All')
   }
 
-  // Track how each live price moved since the last tick, for the ▲/▼ flash.
-  const prevOddsRef = useRef<Map<string, number>>(new Map())
-  const liveOddsNow = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const e of events) if (e.status === 'live') for (const s of liveSelections(e)) m.set(s.id, s.odds)
-    return m
-  }, [events])
-  const moves = useMemo(() => {
-    const m = new Map<string, Move>()
-    for (const [id, odds] of liveOddsNow) {
-      const prev = prevOddsRef.current.get(id)
-      if (prev != null && odds !== prev) m.set(id, odds > prev ? 'up' : 'down')
-    }
-    return m
-  }, [liveOddsNow])
-  useEffect(() => {
-    prevOddsRef.current = liveOddsNow
-  }, [liveOddsNow])
+  // Price movement (the ▲/▼ flash) is detected inside <OddsTick> from the value
+  // it's handed each render — no slate-wide bookkeeping needed here.
 
   // The mobile sheet (slipOpen) is only ever opened on mobile, so these guards
   // are inert on desktop where slipOpen stays false.
@@ -394,7 +377,11 @@ export function Sportsbook({ account, store }: SportsbookProps) {
               Live slate — moneyline, spreads & totals. One balance across the whole app.
             </p>
           </div>
-          <FeedStatusPill health={health} />
+          {/* TODO(api): `health` (and the `events` slate below) come from the store's
+              feed — the mock feed today (createMockFeed), a real odds/scores API later.
+              Both drive the same FeedHealth/GameEvent shapes, so this chip is unchanged
+              when the live API is attached. */}
+          <FeedStatus health={health} />
         </div>
 
         <div className="sb-toolbar">
@@ -489,14 +476,12 @@ export function Sportsbook({ account, store }: SportsbookProps) {
                 tone="live"
                 events={shownEvents.filter((e) => e.status === 'live')}
                 slipIds={slipIds}
-                moves={moves}
                 onPick={toggle}
               />
               <EventGroup
                 title="Upcoming"
                 events={shownEvents.filter((e) => e.status === 'upcoming')}
                 slipIds={slipIds}
-                moves={moves}
                 onPick={toggle}
               />
               <EventGroup
@@ -504,7 +489,6 @@ export function Sportsbook({ account, store }: SportsbookProps) {
                 tone="final"
                 events={shownEvents.filter((e) => e.status === 'final')}
                 slipIds={slipIds}
-                moves={moves}
                 onPick={toggle}
               />
             </>
@@ -587,47 +571,8 @@ export function Sportsbook({ account, store }: SportsbookProps) {
 }
 
 /* ------------------------------ feed status ------------------------------ */
-
-const FEED_LABEL: Record<FeedStatus, string> = {
-  idle: 'Idle',
-  connecting: 'Connecting…',
-  live: 'Live',
-  reconnecting: 'Reconnecting…',
-  error: 'Offline',
-}
-
-/** Compact "Ns / Nm / Nh ago" since a timestamp. */
-function freshness(lastUpdated: number): string {
-  const s = Math.max(0, Math.round((Date.now() - lastUpdated) / 1000))
-  if (s < 60) return `${s}s ago`
-  const m = Math.round(s / 60)
-  return m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`
-}
-
-/** Feed-health indicator: a colored dot + status, plus how fresh prices are
- *  while live. Self-ticks each second so "updated Ns ago" stays current. A real
- *  odds API drives this through the feed's health channel; nothing else changes. */
-function FeedStatusPill({ health }: { health: FeedHealth }) {
-  const [, tick] = useReducer((n: number) => n + 1, 0)
-  useEffect(() => {
-    if (health.status !== 'live') return
-    const id = window.setInterval(tick, 1000)
-    return () => window.clearInterval(id)
-  }, [health.status])
-  return (
-    <span className={`sb-feed is-${health.status}`} role="status" aria-live="polite">
-      <span className="sb-feed-dot" />
-      <span className="sb-feed-label">{FEED_LABEL[health.status]}</span>
-      {health.status === 'live' && health.lastUpdated != null && (
-        // aria-hidden: the per-second freshness must NOT re-announce every tick;
-        // only the status label above is spoken (and only when it changes).
-        <span className="sb-feed-ago" aria-hidden="true">
-          · {freshness(health.lastUpdated)}
-        </span>
-      )}
-    </span>
-  )
-}
+// The feed-status chip is now <FeedStatus> from ./live — the single source of
+// truth for the live indicator (status label, dot, and per-second freshness).
 
 /** Placeholder board shown while the feed makes its first connection. */
 function BoardSkeleton() {
@@ -663,14 +608,12 @@ function EventGroup({
   tone,
   events,
   slipIds,
-  moves,
   onPick,
 }: {
   title: string
   tone?: 'live' | 'final'
   events: GameEvent[]
   slipIds: Set<string>
-  moves: Map<string, Move>
   onPick: (s: Selection) => void
 }) {
   if (events.length === 0) return null
@@ -683,7 +626,7 @@ function EventGroup({
       </header>
       <div className="sb-events">
         {events.map((e) => (
-          <EventCard key={e.id} event={e} slipIds={slipIds} moves={moves} onPick={onPick} />
+          <EventCard key={e.id} event={e} slipIds={slipIds} onPick={onPick} />
         ))}
       </div>
     </section>
@@ -695,12 +638,10 @@ function EventGroup({
 function EventCard({
   event,
   slipIds,
-  moves,
   onPick,
 }: {
   event: GameEvent
   slipIds: Set<string>
-  moves: Map<string, Move>
   onPick: (s: Selection) => void
 }) {
   const fmtOdds = useFmtOdds()
@@ -720,7 +661,8 @@ function EventCard({
         <div className="sb-meta">
           <span className="sb-league">{event.league}</span>
           {allSuspended && <span className="sb-suspended-pill">Suspended</span>}
-          <EventStatusLine event={event} />
+          <LiveBadge event={event} />
+          <LiveScore event={event} />
         </div>
       </header>
 
@@ -777,7 +719,8 @@ function EventCard({
                       onClick={() => onPick(s)}
                     >
                       <span className="sb-price-label">{s.label}</span>
-                      <PriceOdds key={s.odds} odds={s.odds} move={moves.get(s.id)} />
+                      {/* OddsTick flashes ▲/▼ when the in-play price moves between feed ticks. */}
+                      <OddsTick value={s.odds} format={fmtOdds} />
                     </button>
                   ))}
                 </div>
@@ -789,18 +732,6 @@ function EventCard({
         <p className="sb-closed-note">Final.</p>
       )}
     </section>
-  )
-}
-
-/** A live price with a ▲/▼ tick + flash when it just moved. Remounted on each
- *  odds change (via `key`), so the flash animation replays. */
-function PriceOdds({ odds, move }: { odds: number; move?: Move }) {
-  const fmtOdds = useFmtOdds()
-  return (
-    <span className={`sb-price-odds ${move ? `sb-move-${move}` : ''}`}>
-      {move && <span className="sb-move-arrow">{move === 'up' ? '▲' : '▼'}</span>}
-      {fmtOdds(odds)}
-    </span>
   )
 }
 
@@ -832,20 +763,6 @@ function LiveWinBar({ event }: { event: GameEvent }) {
       </div>
     </div>
   )
-}
-
-function EventStatusLine({ event }: { event: GameEvent }) {
-  if (event.status === 'upcoming') return <span className="sb-time">{event.startsAt}</span>
-  const s = event.score ?? { home: 0, away: 0 }
-  if (event.status === 'live') {
-    return (
-      <span className="sb-live">
-        <span className="sb-live-dot" />
-        LIVE {event.clock} · {s.away}–{s.home}
-      </span>
-    )
-  }
-  return <span className="sb-final">Final {s.away}–{s.home}</span>
 }
 
 /* -------------------------------- bet slip ------------------------------- */
