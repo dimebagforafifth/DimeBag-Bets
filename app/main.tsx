@@ -1,5 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Set the active tenant (book) from the session BEFORE App pulls in the module-singleton
+// stores — ordering matters (see boot-tenant.ts). No session/tenantId → the default book.
+import './boot-tenant.js'
 import { App } from './App.js'
 import { ErrorBoundary } from './ErrorBoundary.js'
 import { AuthProvider, Login, useAuth } from '../auth/index.js'
