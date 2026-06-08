@@ -1,0 +1,101 @@
+/* The glossary info-icon + tooltip (games/shared/GlossaryTerm). Uses the shared
+   theme tokens so it reads consistently across the casino and sportsbook. Clean
+   and restrained (CLAUDE.md §2): a small dot that reveals a plain-language note. */
+
+.gloss-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gloss {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.gloss-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--muted) 60%, transparent);
+  background: transparent;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  cursor: help;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.gloss-dot:hover,
+.gloss-dot:focus-visible {
+  color: var(--text);
+  border-color: var(--text);
+  outline: none;
+}
+
+/* the tooltip — hidden until the dot is hovered, focused, or tapped open */
+.gloss-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  z-index: 50;
+  width: max-content;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2, var(--surface));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.gloss:hover .gloss-pop,
+.gloss:focus-within .gloss-pop,
+.gloss-pop.is-open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+/* a little pointer under the bubble */
+.gloss-pop::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--line);
+}
+.gloss-pop-term {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.gloss-pop-text {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/* keep the bubble on-screen near the right edge of a row */
+@media (max-width: 640px) {
+  .gloss-pop {
+    max-width: 200px;
+  }
+}

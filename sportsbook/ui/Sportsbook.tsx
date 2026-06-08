@@ -39,6 +39,7 @@ import { LiveBadge, LiveScore, OddsTick, FeedStatus } from './live/index.js'
 import { availableBetTypes, combinations, priceRoundRobin, type SlipSelection } from '../bets/index.js'
 import { createLocalStore, persistedDoc, type Doc } from '../../persistence/index.js'
 import { Rules } from '../../games/shared/Rules.js'
+import { Term } from '../../games/shared/GlossaryTerm.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
 import './sportsbook.css'
 
@@ -944,7 +945,9 @@ function BetSlip({
               <dd>{formatMoney(totalStake)}</dd>
             </div>
             <div className="sb-summary-pay">
-              <dt>To return</dt>
+              <dt>
+                <Term id="payout">To return</Term>
+              </dt>
               <dd>{formatMoney(totalReturn)}</dd>
             </div>
             <div className="sb-summary-profit">
