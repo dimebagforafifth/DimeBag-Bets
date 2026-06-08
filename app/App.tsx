@@ -16,7 +16,7 @@ import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook
 import { formatMoney } from '../games/shared/money.js'
 import { SoundToggle } from '../sound/index.js'
 import { ManagerConsole } from './ManagerConsole.js'
-import type { Member } from '../org/index.js'
+import type { Member, Role } from '../org/index.js'
 import {
   getBook,
   getBookVersion,
@@ -38,11 +38,25 @@ import { Leaderboard, VipBadge } from '../vip/ui/index.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
 import { houseConfigFor, nativeRtp } from './edge-config.js'
+import {
+  useAuth,
+  memberForUser,
+  allowedSections,
+  canManage,
+  defaultSection,
+  type Section,
+} from '../auth/index.js'
+import '../auth/auth.css' // header identity menu styles (also used by the Login screen)
 
-/** The top-level sections. Casino + sportsbook share one balance; My Bets is the
- *  player's own dashboard over that balance; management is the operator's view of
- *  the Manager → Agent → Player book (CLAUDE.md §5). */
-type Section = 'casino' | 'sportsbook' | 'mybets' | 'leaderboard' | 'management'
+// The top-level sections (the `Section` type) and the role→section access rules live
+// in auth/roles — one source of truth for both the visible nav and the render guard.
+const NAV: { key: Section; label: string }[] = [
+  { key: 'casino', label: 'Casino' },
+  { key: 'sportsbook', label: 'Sportsbook' },
+  { key: 'mybets', label: 'My Bets' },
+  { key: 'leaderboard', label: 'Leaderboard' },
+  { key: 'management', label: 'Management' },
+]
 
 /**
  * The app shell (CLAUDE.md §5). It owns the one shared account — the single
@@ -74,9 +88,21 @@ export function App() {
   // THIS player's core Account, so wins/losses move their figure and roll up the
   // tree (Agent → Sub-Agent → Manager). Null only if the book has no players.
   const book = getBook()
+  const { user, signOut } = useAuth()
+  // Who's signed in → their book member → role → which sections they may reach. App
+  // already subscribes to the book, so this re-resolves live if the member changes.
+  const authMember = memberForUser(user?.id)
+  const role = authMember?.role ?? 'player'
+  const visibleSections = allowedSections(role)
+  // If the selected section isn't allowed for this role, fall back to the role's
+  // default — so a stale/forced section can never render forbidden content.
+  const activeSection = visibleSections.includes(section) ? section : defaultSection(role)
+  // Audit/adjust entries carry the REAL signed-in identity, not a hardcoded 'operator'.
+  const actor = user?.displayName ?? 'operator'
+
   const player = getCurrentPlayer() // an ACTIVE player, or null
   const account = player?.account ?? null
-  const game = section === 'casino' ? findGame(route) : null
+  const game = activeSection === 'casino' ? findGame(route) : null
   // A disabled game can't be played: it drops back to the lobby (which also hides it),
   // so it can't be reached even via a stale route. The enable/disable model lives in
   // app/settings-store; the lobby + this guard are the enforcement.
@@ -121,14 +147,29 @@ export function App() {
   // Tag new ledger entries with whatever's on screen, so each logged bet shows
   // which game (or the sportsbook) it came from.
   useEffect(() => {
-    if (section === 'sportsbook') setActiveGame('sportsbook', 'Sportsbook')
+    if (activeSection === 'sportsbook') setActiveGame('sportsbook', 'Sportsbook')
     else if (liveGame) setActiveGame(liveGame.key, liveGame.name)
     else setActiveGame('casino', 'Casino')
-  }, [section, liveGame])
+  }, [activeSection, liveGame])
 
-  /** The brand + Casino tab both return to the casino lobby. */
+  // A signed-in PLAYER plays as themselves: pin the current player to their own node
+  // (and they get no player-switcher). Operators/agents keep the switcher for play-as.
+  useEffect(() => {
+    if (role === 'player' && authMember?.active && getCurrentPlayerId() !== authMember.id) {
+      setCurrentPlayer(authMember.id)
+    }
+  }, [role, authMember?.id, authMember?.active])
+
+  /** The Casino tab returns to the casino lobby. */
   function openCasino() {
     setSection('casino')
+    setRoute(null)
+  }
+
+  /** The brand returns to this role's home section (Casino for players/operators, the
+   *  console for agents). */
+  function openHome() {
+    setSection(defaultSection(role))
     setRoute(null)
   }
 
@@ -142,44 +183,25 @@ export function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-left">
-          <button className="brand" onClick={openCasino}>
+          <button className="brand" onClick={openHome}>
             DimeBag<span className="brand-dot">·</span>Bets
           </button>
           <nav className="nav">
-            <button
-              className={`nav-tab ${section === 'casino' ? 'is-on' : ''}`}
-              onClick={openCasino}
-            >
-              Casino
-            </button>
-            <button
-              className={`nav-tab ${section === 'sportsbook' ? 'is-on' : ''}`}
-              onClick={() => setSection('sportsbook')}
-            >
-              Sportsbook
-            </button>
-            <button
-              className={`nav-tab ${section === 'mybets' ? 'is-on' : ''}`}
-              onClick={() => setSection('mybets')}
-            >
-              My Bets
-            </button>
-            <button
-              className={`nav-tab ${section === 'leaderboard' ? 'is-on' : ''}`}
-              onClick={() => setSection('leaderboard')}
-            >
-              Leaderboard
-            </button>
-            <button
-              className={`nav-tab ${section === 'management' ? 'is-on' : ''}`}
-              onClick={() => setSection('management')}
-            >
-              Management
-            </button>
+            {NAV.filter((t) => visibleSections.includes(t.key)).map((t) => (
+              <button
+                key={t.key}
+                className={`nav-tab ${activeSection === t.key ? 'is-on' : ''}`}
+                onClick={() => (t.key === 'casino' ? openCasino() : setSection(t.key))}
+              >
+                {t.label}
+              </button>
+            ))}
           </nav>
         </div>
         <div className="header-right">
-          {player && (
+          {/* The "playing as" switcher is an operator-only tool — a player IS their
+              own node, so they don't get it. */}
+          {player && role === 'manager' && (
             <PlayerSwitcher current={player} players={activePlayers} onSwitch={setCurrentPlayer} />
           )}
           <div className="figure">
@@ -211,41 +233,42 @@ export function App() {
             />
           )}
           <SoundToggle />
+          <AuthMenu name={user?.displayName ?? 'Guest'} role={role} onSignOut={signOut} />
         </div>
       </header>
 
       <main className="app-main">
-        {section === 'management' ? (
+        {activeSection === 'management' && canManage(role) ? (
           <ManagerConsole
             org={book}
-            onMutate={auditedMutate}
+            onMutate={(fn) => auditedMutate(fn, actor)}
             currentPlayerId={getCurrentPlayerId()}
             onPlayAs={playAs}
             onSettleAll={(carryover) => settleAndRecord(Date.now(), carryover)}
-            onAdjustFigure={(memberId, delta, reason) => adjustFigure(memberId, delta, reason)}
+            onAdjustFigure={(memberId, delta, reason) => adjustFigure(memberId, delta, reason, actor)}
             players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
           />
-        ) : section === 'leaderboard' ? (
+        ) : activeSection === 'leaderboard' ? (
           <Leaderboard
             players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
             currentPlayerId={getCurrentPlayerId()}
           />
-        ) : section === 'sportsbook' ? (
+        ) : activeSection === 'sportsbook' ? (
           account && player ? (
             <Sportsbook account={account} store={sbStoreFor(player)} />
           ) : (
-            <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} />
+            <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} canManage={canManage(role)} />
           )
-        ) : section === 'mybets' ? (
+        ) : activeSection === 'mybets' ? (
           account && player ? (
             <MyBets account={account} player={player} />
           ) : (
-            <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} />
+            <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} canManage={canManage(role)} />
           )
         ) : (
           <div className="casino-view">
             {!account ? (
-              <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} />
+              <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} canManage={canManage(role)} />
             ) : liveGame ? (
               <div className="game-page">
                 <button className="crumb" onClick={() => setRoute(null)}>
@@ -362,21 +385,50 @@ function WeekFigure({ cents }: { cents: number }) {
   )
 }
 
-/** Shown when there's no active player to play as — either the book is empty or
- *  every player has been suspended. */
-function NoPlayer({ onManage, allSuspended }: { onManage: () => void; allSuspended?: boolean }) {
+/** Shown when there's no active player to play as — the book is empty, every player is
+ *  suspended, or the signed-in user has no book node yet. The "Open Management" CTA is
+ *  only offered to users who can actually manage (not a plain player). */
+function NoPlayer({
+  onManage,
+  allSuspended,
+  canManage = true,
+}: {
+  onManage: () => void
+  allSuspended?: boolean
+  canManage?: boolean
+}) {
   return (
     <div className="no-player">
       <h2 className="no-player-title">
-        {allSuspended ? 'All players are suspended' : 'No player selected'}
+        {allSuspended ? 'All players are suspended' : canManage ? 'No player selected' : 'No account yet'}
       </h2>
       <p className="no-player-sub">
         {allSuspended
           ? 'Reactivate a player in Management to start playing again. Every bet moves that player’s figure and rolls up to their agent and the manager.'
-          : 'Add a player to your book, then pick who to play as. Every bet moves that player’s figure and rolls up to their agent and the manager.'}
+          : canManage
+            ? 'Add a player to your book, then pick who to play as. Every bet moves that player’s figure and rolls up to their agent and the manager.'
+            : 'Your account isn’t set up for play yet — your agent will add you to the book. Every bet then moves your figure.'}
       </p>
-      <button className="action action-bet no-player-cta" onClick={onManage}>
-        Open Management
+      {canManage && (
+        <button className="action action-bet no-player-cta" onClick={onManage}>
+          Open Management
+        </button>
+      )}
+    </div>
+  )
+}
+
+/** The signed-in identity + a sign-out — the real session, replacing the app's old
+ *  implicit "operator". */
+function AuthMenu({ name, role, onSignOut }: { name: string; role: Role; onSignOut: () => void | Promise<void> }) {
+  return (
+    <div className="auth-menu">
+      <span className="auth-id">
+        <span className="auth-id-name">{name}</span>
+        <span className="auth-id-role">{role}</span>
+      </span>
+      <button className="auth-signout" onClick={() => void onSignOut()} title="Sign out">
+        Sign out
       </button>
     </div>
   )
