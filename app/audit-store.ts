@@ -9,7 +9,7 @@
  * snapshot, persistedDoc namespace 'dimebag'). It captures no money — it just remembers.
  */
 
-import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 
 export interface AuditEntry {
   id: number
@@ -33,7 +33,7 @@ export type AuditDraft = Omit<AuditEntry, 'id' | 'at'> & { at?: number }
 /** Keep the most-recent N on disk so localStorage can't grow without bound. */
 const MAX = 2000
 
-const store = createLocalStore({ namespace: 'dimebag' })
+const store = createStore({ namespace: 'dimebag' })
 const DOC: Doc<AuditEntry[]> = persistedDoc<AuditEntry[]>(store, 'audit.log', {
   version: 1,
   initial: [],

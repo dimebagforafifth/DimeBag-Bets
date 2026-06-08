@@ -17,7 +17,7 @@
 
 import { onWagerPlaced, onWagerResolved, type PlaceEvent, type ResolveEvent } from '../core/index.js'
 import { createLedger, type Ledger, type LedgerEntry } from '../ledger/index.js'
-import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { getBook } from './book-store.js'
 import { getActiveGame } from './ledger-store.js'
 
@@ -49,7 +49,7 @@ export function resolveEntry(
   }
 }
 
-const store = createLocalStore({ namespace: 'dimebag' })
+const store = createStore({ namespace: 'dimebag' })
 const LOG_DOC: Doc<LedgerEntry[]> = persistedDoc<LedgerEntry[]>(store, 'ledger.log', {
   version: 1,
   initial: [],

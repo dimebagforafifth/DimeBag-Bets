@@ -13,7 +13,7 @@
  */
 
 import { onWagerResolved } from '../core/index.js'
-import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import {
   defaultVipConfig,
   grantRewards,
@@ -25,7 +25,7 @@ import {
 
 /* ----------------------------- persistence ------------------------------ */
 
-const store = createLocalStore({ namespace: 'dimebag' })
+const store = createStore({ namespace: 'dimebag' })
 const CONFIG_DOC: Doc<VipConfig> = persistedDoc<VipConfig>(store, 'vip.config', {
   version: 1,
   initial: defaultVipConfig(),

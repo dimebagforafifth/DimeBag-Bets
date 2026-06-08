@@ -32,7 +32,7 @@ import {
   type Settlement,
 } from '../org/index.js'
 import { onWagerResolved } from '../core/index.js'
-import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 
 /* ------------------------------- the seed ------------------------------- */
 
@@ -57,7 +57,7 @@ function seedDemoOrg(): Org {
 
 /* ----------------------------- persistence ------------------------------ */
 
-const store = createLocalStore({ namespace: 'dimebag' })
+const store = createStore({ namespace: 'dimebag' })
 
 /**
  * A structural sanity check on a stored/migrated book: a managerId that resolves to
