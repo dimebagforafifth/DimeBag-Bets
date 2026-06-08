@@ -17,6 +17,14 @@ export interface AuthUser {
   id: string
   email: string
   displayName: string
+  /**
+   * Which BOOK (tenant) this identity belongs to. Optional + backward-compatible:
+   * undefined means the default book (today's single-tenant demo). The app sets the
+   * active tenant from this at boot (`setActiveTenant(user.tenantId)`) so every store
+   * is scoped to the operator's own book. Populated from the Supabase org claim in real
+   * mode; the demo leaves it undefined. // TODO(api)
+   */
+  tenantId?: string
 }
 
 /** An established session. `token` is opaque (a demo marker; a real JWT under Supabase). */
