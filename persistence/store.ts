@@ -11,6 +11,8 @@
  * not a live reference. That keeps the memory adapter honest with localStorage.
  */
 
+import { tenantNamespace } from './tenant.js'
+
 /** The one storage contract every adapter implements. */
 export interface KVStore {
   /** Read a value, or null if absent / unreadable. */
@@ -86,7 +88,10 @@ export function createLocalStore(opts: { namespace?: string; backing?: StorageLi
   if (!backing) return createMemoryStore()
 
   // Never an empty prefix — that would make keys()/clear() match the whole origin.
-  const namespace = opts.namespace && opts.namespace.length > 0 ? opts.namespace : 'dimebag'
+  const base = opts.namespace && opts.namespace.length > 0 ? opts.namespace : 'dimebag'
+  // Scope the namespace to the active tenant so two operators' books never share a
+  // keyspace. The default tenant returns `base` unchanged (today's exact behaviour).
+  const namespace = tenantNamespace(base)
   const prefix = `${namespace}:`
   const full = (key: string) => `${prefix}${key}`
 
