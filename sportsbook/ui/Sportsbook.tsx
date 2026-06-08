@@ -40,6 +40,7 @@ import { availableBetTypes, combinations, priceRoundRobin, type SlipSelection } 
 import { createLocalStore, persistedDoc, type Doc } from '../../persistence/index.js'
 import { Rules } from '../../games/shared/Rules.js'
 import { Term } from '../../games/shared/GlossaryTerm.js'
+import { checkPlay } from '../../app/responsible-play.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
 import './sportsbook.css'
 
@@ -299,6 +300,13 @@ export function Sportsbook({ account, store }: SportsbookProps) {
     }
     if (stake > perBetMax) {
       setError(`Each wager is capped at the max bet (${formatMoney(perBetMax)}).`)
+      return
+    }
+    // Honour the player's own responsible-play limits (per-bet cap + a backstop for
+    // the session/cooldown blocks the gate already enforces around this screen).
+    const rp = checkPlay(account.id, Date.now(), stake)
+    if (!rp.allowed) {
+      setError(rp.reason ?? 'This bet is over your responsible-play limit.')
       return
     }
     if (totalStake > available) {
