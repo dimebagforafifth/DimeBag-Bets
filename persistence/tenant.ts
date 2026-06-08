@@ -61,9 +61,27 @@ export function subscribeTenant(listener: () => void): () => void {
   }
 }
 
-/** Sanitise a tenant id into a namespace-safe token (keeps the `<ns>:<key>` scheme clean). */
+/** A deterministic 32-bit FNV-1a hash → base36. Pure (no Date/random), so it's stable
+ *  across reloads — used only to DISAMBIGUATE ids that aren't already namespace-safe. */
+function fnv1a(s: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return (h >>> 0).toString(36)
+}
+
+/**
+ * Sanitise a tenant id into a namespace-safe token (keeps the `<ns>:<key>` scheme clean).
+ * Plain replacement is ambiguous — `'a/b'` and `'a_b'` would both become `'a_b'` and the
+ * two books would SHARE a keyspace. So when sanitisation changes the id, append a hash of
+ * the RAW id: distinct ids can never collide, while already-safe ids stay readable (and a
+ * disambiguated token always carries a `.`, which a clean token never can).
+ */
 function safe(id: string): string {
-  return id.replace(/[^a-zA-Z0-9_-]/g, '_')
+  const cleaned = id.replace(/[^a-zA-Z0-9_-]/g, '_')
+  return cleaned === id ? cleaned : `${cleaned}.${fnv1a(id)}`
 }
 
 /**

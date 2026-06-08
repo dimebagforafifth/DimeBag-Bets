@@ -43,9 +43,23 @@ describe('tenant context', () => {
     expect('dimebag~t~acme'.startsWith('dimebag:')).toBe(false)
   })
 
-  it('sanitises unsafe characters in the tenant id', () => {
+  it('sanitises unsafe characters, keeping the readable form plus a disambiguator', () => {
     setActiveTenant('a/c me.co')
-    expect(tenantNamespace('dimebag')).toBe('dimebag~t~a_c_me_co')
+    const ns = tenantNamespace('dimebag')
+    expect(ns.startsWith('dimebag~t~a_c_me_co.')).toBe(true) // cleaned form + hash suffix
+  })
+
+  it('distinct ids that sanitise to the same token never collide (isolation)', () => {
+    // Plain replacement would map all of these to 'a_b' — they must stay distinct.
+    const ids = ['a/b', 'a.b', 'a b', 'a_b', 'a-b', 'a~t~b', 'a_t_b']
+    const namespaces = ids.map((id) => {
+      setActiveTenant(id)
+      return tenantNamespace('dimebag')
+    })
+    expect(new Set(namespaces).size).toBe(ids.length) // all unique
+    // an already-safe id stays readable (no hash suffix)
+    setActiveTenant('a_b')
+    expect(tenantNamespace('dimebag')).toBe('dimebag~t~a_b')
   })
 
   it('an empty/null id resets to the default tenant', () => {
