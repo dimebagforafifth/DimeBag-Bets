@@ -14,6 +14,7 @@ import { availableToWager } from '../core/index.js'
 import { App } from './App.js'
 import { getCurrentPlayer } from './book-store.js'
 import { formatMoney } from '../games/shared/money.js'
+import { __resetGamification, updateConfig } from '../gamification/index.js'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -43,6 +44,17 @@ describe('leaving Plinko by any route keeps the balance change', () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
     const root: Root = createRoot(host)
+    // The casino lobby now mounts the gamification panel, which auto-claims earned
+    // free-play (e.g. the first-bet achievement) on render — an orthogonal feature.
+    // This test isolates the navigation/balance-persistence invariant, so clear the
+    // reward sources: a drop then earns nothing claimable and the figure is stable.
+    __resetGamification()
+    updateConfig((c) => {
+      c.missions = []
+      c.achievements = []
+      c.tournaments = []
+      c.wheel.enabled = false
+    })
     act(() => root.render(<App />))
 
     const acct = getCurrentPlayer()!.account

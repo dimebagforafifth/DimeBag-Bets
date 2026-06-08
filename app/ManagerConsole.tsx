@@ -22,7 +22,7 @@ import { PermissionsPanel } from './console/PermissionsPanel.js'
 import { SegmentsPanel } from './console/SegmentsPanel.js'
 import { AlertsPanel } from './console/AlertsPanel.js'
 import { NotesPanel } from './console/NotesPanel.js'
-import { OperatorConfigStub } from './console/OperatorConfigStub.js'
+import { GamificationConfigPage } from '../gamification/index.js'
 import { can, type Capability } from './console/permissions.js'
 import {
   getGrants,
@@ -197,7 +197,7 @@ export function ManagerConsole(props: ManagerConsoleProps) {
       label: 'Tournaments & wheel',
       section: 'settings',
       advanced: true,
-      render: () => <OperatorConfigStub />,
+      render: () => <GamificationConfigPage />,
     },
   ]
 

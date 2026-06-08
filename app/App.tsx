@@ -38,6 +38,7 @@ import './exposure.js' // side-effect: the live per-game open-exposure tracker s
 import { settleAndRecord } from './settlement-store.js'
 import { adjustFigure, auditedMutate } from './manager-actions.js'
 import { Leaderboard, VipBadge } from '../vip/ui/index.js'
+import { GamificationPanel } from '../gamification/index.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
 import { houseConfigFor, nativeRtp } from './edge-config.js'
@@ -299,7 +300,17 @@ export function App() {
                 <Ledger gameKey={liveGame.key} gameName={liveGame.name} accountId={account.id} />
               </div>
             ) : (
-              <Lobby onPlay={setRoute} playerId={account.id} />
+              <>
+                <Lobby onPlay={setRoute} playerId={account.id} />
+                {/* The player rewards hub (gamification) lives under the lobby grid.
+                    Rewards pay out as free-play through core.grant; refresh keeps the
+                    header figure live. */}
+                <GamificationPanel
+                  account={account}
+                  players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
+                  onBalanceChange={refresh}
+                />
+              </>
             )}
           </div>
         )}
