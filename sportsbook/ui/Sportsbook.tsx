@@ -39,7 +39,6 @@ import { LiveBadge, LiveScore, OddsTick, FeedStatus } from './live/index.js'
 import { availableBetTypes, combinations, priceRoundRobin, type SlipSelection } from '../bets/index.js'
 import { createLocalStore, persistedDoc, type Doc } from '../../persistence/index.js'
 import { Rules } from '../../games/shared/Rules.js'
-import { play } from '../../sound/index.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
 import './sportsbook.css'
 
@@ -272,7 +271,6 @@ export function Sportsbook({ account, store }: SportsbookProps) {
         ? cur.filter((s) => s.id !== sel.id)
         : [...cur.filter((s) => !(s.eventId === sel.eventId && s.market === sel.market)), sel],
     )
-    play('select')
   }
 
   /** §4 acceptance: lock the slip to the book's current prices, accepting any leg
@@ -324,7 +322,6 @@ export function Sportsbook({ account, store }: SportsbookProps) {
       setSlip([])
       setError(null)
       setSlipOpen(false)
-      play('bet')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     }
@@ -340,7 +337,6 @@ export function Sportsbook({ account, store }: SportsbookProps) {
 
   function cashOut(id: string) {
     store.cashOut(id)
-    play('win')
   }
 
   /** Back a futures outcome through the store/core. Returns an error string (also
@@ -349,7 +345,6 @@ export function Sportsbook({ account, store }: SportsbookProps) {
     try {
       store.placeFuture(marketId, outcomeId, stake)
       setFuturesError(null)
-      play('bet')
       return null
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)

@@ -16,6 +16,7 @@ import {
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
+import { signalReveal } from '../../shared/reveal-bus.js'
 import { play } from '../../../sound/index.js'
 import { NumberInput } from '../../shared/NumberInput.js'
 import { formatMoney, toCents } from '../../shared/money.js'
@@ -64,6 +65,12 @@ export function SlotsGame({
   const available = maxBet(account)
   const table = useMemo(() => buildPaytable(houseConfig), [houseConfig])
   const twoCherry = useMemo(() => twoCherryMultiplier(houseConfig), [houseConfig])
+  // The paytable, ranked best-prize-first (like a real machine). Keep each symbol's
+  // original reel index so the winning-line "is-hit" highlight still matches.
+  const rankedPays = useMemo(
+    () => SYMBOLS.map((s, i) => ({ s, i, mult: table[i] })).sort((a, b) => b.mult - a.mult),
+    [table],
+  )
   const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available || spinning
   const resolving = useResolving(account.id)
 
@@ -79,7 +86,6 @@ export function SlotsGame({
         nonce: nonceRef.current,
         config: houseConfig,
       })
-      onBalanceChange()
       play('roll')
       setRound(r)
       setSpinning(true)
@@ -105,6 +111,8 @@ export function SlotsGame({
         window.setTimeout(() => {
           setSpinning(false)
           setHistory((h) => [{ multiplier: r.multiplier, won: r.multiplier > 1 }, ...h].slice(0, 16))
+          signalReveal(account.id) // the reels have stopped — release the held ledger entry now
+          onBalanceChange() // move the figure in sync with the result landing on screen
           play(r.multiplier > 1 ? 'win' : 'lose')
         }, SETTLE_MS),
       )
@@ -158,7 +166,7 @@ export function SlotsGame({
 
         <div className="slots-paytable">
           <span className="field-label">Paytable</span>
-          {SYMBOLS.map((s, i) => (
+          {rankedPays.map(({ s, i, mult }) => (
             <div
               key={s.key}
               className={`slots-pay-row ${
@@ -170,7 +178,7 @@ export function SlotsGame({
                 {s.glyph}
                 {s.glyph}
               </span>
-              <span className="slots-pay-mult">{table[i].toFixed(2)}×</span>
+              <span className="slots-pay-mult">{mult.toFixed(2)}×</span>
             </div>
           ))}
           <div className="slots-pay-row slots-pay-row--note">

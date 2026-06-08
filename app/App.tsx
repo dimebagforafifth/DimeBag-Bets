@@ -152,6 +152,13 @@ export function App() {
     else setActiveGame('casino', 'Casino')
   }, [activeSection, liveGame])
 
+  // Opening a game (or switching section) jumps back to the top, so the game lands
+  // centred and in view — you can start playing from that section without scrolling
+  // up from wherever the lobby grid was.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 })
+  }, [activeSection, liveGame?.key])
+
   // A signed-in PLAYER plays as themselves: pin the current player to their own node
   // (and they get no player-switcher). Operators/agents keep the switcher for play-as.
   useEffect(() => {

@@ -219,9 +219,9 @@
   position: absolute;
   top: 50%;
   /* the bird's drawn silhouette sits slightly right of its SVG centre (it faces
-     right), so nudge left to centre it on the lane; the extra upward offset lifts
-     it a little above the spot circle while its horizontal jump path is unchanged */
-  transform: translate(calc(-50% - 2px), calc(-50% - 14px));
+     right), so nudge left to centre it on the lane; vertically it sits centred on
+     the spot circle, so each hop lands the bird in the middle of the circle */
+  transform: translate(calc(-50% - 2px), -50%);
   z-index: 4;
   transition: left 0.4s cubic-bezier(0.34, 1.3, 0.5, 1);
   pointer-events: none;
@@ -439,11 +439,8 @@
 }
 @keyframes chick-drop {
   0% {
-    transform: translateY(-240px) rotate(-8deg);
-    opacity: 0;
-  }
-  14% {
-    opacity: 1;
+    transform: translateY(-180px) rotate(-8deg);
+    opacity: 1; /* visible the instant the click drops it, so the fall reads immediately */
   }
   64% {
     transform: translateY(0) rotate(0deg); /* SLAM down (~0.32s) — just before the chicken reaches the next spot */

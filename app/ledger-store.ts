@@ -66,6 +66,7 @@ const FALLBACK_MS: Record<string, number> = {
   keno: 950, // numbers × 85ms reveal — signals the instant the last lands; this is only the ceiling
   diamonds: 600, // 5 gems × 120ms staggered in — the result is readable as the last lands
   sicbo: 1350, // dice settle one-by-one (~840ms) then a suspense beat before reveal (~1260ms); signals on reveal
+  slots: 1100, // reels lock left→right (~1060ms) then the win lands — signals on settle; this is only the ceiling
   blackjack: 3600, // split (pair separates + two deals) then dealer draws to 17 — a high safety ceiling; the game signals the instant it's actually done
   coinflip: 1000, // safety ceiling only — the game signals on land (~0.8s toss) and on cash
   chickenroad: 840, // the bust roadkill slam + settle (wins signal immediately)

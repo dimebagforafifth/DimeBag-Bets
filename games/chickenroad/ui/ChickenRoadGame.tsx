@@ -71,6 +71,7 @@ export function ChickenRoadGame({
   const [hop, setHop] = useState(0) // bumped each step so the hop animation replays
   const [, redraw] = useReducer((n: number) => n + 1, 0)
   const runnerRef = useRef<HTMLDivElement | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
 
   const active = game?.status === 'active'
   const ended = game != null && game.status !== 'active'
@@ -102,9 +103,20 @@ export function ChickenRoadGame({
     [difficulty, game, idle, houseConfig],
   )
 
-  // Keep the chicken in view as it crosses.
+  // Keep the chicken in view by scrolling ONLY the road viewport — never the page —
+  // and only when the bird nears an edge. The screen around it stays still while the
+  // chicken visibly moves forward, instead of the whole view re-centering each step.
   useEffect(() => {
-    runnerRef.current?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    const view = scrollRef.current
+    const runner = runnerRef.current
+    if (!view || !runner) return
+    const chickX = runner.offsetLeft // the chicken's centre within the road
+    const margin = view.clientWidth * 0.28 // headroom kept at each edge
+    if (chickX > view.scrollLeft + view.clientWidth - margin) {
+      view.scrollTo({ left: chickX - view.clientWidth + margin, behavior: 'smooth' })
+    } else if (chickX < view.scrollLeft + margin) {
+      view.scrollTo({ left: Math.max(0, chickX - margin), behavior: 'smooth' })
+    }
   }, [game?.position])
 
   function start() {
@@ -234,7 +246,7 @@ export function ChickenRoadGame({
           ))}
         </div>
 
-        <div className="chick-scroll">
+        <div className="chick-scroll" ref={scrollRef}>
           <div className="chick-road" style={{ width: KERB_W + lanes * LANE_W }}>
             {/* gradients/filters shared by every vehicle + the chicken (declared once) */}
             <RoadDefs />
