@@ -23,14 +23,37 @@ in-memory snapshot synchronously (identical semantics), and every mutation mirro
 localStorage (offline safety net) + the server (background). `await store.ready` for
 the first server reconciliation; the app never blocks on it.
 
-### Adoption (shell workstream — one-line swap per store, safe to do now)
+### Adoption — DONE for the 7 book stores
 
-The document stores currently call `createLocalStore({ namespace: 'dimebag' })`
-(`app/book-store.ts`, `app/settings-store.ts`, the manager stores, …). To put
-documents on Supabase, swap each to `createStore({ namespace: 'dimebag' })`. Because
-`createStore` === localStorage with no keys, adopting it changes nothing until the
-operator drops the keys in. (Those call sites are the shell/feature lanes, not this
-one, so this layer only provides the selector — it does not edit them.)
+The book document stores (`app/book-store`, `settings`, `settlement`, `vip`, `edge`,
+`audit`, `book-ledger`) now call `createStore({ namespace: 'dimebag' })`. With no keys
+this is byte-for-byte localStorage; with keys those documents move to Supabase
+automatically. The manager stores still call `createLocalStore` directly — they are
+the manager-console lane, but they are **already tenant-scoped** (see below) because the
+scoping lives in the persistence primitive, not the call site. They can swap to
+`createStore` themselves whenever that lane wants document sync. `auth/demoAdapter`
+deliberately stays on `createLocalStore` — it's the local demo provider; real auth has
+its own `auth/supabaseAdapter`.
+
+## Multi-tenancy: `tenant.ts`
+
+Each manager is a fully isolated **book** (tenant). `persistence/tenant.ts` holds the
+active tenant; **every** store resolves its namespace through it
+(`createLocalStore`/`createStore` call `tenantNamespace(base)`), so two operators never
+share a keyspace — locally each book's keys are `dimebag~t~<tenant>:…`, and under
+Supabase the namespace + `tenant_id`/RLS keep books apart
+(`supabase/migrations/0004_tenancy.sql`).
+
+```ts
+import { setActiveTenant } from '../persistence/index.js'
+setActiveTenant(session.user.tenantId)   // at boot, from the signed-in operator
+```
+
+The **default tenant** returns the namespace unchanged (`'dimebag'`), so the single demo
+book and every existing key/test are identical until a real tenant is set. The active
+tenant is read at store-creation time (stores are module singletons), so set it at boot
+before stores initialise; switching books in a running tab means a reload. (`AuthUser`
+carries an optional `tenantId`; the demo leaves it undefined → the default book.)
 
 ## Money: `createMoneyService`
 
@@ -52,13 +75,20 @@ await money.settle(accountId)
 The provably-fair RNG stays in `core`/games — this validates the *ledger write*, not
 the dice.
 
-### Adoption (shell/games lanes — later, gated by auth)
+### Adoption — `bookMoney` is wired over the live book
 
-Games/sportsbook today call `core.placeWager(account, …)` directly. To go
-server-authoritative, route those through a shared `MoneyService` instead and `await`
-the returned authoritative account. That's a larger, cross-lane change owned by the
-shell + game lanes; this foundation makes it a drop-in (the local service preserves
-today's behaviour until keys + auth are in place). Not done here by design.
+`app/money-service.ts` exports **`bookMoney`**, the env-aware `MoneyService` wired over
+the live org (via an `AccountSource` that reads a member's account and writes changes
+back through `mutateBook`). No keys → runs `core` in-process (today's behaviour); keys →
+server-authoritative via the RPCs.
+
+Going fully server-authoritative is inherently **async** (a network round-trip), so the
+cutover — operator money (`grant`/`adjust`/`settle`) and eventually play switching from
+`core.*` to `await bookMoney.*` — rides the same env switch and is what activates server
+authority. Games/sportsbook keep their existing **sync** `core` path until then (there's
+no central money chokepoint above `core`, and the provably-fair RNG must stay untouched),
+so no-keys behaviour is unchanged. Those call sites live in the game/console/shell lanes;
+flipping them is their adoption step, made drop-in by this wiring.
 
 ## Tests
 
