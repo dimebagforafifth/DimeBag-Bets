@@ -1,0 +1,102 @@
+/* The live activity ticker (app/ActivityTicker). A quiet, compact feed that sits
+   above the lobby grid — restrained per CLAUDE.md §2, with big wins gently lit. */
+.activity {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+.activity-head {
+  margin-bottom: 8px;
+}
+.activity-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.activity-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--green) 70%, transparent);
+  animation: activity-pulse 1.4s ease-in-out infinite;
+}
+@keyframes activity-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.activity-row {
+  display: grid;
+  grid-template-columns: minmax(64px, auto) 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.activity-row.is-big {
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+.activity-who {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.activity-what {
+  color: var(--muted);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.activity-row.is-win .activity-what strong,
+.activity-row.is-big .activity-what strong {
+  color: var(--green);
+}
+.activity-row.is-loss .activity-what strong {
+  color: var(--muted);
+}
+.activity-mult {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.activity-big {
+  font-size: 12px;
+}
+.activity-game {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-dot {
+    animation: none;
+  }
+}

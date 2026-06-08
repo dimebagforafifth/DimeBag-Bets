@@ -30,6 +30,7 @@ import {
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
 import { setActiveGame } from './ledger-store.js'
+import { ActivityTicker } from './ActivityTicker.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
 import { settleAndRecord } from './settlement-store.js'
@@ -470,6 +471,7 @@ function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
         <h1 className="lobby-title">Casino</h1>
         <p className="lobby-sub">Provably-fair originals — one balance across every game.</p>
       </div>
+      <ActivityTicker />
       <div className="lobby-grid">
         {GAMES.filter((g) => isGameEnabled(g.key)).map((g) => (
           <button
