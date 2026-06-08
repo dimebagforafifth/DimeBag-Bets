@@ -53,11 +53,16 @@ describe('Branding re-themes the app (mounted in ManagerConsole)', () => {
       ),
     )
 
-    // Open the Branding tab.
-    const brandTab = [...host.querySelectorAll<HTMLButtonElement>('.mc-tab')].find(
-      (t) => t.textContent === 'Branding',
-    )!
-    act(() => brandTab.click())
+    // Navigate: Settings section → reveal advanced tools → Branding.
+    const click = (sel: string, text: string) =>
+      act(() =>
+        [...host.querySelectorAll<HTMLButtonElement>(sel)]
+          .find((b) => b.textContent === text)!
+          .click(),
+      )
+    click('.mc-section', 'Settings')
+    act(() => host.querySelector<HTMLButtonElement>('.mc-adv-toggle')!.click())
+    click('.mc-tools .mc-tab', 'Branding')
     expect(host.querySelector('.mgr-brand-title')?.textContent).toMatch(/Branding/i)
 
     // Defaults before any change: theme accent is unset, money is the $ default.

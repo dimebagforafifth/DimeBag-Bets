@@ -1,82 +1,95 @@
 // @vitest-environment happy-dom
-/** The manager console sub-nav switches between the operator sections. */
-import { describe, expect, it } from 'vitest'
+/** The manager console: a two-level section/tool nav with progressive disclosure.
+ *  Every operator tool stays reachable; advanced tools hide behind the toggle. */
+import { describe, expect, it, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { getBook, listPlayers } from './book-store.js'
 import { ManagerConsole } from './ManagerConsole.js'
+import { __resetPermissions } from './console/permissions-store.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
+const roots: { root: ReturnType<typeof createRoot>; host: HTMLElement }[] = []
+afterEach(() => {
+  act(() => roots.forEach((r) => r.root.unmount()))
+  roots.forEach((r) => r.host.remove())
+  roots.length = 0
+  __resetPermissions()
+})
+
+function mount() {
+  const host = document.createElement('div')
+  document.body.appendChild(host)
+  const root = createRoot(host)
+  act(() =>
+    root.render(
+      <ManagerConsole
+        org={getBook()}
+        onMutate={() => {}}
+        players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
+      />,
+    ),
+  )
+  roots.push({ root, host })
+  return host
+}
+
+const section = (host: HTMLElement, label: string) =>
+  [...host.querySelectorAll<HTMLButtonElement>('.mc-section')].find((b) => b.textContent === label)
+const tool = (host: HTMLElement, label: string) =>
+  [...host.querySelectorAll<HTMLButtonElement>('.mc-tools .mc-tab')].find(
+    (b) => b.textContent === label,
+  )
+const advToggle = (host: HTMLElement) => host.querySelector<HTMLButtonElement>('.mc-adv-toggle')!
+
 describe('ManagerConsole', () => {
-  it('renders a sub-nav and switches sections', () => {
-    const host = document.createElement('div')
-    document.body.appendChild(host)
-    const root = createRoot(host)
-    act(() =>
-      root.render(
-        <ManagerConsole
-          org={getBook()}
-          onMutate={() => {}}
-          players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
-        />,
-      ),
-    )
-
-    const tab = (label: string) =>
-      [...host.querySelectorAll<HTMLButtonElement>('.mc-tab')].find((t) => t.textContent === label)!
-    expect(tab('Risk')).toBeTruthy()
-
-    act(() => tab('Risk').click())
-    expect(host.textContent).toContain('Risk & exposure')
-
-    act(() => tab('Settlement').click())
-    expect(host.textContent).toContain('Settlement history')
-
-    act(() => tab('Audit').click())
-    expect(host.textContent).toContain('Audit log')
-
-    act(() => root.unmount())
-    host.remove()
+  it('shows all six sections and opens on the Dashboard (full-access operator)', () => {
+    const host = mount()
+    for (const s of ['Dashboard', 'Daily ops', 'Players', 'Risk', 'Growth', 'Settings']) {
+      expect(section(host, s), `section ${s}`).toBeTruthy()
+    }
+    expect(host.querySelector('.con-h1')?.textContent).toMatch(/Dashboard/)
   })
 
-  it('mounts the growth/insight suite — every new tab is reachable and renders its page', () => {
-    const host = document.createElement('div')
-    document.body.appendChild(host)
-    const root = createRoot(host)
-    act(() =>
-      root.render(
-        <ManagerConsole
-          org={getBook()}
-          onMutate={() => {}}
-          players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
-        />,
-      ),
-    )
+  it('each section opens its default tool', () => {
+    const host = mount()
+    act(() => section(host, 'Daily ops')!.click())
+    expect(host.textContent).toContain('Settlement history')
+    act(() => section(host, 'Risk')!.click())
+    expect(host.textContent).toContain('Risk & exposure')
+    act(() => section(host, 'Growth')!.click())
+    expect(host.querySelector('.mgr-report-title')?.textContent).toMatch(/Reporting/i)
+    act(() => section(host, 'Settings')!.click())
+    expect(host.querySelector('.con-h1')?.textContent).toMatch(/Setup/)
+  })
 
-    const tab = (label: string) =>
-      [...host.querySelectorAll<HTMLButtonElement>('.mc-tab')].find((t) => t.textContent === label)
+  it('progressive disclosure hides advanced tools until revealed', () => {
+    const host = mount()
+    act(() => section(host, 'Settings')!.click())
+    // Branding is an advanced tool — hidden from the sub-nav at first.
+    expect(tool(host, 'Branding')).toBeFalsy()
+    act(() => advToggle(host).click())
+    expect(tool(host, 'Branding')).toBeTruthy()
+    act(() => tool(host, 'Branding')!.click())
+    expect(host.querySelector('.mgr-brand-title')?.textContent).toMatch(/Branding/i)
+  })
 
-    // Each newly mounted tab: its nav button exists, and clicking it renders that
-    // page (asserted via the page's own title element). These six were built and
-    // tested standalone but unmounted until now.
-    const PAGES: { label: string; titleSel: string; titleRe: RegExp }[] = [
-      { label: 'Reporting', titleSel: '.mgr-report-title', titleRe: /Reporting/i },
-      { label: 'Copilot', titleSel: '.mgr-cop-title', titleRe: /Copilot/i },
-      { label: 'Promotions', titleSel: '.mgr-promo-title', titleRe: /Promotions/i },
-      { label: 'Loyalty', titleSel: '.mgr-loy-title', titleRe: /Loyalty/i },
-      { label: 'Communication', titleSel: '.mgr-comms-title', titleRe: /Communication/i },
-      { label: 'Branding', titleSel: '.mgr-brand-title', titleRe: /Branding/i },
-    ]
-
-    for (const p of PAGES) {
-      const btn = tab(p.label)
-      expect(btn, `tab "${p.label}" should be present`).toBeTruthy()
-      act(() => btn!.click())
-      const title = host.querySelector(p.titleSel)?.textContent
-      expect(title, `page for "${p.label}" should render`).toMatch(p.titleRe)
-    }
-
-    act(() => root.unmount())
-    host.remove()
+  it('keeps all six growth/insight pages reachable', () => {
+    const host = mount()
+    // Daily ops → Communication
+    act(() => section(host, 'Daily ops')!.click())
+    act(() => tool(host, 'Communication')!.click())
+    expect(host.querySelector('.mgr-comms-title')?.textContent).toMatch(/Communication/i)
+    // Growth → Promotions, then advanced → Copilot
+    act(() => section(host, 'Growth')!.click())
+    act(() => tool(host, 'Promotions')!.click())
+    expect(host.querySelector('.mgr-promo-title')?.textContent).toMatch(/Promotions/i)
+    act(() => advToggle(host).click())
+    act(() => tool(host, 'Copilot')!.click())
+    expect(host.querySelector('.mgr-cop-title')?.textContent).toMatch(/Copilot/i)
+    // Players → Loyalty (advanced is a console-wide toggle, already on from above)
+    act(() => section(host, 'Players')!.click())
+    act(() => tool(host, 'Loyalty')!.click())
+    expect(host.querySelector('.mgr-loy-title')?.textContent).toMatch(/Loyalty/i)
   })
 })
