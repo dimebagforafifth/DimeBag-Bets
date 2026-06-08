@@ -47,10 +47,12 @@ export {
   toggleSelection,
   relatedPairs,
   canCombine,
+  sameGameEligible,
   teaserEligible,
   availableBetTypes,
   priceSingles,
   priceParlay,
+  priceSameGameParlay,
   priceRoundRobin,
   priceTeaser,
 } from './slip.js'

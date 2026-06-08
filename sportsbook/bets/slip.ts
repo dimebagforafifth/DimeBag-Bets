@@ -32,7 +32,7 @@ export interface SlipSelection {
   sport?: TeaserSport
 }
 
-export type BetType = 'single' | 'parlay' | 'roundRobin' | 'teaser'
+export type BetType = 'single' | 'parlay' | 'roundRobin' | 'teaser' | 'sameGameParlay'
 
 export interface BetSlip {
   selections: SlipSelection[]
@@ -78,6 +78,14 @@ export function canCombine(slip: BetSlip): boolean {
   return relatedPairs(slip).length === 0
 }
 
+/** Same-game-parlay (bet builder) eligible: ≥2 legs, ALL on the one event. The
+ *  player has deliberately combined that game's markets, so the related-leg block
+ *  is opted out of for this slip. */
+export function sameGameEligible(slip: BetSlip): boolean {
+  const sels = slip.selections
+  return sels.length >= 2 && new Set(sels.map((s) => s.eventId)).size === 1
+}
+
 /** Teaser-eligible: ≥2 legs, every leg a spread or total of the SAME sport. */
 export function teaserEligible(slip: BetSlip): boolean {
   const sels = slip.selections
@@ -97,6 +105,9 @@ export function availableBetTypes(slip: BetSlip): BetType[] {
   if (n >= 2 && combinable) types.push('parlay')
   if (n >= 3 && combinable) types.push('roundRobin')
   if (combinable && teaserEligible(slip)) types.push('teaser')
+  // A slip that's all one game can't be a straight parlay (related legs), but it
+  // CAN be a same-game parlay (bet builder).
+  if (n >= 2 && sameGameEligible(slip)) types.push('sameGameParlay')
   return types
 }
 
@@ -142,6 +153,21 @@ export function priceParlay(slip: BetSlip, stake: number): ParlayPricing {
   requireStake(stake)
   if (slip.selections.length < 2) throw new Error('a parlay needs ≥2 selections')
   if (!canCombine(slip)) throw new Error('cannot parlay related legs from the same event')
+  const decimal = parlayDecimalOf(slip.selections.map((s) => s.decimal))
+  return {
+    legs: slip.selections.map((s) => s.label),
+    decimal,
+    stake,
+    toReturn: Math.round(stake * decimal),
+  }
+}
+
+/** Price the whole slip as one same-game parlay (bet builder): identical math to
+ *  a parlay, but the legs are all on one game — so it skips the related-leg guard
+ *  that `priceParlay` enforces. Every leg still must win and the odds multiply. */
+export function priceSameGameParlay(slip: BetSlip, stake: number): ParlayPricing {
+  requireStake(stake)
+  if (!sameGameEligible(slip)) throw new Error('a same-game parlay needs ≥2 legs on the one game')
   const decimal = parlayDecimalOf(slip.selections.map((s) => s.decimal))
   return {
     legs: slip.selections.map((s) => s.label),

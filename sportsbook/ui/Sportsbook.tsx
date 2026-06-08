@@ -71,12 +71,13 @@ function useFmtOdds(): (american: number) => string {
 
 /** How the current slip is being bet. A teaser mode arrives with the engine's
  *  teaser kind; round robin places as every N-leg parlay combination. */
-type SlipMode = 'single' | 'parlay' | 'roundRobin'
+type SlipMode = 'single' | 'parlay' | 'roundRobin' | 'sameGameParlay'
 
 const MODE_LABEL: Record<SlipMode, string> = {
   single: 'Singles',
   parlay: 'Parlay',
   roundRobin: 'Round robin',
+  sameGameParlay: 'Same Game',
 }
 
 /** Bridge a board `Selection` (American odds) to the `bets/` slip model (decimal
@@ -202,8 +203,8 @@ export function Sportsbook({ account, store }: SportsbookProps) {
   // unrelated, round robin ≥3 unrelated). Teaser is gated until the engine carries it.
   const slipSels = useMemo(() => freshSlip.map(toSlipSelection), [freshSlip])
   const betTypes = useMemo(() => availableBetTypes({ selections: slipSels }), [slipSels])
-  const availableModes = (['single', 'parlay', 'roundRobin'] as SlipMode[]).filter((m) =>
-    betTypes.includes(m),
+  const availableModes = (['single', 'parlay', 'roundRobin', 'sameGameParlay'] as SlipMode[]).filter(
+    (m) => betTypes.includes(m),
   )
   const effectiveMode: SlipMode = availableModes.includes(mode) ? mode : 'single'
 
@@ -216,7 +217,8 @@ export function Sportsbook({ account, store }: SportsbookProps) {
 
   const { totalStake, totalReturn, parlayCount } = useMemo(() => {
     if (freshSlip.length === 0) return { totalStake: 0, totalReturn: 0, parlayCount: 0 }
-    if (effectiveMode === 'parlay') {
+    if (effectiveMode === 'parlay' || effectiveMode === 'sameGameParlay') {
+      // Same-game parlay prices identically to a parlay — the legs just share a game.
       const dec = priceTicket('parlay', freshSlip)
       return { totalStake: stake, totalReturn: potentialReturn(stake, dec), parlayCount: 1 }
     }
@@ -307,6 +309,10 @@ export function Sportsbook({ account, store }: SportsbookProps) {
       let reqs: PlaceTicketOptions[]
       if (effectiveMode === 'parlay') {
         reqs = [{ kind: 'parlay', legs: freshSlip, stake }]
+      } else if (effectiveMode === 'sameGameParlay') {
+        // A bet builder on one game — same parlay path, with the related-leg block
+        // opted out of for this deliberately-combined ticket.
+        reqs = [{ kind: 'parlay', legs: freshSlip, stake, sameGameParlay: true }]
       } else if (effectiveMode === 'roundRobin') {
         // Every N-leg combination is its own parlay ticket — they settle
         // independently, so a single losing leg only kills the parlays it sits in.
@@ -819,15 +825,21 @@ function BetSlip({
   const closedIds = new Set(closedLegs.map((s) => s.id))
   const linesMoved = movedIds.size > 0
   const stakeLabel =
-    mode === 'parlay' ? 'Parlay stake' : mode === 'roundRobin' ? 'Stake (per parlay)' : 'Stake (each)'
+    mode === 'parlay' || mode === 'sameGameParlay'
+      ? 'Parlay stake'
+      : mode === 'roundRobin'
+        ? 'Stake (per parlay)'
+        : 'Stake (each)'
   const placeLabel =
     mode === 'parlay'
       ? 'Place parlay'
-      : mode === 'roundRobin'
-        ? `Place ${parlayCount} parlays`
-        : slip.length > 1
-          ? `Place ${slip.length} bets`
-          : 'Place bet'
+      : mode === 'sameGameParlay'
+        ? 'Place same game parlay'
+        : mode === 'roundRobin'
+          ? `Place ${parlayCount} parlays`
+          : slip.length > 1
+            ? `Place ${slip.length} bets`
+            : 'Place bet'
   return (
     <section className="sb-slip">
       <header className="sb-slip-head">
@@ -863,8 +875,18 @@ function BetSlip({
               ))}
             </div>
           )}
-          {related && slip.length >= 2 && (
-            <p className="sb-note">Two picks from one game can’t be parlayed — betting as singles.</p>
+          {related && slip.length >= 2 && mode !== 'sameGameParlay' && (
+            <p className="sb-note">
+              {availableModes.includes('sameGameParlay') ? (
+                <>
+                  All picks are on one game — pick{' '}
+                  <Term id="same-game-parlay">Same Game</Term> to combine them into one bet, or bet
+                  as singles.
+                </>
+              ) : (
+                'Two picks from one game can’t be combined with the rest — betting as singles.'
+              )}
+            </p>
           )}
 
           {mode === 'roundRobin' && (

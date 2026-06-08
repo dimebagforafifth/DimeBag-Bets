@@ -66,12 +66,17 @@ export interface PlaceTicketOptions {
   kind: TicketKind
   legs: Selection[]
   stake: number
+  /** A same-game parlay (bet builder): the player has deliberately combined
+   *  several markets on ONE game, so the related-contingency block is opted out of
+   *  for this ticket. Pricing and settlement are unchanged — the legs still grade
+   *  off the one game's result and the odds still multiply (CLAUDE.md §4). */
+  sameGameParlay?: boolean
 }
 
 /** Place a ticket: validate it, lock the price, and hold the stake via core. */
 export function placeTicket(account: Account, opts: PlaceTicketOptions): Ticket {
-  const { kind, legs, stake } = opts
-  if (kind === 'parlay' && hasRelatedLegs(legs)) {
+  const { kind, legs, stake, sameGameParlay } = opts
+  if (kind === 'parlay' && !sameGameParlay && hasRelatedLegs(legs)) {
     throw new Error('cannot parlay two selections from the same event')
   }
   const oddsDecimal = priceTicket(kind, legs) // also validates the leg count
