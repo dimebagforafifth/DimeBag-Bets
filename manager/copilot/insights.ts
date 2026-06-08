@@ -32,6 +32,11 @@ const RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 }
 const pct = (n: number): string => `${(n * 100).toFixed(1)}%`
 
 export function analyze(s: BookSnapshot): Recommendation[] {
+  // TODO(api): the premium LLM swaps in HERE, behind this exact
+  // `analyze(snapshot) -> Recommendation[]` signature. Today it is the deterministic
+  // rules engine below (no external dependency, fully testable, never acts). A real
+  // model would read the same read-only snapshot and return the same shape — still
+  // advisory, still manager-approved — so callers and the UI never change.
   const recs: Recommendation[] = []
   const a = s.activity
 
