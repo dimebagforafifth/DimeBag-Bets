@@ -1,0 +1,120 @@
+.gamc {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 14px);
+  padding: 16px;
+}
+.gamc-head {
+  margin-bottom: 12px;
+}
+.gamc-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+.gamc-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.gamc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.gamc-tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.gamc-tab.is-on {
+  color: var(--text);
+  background: var(--surface);
+}
+.gamc-error {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--red, #e5484d);
+}
+.gamc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.gamc-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.gamc-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.gamc-metric {
+  color: var(--muted);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.gamc-glyph {
+  font-size: 16px;
+}
+.gamc-num {
+  width: 80px;
+  text-align: right;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.gamc-text {
+  width: 140px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 13px;
+}
+.gamc-num:focus,
+.gamc-text:focus {
+  outline: none;
+  border-color: var(--muted);
+}
+.gamc-prob,
+.gamc-split {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.gamc-wheel-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+.gamc-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
