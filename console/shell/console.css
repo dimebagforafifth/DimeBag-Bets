@@ -1,0 +1,299 @@
+/* Manager console shell layout (console/shell). Serious-bettor, data-dense, dark.
+   Reads the tokens from console/theme; everything is scoped under `.console`. */
+
+.console {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.console-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 22px 24px 40px;
+}
+
+/* ------------------------------- top bar -------------------------------- */
+.c-topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 24px;
+  background: var(--c-panel);
+  border-bottom: 1px solid var(--c-line);
+}
+.c-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.c-brand {
+  font-family: var(--c-font-head);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--c-text);
+}
+.c-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--c-radius-sm);
+  border: 1px solid var(--c-line);
+  background: var(--c-panel-2);
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.c-iconbtn:hover {
+  color: var(--c-text);
+  border-color: color-mix(in srgb, var(--c-gold) 55%, var(--c-line));
+}
+.c-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--c-radius-sm);
+  border: 1px solid var(--c-line);
+  background: var(--c-bg);
+  color: var(--c-muted);
+}
+.c-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-text);
+  font-family: var(--c-font-body);
+  font-size: 14px;
+  outline: none;
+}
+.c-search-input::placeholder {
+  color: var(--c-faint);
+}
+.c-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.c-user {
+  font-family: var(--c-font-label);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--c-text);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ----------------------------- figures strip ---------------------------- */
+.c-figures {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--c-gap);
+  margin-bottom: 26px;
+}
+.c-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--c-panel);
+  border: 1px solid var(--c-line);
+  border-radius: var(--c-radius);
+}
+.c-figure-label {
+  color: var(--c-muted);
+}
+.c-figure-value {
+  font-family: var(--c-font-head);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+.c-figure-value.is-up {
+  color: var(--c-up);
+}
+.c-figure-value.is-down {
+  color: var(--c-down);
+}
+
+/* ------------------------------- app grid ------------------------------- */
+.c-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.c-section-head {
+  margin: 0 0 12px;
+}
+.c-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--c-gap);
+}
+
+/* tile */
+.c-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 15px 16px 15px 18px;
+  background: var(--c-panel);
+  border: 1px solid var(--c-line);
+  border-radius: var(--c-radius);
+  color: var(--c-text);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.13s ease, border-color 0.13s ease, background 0.13s ease;
+}
+.c-tile-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--c-gold);
+  opacity: 0.55;
+  transition: opacity 0.13s ease, width 0.13s ease;
+}
+.c-tile:hover {
+  transform: translateY(var(--c-lift));
+  border-color: color-mix(in srgb, var(--c-gold) 45%, var(--c-line));
+  background: var(--c-panel-2);
+}
+.c-tile:hover .c-tile-accent {
+  opacity: 1;
+  width: 4px;
+}
+.c-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--c-radius-sm);
+  background: var(--c-panel-2);
+  border: 1px solid var(--c-line);
+  color: var(--c-gold);
+}
+.c-tile:hover .c-tile-icon {
+  border-color: color-mix(in srgb, var(--c-gold) 40%, var(--c-line));
+}
+.c-tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.c-tile-name {
+  font-family: var(--c-font-head);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--c-text);
+}
+.c-tile-hint {
+  font-size: 12.5px;
+  color: var(--c-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* empty grid */
+.c-grid-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 64px 24px;
+  background: var(--c-panel);
+  border: 1px dashed var(--c-line);
+  border-radius: var(--c-radius);
+}
+.c-grid-empty-msg {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--c-muted);
+}
+
+/* ------------------------------ workspace ------------------------------- */
+.c-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.c-workspace-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.c-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px 7px 9px;
+  border-radius: var(--c-radius-sm);
+  border: 1px solid var(--c-line);
+  background: var(--c-panel);
+  color: var(--c-muted);
+  font-family: var(--c-font-label);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.c-back:hover {
+  color: var(--c-text);
+  border-color: color-mix(in srgb, var(--c-gold) 55%, var(--c-line));
+}
+.c-workspace-title {
+  font-family: var(--c-font-head);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.c-workspace-body {
+  background: var(--c-panel);
+  border: 1px solid var(--c-line);
+  border-radius: var(--c-radius);
+  padding: 20px;
+}
+
+/* ------------------------------ responsive ------------------------------ */
+@media (max-width: 760px) {
+  .c-topbar {
+    grid-template-columns: 1fr auto;
+    row-gap: 10px;
+  }
+  /* search drops to its own full-width row beneath the bar */
+  .c-search {
+    grid-column: 1 / -1;
+    order: 3;
+    max-width: none;
+  }
+  .c-figures {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .console-main {
+    padding: 18px 16px 32px;
+  }
+}
