@@ -10,7 +10,7 @@
  */
 
 import type { Account, Outcome, Wager } from '../core/index.js'
-import { placeWager, resolveAtMultiplier, resolveWager } from '../core/index.js'
+import { adjustBalance, placeWager, resolveAtMultiplier, resolveWager } from '../core/index.js'
 import {
   decimalFromAmerican,
   impliedProbability,
@@ -94,16 +94,48 @@ export function placeTicket(account: Account, opts: PlaceTicketOptions): Ticket 
   }
 }
 
-/** Map a settled ticket's per-leg grades into its overall status. */
-function statusFor(outcomes: Outcome[]): Exclude<TicketStatus, 'open'> {
+/** Map a settled ticket's per-leg grades into its overall status (never 'cashed' —
+ *  that's a player cash-out, not a grade). */
+function statusFor(outcomes: Outcome[]): Exclude<TicketStatus, 'open' | 'cashed'> {
   if (outcomes.includes('loss')) return 'lost'
   const winners = outcomes.filter((o) => o === 'win').length
   if (winners === 0) return outcomes.includes('push') ? 'push' : 'void'
   return 'won'
 }
 
+/** The outcome of a ticket against a set of results — the pure grading math, shared
+ *  by the open-ticket settle (gradeTicket) and the already-settled re-grade
+ *  (regradeTicket). `returned` is the points the player ends with: 0 on a loss, the
+ *  stake on a push/void, stake × winning-decimal on a win. */
+interface Settlement {
+  status: Exclude<TicketStatus, 'open' | 'cashed'>
+  outcomes: Outcome[]
+  /** The combined decimal actually paid (winners only); the locked odds otherwise. */
+  decimal: number
+  returned: number
+}
+function computeSettlement(
+  ticket: Ticket,
+  results: Record<string, MatchResult | null | undefined>,
+): Settlement {
+  const outcomes = ticket.legs.map((l) => gradeSelection(l, results[l.eventId]))
+  const status = statusFor(outcomes)
+  if (status === 'won') {
+    // Re-price on the legs that actually won (push/void legs contribute nothing).
+    const winningOdds = ticket.legs.filter((_, i) => outcomes[i] === 'win').map((l) => l.odds)
+    const decimal = Math.min(
+      MAX_PARLAY_DECIMAL,
+      winningOdds.reduce((a, o) => a * decimalFromAmerican(o), 1),
+    )
+    return { status, outcomes, decimal, returned: potentialReturn(ticket.stake, decimal) }
+  }
+  if (status === 'lost') return { status, outcomes, decimal: ticket.oddsDecimal, returned: 0 }
+  // push or void: stake returned, figure unchanged.
+  return { status, outcomes, decimal: ticket.oddsDecimal, returned: ticket.stake }
+}
+
 /**
- * Settle a ticket against final results, adjusting the figure through core.
+ * Settle an OPEN ticket against final results, adjusting the figure through core.
  *  - any leg lost → ticket lost (lose the stake)
  *  - otherwise the winning legs re-price (push/void legs drop out): win at that
  *    decimal; if no legs won, it's a push/void and the stake is returned.
@@ -115,29 +147,86 @@ export function gradeTicket(
 ): Ticket {
   if (ticket.status !== 'open') throw new Error(`ticket ${ticket.id} is already settled`)
 
-  const outcomes = ticket.legs.map((l) => gradeSelection(l, results[l.eventId]))
-  const status = statusFor(outcomes)
-  ticket.legOutcomes = outcomes
-  ticket.status = status
+  const s = computeSettlement(ticket, results)
+  ticket.legOutcomes = s.outcomes
+  ticket.status = s.status
 
-  if (status === 'lost') {
+  if (s.status === 'lost') {
     resolveWager(account, ticket.wager, 'loss')
     ticket.returned = 0
     return ticket
   }
-  if (status === 'won') {
-    // Re-price on the legs that actually won (push/void legs contribute nothing).
-    const winningOdds = ticket.legs.filter((_, i) => outcomes[i] === 'win').map((l) => l.odds)
-    const decimal = Math.min(MAX_PARLAY_DECIMAL, winningOdds.reduce((a, o) => a * decimalFromAmerican(o), 1))
-    resolveWager(account, ticket.wager, 'win', decimal)
-    ticket.oddsDecimal = decimal // reflect the re-priced odds actually paid
-    ticket.returned = potentialReturn(ticket.stake, decimal)
+  if (s.status === 'won') {
+    resolveWager(account, ticket.wager, 'win', s.decimal)
+    ticket.oddsDecimal = s.decimal // reflect the re-priced odds actually paid
+    ticket.returned = s.returned
     return ticket
   }
   // push or void: stake returned, figure unchanged.
-  resolveWager(account, ticket.wager, status === 'push' ? 'push' : 'void')
+  resolveWager(account, ticket.wager, s.status === 'push' ? 'push' : 'void')
   ticket.returned = ticket.stake
   return ticket
+}
+
+/**
+ * The figure effect a settlement HAD (or would have) on the account, mirroring
+ * `core.resolveWager` exactly — including the per-head max-payout cap on a win
+ * (Account.maxPayout). Won: the capped profit; lost: −stake; push/void: 0. We can't
+ * read this back off `ticket.returned` (which records the UNCAPPED potential return),
+ * so the re-grade recomputes it from status + winning decimal the same way core does.
+ */
+function figureEffect(
+  stake: number,
+  status: TicketStatus,
+  decimal: number,
+  maxPayout: number | null | undefined,
+): number {
+  if (status === 'won') {
+    let profit = Math.round(stake * (decimal - 1))
+    if (maxPayout != null && profit > maxPayout) profit = maxPayout // core's operator cap
+    return profit
+  }
+  if (status === 'lost') return -stake
+  return 0 // push / void: stake returned, figure unchanged
+}
+
+/**
+ * Re-grade an ALREADY-SETTLED ticket against a corrected result (CLAUDE.md §4 —
+ * palpable-error re-settle / a result the operator fixed by hand after it had
+ * already graded off the feed). The stake was released at the first settlement, so
+ * this never touches `pending`; it moves the figure by the DIFFERENCE between the
+ * settlement's prior figure effect and the corrected one, through core's
+ * `adjustBalance` (the same manual-adjustment primitive the operator uses elsewhere).
+ * Both effects are computed cap-aware via `figureEffect`, so the corrected figure
+ * lands EXACTLY where a clean first-time grade at the new result would — even with a
+ * max-payout cap in play. Idempotent: an unchanged outcome moves nothing. A cashed-out
+ * ticket is left alone (the player already took a settled-early price). Returns true
+ * if the figure moved.
+ */
+export function regradeTicket(
+  account: Account,
+  ticket: Ticket,
+  results: Record<string, MatchResult | null | undefined>,
+): boolean {
+  if (ticket.status === 'open') throw new Error(`ticket ${ticket.id} is open; use gradeTicket`)
+  if (ticket.status === 'cashed') return false // a cashed ticket isn't re-graded
+
+  // The prior effect, from the ticket's standing status + the decimal it won at.
+  const prevEffect = figureEffect(ticket.stake, ticket.status, ticket.oddsDecimal, account.maxPayout)
+  const s = computeSettlement(ticket, results)
+  const newEffect = figureEffect(ticket.stake, s.status, s.decimal, account.maxPayout)
+  const delta = newEffect - prevEffect
+
+  ticket.legOutcomes = s.outcomes
+  ticket.status = s.status
+  ticket.returned = s.returned
+  if (s.status === 'won') ticket.oddsDecimal = s.decimal
+
+  if (delta !== 0) {
+    adjustBalance(account, delta)
+    return true
+  }
+  return false
 }
 
 /**

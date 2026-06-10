@@ -86,6 +86,22 @@ export type { FutureTicket, FutureTicketStatus } from './book/futures.js'
 export { FUTURES, futureDecimal, futureOverround, findFutureOutcome } from './bets/futures.js'
 export type { FutureMarket, FutureOutcome, FutureStatus } from './bets/futures.js'
 
+// The results overlay — the operator's manual grading (enter/correct a final
+// result, or void a postponed/abandoned fixture). Settles every player's open
+// tickets through core, exactly like the feed finaling a game. See book/results.ts.
+export {
+  setResult,
+  voidEvent,
+  clearResult,
+  resetResults,
+  getResult,
+  isResultOverridden,
+  subscribeResults,
+  getResultsVersion,
+  applyResults,
+} from './book/results.js'
+export type { ResultOverride } from './book/results.js'
+
 // Additional bet types (round robins, teasers, futures, boosts) layered on top
 // of the core ticket flow. The player slip uses the round-robin combinatorics to
 // expand a set of picks into its constituent parlays; all of it settles through

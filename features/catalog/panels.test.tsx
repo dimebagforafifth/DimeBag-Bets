@@ -1,13 +1,16 @@
 // @vitest-environment happy-dom
 /** Catalog panels mount, and the new panels (Scores, Manual Ticket) work. */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { getBook } from '../../app/book-store.js'
+import { getResult, resetResults } from '../../sportsbook/index.js'
 import { catalogManifests } from './manifest.js'
 import { ScoresPanel } from './ScoresPanel.js'
 import { TicketWriterPanel } from './TicketWriterPanel.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+afterEach(() => resetResults()) // the Scores grading test writes the shared results overlay
 
 function host(): HTMLDivElement {
   const h = document.createElement('div')
@@ -47,6 +50,54 @@ describe('catalog panels', () => {
     act(() => root.render(<ScoresPanel />))
     expect(h.textContent).toContain('Results')
     expect(h.querySelectorAll('.cat-score-row').length).toBeGreaterThan(1) // header + fixtures
+    act(() => root.unmount())
+    h.remove()
+  })
+
+  it('Scores grades a fixture by hand into the shared results overlay (settles the book)', () => {
+    const h = host()
+    const root = createRoot(h)
+    act(() => root.render(<ScoresPanel />))
+    // Open the first fixture's grader.
+    const toggle = h.querySelector<HTMLButtonElement>('.cat-grade-toggle')!
+    act(() => toggle.click())
+    const [home, away] = h.querySelectorAll<HTMLInputElement>('.cat-grade-input')
+    act(() => setValue(home, '101'))
+    act(() => setValue(away, '99'))
+    // Money-moving, so it takes a second confirm.
+    const markFinal = [...h.querySelectorAll<HTMLButtonElement>('.cat-grade-btn')].find(
+      (b) => b.textContent === 'Mark final',
+    )!
+    act(() => markFinal.click())
+    const confirm = [...h.querySelectorAll<HTMLButtonElement>('.cat-grade-btn')].find((b) =>
+      (b.textContent ?? '').startsWith('Confirm'),
+    )!
+    act(() => confirm.click())
+    // The result is now in the shared overlay — every player's store re-grades off it.
+    expect(getResult('nba-lal-bos')).toEqual({ kind: 'final', home: 101, away: 99 })
+    act(() => root.unmount())
+    h.remove()
+  })
+
+  it('Scores refuses to grade a fixture with blank scores (no silent 0–0)', () => {
+    const h = host()
+    const root = createRoot(h)
+    act(() => root.render(<ScoresPanel />))
+    const toggle = h.querySelector<HTMLButtonElement>('.cat-grade-toggle')!
+    act(() => toggle.click())
+    const [home, away] = h.querySelectorAll<HTMLInputElement>('.cat-grade-input')
+    act(() => setValue(home, '')) // explicitly blank both sides
+    act(() => setValue(away, ''))
+    const markFinal = [...h.querySelectorAll<HTMLButtonElement>('.cat-grade-btn')].find(
+      (b) => b.textContent === 'Mark final',
+    )!
+    act(() => markFinal.click()) // arms
+    const confirm = [...h.querySelectorAll<HTMLButtonElement>('.cat-grade-btn')].find((b) =>
+      (b.textContent ?? '').startsWith('Confirm'),
+    )!
+    act(() => confirm.click())
+    expect(getResult('nba-lal-bos')).toBeUndefined() // nothing graded
+    expect(h.textContent).toContain('Enter a score for both sides')
     act(() => root.unmount())
     h.remove()
   })
