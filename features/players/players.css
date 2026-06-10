@@ -1,5 +1,7 @@
-/* Console panel tokens (per the shell's design language). Scoped to .feat so adapted
-   and new panels share one look; matches the shell's dark/gold theme. */
+/* Players-section console panels — VANTAGE graphite-and-gold. Scoped to `.feat` so
+   every adapted and new panel shares one look and matches the shell's theme. Tokens
+   mirror console/theme (bg #14171C, panels #1B1F26/#20252E, borders #2A2F39, gold
+   #D6B14A, up #5BB98B, down #D27068). Coins only — never a "$" baked into a class. */
 .feat {
   --c-bg: #14171c;
   --c-panel: #1b1f26;
@@ -16,16 +18,46 @@
   gap: 14px;
   font-family: 'Saira', system-ui, sans-serif;
 }
+
+/* Headings & text -------------------------------------------------------- */
+.feat-h1 {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
 .feat-h {
   font-family: 'Saira Condensed', 'Saira', sans-serif;
   font-size: 16px;
   font-weight: 700;
   margin: 0 0 8px;
 }
+.feat-h2 {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  margin: 0;
+}
+.feat-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--c-muted);
+}
+.feat-sub {
+  color: var(--c-muted);
+  font-size: 13px;
+  margin: 0;
+}
 .feat-empty {
   color: var(--c-muted);
   font-size: 13px;
   margin: 4px 0;
+}
+.feat-muted {
+  color: var(--c-muted);
 }
 .feat-card {
   background: var(--c-panel);
@@ -33,8 +65,205 @@
   border-radius: 12px;
   padding: 14px;
 }
+.feat-flag {
+  display: inline-block;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--c-gold);
+  border: 1px solid color-mix(in srgb, var(--c-gold) 50%, transparent);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
 
-/* Forms */
+/* Toolbar / search-first ------------------------------------------------- */
+.feat-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-bg);
+  padding: 2px 0 8px;
+}
+.feat-search {
+  flex: 1 1 240px;
+  background: var(--c-panel-2);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  color: var(--c-text);
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: 'Saira', sans-serif;
+}
+.feat-search:focus {
+  outline: none;
+  border-color: var(--c-gold);
+}
+.feat-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.feat-chip {
+  border: 1px solid var(--c-border);
+  background: var(--c-panel-2);
+  color: var(--c-muted);
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.feat-chip.is-on {
+  border-color: var(--c-gold);
+  color: #1a1404;
+  background: var(--c-gold);
+}
+
+/* Data tables ------------------------------------------------------------ */
+.feat-tablewrap {
+  background: var(--c-panel);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  overflow: auto;
+}
+.feat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.feat-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--c-panel-2);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--c-border);
+  white-space: nowrap;
+}
+.feat-table tbody td {
+  padding: 11px 12px;
+  border-top: 1px solid var(--c-border);
+  vertical-align: middle;
+}
+.feat-table tbody tr {
+  cursor: default;
+}
+.feat-table tbody tr.is-click {
+  cursor: pointer;
+}
+.feat-table tbody tr.is-click:hover {
+  background: var(--c-panel-2);
+}
+.feat-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.feat-up {
+  color: var(--c-up);
+}
+.feat-down {
+  color: var(--c-down);
+}
+/* Sortable header button */
+.feat-sort {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.feat-sort.is-active {
+  color: var(--c-gold);
+}
+.feat-sort-arrow {
+  font-size: 9px;
+}
+
+/* Pills (segment / status) ---------------------------------------------- */
+.feat-pill {
+  display: inline-block;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-radius: 6px;
+  padding: 2px 7px;
+  border: 1px solid var(--c-border);
+  color: var(--c-muted);
+  white-space: nowrap;
+}
+.feat-pill.is-vip {
+  color: var(--c-gold);
+  border-color: color-mix(in srgb, var(--c-gold) 55%, transparent);
+}
+.feat-pill.is-new {
+  color: var(--c-text);
+  border-color: color-mix(in srgb, var(--c-gold) 35%, var(--c-border));
+}
+.feat-pill.is-casual {
+  color: var(--c-text);
+}
+.feat-pill.is-dormant {
+  color: var(--c-muted);
+}
+.feat-pill.is-active {
+  color: var(--c-up);
+  border-color: color-mix(in srgb, var(--c-up) 45%, transparent);
+}
+.feat-pill.is-suspended {
+  color: var(--c-down);
+  border-color: color-mix(in srgb, var(--c-down) 45%, transparent);
+}
+.feat-pill.is-locked {
+  color: var(--c-down);
+}
+
+/* KPI cards -------------------------------------------------------------- */
+.feat-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.feat-kpi {
+  background: var(--c-panel);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.feat-kpi strong {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Forms ------------------------------------------------------------------ */
 .feat-form {
   background: var(--c-panel);
   border: 1px solid var(--c-border);
@@ -43,7 +272,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 420px;
+  max-width: 460px;
 }
 .feat-field {
   display: flex;
@@ -55,7 +284,9 @@
   letter-spacing: 0.5px;
   color: var(--c-muted);
 }
-.feat-input {
+.feat-input,
+.feat-select,
+.feat-textarea {
   background: var(--c-panel-2);
   border: 1px solid var(--c-border);
   border-radius: 8px;
@@ -64,13 +295,20 @@
   font-size: 14px;
   font-family: 'Saira', sans-serif;
 }
-.feat-input:focus {
+.feat-textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+.feat-input:focus,
+.feat-select:focus,
+.feat-textarea:focus {
   outline: none;
   border-color: var(--c-gold);
 }
 .feat-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .feat-btn {
   border: 1px solid var(--c-border);
@@ -86,10 +324,18 @@
 .feat-btn:hover {
   border-color: var(--c-muted);
 }
+.feat-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .feat-btn.is-primary {
   background: var(--c-gold);
   border-color: var(--c-gold);
   color: #1a1404;
+}
+.feat-btn.is-sm {
+  padding: 5px 10px;
+  font-size: 12px;
 }
 .feat-ok {
   color: var(--c-up);
@@ -116,7 +362,7 @@
   padding-bottom: 9px;
 }
 
-/* Movers / leaderboard */
+/* Movers / leaderboard --------------------------------------------------- */
 .feat-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -158,8 +404,142 @@
   color: var(--c-down);
 }
 
+/* Profile view ----------------------------------------------------------- */
+.feat-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.feat-profile-head .feat-spacer {
+  flex: 1;
+}
+.feat-linkback {
+  background: none;
+  border: 0;
+  color: var(--c-gold);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  padding: 0;
+}
+.feat-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--c-border);
+}
+.feat-tab {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--c-muted);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.feat-tab.is-on {
+  color: var(--c-text);
+  border-bottom-color: var(--c-gold);
+}
+.feat-defs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  font-size: 13px;
+  align-items: center;
+}
+.feat-defs dt {
+  color: var(--c-muted);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+.feat-defs dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.feat-inline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Analysis (CLV) --------------------------------------------------------- */
+.feat-meter {
+  position: relative;
+  width: 56px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-panel-2);
+  display: inline-block;
+  vertical-align: middle;
+}
+.feat-meter-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: var(--c-gold);
+}
+.feat-sharp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pending / grading ------------------------------------------------------ */
+.feat-totes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.feat-grade {
+  display: inline-flex;
+  gap: 4px;
+}
+.feat-gradebtn {
+  border: 1px solid var(--c-border);
+  background: var(--c-panel-2);
+  color: var(--c-text);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+}
+.feat-gradebtn.is-win:hover {
+  border-color: var(--c-up);
+  color: var(--c-up);
+}
+.feat-gradebtn.is-loss:hover {
+  border-color: var(--c-down);
+  color: var(--c-down);
+}
+.feat-gradebtn.is-push:hover,
+.feat-gradebtn.is-void:hover {
+  border-color: var(--c-gold);
+  color: var(--c-gold);
+}
+
+/* Responsive ------------------------------------------------------------- */
 @media (max-width: 640px) {
   .feat-cols {
     grid-template-columns: 1fr;
+  }
+  .feat-toolbar {
+    position: static;
   }
 }

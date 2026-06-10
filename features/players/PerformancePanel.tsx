@@ -9,7 +9,7 @@ import './players.css'
  * reporting). Adapts the existing `winnersLosers` analytics (app/risk) into a focused
  * leaderboard of who's up and who's down for the operator's eye.
  */
-export function PerformancePanel() {
+export function PerformancePanel({ onBack: _onBack }: { onBack: () => void }) {
   useSyncExternalStore(subscribeBook, getBookVersion)
   const { winners, losers } = winnersLosers(getBook(), 8)
   return (
