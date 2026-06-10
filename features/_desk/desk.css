@@ -1,0 +1,212 @@
+/* Money-desk primitives the shell's operations theme doesn't ship yet — filter
+   chips, a sticky search/filter toolbar, segmented action tabs, ledger type pills,
+   and the cashier batch queue. They consume the .feat-panel token vars
+   (var(--line)/--surface/--surface-2/--gem/--up/--down/--muted/--text), so they're
+   used INSIDE a PanelShell and match the charcoal/gold family. */
+
+/* ---- sticky search + filter toolbar ---- */
+.mdsk-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.mdsk-spacer {
+  flex: 1 1 auto;
+}
+
+/* ---- filter chips ---- */
+.mdsk-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mdsk-chip {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.mdsk-chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--gem) 50%, var(--line));
+}
+.mdsk-chip.is-on {
+  color: #14171c;
+  background: var(--gem);
+  border-color: var(--gem);
+}
+.mdsk-chip:focus-visible {
+  outline: 2px solid var(--gem);
+  outline-offset: 2px;
+}
+
+/* ---- segmented tabs (Grant/Deduct/Set, sort toggles) ---- */
+.mdsk-tabs {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.mdsk-tab {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: none;
+  border-right: 1px solid var(--line);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+.mdsk-tab:last-child {
+  border-right: none;
+}
+.mdsk-tab:hover:not(.is-on) {
+  color: var(--text);
+}
+.mdsk-tab.is-on {
+  color: #14171c;
+  background: var(--gem);
+}
+.mdsk-tab:focus-visible {
+  outline: 2px solid var(--gem);
+  outline-offset: -2px;
+}
+
+/* ---- search input ---- */
+.mdsk-search {
+  flex: 1 1 200px;
+}
+.mdsk-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.mdsk-search-input::placeholder {
+  color: var(--muted);
+}
+.mdsk-search-input:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+
+/* ---- ledger type pill ---- */
+.mdsk-pill {
+  display: inline-block;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+.mdsk-pill.is-adjust {
+  color: var(--gem);
+  border-color: color-mix(in srgb, var(--gem) 45%, transparent);
+}
+.mdsk-pill.is-settle {
+  color: var(--up);
+  border-color: color-mix(in srgb, var(--up) 45%, transparent);
+}
+
+/* ---- horizontal scroll for the wide day-column figures grid ---- */
+.mdsk-scroll {
+  overflow-x: auto;
+}
+
+/* ---- cashier batch queue ---- */
+.mdsk-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mdsk-queue-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.mdsk-queue-reason {
+  color: var(--muted);
+  font-size: 12px;
+}
+.mdsk-x {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+.mdsk-x:hover {
+  color: var(--down);
+}
+
+/* ---- small inline meta row (actor · reason · link) ---- */
+.mdsk-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+.mdsk-link {
+  color: var(--gem);
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--gem) 55%, transparent);
+  cursor: pointer;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  font: inherit;
+  padding: 0;
+}
+
+@media (max-width: 560px) {
+  .mdsk-queue-row {
+    grid-template-columns: 1fr auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mdsk-chip,
+  .mdsk-tab {
+    transition: none;
+  }
+}
