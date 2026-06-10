@@ -5,11 +5,14 @@
   width: 100%;
 }
 
-/* Home — sections of square app tiles, floated straight on the page backdrop. */
+/* Home — sections of square app tiles, floated straight on the page backdrop,
+   as a centred column in the middle of the screen. */
 .mc-home {
   display: flex;
   flex-direction: column;
   gap: 30px;
+  max-width: 720px;
+  margin-inline: auto;
 }
 .mc-section {
   display: flex;
@@ -25,7 +28,8 @@
 }
 .mc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(154px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 160px));
+  justify-content: center;
   gap: 14px;
 }
 
