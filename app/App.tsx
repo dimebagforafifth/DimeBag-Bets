@@ -25,6 +25,7 @@ import { cashierDeskManifests } from '../features/cashier/manifest.js'
 import { ledgerManifests } from '../features/transactions/manifest.js'
 import { settlementRunManifests } from '../features/settlements/manifest.js'
 import { operatorManualManifests } from '../features/help/manifest.js'
+import { agentsManifests } from '../features/agents/manifest.js'
 const PREVIEW_REGISTRY = [
   ...REGISTRY,
   ...weeklySheetManifests,
@@ -32,6 +33,7 @@ const PREVIEW_REGISTRY = [
   ...ledgerManifests,
   ...settlementRunManifests,
   ...operatorManualManifests,
+  ...agentsManifests,
 ]
 import { consoleFigures } from './console-figures.js'
 import { getAnalyticsRecords } from '../manager/reporting/index.js'

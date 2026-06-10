@@ -1,0 +1,170 @@
+/* Agents — org tree + member editor, on the shell's .feat-panel tokens. */
+
+/* ---- add member ---- */
+.agt-add-grid {
+  display: grid;
+  grid-template-columns: minmax(130px, 160px) minmax(180px, 1fr) minmax(140px, 1fr) minmax(150px, 180px) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 10px;
+}
+.agt-add .feat-field {
+  gap: 5px;
+}
+.agt-add-btn {
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .agt-add-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .agt-add-btn {
+    grid-column: 1 / -1;
+  }
+}
+
+.agt-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---- tree ---- */
+.agt-tree {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.agt-row {
+  display: flex;
+  align-items: center;
+  /* indent by tree depth */
+  padding-left: calc(var(--depth, 0) * 18px);
+  border-radius: 8px;
+}
+.agt-row.is-sel {
+  background: color-mix(in srgb, var(--gem) 12%, transparent);
+}
+.agt-caret,
+.agt-caret-spacer {
+  width: 18px;
+  flex: none;
+  text-align: center;
+}
+.agt-caret {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 0;
+}
+.agt-caret:hover {
+  color: var(--text);
+}
+.agt-rowbtn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px 8px;
+  text-align: left;
+  color: var(--text);
+  border-radius: 7px;
+}
+.agt-rowbtn:hover {
+  background: var(--surface-2);
+}
+.agt-rowbtn:focus-visible {
+  outline: 2px solid var(--gem);
+  outline-offset: -2px;
+}
+.agt-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.agt-fig {
+  flex: none;
+  font-size: 12.5px;
+}
+.agt-tag {
+  margin-left: 7px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+.agt-tag.is-lock {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 45%, transparent);
+}
+
+/* ---- role badge ---- */
+.agt-badge {
+  flex: none;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 9.5px;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 2px 6px;
+  border: 1px solid;
+  --c: var(--muted);
+  color: var(--c);
+  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+}
+.agt-badge.is-manager {
+  --c: var(--gem);
+}
+.agt-badge.is-subagent {
+  --c: #5a8dee;
+}
+.agt-badge.is-agent {
+  --c: #b07cf0;
+}
+.agt-badge.is-player {
+  --c: var(--up);
+}
+
+/* ---- detail editor ---- */
+.agt-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.agt-detail .feat-head {
+  align-items: center;
+}
+.agt-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.agt-edit .feat-input {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .agt-layout {
+    grid-template-columns: 1fr;
+  }
+}
