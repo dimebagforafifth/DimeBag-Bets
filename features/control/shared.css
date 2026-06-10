@@ -25,8 +25,10 @@
   --gold: #d6b14a;
 
   width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
+  /* Full-page panel body (was 960px centered) — matches operations/shared.css so
+     the duplicate global .feat-panel can't override it back to a boxed width. */
+  max-width: none;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;

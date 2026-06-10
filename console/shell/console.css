@@ -9,9 +9,24 @@
 .console-main {
   flex: 1;
   width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 22px 24px 40px;
+  /* Full-page content: the features fill the whole page; only the top bar header
+     stays as chrome above. (Was max-width: 1180px centered.) */
+  max-width: none;
+  margin: 0;
+  padding: 22px 28px 40px;
+}
+
+/* When mounted as the app's Management view, the console fills the full region
+   below the site nav and scrolls internally: the .console stretches to the bounded
+   .app-main.is-console, its TopBar stays pinned, and .console-main is the scroller. */
+.app-main.is-console > .console {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+.app-main.is-console .console-main {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* ------------------------------- top bar -------------------------------- */

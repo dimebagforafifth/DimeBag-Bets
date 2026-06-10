@@ -367,6 +367,18 @@ body {
   align-items: flex-start;
   padding: 40px 24px;
 }
+/* The Management/operator console fills the whole region below the site nav: full
+   width + full height, scrolling internally instead of being a centered box. Every
+   other section keeps the centered, top-aligned game layout above. */
+.app-main.is-console {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+  padding: 0;
+  min-height: 0; /* let the child be bounded so it can scroll internally */
+  overflow: hidden;
+}
 
 /* shown when there's no player to play as */
 .no-player {

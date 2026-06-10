@@ -16,6 +16,21 @@ import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook
 import { formatMoney } from '../games/shared/money.js'
 import { SoundToggle } from '../sound/index.js'
 import { Console } from '../console/shell/index.js'
+// LOCAL PREVIEW SHIM (uncommitted): merge the money-desk lane's manifests into the
+// registry so the four new tiles render. The committed coexist plan leaves these to
+// the registry owner (console/registry/index.ts) — this does NOT edit that file.
+import { REGISTRY } from '../console/registry/index.js'
+import { weeklySheetManifests } from '../features/figures/manifest.js'
+import { cashierDeskManifests } from '../features/cashier/manifest.js'
+import { ledgerManifests } from '../features/transactions/manifest.js'
+import { settlementRunManifests } from '../features/settlements/manifest.js'
+const PREVIEW_REGISTRY = [
+  ...REGISTRY,
+  ...weeklySheetManifests,
+  ...cashierDeskManifests,
+  ...ledgerManifests,
+  ...settlementRunManifests,
+]
 import { consoleFigures } from './console-figures.js'
 import { getAnalyticsRecords } from '../manager/reporting/index.js'
 import type { Member, Role } from '../org/index.js'
@@ -249,7 +264,7 @@ export function App() {
         </div>
       </header>
 
-      <main className="app-main">
+      <main className={`app-main${activeSection === 'management' ? ' is-console' : ''}`}>
         {activeSection === 'management' && canManage(role) ? (
           (() => {
             const fig = consoleFigures(
@@ -260,6 +275,7 @@ export function App() {
             )
             return (
               <Console
+                registry={PREVIEW_REGISTRY}
                 brand="DimeBag-Bets"
                 username={actor}
                 onSignOut={signOut}
