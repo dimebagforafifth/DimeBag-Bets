@@ -2,12 +2,14 @@ import { describe, it, expect } from 'vitest'
 import { catalogManifests } from './manifest.js'
 
 describe('catalog manifests', () => {
-  it('exposes the five catalog tiles in the contract shape', () => {
+  it('exposes the seven catalog tiles in the contract shape', () => {
     expect(catalogManifests.map((m) => m.key)).toEqual([
       'lines',
+      'game-admin',
       'casino',
       'ticketwriter',
       'scores',
+      'rules',
       'gamification',
     ])
     for (const m of catalogManifests) {

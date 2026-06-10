@@ -1,0 +1,117 @@
+/*
+ * Scores panel additions — manual result entry & grade preview (sibling to catalog.css).
+ * Reuses the catalog tokens already on .feat; only adds the result-entry form and the
+ * per-market would-be-outcome chips. Coins-only, graphite-and-gold VANTAGE theme.
+ */
+
+/* Make a board row clickable to open manual entry. */
+.cat-score-row.is-pick {
+  cursor: pointer;
+}
+.cat-score-row.is-pick:hover {
+  background: var(--c-panel-2);
+}
+.cat-score-row.is-open {
+  background: var(--c-panel-2);
+}
+
+/* Manual result entry, opened under a selected fixture. */
+.cat-result {
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-panel-2);
+  padding: 12px;
+  margin: 8px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cat-result-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cat-result-title {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.cat-result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.cat-official {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.cat-official input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--c-gold);
+  cursor: pointer;
+}
+
+/* Per-market would-be-outcome preview. */
+.cat-grades {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-top: 1px solid var(--c-border);
+  padding-top: 8px;
+}
+.cat-grade-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 5px 2px;
+  font-size: 13px;
+}
+.cat-grade-label {
+  color: var(--c-text);
+}
+.cat-grade-label .cat-mkt {
+  color: var(--c-muted);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 7px;
+}
+.cat-grade-out {
+  text-align: right;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cat-grade-out.is-win {
+  color: var(--c-up);
+}
+.cat-grade-out.is-loss {
+  color: var(--c-down);
+}
+.cat-grade-out.is-push,
+.cat-grade-out.is-void {
+  color: var(--c-muted);
+}
+
+.cat-seam {
+  color: var(--c-muted);
+  font-size: 11.5px;
+  font-style: italic;
+  margin: 2px 0 0;
+}

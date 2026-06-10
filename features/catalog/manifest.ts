@@ -1,13 +1,16 @@
-import { LineChart, Dice5, PenLine, ClipboardCheck, Gift } from 'lucide-react'
+import { LineChart, ListTree, Dice5, PenLine, ClipboardCheck, Gavel, Gift } from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { LinesPanel } from './LinesPanel.js'
+import { GameAdminPanel } from './GameAdminPanel.js'
 import { CasinoAdminPanel } from './CasinoAdminPanel.js'
 import { TicketWriterPanel } from './TicketWriterPanel.js'
 import { ScoresPanel } from './ScoresPanel.js'
+import { RulesPanel } from './RulesPanel.js'
 import { RewardsPanel } from './RewardsPanel.js'
 
-/** The Catalog section tiles. lines/casino/rewards adapt existing components; ticketwriter
- *  + scores are new minimal panels (no prior component existed). */
+/** The Catalog section tiles. lines/casino/rewards adapt existing components; game-admin,
+ *  ticketwriter, scores + rules are purpose-built console panels (game-admin manages the
+ *  sportsbook slate over the book overlay; rules holds trading/grading config). */
 export const catalogManifests: FeatureManifest[] = [
   {
     key: 'lines',
@@ -16,6 +19,14 @@ export const catalogManifests: FeatureManifest[] = [
     section: 'catalog',
     icon: LineChart,
     Panel: LinesPanel,
+  },
+  {
+    key: 'game-admin',
+    name: 'Game Admin',
+    hint: 'Per-game markets, lines & limits',
+    section: 'catalog',
+    icon: ListTree,
+    Panel: GameAdminPanel,
   },
   {
     key: 'casino',
@@ -40,6 +51,14 @@ export const catalogManifests: FeatureManifest[] = [
     section: 'catalog',
     icon: ClipboardCheck,
     Panel: ScoresPanel,
+  },
+  {
+    key: 'rules',
+    name: 'Rules',
+    hint: 'Trading & grading config',
+    section: 'catalog',
+    icon: Gavel,
+    Panel: RulesPanel,
   },
   {
     key: 'gamification',

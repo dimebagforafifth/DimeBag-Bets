@@ -1,0 +1,199 @@
+/* Live Activity / Bet Ticker — operations panel styles (VANTAGE graphite/gold).
+   Sibling stylesheet for features/operations/LiveActivityPanel.tsx ONLY. It inherits
+   the shell tokens re-mapped on the surrounding .feat-panel (see shared.css): --gem
+   (gold), --up (positive), --down (negative), --surface/--line/--text/--muted. We add
+   only the ticker-specific layout here; primitives stay in shared.css. */
+
+/* ---- sticky filter header ---- */
+.la-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.la-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.la-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--up);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--up) 70%, transparent);
+  animation: la-pulse 2s ease-out infinite;
+}
+@keyframes la-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--up) 60%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .la-dot {
+    animation: none;
+  }
+}
+.la-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* a flexible spacer that pushes the toggle to the right edge when there's room */
+.la-spacer {
+  flex: 1 1 auto;
+}
+
+/* segmented filter groups */
+.la-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.la-seg {
+  display: inline-flex;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 2px;
+  gap: 2px;
+}
+.la-seg-btn {
+  font: inherit;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.la-seg-btn:hover {
+  color: var(--text);
+}
+.la-seg-btn.is-on {
+  color: #14171c;
+  background: var(--gem);
+}
+.la-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.la-toggle input {
+  accent-color: var(--gem);
+  cursor: pointer;
+}
+.la-toggle.is-on {
+  color: var(--gem);
+}
+
+/* ---- the feed ---- */
+.la-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.la-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--line);
+}
+.la-row:first-child {
+  border-top: none;
+}
+.la-row.is-big {
+  background: color-mix(in srgb, var(--gem) 8%, transparent);
+}
+/* who + verb, left column, wraps under the amount on narrow screens */
+.la-line {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.la-who {
+  font-weight: 700;
+  color: var(--text);
+}
+.la-verb {
+  font-size: 13px;
+  color: var(--muted);
+}
+.la-mult {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.la-flame {
+  font-size: 12px;
+}
+/* coin delta — right-aligned, tabular */
+.la-delta {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.la-delta.is-up {
+  color: var(--up);
+}
+.la-delta.is-down {
+  color: var(--down);
+}
+.la-delta.is-flat {
+  color: var(--muted);
+}
+.la-row.is-big .la-delta.is-up {
+  color: var(--gem);
+}
+/* game label under the row */
+.la-game {
+  grid-column: 1 / -1;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  color: var(--faint, var(--muted));
+}

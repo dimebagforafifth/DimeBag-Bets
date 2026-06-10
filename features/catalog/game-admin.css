@@ -1,0 +1,335 @@
+/**
+ * Game Admin — tree-specific layout (sport → league → game with inline controls).
+ * Base tokens + .feat-* classes come from catalog.css; this only adds the tree,
+ * sticky search header, rows, chips and nudge controls. Coins-only, graphite/gold.
+ */
+
+/* sticky search-first header */
+.ga-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--c-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 2px;
+}
+.ga-search-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ga-search {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+.ga-sport-filter {
+  flex: 0 0 auto;
+}
+.ga-count {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+}
+
+/* the tree */
+.ga-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ga-sport {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ga-sport-h {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--c-border);
+}
+.ga-league {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 4px;
+}
+.ga-league-h {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--c-muted);
+  margin: 2px 0 0;
+}
+
+/* one game card */
+.ga-game {
+  background: var(--c-panel);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ga-game.is-off {
+  border-color: var(--c-down);
+}
+.ga-game-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ga-teams {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  flex: 1 1 auto;
+}
+.ga-at {
+  color: var(--c-muted);
+  font-weight: 400;
+  margin: 0 2px;
+}
+.ga-when {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+/* chips */
+.ga-chip {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  white-space: nowrap;
+}
+.ga-chip.is-off {
+  color: var(--c-down);
+  border-color: var(--c-down);
+}
+.ga-chip.is-circled {
+  color: var(--c-gold);
+  border-color: var(--c-gold);
+}
+
+/* game-level inline controls */
+.ga-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+.ga-ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ga-ctl-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+}
+.ga-limit-input {
+  width: 96px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 9px;
+}
+.ga-coins {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+}
+
+/* toggle buttons reuse feat-btn; add active states */
+.ga-btn.is-on {
+  background: var(--c-gold);
+  border-color: var(--c-gold);
+  color: #1a1404;
+}
+.ga-btn.is-danger {
+  border-color: var(--c-down);
+  color: var(--c-down);
+}
+
+/* period tabs */
+.ga-periods {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--c-panel-2);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  padding: 3px;
+}
+.ga-period {
+  border: none;
+  background: transparent;
+  color: var(--c-muted);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+}
+.ga-period.is-on {
+  background: var(--c-gold);
+  color: #1a1404;
+}
+.ga-period:disabled {
+  cursor: not-allowed;
+}
+.ga-period-note {
+  font-size: 11.5px;
+  color: var(--c-muted);
+  font-style: italic;
+}
+
+/* per-market rows */
+.ga-markets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--c-border);
+  padding-top: 10px;
+}
+.ga-markets.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.ga-mkt {
+  display: grid;
+  grid-template-columns: 116px minmax(120px, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 4px 0;
+}
+.ga-mkt.is-locked .ga-mkt-prices {
+  color: var(--c-muted);
+  text-decoration: line-through;
+}
+.ga-mkt-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.ga-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-gold);
+  display: inline-block;
+}
+.ga-mkt-prices {
+  display: flex;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.ga-price b {
+  font-weight: 700;
+}
+.ga-price-odds {
+  color: var(--c-muted);
+  margin-left: 4px;
+}
+
+/* line nudger */
+.ga-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ga-step {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--c-border);
+  background: var(--c-panel-2);
+  color: var(--c-text);
+  border-radius: 7px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ga-step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ga-line-val {
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.ga-line-na {
+  color: var(--c-muted);
+  min-width: 44px;
+  text-align: center;
+}
+
+/* per-market actions */
+.ga-mkt-actions {
+  display: inline-flex;
+  gap: 6px;
+  justify-self: end;
+}
+.ga-mini-btn {
+  border: 1px solid var(--c-border);
+  background: var(--c-panel-2);
+  color: var(--c-text);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+}
+.ga-mini-btn:hover:not(:disabled) {
+  border-color: var(--c-muted);
+}
+.ga-mini-btn.is-on {
+  border-color: var(--c-down);
+  color: var(--c-down);
+}
+.ga-mini-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  .ga-mkt {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .ga-mkt-actions {
+    justify-self: start;
+  }
+}

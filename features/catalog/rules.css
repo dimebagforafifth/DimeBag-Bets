@@ -1,0 +1,140 @@
+/**
+ * Rules panel styles (Catalog ▸ Rules). Sits alongside catalog.css — reuses the
+ * shared .feat-* classes for cards/forms/inputs and only adds the few layout
+ * primitives this settings form needs: a responsive field grid, a labelled toggle
+ * row, and informational (read-only) rows for the §4 "official game" thresholds.
+ * Graphite-and-gold VANTAGE tokens are inherited from .feat (see catalog.css).
+ */
+
+/* Section heading + a one-line caption under it. */
+.rules-sec-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+/* Responsive grid of editable fields — wraps to one column on narrow screens. */
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+/* An input with a trailing unit hint ("coins", "%", "×", "min"). */
+.rules-input-unit {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+.rules-input-unit .feat-input {
+  flex: 1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.rules-unit {
+  align-self: center;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+  min-width: 38px;
+}
+
+/* A toggle row: label/desc on the left, the switch on the right. */
+.rules-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-top: 1px solid var(--c-border);
+}
+.rules-toggle:first-of-type {
+  border-top: none;
+}
+.rules-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rules-toggle-name {
+  font-family: 'Saira', sans-serif;
+  font-size: 13.5px;
+  color: var(--c-text);
+}
+
+/* The pill switch (a styled checkbox). */
+.rules-switch {
+  position: relative;
+  flex: none;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: var(--c-panel-2);
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+.rules-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-muted);
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease;
+}
+.rules-switch.is-on {
+  background: rgba(214, 177, 74, 0.22);
+  border-color: var(--c-gold);
+}
+.rules-switch.is-on::after {
+  transform: translateX(18px);
+  background: var(--c-gold);
+}
+.rules-switch:focus-visible {
+  outline: 2px solid var(--c-gold);
+  outline-offset: 2px;
+}
+
+/* Read-only informational rows (the §4 "official game" thresholds). */
+.rules-info-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-top: 1px solid var(--c-border);
+  font-size: 13px;
+}
+.rules-info-row:first-of-type {
+  border-top: none;
+}
+.rules-info-key {
+  color: var(--c-muted);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 11.5px;
+}
+.rules-info-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+/* The save row footer of each section. */
+.rules-save {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
