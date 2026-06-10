@@ -19,6 +19,7 @@ import {
   cashOutTicket,
   cashOutValue,
   gradeTicket,
+  regradeTicket,
   placeTicket,
   type PlaceTicketOptions,
   type Ticket,
@@ -26,6 +27,7 @@ import {
 import { gradeSelection, type GameEvent, type MatchResult } from './markets.js'
 import type { FeedHealth, SportsbookFeed } from './provider.js'
 import { applyOverlay, subscribeOverlay } from './book/overlay.js'
+import { applyResults, isResultOverridden, subscribeResults } from './book/results.js'
 import {
   getFutures,
   getFutureMarket,
@@ -82,8 +84,13 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
   // The feed is the RAW slate; the player sees it with the book's line management
   // (suspensions, line moves, vig) applied on top. We keep both so an overlay
   // change can re-derive the player slate without waiting for the next feed push.
+  // The player-facing slate = the raw feed with the book's line management AND any
+  // manual results the operator has entered (book/overlay + book/results) applied.
+  // Both are shared singletons every player store reads, so one operator action moves
+  // every book at once.
+  const deriveSlate = (slate: GameEvent[]) => applyResults(applyOverlay(slate))
   let rawEvents = feed.snapshot()
-  let events = applyOverlay(rawEvents)
+  let events = deriveSlate(rawEvents)
   let tickets: Ticket[] = []
   let futures = getFutures()
   let futureTickets: FutureTicket[] = []
@@ -130,12 +137,33 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
     return changed
   }
 
+  /**
+   * Re-grade ALREADY-SETTLED tickets after the operator entered or corrected a result
+   * by hand (CLAUDE.md §4 palpable-error re-settle). Only tickets that touch an
+   * operator-overridden event are reconsidered — feed-graded tickets are left to the
+   * feed — and only once every leg is final. regradeTicket moves the figure by the
+   * payout difference through core (a no-op when the corrected outcome is unchanged),
+   * so this is safe to run on every results change. Returns true if any figure moved.
+   */
+  function resettleOverridden(slate: GameEvent[]): boolean {
+    const byId = new Map(slate.map((e) => [e.id, e]))
+    const results = resultsFromFinals(slate)
+    let changed = false
+    for (const t of tickets) {
+      if (t.status === 'open' || t.status === 'cashed') continue
+      if (!t.legs.some((l) => isResultOverridden(l.eventId))) continue
+      if (!t.legs.every((l) => byId.get(l.eventId)?.status === 'final')) continue
+      if (regradeTicket(account, t, results)) changed = true
+    }
+    return changed
+  }
+
   const unsubscribe = feed.subscribe((slate) => {
     rawEvents = slate
-    events = applyOverlay(slate)
-    // Grading reads each event's status/score, which the overlay never changes
-    // (it only touches upcoming markets), so settling on the applied slate is
-    // identical to settling on the raw one.
+    events = deriveSlate(slate)
+    // Settle on the derived slate: the line overlay never changes a result (only
+    // upcoming pricing), but the results overlay can final/void an event by hand, so
+    // grading must read the operator's results, not just the feed's.
     const settled = settleReady(events)
     if (settled) onBalanceChange?.()
     notify()
@@ -148,7 +176,17 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
   // slate from the same raw feed and re-render. No settlement: the overlay only
   // affects what is still bettable, never a result.
   const unsubscribeOverlay = subscribeOverlay(() => {
-    events = applyOverlay(rawEvents)
+    events = deriveSlate(rawEvents)
+    notify()
+  })
+  // The operator entered, corrected, or voided a result by hand (the scores desk) —
+  // re-derive the slate, settle every open ticket now decided (exactly as a feed final
+  // would), AND re-grade any already-settled ticket whose result the operator changed.
+  const unsubscribeResults = subscribeResults(() => {
+    events = deriveSlate(rawEvents)
+    const settled = settleReady(events)
+    const resettled = resettleOverridden(events)
+    if (settled || resettled) onBalanceChange?.()
     notify()
   })
   // The operator (or a real feed later) declared a futures winner — grade this
@@ -217,6 +255,7 @@ export function createStore(account: Account, opts: CreateStoreOptions): Sportsb
       unsubscribe()
       unsubscribeHealth?.()
       unsubscribeOverlay()
+      unsubscribeResults()
       unsubscribeFutures()
       feed.stop()
       listeners.clear()

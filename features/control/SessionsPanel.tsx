@@ -8,6 +8,7 @@
  * revoke) from the auth adapter / session table instead of the placeholder below. The
  * demo adapter has no such log.
  */
+import { useState } from 'react'
 import { useAuth } from '../../auth/index.js'
 import { PanelShell } from './shared.js'
 
@@ -20,6 +21,19 @@ const STATUS_LABEL: Record<string, string> = {
 export function SessionsPanel({ onBack }: { onBack: () => void }) {
   const auth = useAuth()
   const user = auth.user
+  const [confirmOut, setConfirmOut] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // A successful sign-out unmounts this panel (the app swaps to Login); a real
+  // (Supabase) adapter can reject on a network failure, so surface that instead of
+  // leaving the operator on a dead "Confirm" with no feedback.
+  const signOut = () => {
+    setError(null)
+    void auth.signOut().catch((e) => {
+      setError(e instanceof Error ? e.message : 'Sign out failed — try again.')
+      setConfirmOut(false)
+    })
+  }
 
   return (
     <PanelShell onBack={onBack}>
@@ -58,6 +72,26 @@ export function SessionsPanel({ onBack }: { onBack: () => void }) {
         ) : (
           <p className="feat-empty">No active session.</p>
         )}
+
+        {user && (
+          <div className="feat-actions" style={{ marginTop: 12 }}>
+            {confirmOut ? (
+              <>
+                <button className="feat-btn feat-btn-primary" onClick={signOut}>
+                  Confirm sign out
+                </button>
+                <button className="feat-btn" onClick={() => setConfirmOut(false)}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button className="feat-btn" onClick={() => setConfirmOut(true)}>
+                Sign out of this session
+              </button>
+            )}
+          </div>
+        )}
+        {error && <p className="feat-empty feat-down">{error}</p>}
       </section>
 
       <section className="feat-card" aria-label="Login history">
