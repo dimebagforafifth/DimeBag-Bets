@@ -1,0 +1,102 @@
+/* Operator Manual layout — a sticky chapter list + a readable column, on the
+   shell's .feat-panel tokens (var(--line)/--surface-2/--gem/--text/--muted). */
+.mdsk-manual {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.mdsk-manual-toc {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mdsk-manual-toc button {
+  text-align: left;
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  padding: 7px 12px;
+  color: var(--muted);
+  font-family: 'Saira', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 0 6px 6px 0;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+.mdsk-manual-toc button:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.mdsk-manual-toc button.is-on {
+  color: var(--gem);
+  border-left-color: var(--gem);
+  background: color-mix(in srgb, var(--gem) 10%, transparent);
+  font-weight: 600;
+}
+.mdsk-manual-toc button:focus-visible {
+  outline: 2px solid var(--gem);
+  outline-offset: 2px;
+}
+
+.mdsk-manual-body {
+  min-width: 0;
+  max-width: 720px;
+}
+.mdsk-manual-body h2 {
+  margin: 0 0 12px;
+}
+.mdsk-manual-body h2.feat-h2:not(:first-child) {
+  margin-top: 22px;
+}
+.mdsk-manual-body p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.mdsk-manual-lead {
+  color: var(--muted);
+  font-size: 13px;
+}
+.mdsk-manual-body ul {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.mdsk-manual-body li {
+  margin-bottom: 6px;
+}
+.mdsk-manual-body strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .mdsk-manual {
+    grid-template-columns: 1fr;
+  }
+  .mdsk-manual-toc {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .mdsk-manual-toc button {
+    border-left: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+  }
+  .mdsk-manual-toc button.is-on {
+    border-color: var(--gem);
+  }
+}

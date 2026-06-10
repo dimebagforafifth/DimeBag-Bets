@@ -17,6 +17,7 @@ import { adjustFigure } from '../../app/manager-actions.js'
 import { toCents, formatMoney } from '../../games/shared/money.js'
 import { PanelShell, useBook, Figure, Tabs } from '../_desk/shared.js'
 import { toDelta, previewBalance, type CashAction } from '../_desk/data.js'
+import { InfoDot } from '../_desk/Tooltip.js'
 
 const ACTIONS: ReadonlyArray<{ value: CashAction; label: string }> = [
   { value: 'grant', label: 'Grant' },
@@ -141,7 +142,10 @@ export function CashierDeskPanel({ onBack }: { onBack: () => void }) {
         <div className="feat-card">
           <h3 className="feat-head">{member!.name}</h3>
 
-          <Tabs value={action} options={ACTIONS} onChange={setAction} label="Cashier action" />
+          <div className="feat-actions">
+            <Tabs value={action} options={ACTIONS} onChange={setAction} label="Cashier action" />
+            <InfoDot id="set" label="Grant, Deduct and Set" />
+          </div>
 
           <div className="feat-field">
             <label className="feat-label" htmlFor="cashier-amount">
@@ -196,7 +200,7 @@ export function CashierDeskPanel({ onBack }: { onBack: () => void }) {
           <div className="feat-actions">
             <h3 className="feat-head">Batch ({queue.length})</h3>
             <span className="feat-label">
-              Net to the book <Figure cents={netToBook} />
+              Net to the book <InfoDot id="net-to-book" /> <Figure cents={netToBook} />
             </span>
           </div>
           <div className="mdsk-queue">

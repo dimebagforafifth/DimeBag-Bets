@@ -28,6 +28,7 @@ import {
   subscribeSettlements,
 } from '../../app/settlement-store.js'
 import { PanelShell, useBook } from '../_desk/shared.js'
+import { InfoDot } from '../_desk/Tooltip.js'
 
 const fmtDate = (ms: number): string => (ms === 0 ? '—' : new Date(ms).toLocaleDateString())
 const fmtWhen = (ms: number): string =>
@@ -117,7 +118,9 @@ export function SettlementRunPanel({ onBack }: { onBack: () => void }) {
       <section className="feat-card" aria-label="Settlement preview">
         <div className="feat-kpis">
           <div className="feat-kpi">
-            <span className="feat-label">Book net</span>
+            <span className="feat-label">
+              Book net <InfoDot id="book-figure" />
+            </span>
             <strong className={net < 0 ? 'feat-down' : 'feat-up'}>{formatMoney(net)}</strong>
           </div>
           <div className="feat-kpi">
@@ -188,13 +191,14 @@ export function SettlementRunPanel({ onBack }: { onBack: () => void }) {
               onChange={(e) => setCarryover(e.target.checked)}
             />
             Carry figures forward (soft close — record without resetting)
+            <InfoDot id="carryover" />
           </label>
 
           <div className="feat-actions">
             <span className="feat-sub">
               This records the sheet and{' '}
               {carryover ? 'carries figures forward' : 'resets every figure to zero'}. Settling is
-              blocked while any wager is still pending.
+              blocked while any wager is still pending. <InfoDot id="pending-guard" />
             </span>
             <button className="feat-btn feat-btn-primary" onClick={settle}>
               Yes, settle now

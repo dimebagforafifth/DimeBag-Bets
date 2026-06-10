@@ -24,12 +24,14 @@ import { weeklySheetManifests } from '../features/figures/manifest.js'
 import { cashierDeskManifests } from '../features/cashier/manifest.js'
 import { ledgerManifests } from '../features/transactions/manifest.js'
 import { settlementRunManifests } from '../features/settlements/manifest.js'
+import { operatorManualManifests } from '../features/help/manifest.js'
 const PREVIEW_REGISTRY = [
   ...REGISTRY,
   ...weeklySheetManifests,
   ...cashierDeskManifests,
   ...ledgerManifests,
   ...settlementRunManifests,
+  ...operatorManualManifests,
 ]
 import { consoleFigures } from './console-figures.js'
 import { getAnalyticsRecords } from '../manager/reporting/index.js'

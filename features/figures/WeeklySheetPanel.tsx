@@ -22,6 +22,7 @@ import { settleAndRecord } from '../../app/settlement-store.js'
 import { getBookVersion } from '../../app/book-store.js'
 import { PanelShell, useBook, Figure, ChipBar, Tabs, downloadFile } from '../_desk/shared.js'
 import { dayWindows, dayNet, rowsToCsv } from '../_desk/data.js'
+import { InfoDot } from '../_desk/Tooltip.js'
 
 type FilterKey = 'all' | 'balance' | 'owes' | 'owed'
 type SortKey = 'figure' | 'exposure'
@@ -135,7 +136,9 @@ export function WeeklySheetPanel({ onBack }: { onBack: () => void }) {
 
       <section className="feat-kpis" aria-label="Weekly sheet summary">
         <div className="feat-kpi">
-          <span className="feat-label">Book figure</span>
+          <span className="feat-label">
+            Book figure <InfoDot id="book-figure" />
+          </span>
           <strong className={view.bookFigure < 0 ? 'feat-down' : 'feat-up'}>
             <Figure cents={view.bookFigure} />
           </strong>
@@ -149,7 +152,9 @@ export function WeeklySheetPanel({ onBack }: { onBack: () => void }) {
           <strong>{view.playersDown}</strong>
         </div>
         <div className="feat-kpi">
-          <span className="feat-label">Total exposure</span>
+          <span className="feat-label">
+            Total exposure <InfoDot id="exposure" />
+          </span>
           <strong>
             <Figure cents={view.totalExposure} plus={false} />
           </strong>
@@ -177,8 +182,12 @@ export function WeeklySheetPanel({ onBack }: { onBack: () => void }) {
                     {d.label}
                   </th>
                 ))}
-                <th className="num">Weekly total</th>
-                <th>Settle</th>
+                <th className="num">
+                  Weekly total <InfoDot id="figure" />
+                </th>
+                <th>
+                  Settle <InfoDot id="owed" />
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -206,6 +215,9 @@ export function WeeklySheetPanel({ onBack }: { onBack: () => void }) {
       )}
 
       <section className="feat-card" aria-label="Settle the book">
+        <p className="feat-sub">
+          Period settlement <InfoDot id="settle" />
+        </p>
         {/* SEAM: "settle = leaderboard season reset" is not wired — vip-store leaderboard ranks by LIFETIME wagered and no settle path resets it. Needs a vip-store resetSeason() called from the settle flow. */}
         {!confirming ? (
           <button className="feat-btn feat-btn-primary" onClick={() => setConfirming(true)}>
