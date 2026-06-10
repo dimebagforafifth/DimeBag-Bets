@@ -1,0 +1,261 @@
+/**
+ * Operator risk ACTIONS — the read-only Risk dashboard's write controls (sibling to
+ * risk-panel.css; never edited there). Quick per-player levers on winner/loser rows,
+ * a book-wide freeze, and an audited manual figure adjustment. Graphite + gold, with
+ * red/green reserved for +/- coin deltas only. Mobile-responsive (flex + wrap).
+ */
+
+.risk-actions {
+  margin-top: 6px;
+}
+.risk-act-note {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* live exposure-by-game table (open at-risk stake, dedicated 2-col layout) */
+.risk-exp {
+  display: flex;
+  flex-direction: column;
+}
+.risk-exrow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 6px 4px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.risk-exrow.is-head {
+  border-top: none;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.risk-exrow.is-total {
+  font-weight: 700;
+  border-top: 1px solid var(--muted);
+}
+
+/* book-wide freeze bar */
+.risk-freeze {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.risk-freeze-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.risk-freeze-label {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.risk-freeze-count {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.risk-freeze-count.is-locked {
+  color: #f5c451;
+}
+
+/* shared action buttons */
+.risk-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.risk-btn:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.risk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.risk-btn.is-primary {
+  background: var(--c-gold, #d6b14a);
+  border-color: var(--c-gold, #d6b14a);
+  color: #14171c;
+}
+.risk-btn.is-warn {
+  border-color: rgba(245, 196, 81, 0.5);
+  color: #f5c451;
+}
+
+/* per-player quick-action rows */
+.risk-people {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.risk-prow {
+  border-top: 1px solid var(--line);
+  padding: 7px 2px;
+}
+.risk-prow:first-child {
+  border-top: none;
+}
+.risk-prow-main {
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+}
+.risk-pname {
+  font-weight: 700;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 80px;
+}
+.risk-ptags {
+  display: inline-flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.risk-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.risk-tag.is-locked {
+  color: #f5c451;
+  border-color: rgba(245, 196, 81, 0.4);
+}
+.risk-tag.is-suspended {
+  color: var(--red);
+  border-color: var(--red);
+}
+.risk-pfigure {
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  flex-shrink: 0;
+}
+.risk-pfigure.is-up {
+  color: #3fb98a;
+}
+.risk-pfigure.is-down {
+  color: var(--red);
+}
+.risk-pbtns {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* expandable credit-edit drawer under a player row */
+.risk-pedit {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.risk-pedit-label {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.risk-pedit-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* manual audited adjustment widget */
+.risk-adjust {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 13px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.risk-adjust-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+.risk-input {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 12.5px;
+}
+.risk-input:focus {
+  outline: none;
+  border-color: var(--muted);
+}
+.risk-input.is-amt {
+  width: 110px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.risk-input.is-reason {
+  flex: 1;
+  min-width: 140px;
+}
+.risk-select {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 12.5px;
+  min-width: 140px;
+}
+.risk-select:focus {
+  outline: none;
+  border-color: var(--muted);
+}
+.risk-feedback {
+  font-size: 12px;
+  font-weight: 600;
+}
+.risk-feedback.is-ok {
+  color: #3fb98a;
+}
+.risk-feedback.is-err {
+  color: var(--red);
+}
+
+@media (max-width: 720px) {
+  .risk-pname {
+    flex-basis: 100%;
+  }
+  .risk-input.is-amt {
+    width: 100%;
+  }
+}

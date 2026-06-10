@@ -1,0 +1,117 @@
+/**
+ * Weekly Figures — panel-local styles (additive; never edit shared.css).
+ * Extends the operations theme: expandable per-player drill, the settlement
+ * preview, and the at-risk credit badge. Coins-only context — colour is used
+ * ONLY for +/- coin deltas (--up gain / --down loss), per the theme rules.
+ */
+
+/* a player row you can click to expand its figure detail */
+.wf-row {
+  cursor: pointer;
+}
+.wf-row:hover {
+  background: var(--surface);
+}
+.wf-row > td:first-child {
+  font-weight: 600;
+}
+.wf-caret {
+  display: inline-block;
+  width: 1em;
+  color: var(--muted);
+  transition: transform 0.12s ease;
+  font-variant-numeric: tabular-nums;
+}
+.wf-row.is-open .wf-caret {
+  transform: rotate(90deg);
+}
+
+/* the expanded detail panel beneath a player row */
+.wf-detail td {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.wf-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 18px;
+  padding: 14px 16px;
+}
+.wf-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf-stat-val {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* credit-utilization badge — red ONLY when at-risk (≥ threshold) */
+.wf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.wf-badge.is-risk {
+  color: var(--down);
+  border-color: var(--down);
+}
+
+/* settle-obligation pill inside the detail (label only — no money moves here) */
+.wf-obligation {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* section heading + the settlement preview block */
+.wf-section {
+  margin-top: 22px;
+}
+.wf-section-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 8px;
+}
+.wf-section-title {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+.wf-role {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  color: var(--muted);
+}
+.wf-net-row td {
+  border-top: 2px solid var(--line);
+  font-weight: 700;
+}
+.wf-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}

@@ -1,0 +1,250 @@
+/* Transactions — operations panel styles (VANTAGE graphite/gold). Sibling stylesheet
+   for features/operations/TransactionsPanel.tsx ONLY. It inherits the shell tokens
+   re-mapped on the surrounding .feat-panel (see shared.css): --gem (gold), --up
+   (positive), --down (negative), --surface/--surface-2/--line/--text/--muted. Only the
+   transaction-ledger layout lives here; primitives stay in shared.css. */
+
+/* ---- analysis summary strip ---- */
+.tx-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.tx-stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.tx-stat-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tx-stat-value {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.tx-stat-value.is-up {
+  color: var(--up);
+}
+.tx-stat-value.is-down {
+  color: var(--down);
+}
+
+/* ---- sticky filter header ---- */
+.tx-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.tx-search {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 11px;
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+.tx-search:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+.tx-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tx-field-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tx-select {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+.tx-select:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+.tx-spacer {
+  flex: 1 1 auto;
+}
+.tx-count {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  align-self: center;
+}
+.tx-export {
+  white-space: nowrap;
+}
+
+/* ---- the table ---- */
+.tx-table {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.tx-row {
+  display: grid;
+  grid-template-columns: 110px 1.2fr 0.9fr 0.8fr 1fr 1.6fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.tx-row:first-child {
+  border-top: none;
+}
+.tx-row-head {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tx-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tx-who {
+  font-weight: 700;
+  color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tx-kind {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tx-kind-adjust,
+.tx-kind-settle {
+  color: var(--gem);
+}
+.tx-outcome {
+  font-size: 12px;
+  color: var(--muted);
+}
+.tx-outcome.is-up {
+  color: var(--up);
+}
+.tx-outcome.is-down {
+  color: var(--down);
+}
+.tx-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tx-delta {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tx-delta.is-up {
+  color: var(--up);
+}
+.tx-delta.is-down {
+  color: var(--down);
+}
+.tx-delta.is-flat {
+  color: var(--muted);
+}
+.tx-detail {
+  color: var(--muted);
+  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- mobile: collapse the grid into stacked rows ---- */
+@media (max-width: 640px) {
+  .tx-row-head {
+    display: none;
+  }
+  .tx-row {
+    grid-template-columns: 1fr auto;
+    gap: 4px 10px;
+  }
+  .tx-time {
+    order: 1;
+  }
+  .tx-delta {
+    order: 2;
+    text-align: right;
+  }
+  .tx-who {
+    order: 3;
+    grid-column: 1 / -1;
+  }
+  .tx-kind {
+    order: 4;
+  }
+  .tx-outcome {
+    order: 5;
+    text-align: right;
+  }
+  .tx-detail {
+    order: 6;
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
+}

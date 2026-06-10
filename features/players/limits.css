@@ -1,0 +1,84 @@
+/* Players ▸ Limits — the per-player control desk. Sibling sheet (never edits the
+   shared players.css). Inherits the .feat theme tokens; graphite-and-gold. */
+
+/* Current-limits summary grid */
+.lim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+.lim-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--c-panel-2);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+}
+.lim-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+}
+.lim-value {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.lim-num {
+  font-variant-numeric: tabular-nums;
+}
+.lim-value.is-up {
+  color: var(--c-up);
+}
+.lim-value.is-down {
+  color: var(--c-down);
+}
+.lim-value.is-risk {
+  color: var(--c-down);
+}
+
+/* Betting lock row */
+.lim-lock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  margin-top: 4px;
+}
+.lim-lock-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lim-pill {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+}
+.lim-pill.is-open {
+  color: var(--c-up);
+  border-color: color-mix(in srgb, var(--c-up) 45%, transparent);
+}
+.lim-pill.is-locked {
+  color: var(--c-down);
+  border-color: color-mix(in srgb, var(--c-down) 45%, transparent);
+}
+
+@media (max-width: 640px) {
+  .lim-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

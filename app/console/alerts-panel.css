@@ -1,0 +1,238 @@
+/* Operator Alerts panel — additive styles for the counts bar, type filters, per-alert
+   quick actions, and the inline threshold tuners. Sibling to console.css (never edited
+   there). Graphite + gold, with red/green reserved for severity dots / +/- coin deltas.
+   Mobile-responsive (flex + wrap). Tokens match console.css. */
+
+/* ---- counts summary bar ---- */
+.alr-counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+.alr-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+.alr-count strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.alr-count.is-sev.is-warn strong {
+  color: var(--gold, #e3b341);
+}
+.alr-sep {
+  color: var(--line);
+}
+
+/* ---- filter chips ---- */
+.alr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.alr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.alr-chip:hover {
+  border-color: var(--gem);
+}
+.alr-chip.is-on {
+  color: var(--text);
+  border-color: var(--gem);
+  background: color-mix(in srgb, var(--gem) 12%, transparent);
+}
+.alr-chip-count {
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.alr-chip.is-on .alr-chip-count {
+  color: var(--text);
+}
+.alr-matched {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- alert rows (extend con-alert from console.css) ---- */
+.con-alert .alr-msg {
+  flex: 1 1 auto;
+  min-width: 180px;
+}
+.alr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.alr-tags {
+  display: inline-flex;
+  gap: 4px;
+}
+.alr-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-radius: 5px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.alr-tag.is-suspended {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 45%, var(--line));
+}
+.alr-tag.is-locked {
+  color: var(--gold, #e3b341);
+  border-color: color-mix(in srgb, var(--gold, #e3b341) 45%, var(--line));
+}
+
+/* ---- quick-action buttons ---- */
+.alr-btn {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.alr-btn:hover:not(:disabled) {
+  border-color: var(--gem);
+}
+.alr-btn.is-warn {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 40%, var(--line));
+}
+.alr-btn.is-primary {
+  color: #fff;
+  background: var(--gem);
+  border-color: var(--gem);
+}
+.alr-btn.is-ghost {
+  color: var(--muted);
+  background: transparent;
+}
+
+/* ---- inline credit editor ---- */
+.alr-credit {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex-basis: 100%;
+  margin-top: 4px;
+}
+.alr-input {
+  width: 96px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 8px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.alr-input:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+.alr-credit-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- per-action feedback ---- */
+.alr-feedback {
+  flex-basis: 100%;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.alr-feedback.is-ok {
+  color: var(--green, #3fb950);
+}
+.alr-feedback.is-err {
+  color: var(--red);
+}
+
+/* ---- threshold tuners ---- */
+.alr-tuners {
+  margin-top: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.alr-th {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 12px;
+}
+.alr-th-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.alr-th-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.alr-th-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.alr-th-suffix {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .alr-actions {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+  .con-alert {
+    flex-wrap: wrap;
+  }
+  .alr-matched {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

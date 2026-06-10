@@ -2,6 +2,7 @@ import { useMemo, useState, useSyncExternalStore } from 'react'
 import { availableToWager, placeWager, resolveWager } from '../../core/index.js'
 import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
+import { record as recordOpenTicket } from '../operations/open-tickets-store.js'
 import { toCents, CENTS } from '../../games/shared/money.js'
 import { EVENTS, SPORTS, type GameEvent, type Selection } from '../../sportsbook/markets.js'
 import { decimalFromAmerican, formatAmerican } from '../../sportsbook/odds.js'
@@ -128,15 +129,27 @@ export function TicketWriterPanel() {
         if (settle === 'win') resolveWager(acct, w, 'win', m)
         else if (settle === 'loss') resolveWager(acct, w, 'loss')
         else if (settle === 'push') resolveWager(acct, w, 'push')
-        // 'open' → leave the hold pending until graded later.
-        // SEAM: open tickets should register in the Pending lane
-        // (features/operations/PendingPanel) — needs a shared open-ticket store keyed
-        // by player+selection. For now the hold sits in core.pending.
+        else {
+          // 'open' → leave the hold pending until graded later, and register the live
+          // gradeable Wager (by reference) + display meta in the shared open-tickets
+          // store so it shows up in Operations ▸ Pending with Win/Loss/Push/Void buttons
+          // that settle it through core. The hold itself already sits in core.pending.
+          recordOpenTicket({
+            id: w.id,
+            playerId: member.id,
+            playerName: member.name,
+            wager: w,
+            stake: stakeCents,
+            multiplier: m,
+            description: sel ? sel.label : 'Manual ticket',
+            placedAt: Date.now(),
+          })
+        }
       })
       const delta = acct.balance - before
       if (settle === 'open') {
         setLeftOpen(true)
-        setDone(`Open ticket written${tag} — ${coins(stakeCents)} at risk.`)
+        setDone(`Open ticket written${tag} — ${coins(stakeCents)} at risk, now in Pending.`)
       } else {
         setDone(
           `Ticket graded ${settle.toUpperCase()}${tag} — figure ${delta >= 0 ? '+' : ''}${coins(delta)}.`,
@@ -307,7 +320,7 @@ export function TicketWriterPanel() {
           {done && <p className="feat-ok">{done}</p>}
           {leftOpen && (
             <p className="tw-open-note">
-              Left open — will appear in Pending once the open-ticket store lands.
+              Left open — now listed in Operations ▸ Pending, ready to grade.
             </p>
           )}
           {error && <p className="feat-err">{error}</p>}

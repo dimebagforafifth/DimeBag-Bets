@@ -152,3 +152,18 @@ export function grantFreePlay(playerId: string, cents: number): void {
   persist()
   notify()
 }
+
+/**
+ * Settle a player's REACHED-but-unclaimed tier rewards into their free-play pool,
+ * marking each tier claimed so the same reward can never be granted twice. Unlike the
+ * free-form grantFreePlay, this is IDEMPOTENT — a second call (nothing left owed) grants
+ * 0 and changes nothing. Returns the cents granted. Persists + notifies only on a change.
+ */
+export function settleOwedRewards(playerId: string): number {
+  const cents = grantRewards(ensure(playerId), config)
+  if (cents > 0) {
+    persist()
+    notify()
+  }
+  return cents
+}

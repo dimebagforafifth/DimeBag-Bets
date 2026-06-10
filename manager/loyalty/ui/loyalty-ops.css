@@ -1,0 +1,411 @@
+/* Loyalty OPERATIONS styles — the live book-management surfaces layered on top of
+   the rank-ladder config: leaderboard (search + tier filter), VIP exposure
+   breakdown, per-player inspector (progress + owed-reward settle), and the
+   bulk "grant to a whole tier" lever. Scoped under .mgr-loy; reuses the manager
+   theme tokens from loyalty.css (app/theme.css). Additive sibling — loyalty.css
+   owns the config + base tokens, this file owns the ops widgets. */
+
+/* ------------------------------- shared bits ----------------------------- */
+
+.mgr-loy .loy-money {
+  font-variant-numeric: tabular-nums;
+}
+.mgr-loy .loy-money.is-free {
+  color: var(--green);
+}
+
+.mgr-loy .loy-rank-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+/* ------------------------------ stat grid -------------------------------- */
+
+.mgr-loy .loy-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.mgr-loy .loy-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.mgr-loy .loy-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-loy .loy-stat-value {
+  display: inline-flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-loy .loy-stat-value.is-warn {
+  color: var(--red);
+}
+.mgr-loy .loy-stat-value.is-free {
+  color: var(--green);
+}
+.mgr-loy .loy-stat-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* --------------------------- exposure breakdown -------------------------- */
+
+.mgr-loy .loy-exposure {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-loy .loy-exposure th,
+.mgr-loy .loy-exposure td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.mgr-loy .loy-exposure th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-loy .loy-exposure th.num,
+.mgr-loy .loy-exposure td.num {
+  text-align: right;
+}
+.mgr-loy .loy-exposure tfoot td {
+  font-weight: 800;
+  border-bottom: none;
+  border-top: 1px solid var(--line);
+}
+
+/* ------------------------------ leaderboard ------------------------------ */
+
+.mgr-loy .loy-lb-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mgr-loy .loy-lb-search {
+  flex: 1 1 200px;
+  min-width: 160px;
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.mgr-loy .loy-lb-search:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+.mgr-loy .loy-lb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mgr-loy .loy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.mgr-loy .loy-chip:hover {
+  color: var(--text);
+}
+.mgr-loy .loy-chip.is-on {
+  color: var(--text);
+  border-color: var(--gem);
+  background: color-mix(in srgb, var(--gem) 22%, var(--surface));
+}
+
+.mgr-loy .loy-lb {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-loy .loy-lb th,
+.mgr-loy .loy-lb td {
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.mgr-loy .loy-lb th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-loy .loy-lb th.num,
+.mgr-loy .loy-lb td.num {
+  text-align: right;
+}
+.mgr-loy .loy-lb .loy-pos {
+  color: var(--muted);
+  width: 1%;
+}
+.mgr-loy .loy-lb .loy-name {
+  font-weight: 600;
+}
+
+/* ------------------------------- inspector ------------------------------- */
+
+.mgr-loy .loy-inspector,
+.mgr-loy .loy-bulk {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.mgr-loy .loy-inspector > .mgr-h2,
+.mgr-loy .loy-bulk > .mgr-h2 {
+  margin: 0;
+}
+
+.mgr-loy .loy-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mgr-loy .loy-pick-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-loy .loy-select {
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.mgr-loy .loy-select:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+
+/* progress to next tier */
+.mgr-loy .loy-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mgr-loy .loy-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+}
+.mgr-loy .loy-progress-pct {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.mgr-loy .loy-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.mgr-loy .loy-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+.mgr-loy .loy-progress-rem {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* claimed + owed tags */
+.mgr-loy .loy-claimed,
+.mgr-loy .loy-owed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.mgr-loy .loy-claimed-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-loy .loy-claimed .loy-rank-tag,
+.mgr-loy .loy-owed-tags .loy-rank-tag {
+  padding: 3px 9px;
+  font-size: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.mgr-loy .loy-owed-amt {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--green);
+}
+
+/* owed-reward settle block */
+.mgr-loy .loy-owed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--gem) 40%, var(--line));
+  border-radius: 12px;
+}
+.mgr-loy .loy-owed-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.mgr-loy .loy-owed-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-loy .loy-owed-total {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* grant box */
+.mgr-loy .loy-grant {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mgr-loy .loy-grant-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+.mgr-loy .loy-grant-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mgr-loy .loy-grant-btn {
+  padding: 8px 16px;
+  font: inherit;
+  font-weight: 700;
+  color: #06281a;
+  background: var(--green);
+  border: 1px solid var(--green);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: filter 0.12s ease, opacity 0.12s ease;
+}
+.mgr-loy .loy-grant-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.mgr-loy .loy-grant-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.mgr-loy .loy-grant-btn.is-owed {
+  align-self: flex-start;
+}
+.mgr-loy .loy-grant-btn.is-ghost {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--line);
+}
+.mgr-loy .loy-grant-btn.is-ghost:hover:not(:disabled) {
+  color: var(--text);
+}
+.mgr-loy .loy-grant-btn.is-confirm {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+.mgr-loy .loy-grant-note {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.mgr-loy .loy-grant-note code {
+  font-size: 11px;
+}
+.mgr-loy .loy-grant-ok {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+/* ------------------------------ bulk grant ------------------------------- */
+
+.mgr-loy .loy-bulk-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.mgr-loy .loy-bulk-confirm {
+  display: inline-flex;
+  gap: 8px;
+}
+.mgr-loy .loy-bulk-preview {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+.mgr-loy .loy-bulk-preview strong {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .mgr-loy .loy-bulk-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mgr-loy .loy-bulk-row .loy-pick,
+  .mgr-loy .loy-bulk-row .mgr-loy-dollar {
+    width: 100%;
+  }
+}

@@ -1,0 +1,155 @@
+/* Pending panel — styles for the OPEN-TICKET manager added on top of the read-only
+   exposure summary. New sibling stylesheet (never edits shared.css). Uses the shell
+   tokens already mapped on .feat-panel (--surface, --line, --gold, --up, --down …).
+   Coins only; numbers right-aligned + tabular. */
+
+/* ---- the freeze-all-betting control in the header ---- */
+.pend-freeze {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pend-freeze-state {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pend-freeze-state.is-locked {
+  color: var(--down);
+}
+.pend-freeze-btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.pend-freeze-btn:hover {
+  border-color: var(--gold);
+}
+.pend-freeze-btn.is-on {
+  color: #14171c;
+  background: var(--down);
+  border-color: var(--down);
+}
+
+/* ---- the open-ticket list ---- */
+.pend-tickets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pend-ticket {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pend-ticket-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 180px;
+}
+.pend-ticket-who {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+.pend-ticket-desc {
+  font-size: 13px;
+  color: var(--text);
+}
+.pend-ticket-meta {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.pend-ticket-stake {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pend-ticket-stake strong {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+}
+.pend-ticket-stake small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* grade buttons */
+.pend-grade {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.pend-grade-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+.pend-grade-btn:hover {
+  border-color: var(--gold);
+}
+.pend-grade-btn.is-win:hover {
+  border-color: var(--up);
+  color: var(--up);
+}
+.pend-grade-btn.is-loss:hover {
+  border-color: var(--down);
+  color: var(--down);
+}
+
+/* the last-grade result line (figure delta) */
+.pend-result {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pend-result.is-up {
+  color: var(--up);
+}
+.pend-result.is-down {
+  color: var(--down);
+}
+
+/* Standalone "just graded" banner — survives the graded ticket's row being removed. */
+.pend-banner {
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2, var(--surface));
+  font-size: 13px;
+  font-weight: 600;
+}
+.pend-banner.is-up {
+  border-color: var(--up);
+  color: var(--up);
+}
+.pend-banner.is-down {
+  border-color: var(--down);
+  color: var(--down);
+}

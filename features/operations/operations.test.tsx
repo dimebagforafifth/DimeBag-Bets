@@ -60,7 +60,7 @@ describe('operations manifest', () => {
 
   it('the adapters surface the existing components', () => {
     expect(mount(byKey('settlements').Panel).textContent).toContain('Settlement history')
-    expect(mount(byKey('transactions').Panel).textContent).toContain('Casino ledger')
+    expect(mount(byKey('transactions').Panel).textContent).toContain('Net figure')
     expect(mount(byKey('live-activity').Panel).textContent).toContain('No betting activity')
   })
 

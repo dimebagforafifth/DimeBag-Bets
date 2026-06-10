@@ -1,11 +1,22 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
-import { bookPending } from '../org/index.js'
-import { formatMoney, toCents } from '../games/shared/money.js'
-import { getBook, getBookVersion, subscribeBook } from './book-store.js'
+import {
+  availableCredit,
+  membersByRole,
+  setActive,
+  setBettingLocked,
+  setBookBettingLocked,
+  setCreditLimit,
+  bookPending,
+  type Member,
+  type Org,
+} from '../org/index.js'
+import { formatMoney, toCents, toSignedCents } from '../games/shared/money.js'
+import { getBook, getBookVersion, listPlayers, subscribeBook } from './book-store.js'
 import { getBookLedger, subscribeBookLedger } from './book-ledger.js'
 import { getExposureByGame, subscribeExposure } from './exposure.js'
 import { toBetRows } from './ledger-stats.js'
 import { bookHold, holdByGame, winnersLosers, checkAlerts, type Standing } from './risk.js'
+import { adjustFigure, auditedMutate } from './manager-actions.js'
 import {
   getRiskThresholds,
   getSettingsVersion,
@@ -14,13 +25,18 @@ import {
   subscribeSettings,
 } from './settings-store.js'
 import './risk-panel.css'
+import './risk-actions.css'
 
 /**
  * Risk & exposure dashboard (CLAUDE.md §4) — the operator's read on the book: live
- * exposure, realized hold (book-wide + per game), the biggest winners/losers, and
- * configurable threshold alerts. Reads the durable ledger + the org; moves no money.
- * (Per-game LIVE open-exposure isn't shown — that needs open-wager-by-game tracking
- * the core doesn't model yet; this shows book-wide exposure + realized per-game hold.)
+ * exposure (book-wide + per game), realized hold (book-wide + per game), the biggest
+ * winners/losers, and configurable threshold alerts. Reads the durable ledger + the org
+ * + the live exposure store; the read side moves no money.
+ *
+ * The "Actions" area is the write side: per-player credit/suspend/lock quick levers, a
+ * book-wide freeze, and an audited manual figure adjustment. EVERY write routes through
+ * the audited/org path (`auditedMutate` for org setters, `adjustFigure` for money) —
+ * never a direct balance assignment.
  */
 export function RiskPanel() {
   const log = useSyncExternalStore(subscribeBookLedger, getBookLedger, getBookLedger)
@@ -76,16 +92,23 @@ export function RiskPanel() {
       {exposureByGame.length > 0 && (
         <>
           <h3 className="risk-section">Live exposure by game</h3>
-          <div className="risk-games">
+          <div className="risk-exp">
+            <div className="risk-exrow is-head">
+              <span>Game</span>
+              <span className="risk-num">Open</span>
+            </div>
             {exposureByGame.map((g) => (
-              <div key={g.key} className="risk-grow">
+              <div key={g.key} className="risk-exrow">
                 <span className="risk-game-name">{g.name}</span>
-                <span className="risk-num" />
-                <span className="risk-num" />
-                <span className="risk-num" />
                 <span className="risk-num">{formatMoney(g.open)}</span>
               </div>
             ))}
+            <div className="risk-exrow is-total">
+              <span>Total open</span>
+              <span className="risk-num">
+                {formatMoney(exposureByGame.reduce((sum, g) => sum + g.open, 0))}
+              </span>
+            </div>
           </div>
         </>
       )}
@@ -126,7 +149,273 @@ export function RiskPanel() {
 
       <h3 className="risk-section">Alert thresholds</h3>
       <Thresholds creditUtil={t.creditUtil} exposureCap={t.exposureCap} />
+
+      <Actions org={org} winners={winners} losers={losers} />
     </section>
+  )
+}
+
+/* ------------------------------- actions ------------------------------- */
+
+/**
+ * Operator risk ACTIONS — the write side of the read-only dashboard. Every lever here
+ * routes through the audited/org path (never a direct balance write): per-player credit
+ * / suspend / lock via org setters inside `auditedMutate`, a book-wide freeze via
+ * `setBookBettingLocked`, and a manual figure adjustment via the audited `adjustFigure`.
+ */
+function Actions({ org, winners, losers }: { org: Org; winners: Standing[]; losers: Standing[] }) {
+  // Surface the biggest winners + losers as quick-action rows (deduped, order preserved).
+  const ids = new Set<string>()
+  const focus: Member[] = []
+  for (const s of [...losers, ...winners]) {
+    if (ids.has(s.id)) continue
+    ids.add(s.id)
+    const m = org.members[s.id]
+    if (m) focus.push(m)
+  }
+
+  return (
+    <div className="risk-actions">
+      <h3 className="risk-section">Actions</h3>
+      <p className="risk-act-note">
+        Operator levers — every change is audited. Credit, suspend, and lock take effect on the
+        next bet; a figure adjustment posts to the book ledger.
+      </p>
+
+      <FreezeBook org={org} />
+
+      {focus.length > 0 && (
+        <>
+          <h3 className="risk-section">Quick actions</h3>
+          <div className="risk-people">
+            {focus.map((m) => (
+              <PlayerRow key={m.id} org={org} member={m} />
+            ))}
+          </div>
+        </>
+      )}
+
+      <h3 className="risk-section">Manual adjustment</h3>
+      <AdjustWidget />
+    </div>
+  )
+}
+
+/** Book-wide freeze: lock/unlock betting on every player beneath the manager, showing
+ *  the live locked count. Routes through `setBookBettingLocked` inside `auditedMutate`. */
+function FreezeBook({ org }: { org: Org }) {
+  const players = membersByRole(org, 'player')
+  const locked = players.filter((p) => p.account.bettingLocked).length
+  const total = players.length
+  const allLocked = total > 0 && locked === total
+  const [err, setErr] = useState('')
+
+  function freeze(lock: boolean) {
+    setErr('')
+    try {
+      auditedMutate((o) => setBookBettingLocked(o, o.managerId, lock), 'risk')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'could not change the book lock')
+    }
+  }
+
+  return (
+    <div className="risk-freeze">
+      <div className="risk-freeze-info">
+        <span className="risk-freeze-label">Freeze book</span>
+        <span className={`risk-freeze-count ${locked > 0 ? 'is-locked' : ''}`}>
+          {locked} of {total} players locked
+        </span>
+        {err && <span className="risk-feedback is-err">{err}</span>}
+      </div>
+      <button
+        type="button"
+        className="risk-btn is-warn"
+        onClick={() => freeze(true)}
+        disabled={allLocked}
+      >
+        Freeze all
+      </button>
+      <button
+        type="button"
+        className="risk-btn"
+        onClick={() => freeze(false)}
+        disabled={locked === 0}
+      >
+        Unfreeze all
+      </button>
+    </div>
+  )
+}
+
+/** One winner/loser row with inline quick actions: suspend/activate, lock/unlock, and an
+ *  expandable credit-limit editor. All through org setters inside `auditedMutate`. */
+function PlayerRow({ org, member }: { org: Org; member: Member }) {
+  const [open, setOpen] = useState(false)
+  const [err, setErr] = useState('')
+  const acct = member.account
+  const figure = acct.balance
+  const isLocked = !!acct.bettingLocked
+
+  function run(fn: (o: Org) => void) {
+    setErr('')
+    try {
+      auditedMutate(fn, 'risk')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'action failed')
+    }
+  }
+
+  return (
+    <div className="risk-prow">
+      <div className="risk-prow-main">
+        <span className="risk-pname">{member.name}</span>
+        <span className="risk-ptags">
+          {!member.active && <span className="risk-tag is-suspended">Suspended</span>}
+          {isLocked && <span className="risk-tag is-locked">Locked</span>}
+        </span>
+        <span className={`risk-pfigure ${figure > 0 ? 'is-up' : figure < 0 ? 'is-down' : ''}`}>
+          {figure > 0 ? '+' : ''}
+          {formatMoney(figure)}
+        </span>
+        <span className="risk-pbtns">
+          <button
+            type="button"
+            className="risk-btn"
+            onClick={() => run((o) => setBettingLocked(o, member.id, !isLocked))}
+          >
+            {isLocked ? 'Unlock' : 'Lock'}
+          </button>
+          <button
+            type="button"
+            className={`risk-btn ${member.active ? 'is-warn' : ''}`}
+            onClick={() => run((o) => setActive(o, member.id, !member.active))}
+          >
+            {member.active ? 'Suspend' : 'Activate'}
+          </button>
+          <button type="button" className="risk-btn" onClick={() => setOpen((v) => !v)}>
+            Credit
+          </button>
+        </span>
+      </div>
+      {open && (
+        <CreditEdit
+          org={org}
+          member={member}
+          onApply={(cents) => run((o) => setCreditLimit(o, member.id, cents))}
+        />
+      )}
+      {err && <span className="risk-feedback is-err">{err}</span>}
+    </div>
+  )
+}
+
+/** Inline credit-limit editor (coins, no "$" in the meta so it reads as points). The
+ *  apply itself runs through `setCreditLimit` via the parent's audited `onApply`. */
+function CreditEdit({
+  org,
+  member,
+  onApply,
+}: {
+  org: Org
+  member: Member
+  onApply: (cents: number) => void
+}) {
+  const [val, setVal] = useState(String(member.account.creditLimit / 100))
+  const headroom = availableCredit(org, member.id) // what's still grantable on this node
+  function commit() {
+    const n = Number(val)
+    if (Number.isFinite(n) && n >= 0) onApply(toCents(n))
+  }
+  return (
+    <div className="risk-pedit">
+      <span className="risk-pedit-label">Credit limit</span>
+      <input
+        className="risk-input is-amt"
+        type="number"
+        min="0"
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && commit()}
+      />
+      <button type="button" className="risk-btn is-primary" onClick={commit}>
+        Set
+      </button>
+      <span className="risk-pedit-meta">
+        now {formatMoney(member.account.creditLimit)} · {formatMoney(headroom)} grantable here
+      </span>
+    </div>
+  )
+}
+
+/** Audited manual figure adjustment: pick a player, enter SIGNED coins (a debit is
+ *  negative) + a reason → `adjustFigure(id, cents, reason, 'risk')`. Shows the ledger
+ *  result. Uses `toSignedCents` so a debit is NOT clamped to zero (the documented bug). */
+function AdjustWidget() {
+  const players = listPlayers()
+  const [id, setId] = useState('')
+  const [amt, setAmt] = useState('')
+  const [reason, setReason] = useState('')
+  const [ok, setOk] = useState('')
+  const [err, setErr] = useState('')
+
+  const coins = Number(amt)
+  const ready = !!id && reason.trim() !== '' && Number.isFinite(coins) && coins !== 0
+
+  function apply() {
+    setOk('')
+    setErr('')
+    try {
+      const entry = adjustFigure(id, toSignedCents(coins), reason.trim(), 'risk')
+      const sign = entry.balanceDelta > 0 ? '+' : ''
+      setOk(`${sign}${formatMoney(entry.balanceDelta)} → figure now ${formatMoney(entry.balanceAfter)}`)
+      setAmt('')
+      setReason('')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'adjustment failed')
+    }
+  }
+
+  return (
+    <div className="risk-adjust">
+      <div className="risk-adjust-row">
+        <select
+          className="risk-select"
+          value={id}
+          onChange={(e) => {
+            setId(e.target.value)
+            setOk('')
+            setErr('')
+          }}
+        >
+          <option value="">Select player…</option>
+          {players.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+        <input
+          className="risk-input is-amt"
+          type="number"
+          placeholder="± coins"
+          value={amt}
+          onChange={(e) => setAmt(e.target.value)}
+        />
+        <input
+          className="risk-input is-reason"
+          type="text"
+          placeholder="Reason (audited)"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        />
+        <button type="button" className="risk-btn is-primary" onClick={apply} disabled={!ready}>
+          Apply
+        </button>
+      </div>
+      {ok && <span className="risk-feedback is-ok">{ok}</span>}
+      {err && <span className="risk-feedback is-err">{err}</span>}
+    </div>
   )
 }
 

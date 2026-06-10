@@ -1,0 +1,240 @@
+/* Segments panel — the actionable cohort console (drill-down + quick actions + bulk).
+   Additive styles on top of console.css; reuses its tokens (--gem/--red/--green/
+   --gold/--muted/--surface/--surface-2/--line/--text/--bg/--radius) so the graphite-
+   and-gold theme + any white-label accent flow straight through. Numbers are
+   tabular-nums; red/green only ever mark a +/- coin delta. Mobile-responsive. */
+
+/* clickable rows in the cohort table */
+.con-seg-row {
+  cursor: pointer;
+}
+.con-seg-row:hover {
+  background: var(--surface-2);
+}
+.con-seg-row.is-open {
+  background: color-mix(in srgb, var(--gem) 9%, transparent);
+}
+.con-seg-row.is-open td {
+  border-bottom-color: var(--gem);
+}
+.con-seg-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+/* a suspended player reads dimmed, with a small tag */
+.con-seg-susp {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--red);
+  border: 1px solid var(--red);
+  border-radius: 5px;
+  padding: 0 5px;
+}
+.con-seg-risk {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gold, #e3b341);
+}
+
+/* ---- segment metrics strip (uses segmentMetrics() rollup) ---- */
+.con-seg-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+.con-seg-metric {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.con-seg-metric-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.con-seg-metric-value {
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.con-seg-metric-value.pos {
+  color: var(--green);
+}
+.con-seg-metric-value.neg {
+  color: var(--red);
+}
+.con-seg-metric-value.warn {
+  color: var(--gold, #e3b341);
+}
+
+/* ---- bulk action bar above a single cohort ---- */
+.con-seg-bulk {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.con-seg-bulk-label {
+  font-size: 13px;
+  color: var(--text);
+}
+.con-seg-bulk-label strong {
+  font-weight: 800;
+}
+.con-seg-bulk-spend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ---- per-player drill-down detail ---- */
+.con-seg-detail {
+  background: var(--surface);
+  border: 1px solid var(--gem);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 4px 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.con-seg-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.con-seg-detail-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+.con-seg-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+.con-seg-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.con-seg-stats dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.con-seg-stats dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.con-seg-stats dd.pos {
+  color: var(--green);
+}
+.con-seg-stats dd.neg {
+  color: var(--red);
+}
+
+/* a small utilization meter (creditUtilization 0..1) */
+.con-seg-util {
+  position: relative;
+  height: 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.con-seg-util > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--green);
+  border-radius: 4px;
+}
+.con-seg-util.is-warn > span {
+  background: var(--gold, #e3b341);
+}
+.con-seg-util.is-high > span {
+  background: var(--red);
+}
+
+/* ---- quick-action controls ---- */
+.con-seg-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+.con-seg-action {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+.con-seg-action label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.con-seg-action-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.con-seg-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 9px;
+  font-variant-numeric: tabular-nums;
+}
+.con-seg-input:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+
+.con-seg-msg {
+  font-size: 12px;
+  min-height: 16px;
+}
+.con-seg-msg.is-err {
+  color: var(--red);
+}
+.con-seg-msg.is-ok {
+  color: var(--green);
+}
+
+@media (max-width: 640px) {
+  .con-seg-bulk-spend {
+    margin-left: 0;
+    width: 100%;
+  }
+  .con-seg-detail-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
