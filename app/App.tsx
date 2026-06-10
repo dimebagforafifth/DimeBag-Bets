@@ -26,6 +26,7 @@ import { ledgerManifests } from '../features/transactions/manifest.js'
 import { settlementRunManifests } from '../features/settlements/manifest.js'
 import { operatorManualManifests } from '../features/help/manifest.js'
 import { agentsManifests } from '../features/agents/manifest.js'
+import { membersManifests } from '../features/directory/manifest.js'
 const PREVIEW_REGISTRY = [
   ...REGISTRY,
   ...weeklySheetManifests,
@@ -34,6 +35,7 @@ const PREVIEW_REGISTRY = [
   ...settlementRunManifests,
   ...operatorManualManifests,
   ...agentsManifests,
+  ...membersManifests,
 ]
 import { consoleFigures } from './console-figures.js'
 import { getAnalyticsRecords } from '../manager/reporting/index.js'
