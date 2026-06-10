@@ -1,39 +1,130 @@
+/* The manager console — an app launcher. One backdrop (no slab/container); the
+   tools are square, purpose-coloured app tiles grouped by section. Click a tile to
+   open that tool; "All tools" returns to the grid. */
 .mc {
+  width: 100%;
+}
+
+/* Home — sections of square app tiles, floated straight on the page backdrop. */
+.mc-home {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.mc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mc-section-head {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(154px, 1fr));
+  gap: 14px;
+}
+
+/* A square app tile: uniform body, with the purpose colour carried only by the
+   icon chip + a soft hover accent — so a wall of tiles reads clean, not loud. */
+.mc-app {
+  --app: var(--muted);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease;
+}
+.mc-app:hover {
+  transform: translateY(-3px);
+  background: color-mix(in srgb, var(--app) 7%, var(--surface));
+  border-color: color-mix(in srgb, var(--app) 55%, var(--line));
+  box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--app) 75%, transparent);
+}
+.mc-app:focus-visible {
+  outline: 2px solid var(--app);
+  outline-offset: 2px;
+}
+.mc-app-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--app);
+  background: color-mix(in srgb, var(--app) 16%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--app) 28%, transparent);
+}
+.mc-app-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.mc-app-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Workspace — the opened tool, on the same backdrop, with a back affordance. */
+.mc-workspace {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
-.mc-nav {
-  display: flex;
-  flex-wrap: wrap;
+.mc-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  padding: 4px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  position: sticky;
-  top: 8px;
-  z-index: 5;
-}
-.mc-tab {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--muted);
   background: transparent;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 13px;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease;
 }
-.mc-tab:hover {
+.mc-back:hover {
   color: var(--text);
+  border-color: color-mix(in srgb, var(--text) 25%, var(--line));
 }
-.mc-tab.is-active {
+.mc-back:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.mc-workspace-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mc-workspace-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
   color: var(--text);
-  background: var(--surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .mc-body {
   display: flex;
@@ -46,4 +137,18 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
+}
+
+@media (max-width: 560px) {
+  .mc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-app {
+    transition: none;
+  }
+  .mc-app:hover {
+    transform: none;
+  }
 }

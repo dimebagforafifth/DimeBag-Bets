@@ -53,8 +53,8 @@ describe('Branding re-themes the app (mounted in ManagerConsole)', () => {
       ),
     )
 
-    // Open the Branding tab.
-    const brandTab = [...host.querySelectorAll<HTMLButtonElement>('.mc-tab')].find(
+    // Open the Branding tool from its app tile.
+    const brandTab = [...host.querySelectorAll<HTMLButtonElement>('.mc-app')].find(
       (t) => t.textContent === 'Branding',
     )!
     act(() => brandTab.click())

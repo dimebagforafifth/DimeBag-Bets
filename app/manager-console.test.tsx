@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
-/** The manager console sub-nav switches between the operator sections. */
+/** The manager console is an app launcher: clicking an app tile opens that tool,
+ *  and "All tools" returns to the grid. Every tool is reachable and renders. */
 import { describe, expect, it } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -7,58 +8,55 @@ import { getBook, listPlayers } from './book-store.js'
 import { ManagerConsole } from './ManagerConsole.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-describe('ManagerConsole', () => {
-  it('renders a sub-nav and switches sections', () => {
-    const host = document.createElement('div')
-    document.body.appendChild(host)
-    const root = createRoot(host)
-    act(() =>
-      root.render(
-        <ManagerConsole
-          org={getBook()}
-          onMutate={() => {}}
-          players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
-        />,
-      ),
-    )
+function mount() {
+  const host = document.createElement('div')
+  document.body.appendChild(host)
+  const root = createRoot(host)
+  act(() =>
+    root.render(
+      <ManagerConsole
+        org={getBook()}
+        onMutate={() => {}}
+        players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
+      />,
+    ),
+  )
+  return { host, root }
+}
+const tile = (host: HTMLElement, label: string) =>
+  [...host.querySelectorAll<HTMLButtonElement>('.mc-app')].find((t) => t.textContent === label)
+const back = (host: HTMLElement) => host.querySelector<HTMLButtonElement>('.mc-back')
 
-    const tab = (label: string) =>
-      [...host.querySelectorAll<HTMLButtonElement>('.mc-tab')].find((t) => t.textContent === label)!
-    expect(tab('Risk')).toBeTruthy()
+describe('ManagerConsole (app launcher)', () => {
+  it('opens a tool from its tile and returns via "All tools"', () => {
+    const { host, root } = mount()
+    // Home is the grid: app tiles present, no tool open yet.
+    expect(host.querySelectorAll('.mc-app').length).toBeGreaterThan(0)
+    expect(back(host)).toBeNull()
 
-    act(() => tab('Risk').click())
+    // Open Risk → its panel renders; back → the grid returns.
+    act(() => tile(host, 'Risk')!.click())
     expect(host.textContent).toContain('Risk & exposure')
+    expect(back(host)).not.toBeNull()
+    act(() => back(host)!.click())
+    expect(host.querySelectorAll('.mc-app').length).toBeGreaterThan(0)
 
-    act(() => tab('Settlement').click())
+    // Settlement and Audit are reachable the same way.
+    act(() => tile(host, 'Settlement')!.click())
     expect(host.textContent).toContain('Settlement history')
-
-    act(() => tab('Audit').click())
+    act(() => back(host)!.click())
+    act(() => tile(host, 'Audit')!.click())
     expect(host.textContent).toContain('Audit log')
 
     act(() => root.unmount())
     host.remove()
   })
 
-  it('mounts the growth/insight suite — every new tab is reachable and renders its page', () => {
-    const host = document.createElement('div')
-    document.body.appendChild(host)
-    const root = createRoot(host)
-    act(() =>
-      root.render(
-        <ManagerConsole
-          org={getBook()}
-          onMutate={() => {}}
-          players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
-        />,
-      ),
-    )
+  it('mounts the growth/insight suite — every tile opens its page', () => {
+    const { host, root } = mount()
 
-    const tab = (label: string) =>
-      [...host.querySelectorAll<HTMLButtonElement>('.mc-tab')].find((t) => t.textContent === label)
-
-    // Each newly mounted tab: its nav button exists, and clicking it renders that
-    // page (asserted via the page's own title element). These six were built and
-    // tested standalone but unmounted until now.
+    // Each tile: present on the grid, and clicking it renders that page (asserted
+    // via the page's own title element). These were built standalone, now reachable.
     const PAGES: { label: string; titleSel: string; titleRe: RegExp }[] = [
       { label: 'Reporting', titleSel: '.mgr-report-title', titleRe: /Reporting/i },
       { label: 'Copilot', titleSel: '.mgr-cop-title', titleRe: /Copilot/i },
@@ -69,11 +67,12 @@ describe('ManagerConsole', () => {
     ]
 
     for (const p of PAGES) {
-      const btn = tab(p.label)
-      expect(btn, `tab "${p.label}" should be present`).toBeTruthy()
-      act(() => btn!.click())
+      const t = tile(host, p.label)
+      expect(t, `tile "${p.label}" should be present`).toBeTruthy()
+      act(() => t!.click())
       const title = host.querySelector(p.titleSel)?.textContent
       expect(title, `page for "${p.label}" should render`).toMatch(p.titleRe)
+      act(() => back(host)!.click()) // return to the grid for the next one
     }
 
     act(() => root.unmount())
