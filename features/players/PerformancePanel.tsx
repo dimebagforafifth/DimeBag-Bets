@@ -16,13 +16,28 @@ export function PerformancePanel() {
     <div className="feat">
       <div className="feat-cols">
         <Movers title="Top movers" rows={winners} tone="up" empty="No players up this period." />
-        <Movers title="Bottom movers" rows={losers} tone="down" empty="No players down this period." />
+        <Movers
+          title="Bottom movers"
+          rows={losers}
+          tone="down"
+          empty="No players down this period."
+        />
       </div>
     </div>
   )
 }
 
-function Movers({ title, rows, tone, empty }: { title: string; rows: Standing[]; tone: 'up' | 'down'; empty: string }) {
+function Movers({
+  title,
+  rows,
+  tone,
+  empty,
+}: {
+  title: string
+  rows: Standing[]
+  tone: 'up' | 'down'
+  empty: string
+}) {
   return (
     <div className="feat-board">
       <h3 className="feat-h">{title}</h3>

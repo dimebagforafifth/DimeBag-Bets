@@ -7,7 +7,6 @@ import { getBook } from '../../app/book-store.js'
 import { catalogManifests } from './manifest.js'
 import { ScoresPanel } from './ScoresPanel.js'
 import { TicketWriterPanel } from './TicketWriterPanel.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 function host(): HTMLDivElement {
@@ -61,7 +60,9 @@ describe('catalog panels', () => {
     const [stake, mult] = h.querySelectorAll<HTMLInputElement>('.feat-input') // stake, multiplier, (select)
     act(() => setValue(stake, '10')) // 10 coins
     act(() => setValue(mult, '3')) // 3× → win profit +20 coins (2000 cents)
-    const writeBtn = [...h.querySelectorAll<HTMLButtonElement>('.feat-btn')].find((b) => b.textContent === 'Write ticket')!
+    const writeBtn = [...h.querySelectorAll<HTMLButtonElement>('.feat-btn')].find(
+      (b) => b.textContent === 'Write ticket',
+    )!
     act(() => writeBtn.click())
     expect(getBook().members['p-lena'].account.balance).toBe(before + 2000) // default grade = Win
     expect(h.textContent).toContain('graded WIN')

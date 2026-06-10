@@ -1,6 +1,12 @@
 import { useState, useSyncExternalStore } from 'react'
 import { PlayerSearch, PlayerProfile } from '../../org/ui/PlayerLookup.js'
-import { getBook, getBookVersion, subscribeBook, getCurrentPlayerId, mutateBook } from '../../app/book-store.js'
+import {
+  getBook,
+  getBookVersion,
+  subscribeBook,
+  getCurrentPlayerId,
+  mutateBook,
+} from '../../app/book-store.js'
 import './players.css'
 
 /**

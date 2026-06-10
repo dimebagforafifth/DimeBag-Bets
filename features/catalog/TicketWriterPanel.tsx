@@ -33,7 +33,8 @@ export function TicketWriterPanel() {
     const stakeCents = toCents(Number(stake) || 0)
     const m = Number(mult)
     if (stakeCents <= 0) return setError('Enter a stake.')
-    if ((settle === 'win' || settle === 'open') && !(m > 1)) return setError('Multiplier must be greater than 1.')
+    if ((settle === 'win' || settle === 'open') && !(m > 1))
+      return setError('Multiplier must be greater than 1.')
     try {
       const before = acct.balance
       mutateBook(() => {
@@ -61,20 +62,37 @@ export function TicketWriterPanel() {
         <div className="feat-form">
           <h3 className="feat-h">
             Ticket for {member.name}
-            <span className="feat-note"> · {formatMoney(availableToWager(member.account))} to wager</span>
+            <span className="feat-note">
+              {' '}
+              · {formatMoney(availableToWager(member.account))} to wager
+            </span>
           </h3>
           <div className="cat-ticket-grid">
             <label className="feat-field">
               <span>Stake (coins)</span>
-              <input className="feat-input" inputMode="decimal" value={stake} onChange={(e) => setStake(e.target.value)} />
+              <input
+                className="feat-input"
+                inputMode="decimal"
+                value={stake}
+                onChange={(e) => setStake(e.target.value)}
+              />
             </label>
             <label className="feat-field">
               <span>Multiplier</span>
-              <input className="feat-input" inputMode="decimal" value={mult} onChange={(e) => setMult(e.target.value)} />
+              <input
+                className="feat-input"
+                inputMode="decimal"
+                value={mult}
+                onChange={(e) => setMult(e.target.value)}
+              />
             </label>
             <label className="feat-field">
               <span>Grade</span>
-              <select className="feat-input" value={settle} onChange={(e) => setSettle(e.target.value as Settle)}>
+              <select
+                className="feat-input"
+                value={settle}
+                onChange={(e) => setSettle(e.target.value as Settle)}
+              >
                 <option value="win">Win</option>
                 <option value="loss">Loss</option>
                 <option value="push">Push</option>

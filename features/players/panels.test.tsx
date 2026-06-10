@@ -8,7 +8,6 @@ import { playersManifests } from './manifest.js'
 import { AddPlayerPanel } from './AddPlayerPanel.js'
 import { PerformancePanel } from './PerformancePanel.js'
 import { LimitsPanel } from './LimitsPanel.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 function host(): HTMLDivElement {
@@ -50,7 +49,11 @@ describe('players panels', () => {
     const before = listPlayers().length
     const name = h.querySelectorAll<HTMLInputElement>('.feat-input')[0]
     act(() => setValue(name, 'Sidney Console'))
-    act(() => h.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
+    act(() =>
+      h
+        .querySelector('form')!
+        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })),
+    )
     expect(listPlayers().length).toBe(before + 1)
     expect(h.textContent).toContain('Added')
     act(() => root.unmount())
@@ -75,7 +78,9 @@ describe('players panels', () => {
     selectPlayer(h, 'Marco')
     const maxInput = h.querySelectorAll<HTMLInputElement>('.feat-input')[0]
     act(() => setValue(maxInput, '5')) // $5.00 → 500 coins
-    const setBtn = [...h.querySelectorAll<HTMLButtonElement>('.feat-btn')].find((b) => b.textContent === 'Set')!
+    const setBtn = [...h.querySelectorAll<HTMLButtonElement>('.feat-btn')].find(
+      (b) => b.textContent === 'Set',
+    )!
     act(() => setBtn.click())
     expect(getBook().members['p-marco'].account.maxWager).toBe(500)
     act(() => root.unmount())

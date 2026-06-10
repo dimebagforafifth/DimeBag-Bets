@@ -3,13 +3,25 @@
  * weekly-figures + pending are NEW panels (assembled from existing read-only stores);
  * live-activity / settlements / transactions ADAPT existing components.
  */
-import { Coins, Hourglass, Activity, Scale, ArrowLeftRight } from 'lucide-react'
+import {
+  Coins,
+  Hourglass,
+  Activity,
+  Scale,
+  ArrowLeftRight,
+  Gauge,
+  Bell,
+  Banknote,
+} from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { WeeklyFiguresPanel } from './WeeklyFiguresPanel.js'
 import { PendingPanel } from './PendingPanel.js'
 import { LiveActivityPanel } from './LiveActivityPanel.js'
 import { SettlementsPanel } from './SettlementsPanel.js'
 import { TransactionsPanel } from './TransactionsPanel.js'
+import { RiskFeaturePanel } from './RiskFeaturePanel.js'
+import { AlertsFeaturePanel } from './AlertsFeaturePanel.js'
+import { SettlePanel } from './SettlePanel.js'
 
 export const operationsManifests: FeatureManifest[] = [
   {
@@ -51,6 +63,31 @@ export const operationsManifests: FeatureManifest[] = [
     section: 'operations',
     icon: ArrowLeftRight,
     Panel: TransactionsPanel,
+  },
+  // Ported from the old manager console:
+  {
+    key: 'risk',
+    name: 'Risk & Exposure',
+    hint: 'Hold, exposure, winners & losers',
+    section: 'operations',
+    icon: Gauge,
+    Panel: RiskFeaturePanel,
+  },
+  {
+    key: 'alerts',
+    name: 'Alerts',
+    hint: 'Exposure, big wins & large positions',
+    section: 'operations',
+    icon: Bell,
+    Panel: AlertsFeaturePanel,
+  },
+  {
+    key: 'settle',
+    name: 'Settle Period',
+    hint: 'Reconcile & close out the week',
+    section: 'operations',
+    icon: Banknote,
+    Panel: SettlePanel,
   },
 ]
 

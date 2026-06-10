@@ -206,3 +206,55 @@
   font-size: 12px;
   color: var(--up);
 }
+
+/* ---- buttons + small layout helpers (used by the Settle action, etc.) ---- */
+.feat-btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+.feat-btn:hover:not(:disabled) {
+  border-color: var(--gem);
+}
+.feat-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.feat-btn-primary {
+  color: #14171c;
+  background: var(--gem);
+  border-color: var(--gem);
+}
+.feat-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin: 12px 0;
+}
+.feat-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.feat-defs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+.feat-defs dt {
+  color: var(--muted);
+}
+.feat-defs dd {
+  margin: 0;
+  font-weight: 600;
+}

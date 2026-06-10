@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { playersManifests } from './manifest.js'
 
 describe('players manifests', () => {
-  it('exposes the six player tiles in the contract shape', () => {
+  it('exposes the player tiles in the contract shape', () => {
     expect(playersManifests.map((m) => m.key)).toEqual([
       'players',
       'add-player',
@@ -10,6 +10,12 @@ describe('players manifests', () => {
       'limits',
       'performance',
       'messaging',
+      // ported from the old manager console
+      'vip',
+      'loyalty',
+      'segments',
+      'notes',
+      'promotions',
     ])
     for (const m of playersManifests) {
       expect(m.section).toBe('players')

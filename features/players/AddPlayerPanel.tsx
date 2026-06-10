@@ -45,11 +45,21 @@ export function AddPlayerPanel({ onBack }: { onBack: () => void }) {
         <h3 className="feat-h">Onboard a new account</h3>
         <label className="feat-field">
           <span>Player name</span>
-          <input className="feat-input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          <input
+            className="feat-input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+          />
         </label>
         <label className="feat-field">
           <span>Credit line (coins)</span>
-          <input className="feat-input" inputMode="decimal" value={credit} onChange={(e) => setCredit(e.target.value)} />
+          <input
+            className="feat-input"
+            inputMode="decimal"
+            value={credit}
+            onChange={(e) => setCredit(e.target.value)}
+          />
         </label>
         {added && <p className="feat-ok">Added “{added}”. Add another, or go back.</p>}
         {error && <p className="feat-err">{error}</p>}

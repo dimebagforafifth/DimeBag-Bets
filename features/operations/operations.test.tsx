@@ -24,13 +24,16 @@ function mount(Panel: ComponentType<{ onBack: () => void }>, onBack: () => void 
 const byKey = (key: string) => operationsManifests.find((m) => m.key === key)!
 
 describe('operations manifest', () => {
-  it('declares the five tiles in order with the full contract shape', () => {
+  it('declares its tiles in order with the full contract shape', () => {
     expect(operationsManifests.map((m) => m.key)).toEqual([
       'weekly-figures',
       'pending',
       'live-activity',
       'settlements',
       'transactions',
+      'risk',
+      'alerts',
+      'settle',
     ])
     for (const m of operationsManifests) {
       expect(m.section).toBe('operations')
@@ -66,5 +69,20 @@ describe('operations manifest', () => {
     mount(byKey('weekly-figures').Panel, () => (backs += 1))
     act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })))
     expect(backs).toBe(1)
+  })
+
+  // Last — it squares up the demo book (resets figures), so keep it after the others.
+  it('the Settle action squares up the book through settleAndRecord', () => {
+    const host = mount(byKey('settle').Panel)
+    const clickBtn = (re: RegExp) =>
+      act(() =>
+        [...host.querySelectorAll<HTMLButtonElement>('button')]
+          .find((b) => re.test(b.textContent ?? ''))!
+          .click(),
+      )
+    clickBtn(/Settle period/) // → confirm step
+    expect(host.textContent).toMatch(/Confirm\?/)
+    clickBtn(/Yes, settle now/) // → runs settleAndRecord
+    expect(host.textContent).toMatch(/Settled \d+ account/)
   })
 })

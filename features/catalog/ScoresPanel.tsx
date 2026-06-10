@@ -16,8 +16,8 @@ export function ScoresPanel() {
       <div className="feat-card">
         <h3 className="feat-h">Results &amp; auto-grading</h3>
         <p className="feat-note">
-          Bets settle automatically off the live feed as games finish — graders run on the shared core. Scores
-          stream in once games start.
+          Bets settle automatically off the live feed as games finish — graders run on the shared
+          core. Scores stream in once games start.
         </p>
         <div className="cat-scores">
           <div className="cat-score-row is-head">

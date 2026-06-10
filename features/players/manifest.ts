@@ -1,4 +1,16 @@
-import { Users, UserPlus, Coins, SlidersHorizontal, TrendingUp, MessageSquare } from 'lucide-react'
+import {
+  Users,
+  UserPlus,
+  Coins,
+  SlidersHorizontal,
+  TrendingUp,
+  MessageSquare,
+  Crown,
+  Award,
+  PieChart,
+  StickyNote,
+  Megaphone,
+} from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { PlayerAdminPanel } from './PlayerAdminPanel.js'
 import { AddPlayerPanel } from './AddPlayerPanel.js'
@@ -6,6 +18,11 @@ import { CashierPanel } from './CashierPanel.js'
 import { LimitsPanel } from './LimitsPanel.js'
 import { PerformancePanel } from './PerformancePanel.js'
 import { MessagingPanel } from './MessagingPanel.js'
+import { VipFeaturePanel } from './VipFeaturePanel.js'
+import { LoyaltyFeaturePanel } from './LoyaltyFeaturePanel.js'
+import { SegmentsFeaturePanel } from './SegmentsFeaturePanel.js'
+import { NotesFeaturePanel } from './NotesFeaturePanel.js'
+import { PromotionsFeaturePanel } from './PromotionsFeaturePanel.js'
 
 /** The Players section tiles (adapted from existing manager features). */
 export const playersManifests: FeatureManifest[] = [
@@ -56,6 +73,47 @@ export const playersManifests: FeatureManifest[] = [
     section: 'players',
     icon: MessageSquare,
     Panel: MessagingPanel,
+  },
+  // Ported from the old manager console:
+  {
+    key: 'vip',
+    name: 'VIP Program',
+    hint: 'Rank ladder, leaderboard & free play',
+    section: 'players',
+    icon: Crown,
+    Panel: VipFeaturePanel,
+  },
+  {
+    key: 'loyalty',
+    name: 'Loyalty',
+    hint: 'Tune the rank thresholds & rewards',
+    section: 'players',
+    icon: Award,
+    Panel: LoyaltyFeaturePanel,
+  },
+  {
+    key: 'segments',
+    name: 'Segments',
+    hint: 'New / casual / VIP / dormant',
+    section: 'players',
+    icon: PieChart,
+    Panel: SegmentsFeaturePanel,
+  },
+  {
+    key: 'notes',
+    name: 'Notes & Tags',
+    hint: 'Operator CRM per player',
+    section: 'players',
+    icon: StickyNote,
+    Panel: NotesFeaturePanel,
+  },
+  {
+    key: 'promotions',
+    name: 'Promotions',
+    hint: 'Free-play & point bonuses',
+    section: 'players',
+    icon: Megaphone,
+    Panel: PromotionsFeaturePanel,
   },
 ]
 

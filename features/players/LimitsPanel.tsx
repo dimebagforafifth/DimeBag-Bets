@@ -50,7 +50,15 @@ export function LimitsPanel() {
   )
 }
 
-function CapField({ label, value, onSet }: { label: string; value: number | null | undefined; onSet: (cents: number | null) => void }) {
+function CapField({
+  label,
+  value,
+  onSet,
+}: {
+  label: string
+  value: number | null | undefined
+  onSet: (cents: number | null) => void
+}) {
   const [draft, setDraft] = useState(value != null ? String(value / 100) : '')
   return (
     <div className="feat-cap">
@@ -72,7 +80,14 @@ function CapField({ label, value, onSet }: { label: string; value: number | null
       >
         Set
       </button>
-      <button className="feat-btn" type="button" onClick={() => { setDraft(''); onSet(null) }}>
+      <button
+        className="feat-btn"
+        type="button"
+        onClick={() => {
+          setDraft('')
+          onSet(null)
+        }}
+      >
         Clear
       </button>
     </div>

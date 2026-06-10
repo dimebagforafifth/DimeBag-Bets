@@ -36,12 +36,15 @@ function mount(Panel: ComponentType<{ onBack: () => void }>, onBack: () => void 
 const byKey = (key: string) => controlManifests.find((m) => m.key === key)!
 
 describe('control manifest', () => {
-  it('declares the four tiles in order with the full contract shape', () => {
+  it('declares its tiles in order with the full contract shape', () => {
     expect(controlManifests.map((m) => m.key)).toEqual([
       'analytics',
       'access',
       'security',
       'settings',
+      'branding',
+      'copilot',
+      'setup',
     ])
     for (const m of controlManifests) {
       expect(m.section).toBe('control')
