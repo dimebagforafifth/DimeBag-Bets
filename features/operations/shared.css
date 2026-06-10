@@ -1,0 +1,208 @@
+/* Console panel theme — the app-grid shell's charcoal/gold identity (NOT the casino
+   app's teal/emerald). We RE-MAP the existing components' CSS custom properties on a
+   scoped `.feat-panel` wrapper, so adapted components (Ledger, SettlementHistory,
+   ReportingPage, …) inherit the shell palette without editing their own files. New
+   panels use the same tokens + the .feat-* helpers below. */
+
+.feat-panel {
+  /* shell tokens (brief): bg #14171C, panels #1B1F26/#20252E, borders #2A2F39,
+     gold #D6B14A, up #5BB98B, down #D27068. No teal/orange. */
+  --bg: #14171c;
+  --surface: #1b1f26;
+  --surface-2: #20252e;
+  --line: #2a2f39;
+  --gem: #d6b14a;
+  --gem-glow: 214, 177, 74;
+  --green: #5bb98b;
+  --green-press: #4fa87c;
+  --red: #d27068;
+  --text: #e8eaed;
+  --muted: #8a929e;
+  --radius: 12px;
+
+  --up: #5bb98b;
+  --down: #d27068;
+  --gold: #d6b14a;
+
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--text);
+  background: var(--bg);
+  font-family:
+    'Saira',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+/* ---- headings / labels (Saira Condensed / Semi Condensed per brief) ---- */
+.feat-h1 {
+  margin: 0;
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.feat-h2 {
+  margin: 0 0 10px;
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+.feat-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.feat-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.feat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ---- primitives ---- */
+.feat-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.feat-empty {
+  margin: 0;
+  padding: 28px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+.feat-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.feat-kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.feat-kpi strong {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.feat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.feat-table th,
+.feat-table td {
+  padding: 9px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.feat-table th {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  color: var(--muted);
+}
+.feat-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.feat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.feat-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.feat-list li:first-child {
+  border-top: none;
+}
+.feat-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.feat-up {
+  color: var(--up);
+}
+.feat-down {
+  color: var(--down);
+}
+
+/* a "new / needs backend" badge for panels flagged as freshly built */
+.feat-flag {
+  display: inline-block;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
+/* ---- editable settings fields ---- */
+.feat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.feat-input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.feat-input:focus {
+  outline: none;
+  border-color: var(--gem);
+}
+.feat-saved {
+  font-size: 12px;
+  color: var(--up);
+}
