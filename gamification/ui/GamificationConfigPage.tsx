@@ -1,5 +1,4 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { formatMoney } from '../../games/shared/money.js'
 import { probabilities } from '../wheel.js'
 import {
   getConfig,

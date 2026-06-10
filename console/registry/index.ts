@@ -2,15 +2,24 @@
  * The console registry + the logic that renders the app grid from it and mounts
  * the active feature's Panel.
  *
- * Phase 1 ships an EMPTY registry: the shell renders cleanly with no features
- * (graceful empty state). In phase 2 the feature agents' manifests are merged in
- * at the seam below — this file imports NO feature components today.
+ * The four feature sections' manifest arrays are merged into REGISTRY below; the
+ * shell renders the grid from it and mounts each tile's Panel on click. Adding a
+ * feature is a one-line spread here.
  */
 
 import type { ConsoleSection, FeatureManifest } from './types.js'
+import { operationsManifests } from '../../features/operations/manifest.js'
+import { playersManifests } from '../../features/players/manifest.js'
+import { catalogManifests } from '../../features/catalog/manifest.js'
+import { controlManifests } from '../../features/control/manifest.js'
 
-// SEAM: feature manifests merged in phase 2
-export const REGISTRY: FeatureManifest[] = []
+/** Every console feature, grouped into sections at render time by `groupBySection`. */
+export const REGISTRY: FeatureManifest[] = [
+  ...operationsManifests,
+  ...playersManifests,
+  ...catalogManifests,
+  ...controlManifests,
+]
 
 /** The four sections, in display order: Operations · Players · Catalog · Control. */
 export const SECTIONS: { key: ConsoleSection; label: string }[] = [
@@ -36,7 +45,10 @@ export function groupBySection(registry: readonly FeatureManifest[]): SectionGro
 }
 
 /** Find a manifest by its key (null if absent). */
-export function findFeature(registry: readonly FeatureManifest[], key: string | null): FeatureManifest | null {
+export function findFeature(
+  registry: readonly FeatureManifest[],
+  key: string | null,
+): FeatureManifest | null {
   if (key == null) return null
   return registry.find((m) => m.key === key) ?? null
 }

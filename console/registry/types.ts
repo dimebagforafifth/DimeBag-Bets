@@ -6,26 +6,19 @@
  * workspace. A Panel renders ONLY the feature body — never its own top bar,
  * figures strip, or page chrome — and receives `onBack`.
  *
- * The reference spec types `icon` as lucide-react's `LucideIcon`. That package
- * isn't in this codebase, so `ConsoleIcon` is a structural, Lucide-COMPATIBLE
- * type: any lucide-react icon satisfies it, and so does any plain SVG component.
- * To use the literal `LucideIcon`, `npm i lucide-react` and alias it here — the
- * one line that changes; nothing downstream does.
+ * `icon` is lucide-react's `LucideIcon` (the dep is installed at integration). Every
+ * manifest passes a real lucide icon; `ConsoleIcon` aliases the literal type so the
+ * rest of the contract is unchanged.
  */
 
-import type { ComponentType, SVGProps } from 'react'
+import type { ComponentType } from 'react'
+import type { LucideIcon } from 'lucide-react'
 
 /** The four console sections, in their display order. */
 export type ConsoleSection = 'operations' | 'players' | 'catalog' | 'control'
 
-/** A Lucide-compatible icon component (lucide icons + any SVG component fit). */
-export type ConsoleIcon = ComponentType<
-  SVGProps<SVGSVGElement> & {
-    size?: number | string
-    strokeWidth?: number
-    absoluteStrokeWidth?: boolean
-  }
->
+/** The tile icon type — lucide-react's icon component. */
+export type ConsoleIcon = LucideIcon
 
 /** What a feature gives the shell to render its tile and mount its panel. */
 export interface FeatureManifest {

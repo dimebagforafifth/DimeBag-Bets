@@ -17,7 +17,7 @@
 import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { onWagerResolved, type Account, type Outcome, type ResolveEvent } from '../core/index.js'
 import { defaultGamificationConfig } from './config.js'
-import { advanceMission, currentProgress, periodKey, type PlayEvent } from './missions.js'
+import { advanceMission, currentProgress, type PlayEvent } from './missions.js'
 import { newlyUnlocked } from './achievements.js'
 import { XP_PER_BET } from './xp.js'
 import { hasEnded, isLive, standings, type TournamentEntry } from './tournaments.js'
@@ -245,7 +245,7 @@ export interface TournamentPayout {
 export function settleTournament(
   tournamentId: string,
   accounts: Record<string, Account>,
-  now: number = Date.now(),
+  _now: number = Date.now(), // reserved for paid-at stamping; unused today
 ): TournamentPayout[] {
   const def = config.tournaments.find((t) => t.id === tournamentId)
   if (!def) throw new Error(`unknown tournament ${tournamentId}`)

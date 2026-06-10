@@ -49,15 +49,16 @@ describe('operations manifest', () => {
     }
   })
 
+  // Panels render body content only — no tile-name title (the shell shows that).
   it('the NEW panels render their own real content', () => {
-    expect(mount(byKey('weekly-figures').Panel).textContent).toContain('Weekly Figures')
-    expect(mount(byKey('pending').Panel).textContent).toContain('Pending Bets')
+    expect(mount(byKey('weekly-figures').Panel).textContent).toContain('Book figure')
+    expect(mount(byKey('pending').Panel).textContent).toContain('Total at risk')
   })
 
   it('the adapters surface the existing components', () => {
     expect(mount(byKey('settlements').Panel).textContent).toContain('Settlement history')
     expect(mount(byKey('transactions').Panel).textContent).toContain('Casino ledger')
-    expect(mount(byKey('live-activity').Panel).textContent).toContain('Live Activity')
+    expect(mount(byKey('live-activity').Panel).textContent).toContain('No betting activity')
   })
 
   it('Escape calls onBack (the shell-provided back affordance)', () => {

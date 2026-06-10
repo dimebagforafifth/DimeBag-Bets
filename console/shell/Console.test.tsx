@@ -9,13 +9,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import type { SVGProps } from 'react'
+import { Circle as Dot } from 'lucide-react'
 import { Console } from './Console.js'
 import type { FeatureManifest } from '../registry/types.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-
-const Dot = (p: SVGProps<SVGSVGElement>) => <svg {...p} />
 const mkPanel = (body: string) =>
   function Panel({ onBack }: { onBack: () => void }) {
     return (
@@ -30,9 +27,30 @@ const mkPanel = (body: string) =>
 
 // Deliberately out of section order, to prove the grid re-orders them.
 const FAKE: FeatureManifest[] = [
-  { key: 'risk-flags', name: 'Risk Flags', hint: 'exposure alerts', section: 'control', icon: Dot, Panel: mkPanel('RISK BODY') },
-  { key: 'weekly-figures', name: 'Weekly Figures', hint: 'the running figure', section: 'operations', icon: Dot, Panel: mkPanel('WEEK BODY') },
-  { key: 'player-list', name: 'Players', hint: 'every account', section: 'players', icon: Dot, Panel: mkPanel('PLAYERS BODY') },
+  {
+    key: 'risk-flags',
+    name: 'Risk Flags',
+    hint: 'exposure alerts',
+    section: 'control',
+    icon: Dot,
+    Panel: mkPanel('RISK BODY'),
+  },
+  {
+    key: 'weekly-figures',
+    name: 'Weekly Figures',
+    hint: 'the running figure',
+    section: 'operations',
+    icon: Dot,
+    Panel: mkPanel('WEEK BODY'),
+  },
+  {
+    key: 'player-list',
+    name: 'Players',
+    hint: 'every account',
+    section: 'players',
+    icon: Dot,
+    Panel: mkPanel('PLAYERS BODY'),
+  },
 ]
 
 let host: HTMLElement
@@ -52,7 +70,7 @@ const sectionHeads = () => [...host.querySelectorAll('.c-section-head')].map((n)
 
 describe('Console — empty registry', () => {
   it('renders the chrome + a graceful empty state, with no tiles or dummy data', () => {
-    render(<Console />)
+    render(<Console registry={[]} />) // explicit empty: the default REGISTRY is populated post-integration
     expect(host.querySelector('.console')).not.toBeNull()
     expect(host.querySelector('.c-topbar')).not.toBeNull()
     expect(host.querySelector('.c-figures')).not.toBeNull()
@@ -83,8 +101,12 @@ describe('Console — prop-driven chrome', () => {
     expect(host.textContent).toContain('$12,400.00')
     expect(host.textContent).toContain('37')
     const values = [...host.querySelectorAll('.c-figure-value')]
-    expect(values.some((v) => v.classList.contains('is-up') && /\+\$1,200/.test(v.textContent ?? ''))).toBe(true)
-    expect(values.some((v) => v.classList.contains('is-down') && /-\$340/.test(v.textContent ?? ''))).toBe(true)
+    expect(
+      values.some((v) => v.classList.contains('is-up') && /\+\$1,200/.test(v.textContent ?? '')),
+    ).toBe(true)
+    expect(
+      values.some((v) => v.classList.contains('is-down') && /-\$340/.test(v.textContent ?? '')),
+    ).toBe(true)
   })
 })
 
@@ -117,7 +139,11 @@ describe('Console — grid + workspace', () => {
 
   it('lets the Panel close itself via its onBack', () => {
     render(<Console registry={FAKE} />)
-    click([...host.querySelectorAll<HTMLElement>('.c-tile')].find((t) => /Risk Flags/.test(t.textContent ?? '')))
+    click(
+      [...host.querySelectorAll<HTMLElement>('.c-tile')].find((t) =>
+        /Risk Flags/.test(t.textContent ?? ''),
+      ),
+    )
     expect(host.querySelector('.test-panel')?.textContent).toContain('RISK BODY')
     click(host.querySelector('.panel-internal-back')) // the Panel's own onBack
     expect(host.querySelector('.c-workspace')).toBeNull()

@@ -1,26 +1,10 @@
-import type { ComponentType } from 'react'
-import type { IconType } from './icon.js'
-import { LineChart, Dice5, PenLine, ClipboardCheck, Gift } from './icon.js'
+import { LineChart, Dice5, PenLine, ClipboardCheck, Gift } from 'lucide-react'
+import type { FeatureManifest } from '../../console/registry/types.js'
 import { LinesPanel } from './LinesPanel.js'
 import { CasinoAdminPanel } from './CasinoAdminPanel.js'
 import { TicketWriterPanel } from './TicketWriterPanel.js'
 import { ScoresPanel } from './ScoresPanel.js'
 import { RewardsPanel } from './RewardsPanel.js'
-
-/**
- * Local stand-in for the shared contract at console/registry/types.ts (Agent 1 owns it;
- * not in this worktree yet). Same field shape, so it unifies on merge. `icon` is an
- * IconType (lucide-shaped) — swap to real `lucide-react` icons when the dep lands.
- * // TODO(api)
- */
-export interface FeatureManifest {
-  key: string
-  name: string
-  hint: string
-  section: 'operations' | 'players' | 'catalog' | 'control'
-  icon: IconType
-  Panel: ComponentType<{ onBack: () => void }>
-}
 
 /** The Catalog section tiles. lines/casino/rewards adapt existing components; ticketwriter
  *  + scores are new minimal panels (no prior component existed). */

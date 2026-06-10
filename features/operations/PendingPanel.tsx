@@ -37,12 +37,9 @@ export function PendingPanel({ onBack }: { onBack: () => void }) {
   return (
     <PanelShell onBack={onBack}>
       <header className="feat-head">
-        <div>
-          <h1 className="feat-h1">Pending Bets</h1>
-          <p className="feat-sub">
-            Open tickets awaiting grade — coins currently at risk across the book.
-          </p>
-        </div>
+        <p className="feat-sub">
+          Open tickets awaiting grade — coins currently at risk across the book.
+        </p>
       </header>
 
       <section className="feat-kpis" aria-label="Pending summary">

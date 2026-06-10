@@ -70,7 +70,6 @@ describe('control manifest', () => {
 
   it('sessions shows the current session and flags the missing backend', () => {
     const host = mount(byKey('security').Panel)
-    expect(host.textContent).toContain('Sessions')
     expect(host.textContent).toContain('Current session')
     expect(
       [...host.querySelectorAll('.feat-flag')].some((f) =>

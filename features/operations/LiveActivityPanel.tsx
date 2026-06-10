@@ -12,7 +12,7 @@ export function LiveActivityPanel({ onBack }: { onBack: () => void }) {
   const feed = useSyncExternalStore(subscribeLedger, getLedger, getLedger)
   return (
     <PanelShell onBack={onBack}>
-      <h1 className="feat-h1">Live Activity</h1>
+      {/* No title — the shell shows the feature name, and the ticker labels itself. */}
       {feed.length === 0 ? (
         <p className="feat-empty">
           No betting activity yet — bets appear here the moment they settle.

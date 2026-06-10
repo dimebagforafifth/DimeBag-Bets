@@ -6,10 +6,9 @@
 
 import { describe, it, expect } from 'vitest'
 import type { ComponentType } from 'react'
+import { Circle as Dot } from 'lucide-react'
 import { REGISTRY, SECTIONS, groupBySection, findFeature } from '../registry/index.js'
-import type { FeatureManifest, ConsoleIcon } from '../registry/types.js'
-
-const Dot: ConsoleIcon = () => null
+import type { FeatureManifest } from '../registry/types.js'
 const Panel: ComponentType<{ onBack: () => void }> = () => null
 const mk = (key: string, section: FeatureManifest['section']): FeatureManifest => ({
   key,
@@ -21,8 +20,13 @@ const mk = (key: string, section: FeatureManifest['section']): FeatureManifest =
 })
 
 describe('registry', () => {
-  it('ships empty in phase 1', () => {
-    expect(REGISTRY).toEqual([])
+  it('is populated from all four feature sections (post-integration)', () => {
+    expect(REGISTRY.length).toBeGreaterThan(0)
+    expect(new Set(REGISTRY.map((m) => m.section))).toEqual(
+      new Set(['operations', 'players', 'catalog', 'control']),
+    )
+    // keys are unique across the whole registry
+    expect(new Set(REGISTRY.map((m) => m.key)).size).toBe(REGISTRY.length)
   })
 
   it('defines the four sections in display order', () => {

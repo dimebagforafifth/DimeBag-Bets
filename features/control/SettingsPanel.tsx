@@ -42,12 +42,9 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
   return (
     <PanelShell onBack={onBack}>
       <header className="feat-head">
-        <div>
-          <h1 className="feat-h1">Settings</h1>
-          <p className="feat-sub">
-            Tenant configuration — settlement, credit, risk alerts, and the game catalogue.
-          </p>
-        </div>
+        <p className="feat-sub">
+          Tenant configuration — settlement, credit, risk alerts, and the game catalogue.
+        </p>
       </header>
 
       {error && <p className="feat-empty feat-down">{error}</p>}

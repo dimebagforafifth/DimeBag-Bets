@@ -24,10 +24,7 @@ export function SessionsPanel({ onBack }: { onBack: () => void }) {
   return (
     <PanelShell onBack={onBack}>
       <header className="feat-head">
-        <div>
-          <h1 className="feat-h1">Sessions</h1>
-          <p className="feat-sub">Who&apos;s signed in to the console, and how.</p>
-        </div>
+        <p className="feat-sub">Who&apos;s signed in to the console, and how.</p>
         <span className="feat-flag">{auth.isDemo ? 'Demo auth' : 'Live auth'}</span>
       </header>
 

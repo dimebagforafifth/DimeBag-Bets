@@ -15,7 +15,9 @@ import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
 import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { SoundToggle } from '../sound/index.js'
-import { ManagerConsole } from './ManagerConsole.js'
+import { Console } from '../console/shell/index.js'
+import { consoleFigures } from './console-figures.js'
+import { getAnalyticsRecords } from '../manager/reporting/index.js'
 import type { Member, Role } from '../org/index.js'
 import {
   getBook,
@@ -35,8 +37,6 @@ import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
 import { ResponsiblePlayPanel } from './ResponsiblePlayPanel.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
-import { settleAndRecord } from './settlement-store.js'
-import { adjustFigure, auditedMutate } from './manager-actions.js'
 import { Leaderboard, VipBadge } from '../vip/ui/index.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
@@ -183,12 +183,6 @@ export function App() {
     setRoute(null)
   }
 
-  /** Switch the active player and drop into the casino to play as them. */
-  function playAs(playerId: string) {
-    setCurrentPlayer(playerId)
-    openCasino()
-  }
-
   return (
     <div className="app">
       <header className="app-header">
@@ -227,7 +221,11 @@ export function App() {
             </div>
             <div className="figure-block">
               <span className="figure-label">This week</span>
-              {account ? <WeekFigure cents={account.balance} /> : <span className="figure-value">—</span>}
+              {account ? (
+                <WeekFigure cents={account.balance} />
+              ) : (
+                <span className="figure-value">—</span>
+              )}
             </div>
           </div>
           {player && account && (
@@ -243,21 +241,37 @@ export function App() {
             />
           )}
           <SoundToggle />
-          <AuthMenu name={user?.displayName ?? 'Guest'} role={role} onSignOut={signOut} />
+          {/* In Management the Console's own TopBar owns operator identity + sign-out,
+              so we drop the app header's AuthMenu there to avoid a duplicate control. */}
+          {activeSection !== 'management' && (
+            <AuthMenu name={user?.displayName ?? 'Guest'} role={role} onSignOut={signOut} />
+          )}
         </div>
       </header>
 
       <main className="app-main">
         {activeSection === 'management' && canManage(role) ? (
-          <ManagerConsole
-            org={book}
-            onMutate={(fn) => auditedMutate(fn, actor)}
-            currentPlayerId={getCurrentPlayerId()}
-            onPlayAs={playAs}
-            onSettleAll={(carryover) => settleAndRecord(Date.now(), carryover)}
-            onAdjustFigure={(memberId, delta, reason) => adjustFigure(memberId, delta, reason, actor)}
-            players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
-          />
+          (() => {
+            const fig = consoleFigures(
+              book,
+              getAnalyticsRecords(),
+              Date.now(),
+              activePlayers.length,
+            )
+            return (
+              <Console
+                brand="DimeBag-Bets"
+                username={actor}
+                onSignOut={signOut}
+                balance={fig.balance}
+                week={fig.week}
+                weekTrend={fig.weekTrend}
+                today={fig.today}
+                todayTrend={fig.todayTrend}
+                activeAccts={fig.activeAccts}
+              />
+            )
+          })()
         ) : activeSection === 'leaderboard' ? (
           <Leaderboard
             players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
@@ -269,18 +283,30 @@ export function App() {
               <Sportsbook account={account} store={sbStoreFor(player)} />
             </ResponsiblePlayGate>
           ) : (
-            <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} canManage={canManage(role)} />
+            <NoPlayer
+              onManage={() => setSection('management')}
+              allSuspended={allSuspended}
+              canManage={canManage(role)}
+            />
           )
         ) : activeSection === 'mybets' ? (
           account && player ? (
             <MyBets account={account} player={player} />
           ) : (
-            <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} canManage={canManage(role)} />
+            <NoPlayer
+              onManage={() => setSection('management')}
+              allSuspended={allSuspended}
+              canManage={canManage(role)}
+            />
           )
         ) : (
           <div className="casino-view">
             {!account ? (
-              <NoPlayer onManage={() => setSection('management')} allSuspended={allSuspended} canManage={canManage(role)} />
+              <NoPlayer
+                onManage={() => setSection('management')}
+                allSuspended={allSuspended}
+                canManage={canManage(role)}
+              />
             ) : liveGame ? (
               <div className="game-page">
                 <button className="crumb" onClick={() => setRoute(null)}>
@@ -323,7 +349,11 @@ export function App() {
 /** Placeholder shown while a game's lazy chunk loads on first open. */
 function GameLoading() {
   return (
-    <div className="game-loading" aria-busy="true" style={{ padding: '4rem', textAlign: 'center', opacity: 0.55 }}>
+    <div
+      className="game-loading"
+      aria-busy="true"
+      style={{ padding: '4rem', textAlign: 'center', opacity: 0.55 }}
+    >
       Loading…
     </div>
   )
@@ -345,13 +375,14 @@ function GameMount({
   // thrash each game's paytable useMemo and re-fire config-keyed effects — e.g.
   // Cases resets its reel strip on a houseConfig change, which would wipe a shown
   // result between spins. rtp is a primitive, so the deps compare cleanly.
-  const cfg = useMemo(
-    () => (rtp == null ? null : houseConfigFor(game.key, rtp)),
-    [game.key, rtp],
-  )
+  const cfg = useMemo(() => (rtp == null ? null : houseConfigFor(game.key, rtp)), [game.key, rtp])
   const Comp = game.Component as ComponentType<GameProps & { houseConfig?: unknown }>
   return (
-    <Comp account={account} onBalanceChange={onBalanceChange} {...(cfg ? { houseConfig: cfg } : {})} />
+    <Comp
+      account={account}
+      onBalanceChange={onBalanceChange}
+      {...(cfg ? { houseConfig: cfg } : {})}
+    />
   )
 }
 
@@ -414,7 +445,11 @@ function NoPlayer({
   return (
     <div className="no-player">
       <h2 className="no-player-title">
-        {allSuspended ? 'All players are suspended' : canManage ? 'No player selected' : 'No account yet'}
+        {allSuspended
+          ? 'All players are suspended'
+          : canManage
+            ? 'No player selected'
+            : 'No account yet'}
       </h2>
       <p className="no-player-sub">
         {allSuspended
@@ -434,7 +469,15 @@ function NoPlayer({
 
 /** The signed-in identity + a sign-out — the real session, replacing the app's old
  *  implicit "operator". */
-function AuthMenu({ name, role, onSignOut }: { name: string; role: Role; onSignOut: () => void | Promise<void> }) {
+function AuthMenu({
+  name,
+  role,
+  onSignOut,
+}: {
+  name: string
+  role: Role
+  onSignOut: () => void | Promise<void>
+}) {
   return (
     <div className="auth-menu">
       <span className="auth-id">
@@ -455,7 +498,8 @@ function AuthMenu({ name, role, onSignOut }: { name: string; role: Role; onSignO
  * shows the art + name.
  */
 const STAKE_DESC: Record<string, string> = {
-  mines: 'A fresh take on Minesweeper — uncover gems for a rising multiplier while dodging the hidden mines.',
+  mines:
+    'A fresh take on Minesweeper — uncover gems for a rising multiplier while dodging the hidden mines.',
   crash: 'Watch the multiplier climb and cash out before the rocket crashes.',
   dice: 'Roll over or under your number — slide to set your own odds and payout.',
   limbo: 'Pick a target multiplier and watch your bet climb — clear it to win, from 1.01× upward.',
@@ -526,8 +570,25 @@ function GameIcon({ kind }: { kind: string }) {
     case 'dice':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" fill="currentColor" opacity="0.16" />
-          <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+          <rect
+            x="3.5"
+            y="3.5"
+            width="17"
+            height="17"
+            rx="4.5"
+            fill="currentColor"
+            opacity="0.16"
+          />
+          <rect
+            x="3.5"
+            y="3.5"
+            width="17"
+            height="17"
+            rx="4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+          />
           <g fill="currentColor">
             <circle cx="8" cy="8" r="1.5" />
             <circle cx="16" cy="8" r="1.5" />
@@ -539,7 +600,15 @@ function GameIcon({ kind }: { kind: string }) {
       )
     case 'limbo':
       return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           {/* a multiplier spiking to the moon */}
           <polyline points="3,18 8.5,13 12,15.5 19,7" />
           <polyline points="14,7 19,7 19,12" />
@@ -595,7 +664,16 @@ function GameIcon({ kind }: { kind: string }) {
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <rect x="5" y="3.5" width="14" height="17" rx="2.6" fill="currentColor" opacity="0.16" />
-          <rect x="5" y="3.5" width="14" height="17" rx="2.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <rect
+            x="5"
+            y="3.5"
+            width="14"
+            height="17"
+            rx="2.6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
           <path d="M12 6 14.6 9.6H9.4z" fill="currentColor" />
           <path d="M12 18 9.4 14.4h5.2z" fill="currentColor" opacity="0.55" />
         </svg>
@@ -618,7 +696,10 @@ function GameIcon({ kind }: { kind: string }) {
     case 'dragon-tower':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 1.6c1.7 1.1 2 2.9 1.1 4.4-.3-.7-.8-1-1.4-1.1.4 1.1-.2 2-.9 2.4-.7-1-.7-3.6 1.2-5.7z" fill="currentColor" />
+          <path
+            d="M12 1.6c1.7 1.1 2 2.9 1.1 4.4-.3-.7-.8-1-1.4-1.1.4 1.1-.2 2-.9 2.4-.7-1-.7-3.6 1.2-5.7z"
+            fill="currentColor"
+          />
           <rect x="5" y="16" width="14" height="4" rx="1.2" fill="currentColor" />
           <rect x="6.5" y="11" width="11" height="4" rx="1.2" fill="currentColor" opacity="0.8" />
           <rect x="8" y="6.5" width="8" height="4" rx="1.2" fill="currentColor" opacity="0.6" />
@@ -627,7 +708,10 @@ function GameIcon({ kind }: { kind: string }) {
     case 'pump':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2.5c4 0 6.5 3 6.5 6.4 0 3.7-3 7-6.5 7s-6.5-3.3-6.5-7C5.5 5.5 8 2.5 12 2.5z" fill="currentColor" />
+          <path
+            d="M12 2.5c4 0 6.5 3 6.5 6.4 0 3.7-3 7-6.5 7s-6.5-3.3-6.5-7C5.5 5.5 8 2.5 12 2.5z"
+            fill="currentColor"
+          />
           <path d="M11 15.7h2l-.5 2.3h-1z" fill="currentColor" />
           <ellipse cx="9.6" cy="8" rx="1.5" ry="2.2" fill="#fff" opacity="0.32" />
         </svg>
@@ -636,7 +720,15 @@ function GameIcon({ kind }: { kind: string }) {
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8" />
-          <circle cx="12" cy="12" r="4.8" fill="none" stroke="currentColor" strokeWidth="1.3" opacity="0.7" />
+          <circle
+            cx="12"
+            cy="12"
+            r="4.8"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            opacity="0.7"
+          />
           <g stroke="currentColor" strokeWidth="1.2" opacity="0.7">
             <line x1="12" y1="3" x2="12" y2="7.2" />
             <line x1="12" y1="16.8" x2="12" y2="21" />
@@ -650,9 +742,21 @@ function GameIcon({ kind }: { kind: string }) {
     case 'blackjack':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="9.5" y="4" width="10.5" height="14.5" rx="2" fill="currentColor" opacity="0.4" transform="rotate(12 14.75 11.25)" />
+          <rect
+            x="9.5"
+            y="4"
+            width="10.5"
+            height="14.5"
+            rx="2"
+            fill="currentColor"
+            opacity="0.4"
+            transform="rotate(12 14.75 11.25)"
+          />
           <rect x="5" y="5.5" width="10.5" height="14.5" rx="2" fill="currentColor" />
-          <path d="M10.2 9c1.7 1.5 2.7 2.4 2.7 3.5 0 .9-.7 1.5-1.5 1.5-.5 0-.9-.2-1.2-.6-.3.4-.7.6-1.2.6-.8 0-1.5-.6-1.5-1.5 0-1.1 1-2 2.7-3.5z" fill="var(--bg)" />
+          <path
+            d="M10.2 9c1.7 1.5 2.7 2.4 2.7 3.5 0 .9-.7 1.5-1.5 1.5-.5 0-.9-.2-1.2-.6-.3.4-.7.6-1.2.6-.8 0-1.5-.6-1.5-1.5 0-1.1 1-2 2.7-3.5z"
+            fill="var(--bg)"
+          />
           <path d="M9.9 13.6h.6l-.3 1.6z" fill="var(--bg)" />
         </svg>
       )
@@ -667,4 +771,3 @@ function GameIcon({ kind }: { kind: string }) {
       )
   }
 }
-

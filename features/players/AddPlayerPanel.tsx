@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { addPlayer, type Member } from '../../org/index.js'
-import { getBook, mutateBook } from '../../app/book-store.js'
+import { addPlayer } from '../../org/index.js'
+import { mutateBook } from '../../app/book-store.js'
 import { toCents } from '../../games/shared/money.js'
 import './players.css'
 
@@ -24,11 +24,14 @@ export function AddPlayerPanel({ onBack }: { onBack: () => void }) {
       return
     }
     try {
-      let created: Member | null = null
+      let createdName = nm
       mutateBook((org) => {
-        created = addPlayer(org, org.managerId, { name: nm, creditLimit: toCents(Number(credit) || 0) })
+        createdName = addPlayer(org, org.managerId, {
+          name: nm,
+          creditLimit: toCents(Number(credit) || 0),
+        }).name
       })
-      setAdded(created ? created.name : nm)
+      setAdded(createdName)
       setName('')
       setCredit('200')
     } catch (err) {

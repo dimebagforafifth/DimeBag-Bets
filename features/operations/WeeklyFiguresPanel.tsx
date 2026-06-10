@@ -31,12 +31,10 @@ export function WeeklyFiguresPanel({ onBack }: { onBack: () => void }) {
   return (
     <PanelShell onBack={onBack}>
       <header className="feat-head">
-        <div>
-          <h1 className="feat-h1">Weekly Figures</h1>
-          <p className="feat-sub">
-            Each player&apos;s coins won/lost this period, and the book&apos;s figure.
-          </p>
-        </div>
+        {/* No title here — the shell's WorkspaceContainer already shows the feature name. */}
+        <p className="feat-sub">
+          Each player&apos;s coins won/lost this period, and the book&apos;s figure.
+        </p>
       </header>
 
       <section className="feat-kpis" aria-label="Figures summary">

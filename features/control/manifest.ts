@@ -4,7 +4,7 @@
  * (sessions is flagged: full login/device/IP history needs the auth backend).
  */
 import { BarChart3, ShieldCheck, MonitorSmartphone, Settings2 } from 'lucide-react'
-import type { FeatureManifest } from './types.js'
+import type { FeatureManifest } from '../../console/registry/types.js'
 import { AnalyticsPanel } from './AnalyticsPanel.js'
 import { AccessPanel } from './AccessPanel.js'
 import { SessionsPanel } from './SessionsPanel.js'

@@ -4,7 +4,7 @@
  * live-activity / settlements / transactions ADAPT existing components.
  */
 import { Coins, Hourglass, Activity, Scale, ArrowLeftRight } from 'lucide-react'
-import type { FeatureManifest } from './types.js'
+import type { FeatureManifest } from '../../console/registry/types.js'
 import { WeeklyFiguresPanel } from './WeeklyFiguresPanel.js'
 import { PendingPanel } from './PendingPanel.js'
 import { LiveActivityPanel } from './LiveActivityPanel.js'
