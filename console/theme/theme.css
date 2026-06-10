@@ -1,0 +1,71 @@
+/**
+ * Manager console design tokens — ONE source of truth (console/theme).
+ *
+ * The console has its own serious-bettor, data-dense skin, distinct from the
+ * player-facing casino theme. Scoped to `.console` so it never leaks into the
+ * rest of the app. Tailwind wasn't adopted in this Vite codebase, so the spec's
+ * tokens live here as CSS custom properties (the brief allows "CSS vars").
+ *
+ * Fonts: Saira family (Google Fonts), with narrow/condensed fallbacks so the
+ * layout holds even if the webfont is blocked.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700&family=Saira+Semi+Condensed:wght@500;600;700&display=swap');
+
+.console {
+  /* ---- surfaces (per spec) ---- */
+  --c-bg: #14171c;
+  --c-panel: #1b1f26;
+  --c-panel-2: #20252e;
+  --c-line: #2a2f39;
+
+  /* ---- accent + semantics (per spec) ---- */
+  --c-gold: #d6b14a;
+  --c-up: #5bb98b;
+  --c-down: #d27068;
+
+  /* ---- text (derived to read on the dark surfaces; not in the spec) ---- */
+  --c-text: #e9ecf1;
+  --c-muted: #8b94a3;
+  --c-faint: #5c6573;
+
+  /* ---- type ---- */
+  --c-font-head: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --c-font-label: 'Saira Semi Condensed', 'Saira Condensed', system-ui, sans-serif;
+  --c-font-body: 'Saira', system-ui, -apple-system, sans-serif;
+
+  /* ---- shape + motion ---- */
+  --c-radius: 10px;
+  --c-radius-sm: 7px;
+  --c-gap: 14px;
+  --c-lift: -2px; /* hover translateY for tiles */
+
+  color: var(--c-text);
+  background: var(--c-bg);
+  font-family: var(--c-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* an eyebrow/label treatment reused by section headings + figure labels */
+.console .c-eyebrow {
+  font-family: var(--c-font-label);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+/* a visible, consistent keyboard focus ring across every interactive surface */
+.console :focus-visible {
+  outline: 2px solid var(--c-gold);
+  outline-offset: 2px;
+  border-radius: var(--c-radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
