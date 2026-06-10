@@ -49,7 +49,6 @@ import {
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
 import { setActiveGame } from './ledger-store.js'
-import { ActivityTicker } from './ActivityTicker.js'
 import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
 import { ResponsiblePlayPanel } from './ResponsiblePlayPanel.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
@@ -537,9 +536,7 @@ function Lobby({ onPlay, playerId }: { onPlay: (key: string) => void; playerId: 
     <div className="lobby">
       <div className="lobby-head">
         <h1 className="lobby-title">Casino</h1>
-        <p className="lobby-sub">Provably-fair originals — one balance across every game.</p>
       </div>
-      <ActivityTicker />
       <div className="lobby-grid">
         {GAMES.filter((g) => isGameEnabled(g.key)).map((g) => (
           <button
