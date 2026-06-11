@@ -389,7 +389,7 @@
   z-index: 50;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 232px;
+  min-width: 264px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -409,37 +409,34 @@
   visibility: visible;
   transform: translateY(0);
 }
-.vip-pop-title {
-  display: block;
+/* where you're at — the current tier + lifetime wagered */
+.vip-pop-now {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+}
+.vip-pop-now-label {
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   color: var(--muted);
 }
-/* progress toward the next tier — a bar that fills the closer you get, with the
- *  lifetime wagered and the amount still to bet quantified above it */
-.vip-pop-prog {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 8px 0 10px;
+.vip-pop-now-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
 }
-.vip-pop-prog-labels {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 11.5px;
+.vip-pop-now-wagered {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-.vip-pop-wagered {
-  color: var(--muted);
-}
-.vip-pop-remaining {
-  color: var(--text);
-  font-weight: 700;
-}
+/* the progress bar toward the next rung */
 .vip-pop-track {
   height: 7px;
   border-radius: 999px;
@@ -454,11 +451,16 @@
   background: var(--gem);
   transition: width 0.3s ease;
 }
-.vip-pop-top {
-  margin: 8px 0 10px;
-  font-size: 11.5px;
+/* what it takes to unlock the next rung */
+.vip-pop-unlock {
+  margin: 7px 0 11px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.vip-pop-unlock strong {
+  color: var(--text);
   font-weight: 700;
-  color: var(--gem);
 }
 .vip-pop-list {
   list-style: none;
@@ -497,9 +499,10 @@
   animation: none;
 }
 .vip-pop-thresh {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .vip-pop-row.is-current .vip-pop-thresh {
   color: var(--gem);

@@ -55,22 +55,32 @@ export function VipBadge({ playerId }: { playerId: string }) {
       </span>
 
       <div className="vip-pop" role="tooltip">
-        <span className="vip-pop-title">Loyalty tiers</span>
+        {/* where you're at */}
+        <div className="vip-pop-now">
+          <span className="vip-pop-now-label">You’re at</span>
+          <span className="vip-pop-now-tier">
+            <TierIcon rank={prog.current} size={16} />
+            <span style={{ color: prog.current.color }}>{prog.current.name}</span>
+          </span>
+          <span className="vip-pop-now-wagered">{formatMoney(wagered)} wagered</span>
+        </div>
+
+        {/* the bar + what it takes to unlock the next rung */}
         {prog.next ? (
-          <div className="vip-pop-prog">
-            <div className="vip-pop-prog-labels">
-              <span className="vip-pop-wagered">{formatMoney(wagered)} wagered</span>
-              <span className="vip-pop-remaining">
-                {formatMoney(prog.remaining)} to {prog.next.name}
-              </span>
-            </div>
+          <>
             <span className="vip-pop-track">
               <span className="vip-pop-fill" style={{ width: `${pct}%` }} />
             </span>
-          </div>
+            <p className="vip-pop-unlock">
+              Bet <strong>{formatMoney(prog.remaining)}</strong> more to unlock{' '}
+              <strong style={{ color: prog.next.color }}>{prog.next.name}</strong>
+            </p>
+          </>
         ) : (
-          <div className="vip-pop-top">Top tier reached · {formatMoney(wagered)} wagered</div>
+          <p className="vip-pop-unlock">Top tier unlocked — you’re at {prog.current.name}.</p>
         )}
+
+        {/* the full ladder: what's unlocked and what each rung takes */}
         <ul className="vip-pop-list">
           {tiers.map((t) => {
             const reached = wagered >= t.minWagered
@@ -84,7 +94,7 @@ export function VipBadge({ playerId }: { playerId: string }) {
                 <span className="vip-pop-name">{t.name}</span>
                 {!isCurrent && (
                   <span className="vip-pop-thresh">
-                    {reached ? 'Reached' : formatMoney(t.minWagered)}
+                    {reached ? 'Unlocked' : `Unlock at ${formatMoney(t.minWagered)}`}
                   </span>
                 )}
               </li>
