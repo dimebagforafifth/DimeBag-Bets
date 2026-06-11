@@ -42,6 +42,7 @@ describe('control manifest', () => {
       'access',
       'security',
       'settings',
+      'rules',
       'branding',
       'copilot',
       'setup',

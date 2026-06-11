@@ -11,12 +11,14 @@ import {
   Palette,
   Sparkles,
   Wand2,
+  ScrollText,
 } from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { AnalyticsPanel } from './AnalyticsPanel.js'
 import { AccessPanel } from './AccessPanel.js'
 import { SessionsPanel } from './SessionsPanel.js'
 import { SettingsPanel } from './SettingsPanel.js'
+import { RulesPanel } from './RulesPanel.js'
 import { BrandingFeaturePanel } from './BrandingFeaturePanel.js'
 import { CopilotFeaturePanel } from './CopilotFeaturePanel.js'
 import { SetupFeaturePanel } from './SetupFeaturePanel.js'
@@ -53,6 +55,14 @@ export const controlManifests: FeatureManifest[] = [
     section: 'control',
     icon: Settings2,
     Panel: SettingsPanel,
+  },
+  {
+    key: 'rules',
+    name: 'Rules',
+    hint: 'House rules, grading & settlement policy',
+    section: 'control',
+    icon: ScrollText,
+    Panel: RulesPanel,
   },
   // Ported from the old manager console:
   {
