@@ -55,14 +55,17 @@ export function VipBadge({ playerId }: { playerId: string }) {
       </span>
 
       <div className="vip-pop" role="tooltip">
-        <div className="vip-pop-head">
-          <span className="vip-pop-title">Loyalty tiers</span>
-          <span className="vip-pop-sub">
-            {prog.next
-              ? `${formatMoney(prog.remaining)} to ${prog.next.name}`
-              : `Top tier · ${prog.current.name}`}
-          </span>
-        </div>
+        <span className="vip-pop-title">Loyalty tiers</span>
+        {prog.next ? (
+          <div className="vip-pop-prog">
+            <span className="vip-pop-track">
+              <span className="vip-pop-fill" style={{ width: `${pct}%` }} />
+            </span>
+            <span className="vip-pop-prog-to">to {prog.next.name}</span>
+          </div>
+        ) : (
+          <div className="vip-pop-top">Top tier reached</div>
+        )}
         <ul className="vip-pop-list">
           {tiers.map((t) => {
             const reached = wagered >= t.minWagered
@@ -74,9 +77,11 @@ export function VipBadge({ playerId }: { playerId: string }) {
               >
                 <TierIcon rank={t} size={17} />
                 <span className="vip-pop-name">{t.name}</span>
-                <span className="vip-pop-thresh">
-                  {isCurrent ? 'You’re here' : reached ? 'Reached' : formatMoney(t.minWagered)}
-                </span>
+                {!isCurrent && (
+                  <span className="vip-pop-thresh">
+                    {reached ? 'Reached' : formatMoney(t.minWagered)}
+                  </span>
+                )}
               </li>
             )
           })}
