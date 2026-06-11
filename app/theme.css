@@ -294,11 +294,11 @@ body {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 16px;
 }
 .figure {
   display: flex;
-  gap: 28px;
+  gap: 16px;
 }
 .figure-block {
   display: flex;
@@ -307,14 +307,15 @@ body {
   line-height: 1.2;
 }
 .figure-label {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--muted);
 }
 .figure-value {
   font-variant-numeric: tabular-nums;
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 13px;
 }
 .figure-value.is-down {
   color: var(--red);
@@ -328,7 +329,7 @@ body {
 }
 /* The headline number — what you can bet right now — leads the pair. */
 .figure-block.is-primary .figure-value {
-  font-size: 17px;
+  font-size: 15px;
 }
 
 /* "Playing as" — who in the book is at the table (every bet moves their figure) */

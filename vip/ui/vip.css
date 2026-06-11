@@ -315,99 +315,17 @@
   font-size: 14px;
 }
 
-/* ============================ VIP badge card ============================= */
-.vip-mini {
-  --rank: var(--muted);
-  width: 100%;
-  max-width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-}
-.vip-mini-top {
-  display: flex;
+/* ===================== VIP rank chip (header) ===================== */
+.vip-chip {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 7px;
+  cursor: default;
 }
-.vip-mini-label {
+.vip-chip-label {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--muted);
-}
-
-/* the slim progress bar toward the next rank */
-.vip-prog {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.vip-prog-track {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  overflow: hidden;
-}
-.vip-prog-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--rank);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--rank) 60%, transparent);
-  transition: width 0.3s ease;
-}
-.vip-prog-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 11.5px;
-  color: var(--muted);
-}
-.vip-prog-meta strong {
-  color: var(--text);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-/* the free-play balance + redeem */
-.vip-fp {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid var(--line);
-  padding-top: 11px;
-}
-.vip-fp-text {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.vip-fp-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
-}
-.vip-fp-value {
-  font-size: 17px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--gem);
-}
-.vip-fp-value.is-zero {
-  color: var(--muted);
-}
-.vip-redeem {
-  margin-top: 0;
-  width: auto;
-  padding: 9px 15px;
-  font-size: 13px;
 }

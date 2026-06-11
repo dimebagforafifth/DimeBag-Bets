@@ -9,7 +9,7 @@ import {
   type ComponentType,
   type CSSProperties,
 } from 'react'
-import { availableToWager, grant, type Account } from '../core/index.js'
+import { availableToWager, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
 import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
 import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook/index.js'
@@ -30,7 +30,6 @@ import {
   getCurrentPlayerId,
   setCurrentPlayer,
   listPlayers,
-  mutateBook,
 } from './book-store.js'
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
@@ -230,18 +229,7 @@ export function App() {
               )}
             </div>
           </div>
-          {player && account && (
-            <VipBadge
-              playerId={player.id}
-              playerName={player.name}
-              onRedeem={(cents) =>
-                // Credit free play through core's sanctioned grant() — NOT a raw
-                // balance poke — so it's validated and fires a GrantEvent the
-                // operator's bonus analytics record (manager/reporting).
-                cents > 0 && mutateBook(() => grant(account, cents, { promo: 'vip-freeplay' }))
-              }
-            />
-          )}
+          {player && account && <VipBadge playerId={player.id} />}
           <SoundToggle />
           {/* In Management the Console's own TopBar owns operator identity + sign-out,
               so we drop the app header's AuthMenu there to avoid a duplicate control. */}
