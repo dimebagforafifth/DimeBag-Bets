@@ -80,3 +80,29 @@ _Audit of the console against the pay-per-head back-office checklist, with a fir
 | Player lookup (Management PlayerSearch / Playe | THIN | partial | A header search that opens a single player's profile (imported from ./PlayerLook — _gap:_ PlayerLookup.tsx not in the provided set — can't confirm its depth; from usage it's profile + play-as only |
 | add-player | STUB | none | Onboards a single new account by name + credit line and inserts it under the boo — _gap:_ hardcodes parentId = org.managerId — every account lands directly under the manager, so there is no way to add a player under a specific agent/master agent |
 | security | STUB | none | Shows the current signed-in operator's session (name, email, identity id, book/t — _gap:_ no login history, device list, IP capture, or remote session revoke (explicitly stubbed pending Supabase auth) |
+
+---
+
+## Final status — PPH agent back-office build (2026-06-11)
+
+Built and verified this phase (suite 192 files / 1299 tests green; tsc + lint clean):
+
+- **Agent model foundation** — `commissionPct` on Member; org helpers `agentOf` / `rosterOf` / `agentPlayerNet` / `agentCommission` / `agentPerformance` / `allAgents` / `setCommissionPct`.
+- **Add Customer** — onboard Player / Agent / Master Agent under an eligible parent (fixed the old "everything lands under the manager" stub).
+- **Agent Admin** + **Agent Performance** — allowance, commission, suspend; per-agent W/L, roster, exposure, commission.
+- **Agent scoping kit** (`features/_desk/scope`) wired into Pending, Player Performance, Limits, Ticketwriter, Player Admin, Cashier Desk, Notes, and the Weekly Sheet.
+- **Weekly Sheet** — per-agent rollup grouping + scope + agent column in CSV.
+- **Customer Admin** — the player grid: inline + bulk credit edit, status (active/lock), move-between-agents, and login **status + reset only** (never a plaintext password; auth stays in Supabase via `auth/credentials`).
+- **Collections** — per-agent collect / pay worklist + commission, scoped drill-down.
+- **Rules** — house rules / grading & settlement policy, shown plainly (Control section).
+- **Dollars** terminology throughout (no coins/points framing).
+
+Already present (verified, not rebuilt):
+
+- **Bet Ticker** → `live-activity` (real-time ticker over the ledger feed).
+- **Game Admin / Lines** → `LinesPanel` mounts the deep **TradingDesk** (per-market suspend/pull, vig presets, line moves, devig, exposure, props).
+
+Deferred by decision (2026-06-11):
+
+- **Commission at settlement** → **reported figure, not a points movement.** It's a closed-loop, no-cash-out model, so commission is squared operator↔agent in the real world; the weekly points close still resets every figure to zero. Surfaced in Agent Performance + Collections. (No change to core `settleOrgWeek`.)
+- **Analysis/CLV + IP Tracker** → **skipped until the data feed lands** (Phase 3 odds-close history / auth-backend IP capture). The Sessions tile already reserves the IP seam. Not built as placeholders to avoid hollow/fabricated panels (CLAUDE.md "honest by default").

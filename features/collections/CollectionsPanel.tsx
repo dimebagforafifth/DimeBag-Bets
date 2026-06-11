@@ -104,8 +104,9 @@ export function CollectionsPanel({ onBack }: { onBack: () => void }) {
         <p className="feat-sub">
           Each agent&apos;s weekly collect / pay position: what losing players owe in, what
           winning players are owed, the agent&apos;s commission on the losses, and what nets up to
-          the level above. Players are bucketed under their nearest agent. Money moves only when
-          you settle.
+          the level above. Players are bucketed under their nearest agent. Commission is a reported
+          figure — squared between you and the agent; the weekly points close itself resets every
+          figure to zero.
         </p>
       </header>
 
