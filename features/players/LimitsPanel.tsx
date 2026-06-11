@@ -32,12 +32,12 @@ export function LimitsPanel() {
         <div className="feat-card">
           <h3 className="feat-h">{member.name} · wager caps</h3>
           <CapField
-            label="Max bet (coins)"
+            label="Max bet (dollars)"
             value={member.account.maxWager}
             onSet={(c) => guard(() => mutateBook(() => setMaxWager(org, member.id, c)))}
           />
           <CapField
-            label="Min bet (coins)"
+            label="Min bet (dollars)"
             value={member.account.minWager}
             onSet={(c) => guard(() => mutateBook(() => setMinWager(org, member.id, c)))}
           />

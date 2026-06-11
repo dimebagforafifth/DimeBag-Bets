@@ -58,7 +58,7 @@ export function dayWindows(now: number, days = 7): DayWindow[] {
   return out
 }
 
-/** Net coins (signed profit) for one account inside [start, end). Structural over
+/** Net dollars (signed profit) for one account inside [start, end). Structural over
  *  manager/reporting AnalyticsRecord so tests don't need the store. */
 export function dayNet(
   records: ReadonlyArray<{ accountId: string; time: number; profit: number }>,

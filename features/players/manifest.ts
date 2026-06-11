@@ -45,7 +45,7 @@ export const playersManifests: FeatureManifest[] = [
   {
     key: 'cashier',
     name: 'Cashier',
-    hint: 'Issue & adjust coin balances',
+    hint: 'Issue & adjust dollar balances',
     section: 'players',
     icon: Coins,
     Panel: CashierPanel,

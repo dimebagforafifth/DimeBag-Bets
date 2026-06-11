@@ -1,5 +1,5 @@
 /**
- * Settlements — ADAPTS app/SettlementHistory (the weekly coin reconcile: past periods,
+ * Settlements — ADAPTS app/SettlementHistory (the weekly dollar reconcile: past periods,
  * net, members, collection status, export). It's already a self-contained body, so the
  * adapter just themes it via PanelShell.
  */

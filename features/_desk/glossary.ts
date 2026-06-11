@@ -12,7 +12,7 @@ export const GLOSSARY = {
   figure: {
     label: 'Figure',
     short:
-      "A player's running coin balance for the period — what they're up (positive: the book owes them) or down (negative: they owe the book). Resets to zero at settlement.",
+      "A player's running dollar balance for the period — what they're up (positive: the book owes them) or down (negative: they owe the book). Resets to zero at settlement.",
   },
   'book-figure': {
     label: 'Book figure',
@@ -48,11 +48,11 @@ export const GLOSSARY = {
   },
   grant: {
     label: 'Grant',
-    short: 'Add coins to a player’s figure (a credit or comp). Routed through core with a logged reason.',
+    short: 'Add dollars to a player’s figure (a credit or comp). Routed through core with a logged reason.',
   },
   deduct: {
     label: 'Deduct',
-    short: 'Remove coins from a player’s figure (a debit or correction). Audited like a grant.',
+    short: 'Remove dollars from a player’s figure (a debit or correction). Audited like a grant.',
   },
   set: {
     label: 'Set',

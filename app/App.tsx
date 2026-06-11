@@ -317,7 +317,7 @@ export function App() {
       </main>
 
       <footer className="app-footer">
-        Points only — no real-money value, no buy-in, no cash-out.
+        Play money — dollars for fun, no buy-in, no cash-out.
       </footer>
     </div>
   )

@@ -1,14 +1,14 @@
 /**
- * Weekly Sheet — the DEEP per-player by-day coin win/loss view (CLAUDE.md §3/§4).
+ * Weekly Sheet — the DEEP per-player by-day dollar win/loss view (CLAUDE.md §3/§4).
  *
- * A player's running figure is their core `account.balance` (coins won/lost this
+ * A player's running figure is their core `account.balance` (dollars won/lost this
  * period); the per-day breakdown is summed from the read-only analytics feed
  * (manager/reporting). The book figure is the inverse sum of every player figure.
  *
  * The ONLY money action is a whole-book BULK settle through the sanctioned
  * settleAndRecord wrapper (app/settlement-store) behind a confirm gate. Per-player
  * one-tap settle is intentionally read-only (no core primitive exists — see SEAM).
- * Everything else here is derived, read-only, and shown with formatMoney — coins,
+ * Everything else here is derived, read-only, and shown with formatMoney — dollars,
  * never real money.
  */
 import { useMemo, useState, useSyncExternalStore } from 'react'
@@ -129,7 +129,7 @@ export function WeeklySheetPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Per-player coins won and lost, broken out by day for the last week, with the
+          Per-player dollars won and lost, broken out by day for the last week, with the
           book&apos;s running figure. Settle squares up the whole book at once.
         </p>
       </header>

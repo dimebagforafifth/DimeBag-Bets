@@ -1,5 +1,5 @@
 /**
- * Settle Period — the weekly coin reconcile ACTION (the old manager console's
+ * Settle Period — the weekly dollar reconcile ACTION (the old manager console's
  * onSettleAll, restored as a tile). It squares up the book via the existing
  * app/settlement-store.settleAndRecord (which records the frozen sheet to history +
  * the audit ledger, anchors the next period, and resets every figure — or carries

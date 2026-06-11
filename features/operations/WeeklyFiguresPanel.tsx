@@ -1,7 +1,7 @@
 /**
  * Weekly Figures — NEW panel (no single existing component showed the live figures).
  * Built ENTIRELY from existing read-only data: each member's running figure is their
- * core `account.balance` (coins won/lost this period); the book figure is the inverse
+ * core `account.balance` (dollars won/lost this period); the book figure is the inverse
  * sum. This is the operator's weekly win/loss + settle view. Moves no money.
  */
 import { useMemo, useSyncExternalStore } from 'react'
@@ -33,7 +33,7 @@ export function WeeklyFiguresPanel({ onBack }: { onBack: () => void }) {
       <header className="feat-head">
         {/* No title here — the shell's WorkspaceContainer already shows the feature name. */}
         <p className="feat-sub">
-          Each player&apos;s coins won/lost this period, and the book&apos;s figure.
+          Each player&apos;s dollars won/lost this period, and the book&apos;s figure.
         </p>
       </header>
 

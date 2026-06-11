@@ -1,8 +1,8 @@
 /**
- * Cashier Desk — the operator's coin window. Pull up a player, pick an action
+ * Cashier Desk — the operator's dollar window. Pull up a player, pick an action
  * (Grant / Deduct / Set), see the figure it would land on BEFORE committing, then
  * stage moves in a batch and confirm them together. Every figure is shown read-only
- * via the shared Figure (coins, never real money); the one write path is
+ * via the shared Figure (dollars, never real money); the one write path is
  * `adjustFigure`, which moves money through core AND records the audit + reason.
  *
  * Why a batch: a window operator often touches several players in one sitting. The
@@ -73,7 +73,7 @@ export function CashierDeskPanel({ onBack }: { onBack: () => void }) {
     return d
   })
   const queueDeltaSum = rowDeltas.reduce((s, d) => s + d, 0)
-  // "Net to the book": a player gaining coins is the book paying out, so the book's net
+  // "Net to the book": a player gaining dollars is the book paying out, so the book's net
   // is the negative of the players' delta sum.
   const netToBook = -queueDeltaSum
 
@@ -137,7 +137,7 @@ export function CashierDeskPanel({ onBack }: { onBack: () => void }) {
       <PlayerSearch org={book} onSelect={(pid) => { setId(pid); setSaved(null); setError(null) }} />
 
       {!isPlayer ? (
-        <p className="feat-empty">Search a player to grant, deduct, or set their coin figure.</p>
+        <p className="feat-empty">Search a player to grant, deduct, or set their dollar figure.</p>
       ) : (
         <div className="feat-card">
           <h3 className="feat-head">{member!.name}</h3>
@@ -149,7 +149,7 @@ export function CashierDeskPanel({ onBack }: { onBack: () => void }) {
 
           <div className="feat-field">
             <label className="feat-label" htmlFor="cashier-amount">
-              {action === 'set' ? 'Target figure (coins)' : 'Amount (coins)'}
+              {action === 'set' ? 'Target figure (dollars)' : 'Amount (dollars)'}
             </label>
             <input
               id="cashier-amount"

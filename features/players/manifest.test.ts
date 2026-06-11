@@ -26,9 +26,9 @@ describe('players manifests', () => {
     }
   })
 
-  it('uses points/coin language (no real-money terms)', () => {
+  it('uses play-money language (no payment-processing terms)', () => {
     const text = playersManifests.map((m) => `${m.name} ${m.hint}`.toLowerCase()).join(' ')
-    // "Cashier" is the brief's sanctioned tile name; flag actual real-money terms.
-    expect(text).not.toMatch(/dollar|\bmoney\b|deposit|withdraw|real-money/)
+    // dollars are fine now; flag only real-cashier/payment terms.
+    expect(text).not.toMatch(/deposit|withdraw|buy-in|cash-out|kyc/)
   })
 })

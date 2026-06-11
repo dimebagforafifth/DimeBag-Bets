@@ -3,7 +3,7 @@
  * so they read as one family. PanelShell + the feat-* classes come from the shell's
  * operations theme (imported, not edited); this adds the desk-specific bits the shell
  * doesn't ship (filter chips, segmented tabs, sticky toolbar, signed figure, CSV
- * download). All money is shown read-only via formatMoney — coins, never real money.
+ * download). All money is shown read-only via formatMoney — dollars, never real money.
  */
 import { useSyncExternalStore, type ReactNode } from 'react'
 import { getBook, getBookVersion, subscribeBook } from '../../app/book-store.js'
@@ -20,7 +20,7 @@ export function useBook() {
   return getBook()
 }
 
-/** A signed coin figure with up/down tone and an explicit + on gains (formatMoney
+/** A signed dollar figure with up/down tone and an explicit + on gains (formatMoney
  *  already renders the − on losses). */
 export function Figure({ cents, plus = true }: { cents: number; plus?: boolean }) {
   const tone = cents > 0 ? 'feat-up' : cents < 0 ? 'feat-down' : ''

@@ -69,7 +69,7 @@ export function TicketWriterPanel() {
           </h3>
           <div className="cat-ticket-grid">
             <label className="feat-field">
-              <span>Stake (coins)</span>
+              <span>Stake (dollars)</span>
               <input
                 className="feat-input"
                 inputMode="decimal"

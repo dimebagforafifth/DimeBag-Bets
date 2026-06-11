@@ -30,7 +30,7 @@ const ROLE_LABEL: Record<Role, string> = {
  * the account's line — for an agent it is the allowance/budget they can hand down to
  * their own roster (the org credit-waterfall enforces it fits the parent's headroom).
  * Agents/master agents can carry a commission split. Routes through `org.addMember`;
- * coins only.
+ * dollars only.
  */
 export function AddPlayerPanel({ onBack }: { onBack: () => void }) {
   const bookV = useSyncExternalStore(subscribeBook, getBookVersion)
@@ -140,7 +140,7 @@ export function AddPlayerPanel({ onBack }: { onBack: () => void }) {
 
         <div className="addc-grid">
           <label className="feat-field">
-            <span>{isAgent ? 'Allowance — credit budget (coins)' : 'Credit line (coins)'}</span>
+            <span>{isAgent ? 'Allowance — credit budget (dollars)' : 'Credit line (dollars)'}</span>
             <input
               className="feat-input"
               inputMode="decimal"

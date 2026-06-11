@@ -51,7 +51,7 @@ export const operationsManifests: FeatureManifest[] = [
   {
     key: 'settlements',
     name: 'Settlements',
-    hint: 'Weekly coin reconcile',
+    hint: 'Weekly dollar reconcile',
     section: 'operations',
     icon: Scale,
     Panel: SettlementsPanel,
@@ -59,7 +59,7 @@ export const operationsManifests: FeatureManifest[] = [
   {
     key: 'transactions',
     name: 'Transactions',
-    hint: 'Credit/coin ledger',
+    hint: 'Credit/dollar ledger',
     section: 'operations',
     icon: ArrowLeftRight,
     Panel: TransactionsPanel,

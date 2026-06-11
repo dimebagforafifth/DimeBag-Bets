@@ -1,5 +1,5 @@
 /**
- * Ledger feature manifest — the full durable coin ledger panel, filed under
+ * Ledger feature manifest — the full durable dollar ledger panel, filed under
  * operations. Read-only: filter, link, and export the persisted book ledger.
  */
 import { ScrollText } from 'lucide-react'
@@ -11,7 +11,7 @@ export const ledgerManifests: FeatureManifest[] = [
   {
     key: 'transactions-log',
     name: 'Ledger',
-    hint: 'Full coin ledger — filter, link, export',
+    hint: 'Full dollar ledger — filter, link, export',
     section: 'operations',
     icon: ScrollText,
     Panel: LedgerPanel,

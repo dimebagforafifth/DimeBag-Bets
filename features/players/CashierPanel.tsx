@@ -6,7 +6,7 @@ import { adjustFigure } from '../../app/manager-actions.js'
 import './players.css'
 
 /**
- * Cashier — issue & adjust coin balances. Search a player, then the existing
+ * Cashier — issue & adjust dollar balances. Search a player, then the existing
  * `AdjustFigure` control posts a signed adjustment through `manager-actions.adjustFigure`
  * (records the audit + ledger). Money still moves only through core.grant/adjustBalance.
  */
@@ -28,7 +28,7 @@ export function CashierPanel() {
           />
         </div>
       ) : (
-        <p className="feat-empty">Search a player to issue or adjust coins.</p>
+        <p className="feat-empty">Search a player to issue or adjust dollars.</p>
       )}
     </div>
   )

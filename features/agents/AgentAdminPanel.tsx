@@ -19,7 +19,7 @@ const ROLE_LABEL: Record<string, string> = { subagent: 'Master', agent: 'Agent' 
  * Agent Admin — the roster of agents + master agents on the book. For each: set their
  * ALLOWANCE (the credit budget they can hand down to their own players — enforced by the
  * org credit-waterfall against the parent's headroom), set a COMMISSION split, and
- * suspend/activate them. New agents are onboarded from Add Customer. Coins only; edits
+ * suspend/activate them. New agents are onboarded from Add Customer. Dollars only; edits
  * route through the org mutators via mutateBook (persisted + audited downstream).
  */
 export function AgentAdminPanel({ onBack }: { onBack: () => void }) {
@@ -136,7 +136,7 @@ function AgentRow({ member, signal }: { member: Member; signal: number }) {
   )
 }
 
-/** An inline coin (credit) editor that commits the whole entry on blur/Enter. */
+/** An inline dollar (credit) editor that commits the whole entry on blur/Enter. */
 function CoinCell({
   cents,
   signal,

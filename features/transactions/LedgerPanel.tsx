@@ -1,5 +1,5 @@
 /**
- * Ledger — the FULL durable coin ledger for the whole book, read-only. Reads the
+ * Ledger — the FULL durable dollar ledger for the whole book, read-only. Reads the
  * persisted book ledger (app/book-ledger) — every place/resolve/settle/adjust
  * movement that survives reloads — and lets the operator filter it (by player, by
  * kind, by date range), trace each row to its origin, and export the filtered slice
@@ -97,7 +97,7 @@ export function LedgerPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          The full durable coin ledger — every movement across the whole book. Read-only;
+          The full durable dollar ledger — every movement across the whole book. Read-only;
           filter, trace, and export.
         </p>
       </header>

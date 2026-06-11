@@ -145,7 +145,7 @@ function AddMember({ org }: { org: Org }) {
           />
         </label>
         <label className="feat-field">
-          <span className="feat-label">Credit limit (coins)</span>
+          <span className="feat-label">Credit limit (dollars)</span>
           <input
             className="feat-input"
             type="number"
@@ -364,7 +364,7 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
 
       {/* Adjust balance — audited through core */}
       <div className="agt-edit">
-        <span className="feat-label">Adjust balance (coins)</span>
+        <span className="feat-label">Adjust balance (dollars)</span>
         <div className="feat-actions">
           <input
             className="feat-input"
@@ -395,7 +395,7 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
 
       {/* Credit limit */}
       <div className="agt-edit">
-        <span className="feat-label">Credit limit (coins)</span>
+        <span className="feat-label">Credit limit (dollars)</span>
         <div className="feat-actions">
           <input
             className="feat-input"
@@ -415,7 +415,7 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
       {isPlayer && (
         <>
           <div className="agt-edit">
-            <span className="feat-label">Max bet (coins — blank clears the cap)</span>
+            <span className="feat-label">Max bet (dollars — blank clears the cap)</span>
             <div className="feat-actions">
               <input
                 className="feat-input"

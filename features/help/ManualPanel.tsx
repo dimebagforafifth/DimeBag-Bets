@@ -45,8 +45,8 @@ const CHAPTERS: Chapter[] = [
           </li>
         </ul>
         <p>
-          Everything is denominated in <strong>coins</strong> — a closed loop of points, never real
-          money. A “$” is only how a figure is displayed.
+          Everything is denominated in <strong>dollars</strong> — play money in a closed loop, never
+          real cash. No buy-in, no cash-out.
         </p>
       </>
     ),
@@ -138,10 +138,10 @@ const CHAPTERS: Chapter[] = [
     title: 'Cashier',
     body: (
       <>
-        <p>The coin window. Pull up a player, choose an action, and preview the result before committing:</p>
+        <p>The dollar window. Pull up a player, choose an action, and preview the result before committing:</p>
         <ul>
           <li>
-            <Term id="grant">Grant</Term> adds coins; <Term id="deduct">Deduct</Term> removes them;{' '}
+            <Term id="grant">Grant</Term> adds dollars; <Term id="deduct">Deduct</Term> removes them;{' '}
             <Term id="set">Set</Term> lands the figure on an exact amount.
           </li>
           <li>The live preview shows the figure the move would land on, before you commit.</li>
@@ -187,7 +187,7 @@ const CHAPTERS: Chapter[] = [
     body: (
       <>
         <p>
-          The full, durable record of every coin movement — read-only and exportable. Four kinds of
+          The full, durable record of every dollar movement — read-only and exportable. Four kinds of
           entry:
         </p>
         <ul>
@@ -237,9 +237,9 @@ const CHAPTERS: Chapter[] = [
         <p className="mdsk-manual-lead">Every app in the console, by section.</p>
         <h2 className="feat-h2">Operations</h2>
         <ul>
-          <li><strong>Weekly Sheet / Weekly Figures</strong> — coins won/lost + the settle figure.</li>
+          <li><strong>Weekly Sheet / Weekly Figures</strong> — dollars won/lost + the settle figure.</li>
           <li><strong>Settlement Run / Settle Period / Settlements</strong> — preview, close, and archive the week.</li>
-          <li><strong>Ledger / Transactions</strong> — the full coin ledger.</li>
+          <li><strong>Ledger / Transactions</strong> — the full dollar ledger.</li>
           <li><strong>Pending Bets</strong> — open tickets awaiting grade.</li>
           <li><strong>Live Activity</strong> — a real-time bet ticker.</li>
           <li><strong>Risk &amp; Exposure</strong> — hold, exposure, winners &amp; losers.</li>
@@ -247,7 +247,7 @@ const CHAPTERS: Chapter[] = [
         </ul>
         <h2 className="feat-h2">Players</h2>
         <ul>
-          <li><strong>Cashier Desk / Cashier</strong> — issue &amp; adjust coin balances.</li>
+          <li><strong>Cashier Desk / Cashier</strong> — issue &amp; adjust dollar balances.</li>
           <li><strong>Player Admin</strong> — look up accounts, standing, and play history.</li>
           <li><strong>Add Player</strong> — onboard a new account.</li>
           <li><strong>Limits</strong> — per-player wager caps.</li>

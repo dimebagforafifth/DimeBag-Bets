@@ -67,7 +67,7 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
         </label>
 
         <label className="feat-field">
-          <span className="feat-label">Default credit line (coins)</span>
+          <span className="feat-label">Default credit line (dollars)</span>
           <input
             className="feat-input"
             type="number"
@@ -94,7 +94,7 @@ export function SettingsPanel({ onBack }: { onBack: () => void }) {
         </label>
 
         <label className="feat-field">
-          <span className="feat-label">Exposure alert cap (coins, blank = off)</span>
+          <span className="feat-label">Exposure alert cap (dollars, blank = off)</span>
           <input
             className="feat-input"
             type="number"

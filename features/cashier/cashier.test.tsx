@@ -27,7 +27,7 @@ describe('Cashier Desk', () => {
     const h = host()
     const root: Root = createRoot(h)
     act(() => root.render(<CashierDeskPanel onBack={() => {}} />))
-    expect(h.textContent).toContain('Search a player to grant, deduct, or set their coin figure.')
+    expect(h.textContent).toContain('Search a player to grant, deduct, or set their dollar figure.')
     // The action tabs are not on screen yet.
     expect(h.querySelectorAll('.mdsk-tab').length).toBe(0)
     act(() => root.unmount())
@@ -54,7 +54,7 @@ describe('Cashier Desk', () => {
       const tabs = h.querySelectorAll('.mdsk-tab')
       expect(tabs.length).toBe(3)
       expect([...tabs].map((t) => t.textContent)).toEqual(['Grant', 'Deduct', 'Set'])
-      // The preview card renders signed coin figures (feat-num).
+      // The preview card renders signed dollar figures (feat-num).
       expect(h.querySelectorAll('.feat-num').length).toBeGreaterThan(0)
       // No final-confirm money button is wired by merely selecting a player.
       expect(
@@ -63,7 +63,7 @@ describe('Cashier Desk', () => {
     } else {
       // Fallback if the combobox is flaky in this environment: keep the test green by
       // asserting the panel mounted with its empty prompt.
-      expect(h.textContent).toContain('Search a player to grant, deduct, or set their coin figure.')
+      expect(h.textContent).toContain('Search a player to grant, deduct, or set their dollar figure.')
     }
 
     act(() => root.unmount())

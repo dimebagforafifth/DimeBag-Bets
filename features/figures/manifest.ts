@@ -1,6 +1,6 @@
 /**
  * Weekly Sheet manifest — the operations-section tile for the DEEP per-player
- * by-day coin win/loss view. The registry owner imports this array; do not edit
+ * by-day dollar win/loss view. The registry owner imports this array; do not edit
  * console/registry/index.ts here.
  */
 import { CalendarRange } from 'lucide-react'
@@ -12,7 +12,7 @@ export const weeklySheetManifests: FeatureManifest[] = [
   {
     key: 'figures',
     name: 'Weekly Sheet',
-    hint: 'By-day coin win/loss + settle + export',
+    hint: 'By-day dollar win/loss + settle + export',
     section: 'operations',
     icon: CalendarRange,
     Panel: WeeklySheetPanel,

@@ -1,7 +1,7 @@
 /**
  * Pending Bets — NEW panel (no single existing component listed open exposure). Built
  * from existing read-only stores: app/exposure (open, ungraded stake per game) and the
- * org figures (each player's at-risk `account.pending`). It shows where coins are tied
+ * org figures (each player's at-risk `account.pending`). It shows where dollars are tied
  * up awaiting grade. Moves no money.
  *
  * Seam: per-ticket drill-down (one row per open wager) needs an open-wagers selector
@@ -38,7 +38,7 @@ export function PendingPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Open tickets awaiting grade — coins currently at risk across the book.
+          Open tickets awaiting grade — dollars currently at risk across the book.
         </p>
       </header>
 
