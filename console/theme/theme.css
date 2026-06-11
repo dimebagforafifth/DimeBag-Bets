@@ -26,8 +26,8 @@
 
   /* ---- text (derived to read on the dark surfaces; not in the spec) ---- */
   --c-text: #e9ecf1;
-  --c-muted: #8b94a3;
-  --c-faint: #5c6573;
+  --c-muted: #aab2c0; /* brighter secondary text */
+  --c-faint: #8b94a3; /* was #5c6573 — too dark to read; lifted to the old muted level */
 
   /* ---- type ---- */
   --c-font-head: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;

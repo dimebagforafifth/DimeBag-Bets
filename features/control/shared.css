@@ -17,7 +17,7 @@
   --green-press: #4fa87c;
   --red: #d27068;
   --text: #e8eaed;
-  --muted: #8a929e;
+  --muted: #aab2c0; /* brighter secondary text — readable on the dark surfaces */
   --radius: 12px;
 
   --up: #5bb98b;

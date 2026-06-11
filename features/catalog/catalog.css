@@ -8,7 +8,7 @@
   --c-up: #5bb98b;
   --c-down: #d27068;
   --c-text: #e7e9ee;
-  --c-muted: #8b93a1;
+  --c-muted: #aab2c0; /* brighter secondary text */
   color: var(--c-text);
   display: flex;
   flex-direction: column;
