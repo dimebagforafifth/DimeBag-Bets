@@ -27,7 +27,7 @@ export const operationsManifests: FeatureManifest[] = [
   {
     key: 'weekly-figures',
     name: 'Weekly Figures',
-    hint: 'Coins won/lost + settle figure',
+    hint: 'Dollars won/lost + settle figure',
     section: 'operations',
     icon: Coins,
     Panel: WeeklyFiguresPanel,
