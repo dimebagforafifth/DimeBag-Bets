@@ -341,3 +341,20 @@
 .led-pfilter-clear:hover {
   color: var(--text);
 }
+
+/* Weekly sheet — per-agent grouping rows */
+.mdsk-group td {
+  background: rgba(214, 177, 74, 0.07);
+  border-top: 1px solid var(--c-border, #2a2f39);
+  font-weight: 700;
+}
+.mdsk-group-n {
+  color: var(--c-muted, #aab2c0);
+  font-weight: 500;
+  font-size: 12px;
+}
+.mdsk-player td.mdsk-player,
+td.mdsk-player {
+  padding-left: 22px;
+  color: var(--c-muted, #aab2c0);
+}

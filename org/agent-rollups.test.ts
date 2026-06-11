@@ -4,6 +4,7 @@ import {
   addPlayer,
   addSubAgent,
   agentCommission,
+  agentOf,
   agentPerformance,
   agentPlayerNet,
   allAgents,
@@ -101,5 +102,16 @@ describe('agentPerformance', () => {
 describe('allAgents', () => {
   it('lists every agent + master agent, master agents first', () => {
     expect(allAgents(tree()).map((m) => m.id)).toEqual(['sa', 'a'])
+  })
+})
+
+describe('agentOf', () => {
+  it('returns the nearest agent/master ancestor, or null under the manager', () => {
+    const org = tree()
+    expect(agentOf(org, 'p1')?.id).toBe('a') // nearest agent above the player
+    expect(agentOf(org, 'a')?.id).toBe('sa') // an agent reports up to its master
+    expect(agentOf(org, 'sa')).toBeNull() // a master sits under the manager
+    addPlayer(org, 'mgr', { name: 'Direct', creditLimit: 1000, id: 'pd' })
+    expect(agentOf(org, 'pd')).toBeNull() // player straight under the manager
   })
 })

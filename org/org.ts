@@ -409,6 +409,20 @@ export function rosterOf(org: Org, id: string): Member[] {
   return downline(org, id).filter((m) => m.role === 'player')
 }
 
+/** The agent / master agent a member ultimately reports to — the nearest ancestor of
+ *  role 'agent' or 'subagent', or null if it sits directly under the manager. Drives the
+ *  per-agent grouping in figures / reports. */
+export function agentOf(org: Org, id: string): Member | null {
+  let cur = getMember(org, id)
+  while (cur.parentId) {
+    const parent = org.members[cur.parentId]
+    if (!parent) return null
+    if (parent.role === 'agent' || parent.role === 'subagent') return parent
+    cur = parent
+  }
+  return null
+}
+
 /** The net figure of an agent's players: the sum of their balances. Negative = the
  *  players are down on the week (the book — and so the agent — collected). */
 export function agentPlayerNet(org: Org, id: string): number {

@@ -33,6 +33,7 @@ export {
   setBookBettingLocked,
   setCommissionPct,
   rosterOf,
+  agentOf,
   agentPlayerNet,
   agentCommission,
   agentPerformance,
