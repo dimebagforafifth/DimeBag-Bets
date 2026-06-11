@@ -1,26 +1,87 @@
 import { useSyncExternalStore } from 'react'
+import { Circle, Shield, Medal, Trophy, Crown, Gem, type LucideIcon } from 'lucide-react'
 import { formatMoney } from '../../games/shared/money.js'
 import { rankProgress } from '../index.js'
+import type { RankDef, RankId } from '../index.js'
 import { getPlayerVip, getVipConfig, getVipVersion, subscribeVip } from '../../app/vip-store.js'
-import { RankBadge } from './Leaderboard.js'
 import './vip.css'
 
+/** A distinct icon per tier, escalating in prestige (and, via CSS, glow) the higher
+ *  you climb: shield → medal → trophy → crown → gem. */
+const RANK_ICON: Record<RankId, LucideIcon> = {
+  none: Circle,
+  bronze: Shield,
+  silver: Medal,
+  gold: Trophy,
+  platinum: Crown,
+  diamond: Gem,
+}
+
+function TierIcon({ rank, size }: { rank: RankDef; size: number }) {
+  const Icon = RANK_ICON[rank.id]
+  return (
+    <Icon
+      size={size}
+      strokeWidth={2.2}
+      style={{ color: rank.color }}
+      className={`vip-ico vip-ico-${rank.id}`}
+      aria-hidden="true"
+    />
+  )
+}
+
 /**
- * A small VIP rank chip for the header: just the player's current loyalty tier, with
- * progress to the next rung shown on hover. No free-play balance or redeem here —
- * rewards are configured and granted from the manager's VIP tools; this is a clean,
- * compact status indicator only.
+ * A compact loyalty-tier chip for the header: the player's current tier (with its
+ * icon) + a slim progress bar toward the next rung. Hovering reveals the tier ladder
+ * — the rungs they can still walk towards, each icon glowing a little brighter the
+ * higher it sits. Display only; rewards are granted from the manager's VIP tools.
  */
 export function VipBadge({ playerId }: { playerId: string }) {
   useSyncExternalStore(subscribeVip, getVipVersion)
-  const prog = rankProgress(getPlayerVip(playerId).wagered, getVipConfig())
-  const tip = prog.next
-    ? `${formatMoney(prog.remaining)} more wagered to reach ${prog.next.name}`
-    : `Top rank reached — ${prog.current.name}`
+  const config = getVipConfig()
+  const wagered = getPlayerVip(playerId).wagered
+  const prog = rankProgress(wagered, config)
+  const tiers = config.ranks.filter((r) => r.id !== 'none') // the real rungs
+  const pct = Math.round(prog.pct * 100)
+
   return (
-    <div className="vip-chip" title={tip}>
-      <span className="vip-chip-label">VIP</span>
-      <RankBadge rank={prog.current} />
+    <div className="vip-chip" style={{ '--rank': prog.current.color } as React.CSSProperties}>
+      <span className="vip-chip-tier">
+        <TierIcon rank={prog.current} size={15} />
+        {prog.current.name}
+      </span>
+      <span className="vip-chip-bar" aria-hidden="true">
+        <span className="vip-chip-fill" style={{ width: `${pct}%` }} />
+      </span>
+
+      <div className="vip-pop" role="tooltip">
+        <div className="vip-pop-head">
+          <span className="vip-pop-title">Loyalty tiers</span>
+          <span className="vip-pop-sub">
+            {prog.next
+              ? `${formatMoney(prog.remaining)} to ${prog.next.name}`
+              : `Top tier · ${prog.current.name}`}
+          </span>
+        </div>
+        <ul className="vip-pop-list">
+          {tiers.map((t) => {
+            const reached = wagered >= t.minWagered
+            const isCurrent = t.id === prog.current.id
+            return (
+              <li
+                key={t.id}
+                className={`vip-pop-row${isCurrent ? ' is-current' : ''}${reached ? ' is-reached' : ''}`}
+              >
+                <TierIcon rank={t} size={17} />
+                <span className="vip-pop-name">{t.name}</span>
+                <span className="vip-pop-thresh">
+                  {isCurrent ? 'You’re here' : reached ? 'Reached' : formatMoney(t.minWagered)}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
     </div>
   )
 }

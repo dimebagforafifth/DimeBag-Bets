@@ -332,35 +332,6 @@ body {
   font-size: 15px;
 }
 
-/* "Playing as" — who in the book is at the table (every bet moves their figure) */
-.player-switch {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  line-height: 1.2;
-}
-.player-switch-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
-}
-.player-switch-select {
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 5px 8px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  max-width: 170px;
-}
-.player-switch-select:hover {
-  border-color: var(--muted);
-}
-
 .app-main {
   flex: 1;
   display: flex;
@@ -845,7 +816,7 @@ input[type='number']::-webkit-inner-spin-button {
 
 /* ===== responsive: keep the shell clean on smaller screens (CLAUDE.md §2) =====
    The shell was the one part with no breakpoints — every game CSS already has
-   them. On a phone the header (brand + 4 tabs + player select + two figures +
+   them. On a phone the header (brand + 4 tabs + two figures + the VIP chip +
    sound) overflowed; let it wrap gracefully and tighten the lobby grid. */
 @media (max-width: 760px) {
   .app-header {
@@ -881,9 +852,6 @@ input[type='number']::-webkit-inner-spin-button {
   }
   .figure {
     gap: 14px;
-  }
-  .player-switch-select {
-    max-width: 130px;
   }
   .lobby-title {
     font-size: 22px;

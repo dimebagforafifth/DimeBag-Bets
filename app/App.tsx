@@ -204,11 +204,6 @@ export function App() {
           </nav>
         </div>
         <div className="header-right">
-          {/* The "playing as" switcher is an operator-only tool — a player IS their
-              own node, so they don't get it. */}
-          {player && role === 'manager' && (
-            <PlayerSwitcher current={player} players={activePlayers} onSwitch={setCurrentPlayer} />
-          )}
           <div className="figure">
             {/* Lead with what a player actually reads as "how much I have" — the
                 amount they can bet right now (availableToWager = credit + figure −
@@ -374,36 +369,6 @@ function GameMount({
       onBalanceChange={onBalanceChange}
       {...(cfg ? { houseConfig: cfg } : {})}
     />
-  )
-}
-
-/** Header control to choose which player in the book you're playing as. Lists
- *  only ACTIVE players (a suspended player can't take action). Every casino +
- *  sportsbook bet routes to this player's figure. */
-function PlayerSwitcher({
-  current,
-  players,
-  onSwitch,
-}: {
-  current: Member
-  players: Member[]
-  onSwitch: (id: string) => void
-}) {
-  return (
-    <label className="player-switch" title="Who you're playing as — bets move this player's figure">
-      <span className="player-switch-label">Playing as</span>
-      <select
-        className="player-switch-select"
-        value={current.id}
-        onChange={(e) => onSwitch(e.target.value)}
-      >
-        {players.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-    </label>
   )
 }
 

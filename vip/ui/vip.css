@@ -315,17 +315,161 @@
   font-size: 14px;
 }
 
-/* ===================== VIP rank chip (header) ===================== */
+/* ===================== VIP loyalty-tier chip (header) ===================== */
 .vip-chip {
+  --rank: var(--muted);
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   cursor: default;
 }
-.vip-chip-label {
-  font-size: 10px;
-  font-weight: 700;
+.vip-chip-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: var(--rank);
+}
+/* per-tier icons — escalating glow the higher the rung (none = flat) */
+.vip-ico {
+  flex: none;
+}
+.vip-ico-bronze {
+  filter: drop-shadow(0 0 2px currentColor);
+}
+.vip-ico-silver {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.vip-ico-gold {
+  filter: drop-shadow(0 0 4.5px currentColor);
+}
+.vip-ico-platinum {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.vip-ico-diamond {
+  filter: drop-shadow(0 0 7px currentColor);
+  animation: vip-shine 2.6s ease-in-out infinite;
+}
+@keyframes vip-shine {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 13px currentColor);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vip-ico-diamond {
+    animation: none;
+  }
+}
+.vip-chip-bar {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.vip-chip-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rank);
+  transition: width 0.3s ease;
+}
+
+/* hover popover — the tier ladder you can walk towards */
+.vip-pop {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 232px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  padding: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    visibility 0.12s;
+}
+.vip-chip:hover .vip-pop,
+.vip-chip:focus-within .vip-pop {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.vip-pop-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.vip-pop-title {
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--muted);
+}
+.vip-pop-sub {
+  font-size: 11.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.vip-pop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vip-pop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+.vip-pop-row.is-current {
+  background: color-mix(in srgb, var(--gem) 12%, transparent);
+}
+.vip-pop-name {
+  flex: 1;
+  font-weight: 700;
+  color: var(--text);
+}
+/* tiers not yet reached are the ones to walk towards — dim the name AND the icon
+ *  (no glow / no shine) so an un-earned tier never out-shines the one you're on;
+ *  the icons light up as you climb. */
+.vip-pop-row:not(.is-reached) .vip-pop-name {
+  color: var(--muted);
+  font-weight: 600;
+}
+.vip-pop-row:not(.is-reached) .vip-ico {
+  opacity: 0.45;
+  filter: none;
+  animation: none;
+}
+.vip-pop-thresh {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.vip-pop-row.is-current .vip-pop-thresh {
+  color: var(--gem);
+  font-weight: 700;
 }
