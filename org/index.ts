@@ -4,7 +4,7 @@
  */
 
 export type { Role, Member, MemberProfile, Org } from './types.js'
-export type { NewMember, Settlement } from './org.js'
+export type { NewMember, Settlement, AgentPerformance } from './org.js'
 export {
   ROLE_TIER,
   createOrg,
@@ -31,6 +31,12 @@ export {
   setMaxPayout,
   setBettingLocked,
   setBookBettingLocked,
+  setCommissionPct,
+  rosterOf,
+  agentPlayerNet,
+  agentCommission,
+  agentPerformance,
+  allAgents,
   setMemberProfile,
   renameMember,
   removeMember,

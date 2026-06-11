@@ -54,6 +54,13 @@ export interface Member {
   active: boolean
   /** Contact/identity details. Always present (default {}); see MemberProfile. */
   profile: MemberProfile
+  /**
+   * Commission split for an AGENT or MASTER AGENT only — the percent (0–100) of their
+   * downline's net LOSSES they keep when the book squares up weekly. The manager owes
+   * the agent `commissionPct%` of what the agent's players lost; it nets against what
+   * the agent owes up. Undefined / 0 for players and the manager. See `agentCommission`.
+   */
+  commissionPct?: number
 }
 
 /**

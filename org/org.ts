@@ -382,6 +382,105 @@ export function bookPending(org: Org, id: string): number {
   return downline(org, id).reduce((sum, m) => sum + m.account.pending, self.account.pending)
 }
 
+/* ------------------------------ agent rollups --------------------------- */
+
+/**
+ * Set (or clear) an agent's / master agent's commission split — the percent (0–100) of
+ * their downline's net losses they keep at weekly settlement. Players and the manager
+ * carry no split. Pass null (or 0) to clear.
+ */
+export function setCommissionPct(org: Org, id: string, pct: number | null): void {
+  const member = getMember(org, id)
+  if (member.role !== 'agent' && member.role !== 'subagent') {
+    throw new Error('only agents and master agents carry a commission split')
+  }
+  if (pct == null || pct === 0) {
+    delete member.commissionPct
+    return
+  }
+  if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+    throw new Error(`commission must be a percent 0–100 (or null to clear), got ${pct}`)
+  }
+  member.commissionPct = pct
+}
+
+/** Every PLAYER anywhere beneath `id` — an agent's or master agent's whole roster. */
+export function rosterOf(org: Org, id: string): Member[] {
+  return downline(org, id).filter((m) => m.role === 'player')
+}
+
+/** The net figure of an agent's players: the sum of their balances. Negative = the
+ *  players are down on the week (the book — and so the agent — collected). */
+export function agentPlayerNet(org: Org, id: string): number {
+  return rosterOf(org, id).reduce((sum, p) => sum + p.account.balance, 0)
+}
+
+/**
+ * The commission an agent / master agent has earned this period: `commissionPct%` of
+ * their players' net LOSSES (0 when the players are net up — standard PPH: the agent
+ * shares the book's win off their roster, not its loss). Pure read; nothing moves
+ * until settlement nets it.
+ */
+export function agentCommission(org: Org, id: string): number {
+  const pct = getMember(org, id).commissionPct ?? 0
+  if (pct <= 0) return 0
+  const playersLost = Math.max(0, -agentPlayerNet(org, id)) // the book's win off this roster
+  return Math.round((playersLost * pct) / 100)
+}
+
+export interface AgentPerformance {
+  agentId: string
+  name: string
+  role: Role
+  /** Active flag of the agent themselves. */
+  active: boolean
+  /** Players anywhere in the subtree (roster size). */
+  roster: number
+  /** Agents + master agents anywhere in the subtree. */
+  subAgents: number
+  /** Sum of the roster's balances (negative = players down = book won off them). */
+  playerNet: number
+  /** Live exposure across the roster (sum of pending). */
+  exposure: number
+  /** Commission % carried (0 if none). */
+  commissionPct: number
+  /** Commission earned this period (see `agentCommission`). */
+  commission: number
+}
+
+/**
+ * One performance line for an agent / master agent: roster size, sub-agents, the net
+ * their players are up/down, live exposure, and commission earned. One downline walk.
+ * Pure read for the Agent Performance + Agent Admin views.
+ */
+export function agentPerformance(org: Org, id: string): AgentPerformance {
+  const m = getMember(org, id)
+  const sub = downline(org, id)
+  const players = sub.filter((x) => x.role === 'player')
+  const playerNet = players.reduce((s, p) => s + p.account.balance, 0)
+  const pct = m.commissionPct ?? 0
+  return {
+    agentId: id,
+    name: m.name,
+    role: m.role,
+    active: m.active,
+    roster: players.length,
+    subAgents: sub.filter((x) => x.role === 'agent' || x.role === 'subagent').length,
+    playerNet,
+    exposure: players.reduce((s, p) => s + p.account.pending, 0),
+    commissionPct: pct,
+    commission: pct > 0 ? Math.round((Math.max(0, -playerNet) * pct) / 100) : 0,
+  }
+}
+
+/** Every agent + master agent in the book, manager-first by tier then name — the source
+ *  list for the Agent Admin and Agent Performance panels (and agent scope selectors). */
+export function allAgents(org: Org): Member[] {
+  return Object.values(org.members)
+    .filter((m) => m.role === 'agent' || m.role === 'subagent')
+    .sort((a, b) => ROLE_TIER[a.role] - ROLE_TIER[b.role] || a.name.localeCompare(b.name))
+}
+
 /** Merge a patch into a member's profile (contact/identity/notes). Only the given
  *  fields change; pass an empty string to clear one. No tree/money rules involved. */
 export function setMemberProfile(org: Org, id: string, patch: Partial<MemberProfile>): void {
