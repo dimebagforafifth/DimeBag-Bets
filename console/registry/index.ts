@@ -17,6 +17,7 @@ import { controlManifests } from '../../features/control/manifest.js'
 import { weeklySheetManifests } from '../../features/figures/manifest.js'
 import { ledgerManifests } from '../../features/transactions/manifest.js'
 import { settlementRunManifests } from '../../features/settlements/manifest.js'
+import { collectionsManifests } from '../../features/collections/manifest.js'
 import { agentsManifests } from '../../features/agents/manifest.js'
 import { cashierDeskManifests } from '../../features/cashier/manifest.js'
 import { operatorManualManifests } from '../../features/help/manifest.js'
@@ -29,6 +30,7 @@ export const REGISTRY: FeatureManifest[] = [
   ...weeklySheetManifests,
   ...ledgerManifests,
   ...settlementRunManifests,
+  ...collectionsManifests,
   // Players
   ...playersManifests,
   ...agentsManifests,
