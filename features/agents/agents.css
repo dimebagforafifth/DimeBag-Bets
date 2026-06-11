@@ -168,3 +168,107 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- agent admin / performance tables ---- */
+.agt-search {
+  max-width: 320px;
+}
+.agtbl-wrap {
+  overflow-x: auto;
+}
+.agtbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.agtbl th,
+.agtbl td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--c-border, #2a2f39);
+  text-align: left;
+  white-space: nowrap;
+}
+.agtbl th {
+  position: sticky;
+  top: 0;
+  background: var(--c-panel, #1b1f26);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted, #aab2c0);
+}
+.agtbl .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.agtbl tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025);
+}
+.agtbl tr.is-suspended td {
+  opacity: 0.5;
+}
+.agtbl-name {
+  font-weight: 600;
+}
+.agtbl .is-up {
+  color: var(--c-up, #5bb98b);
+}
+.agtbl .is-down {
+  color: var(--c-down, #d27068);
+}
+.agtbl-input {
+  width: 84px;
+  background: var(--c-panel-2, #20252e);
+  border: 1px solid var(--c-border, #2a2f39);
+  border-radius: 6px;
+  color: var(--c-text, #e7e9ee);
+  padding: 4px 7px;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.agtbl-input:focus {
+  outline: none;
+  border-color: var(--c-gold, #d6b14a);
+}
+.agtbl-pct {
+  white-space: nowrap;
+  color: var(--c-muted, #aab2c0);
+}
+.agtbl-pct .agtbl-input {
+  width: 52px;
+}
+.agtbl-btn {
+  border: 1px solid var(--c-up, #5bb98b);
+  background: transparent;
+  color: var(--c-up, #5bb98b);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+}
+.agtbl-btn.is-off {
+  border-color: var(--c-down, #d27068);
+  color: var(--c-down, #d27068);
+}
+.agtbl-err {
+  color: var(--c-down, #d27068);
+  font-size: 12px;
+  padding-top: 2px;
+}
+.agtbl-comm {
+  color: var(--c-gold, #d6b14a);
+}
+.agtbl-commpct {
+  color: var(--c-muted, #aab2c0);
+  font-size: 11px;
+}
+.agtbl-foot td {
+  border-top: 2px solid var(--c-border, #2a2f39);
+  border-bottom: none;
+  font-weight: 700;
+  color: var(--c-muted, #aab2c0);
+}

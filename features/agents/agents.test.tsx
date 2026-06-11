@@ -6,6 +6,8 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { getBook } from '../../app/book-store.js'
 import { AgentsPanel, buildForest, flatten } from './AgentsPanel.js'
+import { AgentAdminPanel } from './AgentAdminPanel.js'
+import { AgentPerformancePanel } from './AgentPerformancePanel.js'
 import { agentsManifests } from './manifest.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -75,5 +77,28 @@ describe('Agents — hierarchy', () => {
     act(() => rowByRole('Super-Agent')!.click())
     expect(detail()).toMatch(/Players under/)
     expect(detail()).not.toMatch(/Max bet/)
+  })
+})
+
+describe('Agent Admin + Performance', () => {
+  it('manifest registers agent-admin + agent-performance under Players', () => {
+    expect(agentsManifests.map((m) => m.key)).toEqual(['agents', 'agent-admin', 'agent-performance'])
+    expect(agentsManifests.every((m) => m.section === 'players')).toBe(true)
+  })
+
+  it('Agent Admin lists agents with editable allowance + commission and a status toggle', () => {
+    act(() => root.render(<AgentAdminPanel onBack={() => {}} />))
+    expect(host.querySelector('.agtbl')).toBeTruthy()
+    expect(host.textContent).toMatch(/Allowance/)
+    expect(host.textContent).toMatch(/Commission/)
+    expect(host.querySelectorAll('.agtbl-input').length).toBeGreaterThan(0) // inline editors
+    expect(host.querySelector('.agtbl-btn')?.textContent).toMatch(/Active|Suspended/)
+  })
+
+  it('Agent Performance ranks agents with Book W/L and a commission total', () => {
+    act(() => root.render(<AgentPerformancePanel onBack={() => {}} />))
+    expect(host.textContent).toMatch(/Book W\/L/)
+    expect(host.querySelectorAll('.agtbl tbody tr').length).toBeGreaterThan(0)
+    expect(host.querySelector('.agtbl-foot')?.textContent).toMatch(/Book total/)
   })
 })
