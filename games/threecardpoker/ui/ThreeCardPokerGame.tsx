@@ -629,8 +629,17 @@ function PlayingCard({
     <div className="threecardpoker-slot" style={{ animationDelay: `${dealDelayMs}ms` }}>
       <div className={`threecardpoker-flip ${faceDown ? 'is-down' : ''}`}>
         <div className={`threecardpoker-face is-front ${red ? 'is-red' : ''}`}>
-          <span className="threecardpoker-card-rank">{RANK_LABELS_SHORT[card.rank]}</span>
-          <span className="threecardpoker-card-suit">{SUIT_SYMBOLS[card.suit]}</span>
+          <span className="tcp-idx tcp-idx-tl">
+            <span className="tcp-idx-rank">{RANK_LABELS_SHORT[card.rank]}</span>
+            <span className="tcp-idx-suit">{SUIT_SYMBOLS[card.suit]}</span>
+          </span>
+          <span className="tcp-pip" aria-hidden="true">
+            {SUIT_SYMBOLS[card.suit]}
+          </span>
+          <span className="tcp-idx tcp-idx-br" aria-hidden="true">
+            <span className="tcp-idx-rank">{RANK_LABELS_SHORT[card.rank]}</span>
+            <span className="tcp-idx-suit">{SUIT_SYMBOLS[card.suit]}</span>
+          </span>
         </div>
         <div className="threecardpoker-face is-back">
           <span className="threecardpoker-cardback" />

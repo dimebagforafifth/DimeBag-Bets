@@ -318,14 +318,25 @@ function PlayingCard({
     // before the deal: a plain red card back, nothing to read or click
     return <span className="videopoker-card is-back" aria-hidden="true" />
   }
+  const rank = RANK_LABELS_SHORT[card.rank]
+  const suit = SUIT_SYMBOLS[card.suit]
   return (
     <button
       type="button"
       className={`videopoker-card ${red ? 'is-red' : ''} ${held ? 'is-held' : ''} ${win ? 'is-win' : ''}`}
       onClick={onClick}
     >
-      <span className="videopoker-card-rank">{RANK_LABELS_SHORT[card.rank]}</span>
-      <span className="videopoker-card-suit">{SUIT_SYMBOLS[card.suit]}</span>
+      <span className="vp-idx vp-idx-tl">
+        <span className="vp-idx-rank">{rank}</span>
+        <span className="vp-idx-suit">{suit}</span>
+      </span>
+      <span className="vp-pip" aria-hidden="true">
+        {suit}
+      </span>
+      <span className="vp-idx vp-idx-br" aria-hidden="true">
+        <span className="vp-idx-rank">{rank}</span>
+        <span className="vp-idx-suit">{suit}</span>
+      </span>
       {held && <span className="videopoker-held-tag">HELD</span>}
     </button>
   )

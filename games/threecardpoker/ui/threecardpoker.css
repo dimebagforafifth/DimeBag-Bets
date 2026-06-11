@@ -446,22 +446,50 @@ button.threecardpoker-clay:disabled {
     inset 0 0 0 1.5px rgba(0, 0, 0, 0.35),
     0 12px 22px -12px rgba(0, 0, 0, 0.85);
 }
-.threecardpoker-card-rank {
-  font-size: 34px;
+/* real card face: a rank+suit index in two corners + a large centre suit */
+.tcp-idx {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.9;
   font-weight: 800;
-  line-height: 1;
+  font-family: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;
+}
+.tcp-idx-tl {
+  top: 7px;
+  left: 8px;
+}
+.tcp-idx-br {
+  bottom: 7px;
+  right: 8px;
+  transform: rotate(180deg);
+}
+.tcp-idx-rank {
+  font-size: 19px;
   font-variant-numeric: tabular-nums;
 }
-.threecardpoker-card-suit {
-  font-size: 29px;
+.tcp-idx-suit {
+  font-size: 13px;
+}
+.tcp-pip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
   line-height: 1;
 }
-/* the dealer's smaller cards get smaller pips */
-.threecardpoker-row.is-dealer .threecardpoker-card-rank {
-  font-size: 28px;
+/* the dealer's smaller cards get smaller indices + pip */
+.threecardpoker-row.is-dealer .tcp-idx-rank {
+  font-size: 15px;
 }
-.threecardpoker-row.is-dealer .threecardpoker-card-suit {
-  font-size: 24px;
+.threecardpoker-row.is-dealer .tcp-idx-suit {
+  font-size: 11px;
+}
+.threecardpoker-row.is-dealer .tcp-pip {
+  font-size: 40px;
 }
 /* a thin inner frame line on the card back, like a real card */
 .threecardpoker-cardback {
@@ -572,17 +600,20 @@ button.threecardpoker-clay:disabled {
     justify-content: center;
     border-radius: 16px;
   }
-  .threecardpoker-card-rank {
-    font-size: 23px;
+  .tcp-idx-rank {
+    font-size: 14px;
   }
-  .threecardpoker-card-suit {
-    font-size: 20px;
+  .tcp-idx-suit {
+    font-size: 10px;
   }
-  .threecardpoker-row.is-dealer .threecardpoker-card-rank {
-    font-size: 19px;
+  .tcp-pip {
+    font-size: 36px;
   }
-  .threecardpoker-row.is-dealer .threecardpoker-card-suit {
-    font-size: 17px;
+  .threecardpoker-row.is-dealer .tcp-idx-rank {
+    font-size: 12px;
+  }
+  .threecardpoker-row.is-dealer .tcp-pip {
+    font-size: 30px;
   }
 }
 
