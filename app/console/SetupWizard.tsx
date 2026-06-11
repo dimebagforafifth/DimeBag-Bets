@@ -1,4 +1,5 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
+import './console.css' // con-* page styles (the console shell doesn't load these)
 import { formatMoney } from '../../games/shared/money.js'
 import { PRESET_LIST, applyPreset, type HousePreset, type PresetKey } from './presets.js'
 import { completeSetup, getSetup, getSetupVersion, subscribeSetup } from './setup-store.js'

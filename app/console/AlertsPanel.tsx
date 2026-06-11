@@ -1,4 +1,5 @@
 import { useMemo, useSyncExternalStore } from 'react'
+import './console.css' // con-* page styles (the console shell doesn't load these)
 import { formatMoney } from '../../games/shared/money.js'
 import { getBook, getBookVersion, subscribeBook } from '../book-store.js'
 import { getBookLedger, subscribeBookLedger } from '../book-ledger.js'

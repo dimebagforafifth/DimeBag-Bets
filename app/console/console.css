@@ -565,7 +565,6 @@
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  margin-bottom: 10px;
 }
 .con-tag-chip {
   display: inline-flex;
@@ -593,8 +592,13 @@
   border-radius: 6px;
   background: var(--bg);
   color: var(--text);
-  padding: 5px 8px;
-  width: 100px;
+  padding: 6px 9px;
+  flex: 1;
+  min-width: 120px;
+}
+.con-tag-input:focus {
+  outline: none;
+  border-color: var(--gem);
 }
 .con-notes-text {
   width: 100%;
@@ -608,9 +612,55 @@
   padding: 10px;
 }
 .con-notes-foot {
-  margin-top: 10px;
   display: flex;
   justify-content: flex-end;
+}
+
+/* The single clean box that holds a player's tags + notes (search-first layout). */
+.con-notes-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.con-notes-box-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.con-notes-box-head .con-h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.con-notes-change {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.con-notes-change:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+.con-notes-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.con-notes-flabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.con-notes-text:focus {
+  outline: none;
+  border-color: var(--gem);
 }
 
 /* ---- stub ---- */

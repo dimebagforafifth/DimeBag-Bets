@@ -1,5 +1,6 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { ChevronDown } from 'lucide-react'
+import './console.css' // con-* page styles (the console shell doesn't load these)
 import { formatMoney } from '../../games/shared/money.js'
 import { getBook, getBookVersion, subscribeBook } from '../book-store.js'
 import {

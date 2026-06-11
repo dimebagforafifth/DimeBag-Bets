@@ -312,3 +312,32 @@
     animation: none;
   }
 }
+
+/* Ledger player filter — a progressive type-ahead when empty, a clearable pill when set. */
+.led-pfilter-search {
+  min-width: 220px;
+}
+.led-pfilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 7px 8px 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.led-pfilter-clear {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.led-pfilter-clear:hover {
+  color: var(--text);
+}

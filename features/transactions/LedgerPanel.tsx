@@ -8,7 +8,7 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { getBookLedger, subscribeBookLedger } from '../../app/book-ledger.js'
 import type { LedgerEntry } from '../../ledger/index.js'
-import { membersByRole } from '../../org/index.js'
+import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
 import { formatMoney } from '../../games/shared/money.js'
 import {
   PanelShell,
@@ -63,7 +63,6 @@ export function LedgerPanel({ onBack }: { onBack: () => void }) {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
-  const players = useMemo(() => membersByRole(book, 'player'), [book])
   const nameOf = (id: string) => book.members[id]?.name ?? id
 
   const filtered = useMemo(
@@ -104,19 +103,23 @@ export function LedgerPanel({ onBack }: { onBack: () => void }) {
       </header>
 
       <Toolbar>
-        <select
-          className="feat-input"
-          aria-label="Player"
-          value={accountId}
-          onChange={(e) => setAccountId(e.target.value)}
-        >
-          <option value="">All players</option>
-          {players.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        {accountId ? (
+          <span className="led-pfilter">
+            <span className="led-pfilter-name">{nameOf(accountId)}</span>
+            <button
+              type="button"
+              className="led-pfilter-clear"
+              aria-label="Clear player filter"
+              onClick={() => setAccountId('')}
+            >
+              ×
+            </button>
+          </span>
+        ) : (
+          <div className="led-pfilter-search">
+            <PlayerSearch org={book} onSelect={setAccountId} />
+          </div>
+        )}
 
         <ChipBar value={kind} options={KIND_OPTIONS} onChange={setKind} label="Kind" />
 
