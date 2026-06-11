@@ -35,7 +35,6 @@ import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
 import { setActiveGame } from './ledger-store.js'
 import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
-import { ResponsiblePlayPanel } from './ResponsiblePlayPanel.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
 import { Leaderboard, VipBadge } from '../vip/ui/index.js'
@@ -311,7 +310,7 @@ export function App() {
                 <Ledger gameKey={liveGame.key} gameName={liveGame.name} accountId={account.id} />
               </div>
             ) : (
-              <Lobby onPlay={setRoute} playerId={account.id} />
+              <Lobby onPlay={setRoute} />
             )}
           </div>
         )}
@@ -470,7 +469,7 @@ const STAKE_DESC: Record<string, string> = {
 }
 
 /** The Casino hub: every registered game as a card. One tap opens its page. */
-function Lobby({ onPlay, playerId }: { onPlay: (key: string) => void; playerId: string }) {
+function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
   return (
     <div className="lobby">
       <div className="lobby-head">
@@ -495,7 +494,6 @@ function Lobby({ onPlay, playerId }: { onPlay: (key: string) => void; playerId: 
           </button>
         ))}
       </div>
-      <ResponsiblePlayPanel playerId={playerId} />
     </div>
   )
 }
