@@ -5,10 +5,12 @@
 /* --- search --- */
 .pl-search {
   position: relative;
+  width: 100%;
+  max-width: 320px;
 }
 .pl-search-input {
-  width: 200px;
-  max-width: 46vw;
+  width: 100%;
+  box-sizing: border-box;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -21,12 +23,14 @@
   outline: none;
   border-color: rgba(var(--gem-glow), 0.6);
 }
+/* The suggestions drop directly UNDER the bar, the same width as it (left+right
+ *  pinned to the search container, not floated off to one side). */
 .pl-suggest {
   position: absolute;
   z-index: 20;
   top: calc(100% + 4px);
+  left: 0;
   right: 0;
-  min-width: 240px;
   margin: 0;
   padding: 4px;
   list-style: none;

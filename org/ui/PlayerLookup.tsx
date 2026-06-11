@@ -32,17 +32,12 @@ export function PlayerSearch({ org, onSelect }: { org: Org; onSelect: (id: strin
   const query = q.trim().toLowerCase()
   // Computed inline (not memoised): the book is mutated IN PLACE, so a memo keyed
   // on the stable `org` ref could serve stale matches across an add/remove/rename.
-  // Progressive type-ahead: a name that STARTS WITH what you've typed ranks above a
-  // mid-name match, so typing the first letter(s) surfaces the names beginning with
-  // it first; substring hits still show (forgiving), just lower. Narrows as you type.
+  // Progressive type-ahead matched by the START of the name only: type the first
+  // letter and just the names that BEGIN with it show, narrowing as you type more.
   const matches = query
     ? Object.values(org.members)
-        .filter((m) => m.role === 'player' && m.name.toLowerCase().includes(query))
-        .sort((a, b) => {
-          const ap = a.name.toLowerCase().startsWith(query) ? 0 : 1
-          const bp = b.name.toLowerCase().startsWith(query) ? 0 : 1
-          return ap - bp || a.name.localeCompare(b.name)
-        })
+        .filter((m) => m.role === 'player' && m.name.toLowerCase().startsWith(query))
+        .sort((a, b) => a.name.localeCompare(b.name))
         .slice(0, 8)
     : []
   const active = matches.length ? Math.min(hi, matches.length - 1) : 0
