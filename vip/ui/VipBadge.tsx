@@ -58,13 +58,18 @@ export function VipBadge({ playerId }: { playerId: string }) {
         <span className="vip-pop-title">Loyalty tiers</span>
         {prog.next ? (
           <div className="vip-pop-prog">
+            <div className="vip-pop-prog-labels">
+              <span className="vip-pop-wagered">{formatMoney(wagered)} wagered</span>
+              <span className="vip-pop-remaining">
+                {formatMoney(prog.remaining)} to {prog.next.name}
+              </span>
+            </div>
             <span className="vip-pop-track">
               <span className="vip-pop-fill" style={{ width: `${pct}%` }} />
             </span>
-            <span className="vip-pop-prog-to">to {prog.next.name}</span>
           </div>
         ) : (
-          <div className="vip-pop-top">Top tier reached</div>
+          <div className="vip-pop-top">Top tier reached · {formatMoney(wagered)} wagered</div>
         )}
         <ul className="vip-pop-list">
           {tiers.map((t) => {
