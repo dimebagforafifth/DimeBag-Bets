@@ -36,8 +36,8 @@ export const playersManifests: FeatureManifest[] = [
   },
   {
     key: 'add-player',
-    name: 'Add Player',
-    hint: 'Onboard a new account',
+    name: 'Add Customer',
+    hint: 'Onboard a player, agent or master agent',
     section: 'players',
     icon: UserPlus,
     Panel: AddPlayerPanel,

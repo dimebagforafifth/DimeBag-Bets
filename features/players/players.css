@@ -45,6 +45,17 @@
   gap: 12px;
   max-width: 420px;
 }
+/* Add-Customer: two fields side by side (Type/Under, Credit/Commission). */
+.addc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 520px) {
+  .addc-grid {
+    grid-template-columns: 1fr;
+  }
+}
 .feat-field {
   display: flex;
   flex-direction: column;

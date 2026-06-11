@@ -47,7 +47,8 @@ describe('players panels', () => {
     const root = createRoot(h)
     act(() => root.render(<AddPlayerPanel onBack={() => {}} />))
     const before = listPlayers().length
-    const name = h.querySelectorAll<HTMLInputElement>('.feat-input')[0]
+    // first real <input> is Name (the Type/Under controls are <select class="feat-input">)
+    const name = h.querySelectorAll<HTMLInputElement>('input.feat-input')[0]
     act(() => setValue(name, 'Sidney Console'))
     act(() =>
       h
