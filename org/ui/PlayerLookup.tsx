@@ -25,8 +25,17 @@ const RESULT_LABEL: Record<BetRow['outcome'], string> = {
 /* -------------------------------- search --------------------------------- */
 
 /** Type-ahead over the book's players; selecting one opens their profile. An
- *  ARIA combobox: arrow keys move the highlight, Enter selects, Escape clears. */
-export function PlayerSearch({ org, onSelect }: { org: Org; onSelect: (id: string) => void }) {
+ *  ARIA combobox: arrow keys move the highlight, Enter selects, Escape clears.
+ *  `restrictTo`, if given, limits matches to those player ids (agent scoping). */
+export function PlayerSearch({
+  org,
+  onSelect,
+  restrictTo,
+}: {
+  org: Org
+  onSelect: (id: string) => void
+  restrictTo?: (playerId: string) => boolean
+}) {
   const [q, setQ] = useState('')
   const [hi, setHi] = useState(0) // highlighted suggestion index
   const query = q.trim().toLowerCase()
@@ -36,7 +45,12 @@ export function PlayerSearch({ org, onSelect }: { org: Org; onSelect: (id: strin
   // letter and just the names that BEGIN with it show, narrowing as you type more.
   const matches = query
     ? Object.values(org.members)
-        .filter((m) => m.role === 'player' && m.name.toLowerCase().startsWith(query))
+        .filter(
+          (m) =>
+            m.role === 'player' &&
+            m.name.toLowerCase().startsWith(query) &&
+            (!restrictTo || restrictTo(m.id)),
+        )
         .sort((a, b) => a.name.localeCompare(b.name))
         .slice(0, 8)
     : []

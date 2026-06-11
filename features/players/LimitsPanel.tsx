@@ -3,16 +3,18 @@ import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
 import { setMaxWager, setMinWager } from '../../org/index.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
+import { ScopeBar, inScope, ALL_SCOPE } from '../_desk/scope.js'
 import './players.css'
 
 /**
- * Limits — per-player wager caps. Search a player, then set/clear their max and min bet
- * through the existing `org.setMaxWager` / `org.setMinWager` (the core enforces them on
- * placement). Coins/points language only.
+ * Limits — per-player wager caps. Search a player (scoped to the whole book or one
+ * agent's roster), then set/clear their max and min bet through `org.setMaxWager` /
+ * `org.setMinWager` (the core enforces them on placement).
  */
 export function LimitsPanel() {
   useSyncExternalStore(subscribeBook, getBookVersion)
   const org = getBook()
+  const [scope, setScope] = useState(ALL_SCOPE)
   const [id, setId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const member = id ? org.members[id] : null
@@ -27,7 +29,8 @@ export function LimitsPanel() {
 
   return (
     <div className="feat">
-      <PlayerSearch org={org} onSelect={setId} />
+      <ScopeBar org={org} value={scope} onChange={setScope} />
+      <PlayerSearch org={org} onSelect={setId} restrictTo={inScope(org, scope)} />
       {member && member.role === 'player' ? (
         <div className="feat-card">
           <h3 className="feat-h">{member.name} · wager caps</h3>

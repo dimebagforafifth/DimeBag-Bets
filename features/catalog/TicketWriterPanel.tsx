@@ -3,6 +3,7 @@ import { availableToWager, placeWager, resolveWager } from '../../core/index.js'
 import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
+import { ScopeBar, inScope, ALL_SCOPE } from '../_desk/scope.js'
 import './catalog.css'
 
 /**
@@ -17,6 +18,7 @@ type Settle = 'open' | 'win' | 'loss' | 'push'
 export function TicketWriterPanel() {
   useSyncExternalStore(subscribeBook, getBookVersion)
   const org = getBook()
+  const [scope, setScope] = useState(ALL_SCOPE)
   const [id, setId] = useState<string | null>(null)
   const [stake, setStake] = useState('10')
   const [mult, setMult] = useState('2.0')
@@ -57,7 +59,8 @@ export function TicketWriterPanel() {
 
   return (
     <div className="feat">
-      <PlayerSearch org={org} onSelect={setId} />
+      <ScopeBar org={org} value={scope} onChange={setScope} />
+      <PlayerSearch org={org} onSelect={setId} restrictTo={inScope(org, scope)} />
       {member && member.role === 'player' ? (
         <div className="feat-form">
           <h3 className="feat-h">

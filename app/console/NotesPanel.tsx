@@ -3,6 +3,7 @@ import { setMemberProfile } from '../../org/index.js'
 import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
 import { getBook, getBookVersion, mutateBook, subscribeBook } from '../book-store.js'
 import { addTag, getTags, getTagsVersion, removeTag, subscribeTags } from './tags-store.js'
+import { ScopeBar, inScope, ALL_SCOPE } from '../../features/_desk/scope.js'
 import './console.css'
 
 /**
@@ -16,6 +17,7 @@ export function NotesPanel() {
   const tv = useSyncExternalStore(subscribeTags, getTagsVersion)
   const org = getBook()
 
+  const [scope, setScope] = useState(ALL_SCOPE)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected =
     selectedId && org.members[selectedId]?.role === 'player' ? org.members[selectedId] : null
@@ -51,7 +53,8 @@ export function NotesPanel() {
         </p>
       </header>
 
-      <PlayerSearch org={org} onSelect={setSelectedId} />
+      <ScopeBar org={org} value={scope} onChange={setScope} />
+      <PlayerSearch org={org} onSelect={setSelectedId} restrictTo={inScope(org, scope)} />
 
       {selected ? (
         <section className="con-card con-notes-box" aria-label={`Notes for ${selected.name}`}>

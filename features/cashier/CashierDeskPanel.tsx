@@ -17,6 +17,7 @@ import { adjustFigure } from '../../app/manager-actions.js'
 import { toCents, formatMoney } from '../../games/shared/money.js'
 import { PanelShell, useBook, Figure, Tabs } from '../_desk/shared.js'
 import { toDelta, previewBalance, type CashAction } from '../_desk/data.js'
+import { ScopeBar, inScope, ALL_SCOPE } from '../_desk/scope.js'
 import { InfoDot } from '../_desk/Tooltip.js'
 
 const ACTIONS: ReadonlyArray<{ value: CashAction; label: string }> = [
@@ -45,6 +46,7 @@ export function CashierDeskPanel({ onBack }: { onBack: () => void }) {
   // Re-render the recent-movements list as the durable ledger grows.
   const ledger = useSyncExternalStore(subscribeBookLedger, getBookLedger, getBookLedger)
 
+  const [scope, setScope] = useState(ALL_SCOPE)
   const [id, setId] = useState<string | null>(null)
   const [action, setAction] = useState<CashAction>('grant')
   const [amount, setAmount] = useState('')
@@ -134,7 +136,16 @@ export function CashierDeskPanel({ onBack }: { onBack: () => void }) {
         <p className="feat-sub">Cashier Desk — grant, deduct, or set a player's figure, then batch-confirm.</p>
       </header>
 
-      <PlayerSearch org={book} onSelect={(pid) => { setId(pid); setSaved(null); setError(null) }} />
+      <ScopeBar org={book} value={scope} onChange={setScope} />
+      <PlayerSearch
+        org={book}
+        restrictTo={inScope(book, scope)}
+        onSelect={(pid) => {
+          setId(pid)
+          setSaved(null)
+          setError(null)
+        }}
+      />
 
       {!isPlayer ? (
         <p className="feat-empty">Search a player to grant, deduct, or set their dollar figure.</p>
