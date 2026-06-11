@@ -5,6 +5,7 @@ describe('players manifests', () => {
   it('exposes the player tiles in the contract shape', () => {
     expect(playersManifests.map((m) => m.key)).toEqual([
       'players',
+      'customer-admin',
       'add-player',
       'cashier',
       'limits',

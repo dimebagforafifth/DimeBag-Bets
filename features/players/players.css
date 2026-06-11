@@ -174,3 +174,216 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Customer Admin — the player grid (self-contained: classes live here so the
+   panel never depends on another section's CSS being imported) ──────────────── */
+.custadm-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.custadm-search {
+  max-width: 260px;
+}
+.custadm-flash {
+  margin: 0;
+}
+
+/* Bulk action bar — appears only when rows are selected. */
+.custadm-bulk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--c-panel);
+  border: 1px solid var(--c-gold);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.custadm-bulk-n {
+  font-weight: 800;
+  font-size: 12.5px;
+  color: var(--c-gold);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+}
+.custadm-bulk-grp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.custadm-bulk-input {
+  width: 130px;
+  padding: 6px 9px;
+  font-size: 13px;
+}
+.custadm-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--c-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Grid */
+.custadm-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+}
+.custadm {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.custadm thead th {
+  text-align: left;
+  padding: 10px 12px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted);
+  background: var(--c-panel-2);
+  border-bottom: 1px solid var(--c-border);
+  white-space: nowrap;
+}
+.custadm tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--c-border);
+  vertical-align: middle;
+}
+.custadm tbody tr:last-child td {
+  border-bottom: none;
+}
+.custadm .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.custadm thead .num {
+  text-align: right;
+}
+.custadm tr.is-locked .custadm-name {
+  color: var(--c-muted);
+  text-decoration: line-through;
+}
+.custadm-check {
+  width: 32px;
+  text-align: center;
+}
+.custadm-name {
+  font-weight: 600;
+}
+
+/* Inline move (agent) select */
+.custadm-move {
+  background: var(--c-panel-2);
+  border: 1px solid var(--c-border);
+  border-radius: 7px;
+  color: var(--c-text);
+  padding: 5px 8px;
+  font-size: 12.5px;
+  font-family: 'Saira', sans-serif;
+  max-width: 170px;
+}
+.custadm-move:focus {
+  outline: none;
+  border-color: var(--c-gold);
+}
+
+/* Inline credit editor */
+.custadm-money {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  justify-content: flex-end;
+}
+.custadm-money-cur {
+  color: var(--c-muted);
+}
+.custadm-money-input {
+  width: 78px;
+  background: var(--c-panel-2);
+  border: 1px solid var(--c-border);
+  border-radius: 7px;
+  color: var(--c-text);
+  padding: 5px 7px;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Saira', sans-serif;
+}
+.custadm-money-input:focus {
+  outline: none;
+  border-color: var(--c-gold);
+}
+
+/* Login status + reset */
+.custadm-login {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.custadm-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+}
+.custadm-badge.is-ok {
+  color: var(--c-up);
+  border-color: color-mix(in srgb, var(--c-up) 45%, transparent);
+}
+.custadm-badge.is-reset {
+  color: var(--c-gold);
+  border-color: color-mix(in srgb, var(--c-gold) 45%, transparent);
+}
+.custadm-badge.is-none {
+  color: var(--c-muted);
+}
+.custadm-reset {
+  background: none;
+  border: none;
+  color: var(--c-gold);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: 'Saira', sans-serif;
+}
+.custadm-reset:disabled {
+  color: var(--c-muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* Status toggle */
+.custadm-status {
+  border: 1px solid var(--c-border);
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--c-panel-2);
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+}
+.custadm-status.is-on {
+  color: var(--c-up);
+  border-color: color-mix(in srgb, var(--c-up) 45%, transparent);
+}
+.custadm-status.is-off {
+  color: var(--c-down);
+  border-color: color-mix(in srgb, var(--c-down) 45%, transparent);
+}
+.custadm-err {
+  color: var(--c-down);
+  font-size: 12px;
+  padding: 4px 12px 8px !important;
+}

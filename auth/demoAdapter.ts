@@ -100,6 +100,16 @@ export function createDemoAdapter(): AuthAdapter {
   }
 }
 
+/**
+ * REDACTED credential list for the operator console — id + email only, NEVER the
+ * password. The console's Customer Admin reads this to show a login STATUS (does this
+ * member have a login?) without the demo password ever leaving this module. See
+ * auth/credentials.ts. // TODO(api): in real mode this comes from Supabase, not here.
+ */
+export function listDemoCreds(): ReadonlyArray<{ id: string; email: string }> {
+  return CREDS.load().map((c) => ({ id: c.id, email: c.email }))
+}
+
 /** Test helper: restore the demo auth store to its seeded, signed-out state. */
 export function __resetDemoAuth(): void {
   CREDS.save([...SEED_CREDS])

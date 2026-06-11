@@ -10,9 +10,11 @@ import {
   PieChart,
   StickyNote,
   Megaphone,
+  Table2,
 } from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { PlayerAdminPanel } from './PlayerAdminPanel.js'
+import { CustomerAdminPanel } from './CustomerAdminPanel.js'
 import { AddPlayerPanel } from './AddPlayerPanel.js'
 import { CashierPanel } from './CashierPanel.js'
 import { LimitsPanel } from './LimitsPanel.js'
@@ -33,6 +35,14 @@ export const playersManifests: FeatureManifest[] = [
     section: 'players',
     icon: Users,
     Panel: PlayerAdminPanel,
+  },
+  {
+    key: 'customer-admin',
+    name: 'Customer Admin',
+    hint: 'Grid edit credit, status & agent; reset logins',
+    section: 'players',
+    icon: Table2,
+    Panel: CustomerAdminPanel,
   },
   {
     key: 'add-player',
