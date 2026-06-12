@@ -67,3 +67,32 @@ export type { ArbitrageResult, MarketSafety } from './arbitrage.js'
 
 export { hedgeToLock, evaluateHedge, maxBookStake } from './hedge.js'
 export type { HedgeResult, HedgeOutcomes } from './hedge.js'
+
+// The deterministic pricing pipeline (feed → margin → adjustments → override) + the
+// house-margin config and the pricing audit log (Part 2).
+export {
+  publishMarket,
+  effectiveMargin,
+  getHouseMargin,
+  setHouseMargin,
+  getLeagueMarketMargin,
+  setLeagueMarketMargin,
+  subscribeHouseMargin,
+  getHouseMarginVersion,
+  houseMarginActive,
+  resetHouseMargin,
+  recordPricingAudit,
+  getPricingAudit,
+  subscribePricingAudit,
+  getPricingAuditVersion,
+  setPricingActor,
+  altLineLadder as altLineLadderSpread,
+} from './precedence.js'
+export type {
+  PublishSource,
+  PublishLayers,
+  PublishedMarket,
+  LineOverride,
+  PricingAuditEntry,
+  PricingAuditDraft,
+} from './precedence.js'

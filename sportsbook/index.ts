@@ -59,16 +59,49 @@ export {
   getOverlayVersion,
   getAdjustment,
   isEventSuspended,
+  isLeagueSuspended,
   isMarketSuspended,
   isMarketAdjusted,
+  hasOverride,
   setMarketSuspended,
   setEventSuspended,
+  setLeagueSuspended,
   nudgeLine,
   setMargin,
+  setShade,
+  setLineOverride,
+  clearLineOverride,
   resetMarket,
   resetOverlay,
 } from './book/overlay.js'
 export type { MarketAdjustment } from './book/overlay.js'
+
+// The pricing pipeline + house margin + audit (Part 2) — re-exported for the desk UI.
+export {
+  publishMarket,
+  effectiveMargin,
+  getHouseMargin,
+  setHouseMargin,
+  getLeagueMarketMargin,
+  setLeagueMarketMargin,
+  subscribeHouseMargin,
+  getHouseMarginVersion,
+  houseMarginActive,
+  resetHouseMargin,
+  recordPricingAudit,
+  getPricingAudit,
+  subscribePricingAudit,
+  getPricingAuditVersion,
+  setPricingActor,
+  altLineLadderSpread,
+} from './trading/index.js'
+export type {
+  PublishSource,
+  PublishLayers,
+  PublishedMarket,
+  LineOverride,
+  PricingAuditEntry,
+} from './trading/index.js'
 
 // The futures book — outright markets placed/graded through core, settled by the
 // operator (or a real feed later). See book/futures.ts.
