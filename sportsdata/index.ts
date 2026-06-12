@@ -11,3 +11,8 @@
 export type { ApiEvent, ApiBookmaker, ApiMarket, ApiOutcome, ApiScore } from './types.js'
 export { mapEvent, mapSlate, type MapOptions } from './map.js'
 export { createHttpFeed, fetchJsonSlate, type HttpFeed, type HttpFeedOptions } from './httpFeed.js'
+
+// The central ingestion poller + the cache-backed feed (the vendor↔player split):
+// ONE poller writes the normalized slate to a cache; every store reads via the feed.
+export { createIngestionPoller, type IngestionOptions, type IngestionPoller } from './ingestion.js'
+export { createCacheFeed, type CacheSource } from './cacheFeed.js'
