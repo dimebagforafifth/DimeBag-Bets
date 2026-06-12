@@ -27,6 +27,7 @@ import {
   isEventSuspended,
   isMarketSuspended,
   isMarketAdjusted,
+  hasOverride,
   setEventSuspended,
   setMarketSuspended,
   nudgeLine,
@@ -53,7 +54,22 @@ import {
 } from '../../props/index.js'
 import { teaserDecimal, TEASER_TABLES, boostProfit, boostedReturn, freeBetValue, freeBetReturn, type TeaserSport } from '../../bets/index.js'
 import { formatMoney, toCents } from '../../../games/shared/money.js'
+import {
+  LineModeToggle,
+  LinesGuidedTour,
+  SimpleHouseEdge,
+  MarginMatrix,
+  AutoRulesPanel,
+  AltLinesCard,
+  CirclingSection,
+  FollowFeedToggle,
+  ShadeControl,
+  OverrideEditor,
+  type LineMode,
+  type CirclingApi,
+} from './LineControls.js'
 import './trading-desk.css'
+import './line-controls.css'
 
 /**
  * The trading desk (CLAUDE.md §4) — the operator's odds toolkit, surfaced in the
@@ -121,7 +137,7 @@ function signedPct(x: number, dp = 1): string {
   return `${x > 0 ? '+' : ''}${(x * 100).toFixed(dp)}%`
 }
 
-export function TradingDesk() {
+export function TradingDesk({ circling }: { circling?: CirclingApi } = {}) {
   const [tab, setTab] = useState<DeskTab>('lines')
   return (
     <div className="td">
@@ -149,12 +165,7 @@ export function TradingDesk() {
       </div>
 
       <div className="td-grid">
-        {tab === 'lines' && (
-          <>
-            <LinesCard />
-            <FuturesCard />
-          </>
-        )}
+        {tab === 'lines' && <LinesTab circling={circling} />}
         {tab === 'markets' && (
           <>
             <DevigCard />
@@ -204,7 +215,40 @@ function pickLabel(s: Selection, e: GameEvent): string {
  * is reflected for every player at once. It manages the pre-game (`upcoming`)
  * book; once a game is live the feed owns it.
  */
-function LinesCard() {
+/** The Lines tab: a Simple/Advanced mode toggle over the one pipeline, the mode-specific
+ *  controls, then the live per-event line list (which moves the player book). */
+function LinesTab({ circling }: { circling?: CirclingApi }) {
+  const [mode, setMode] = useState<LineMode>('simple')
+  return (
+    <div className="td-lines-tab">
+      <LinesGuidedTour />
+      <div className="tdx-modebar">
+        <LineModeToggle mode={mode} onChange={setMode} />
+        <span className="tdx-modebar-hint">
+          {mode === 'simple'
+            ? 'One hold, quick line nudges, one-tap suspend.'
+            : 'Full control: margin matrix, shading, manual overrides, auto-rules.'}
+        </span>
+      </div>
+
+      {mode === 'simple' ? (
+        <SimpleHouseEdge />
+      ) : (
+        <div className="tdx-adv-grid">
+          <MarginMatrix />
+          <AutoRulesPanel />
+          <AltLinesCard />
+          <CirclingSection circling={circling} />
+        </div>
+      )}
+
+      <LinesCard mode={mode} />
+      <FuturesCard />
+    </div>
+  )
+}
+
+function LinesCard({ mode }: { mode: LineMode }) {
   useSyncExternalStore(subscribeOverlay, getOverlayVersion)
   const slate = applyOverlay(EVENTS)
   return (
@@ -216,14 +260,14 @@ function LinesCard() {
       </p>
       <div className="td-lines-list">
         {slate.map((e) => (
-          <EventLines key={e.id} event={e} />
+          <EventLines key={e.id} event={e} mode={mode} />
         ))}
       </div>
     </div>
   )
 }
 
-function EventLines({ event }: { event: GameEvent }) {
+function EventLines({ event, mode }: { event: GameEvent; mode: LineMode }) {
   const suspended = isEventSuspended(event.id)
   return (
     <div className={`td-evt ${suspended ? 'is-suspended' : ''}`}>
@@ -245,14 +289,14 @@ function EventLines({ event }: { event: GameEvent }) {
       </div>
       <div className="td-mkts">
         {(['moneyline', 'spread', 'total'] as MarketKind[]).map((m) => (
-          <MarketLine key={m} event={event} market={m} />
+          <MarketLine key={m} event={event} market={m} mode={mode} />
         ))}
       </div>
     </div>
   )
 }
 
-function MarketLine({ event, market }: { event: GameEvent; market: MarketKind }) {
+function MarketLine({ event, market, mode }: { event: GameEvent; market: MarketKind; mode: LineMode }) {
   const sels = event.selections.filter((s) => s.market === market)
   const adj = getAdjustment(event.id, market)
   const evtSusp = isEventSuspended(event.id)
@@ -262,6 +306,7 @@ function MarketLine({ event, market }: { event: GameEvent; market: MarketKind })
   const line = sels[0]?.line ?? 0
 
   return (
+    <div className="td-mkt-wrap">
     <div className={`td-mkt ${suspended ? 'is-suspended' : ''}`}>
       <span className="td-mkt-name">
         {MARKET_LABEL[market]}
@@ -343,7 +388,18 @@ function MarketLine({ event, market }: { event: GameEvent; market: MarketKind })
         >
           ↺
         </button>
+        <FollowFeedToggle event={event} market={market} />
+        {mode === 'advanced' && <ShadeControl event={event} market={market} />}
       </span>
+    </div>
+    {mode === 'advanced' && (
+      <details className="tdx-override-wrap">
+        <summary className="tdx-override-sum">
+          Manual override{hasOverride(event.id, market) ? ' · active' : ''}
+        </summary>
+        <OverrideEditor event={event} market={market} />
+      </details>
+    )}
     </div>
   )
 }

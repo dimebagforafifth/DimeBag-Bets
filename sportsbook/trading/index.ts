@@ -96,3 +96,16 @@ export type {
   PricingAuditEntry,
   PricingAuditDraft,
 } from './precedence.js'
+
+// Exposure-aware auto-rules for the advanced desk (Part 3).
+export {
+  evaluateExposureRule,
+  evaluateDriftRule,
+  getAutoRules,
+  setAutoRules,
+  subscribeAutoRules,
+  getAutoRulesVersion,
+  resetAutoRules,
+  DEFAULT_AUTORULES,
+} from './autorules.js'
+export type { AutoRulesConfig, ExposureRule, DriftRule } from './autorules.js'
