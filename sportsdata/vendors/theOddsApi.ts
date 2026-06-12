@@ -120,7 +120,7 @@ export interface OddsApiClientOptions {
   onQuota?: (quota: Quota) => void
 }
 
-function readQuota(headers: { get(name: string): string | null }): Quota {
+export function readQuota(headers: { get(name: string): string | null }): Quota {
   const num = (v: string | null) => (v == null || v === '' ? null : Number(v))
   return { remaining: num(headers.get('x-requests-remaining')), used: num(headers.get('x-requests-used')) }
 }
