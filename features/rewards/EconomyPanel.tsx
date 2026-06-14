@@ -43,7 +43,7 @@ export function EconomyPanel({ onBack }: { onBack: () => void }) {
       <header className="feat-head">
         <p className="feat-sub">
           Caps and budgets so rewards can’t blow up the coin economy, and the master switch for each
-          program. Everything is coins — no cash, no cash value.
+          program. Everything is coins — never cash.
         </p>
       </header>
 

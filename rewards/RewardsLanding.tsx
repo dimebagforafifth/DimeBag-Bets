@@ -149,7 +149,7 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
         </div>
         <p className="rw-sub" style={{ margin: '0 0 8px' }}>
           Cashback returns a slice of every coin you wager. Bonus coins unlock to your balance as you
-          play — coins only, never a cash-out.
+          play — coins only, never convertible to money.
         </p>
         {api.cashbackPending === 0 && api.locked.length === 0 ? (
           <p className="rw-row-desc">Keep playing to earn cashback and unlock bonuses.</p>

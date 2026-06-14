@@ -6,11 +6,15 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { RewardsSection } from './index.js'
 import { VIEWS } from './data.js'
+import { __resetRewardsPlayers } from './players.js'
+import { resetRewardsConfig } from './economy.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 let host: HTMLElement
 let root: Root
 beforeEach(() => {
+  __resetRewardsPlayers()
+  resetRewardsConfig()
   host = document.createElement('div')
   document.body.appendChild(host)
   root = createRoot(host)
@@ -64,6 +68,19 @@ describe('Rewards section', () => {
     openView('Badges')
     expect(host.querySelectorAll('.rw-badge').length).toBeGreaterThan(0)
     expect(text()).toMatch(/unlocked/i)
+  })
+
+  it('shows only THIS player’s own status & rewards (own-only)', () => {
+    // Marco — seeded Gold tier at 68,400 status
+    act(() => root.render(<RewardsSection memberId="p-marco" playerName="Marco" balanceCoins={12_500} />))
+    expect(text()).toMatch(/68,400/) // Marco's status
+    expect(text()).toMatch(/Gold/)
+
+    // Dana — a different player, different standing; never Marco's numbers
+    act(() => root.render(<RewardsSection memberId="p-dana" playerName="Dana" balanceCoins={50_000} />))
+    expect(text()).toMatch(/540,000/) // Dana's status
+    expect(text()).toMatch(/Platinum/)
+    expect(text()).not.toMatch(/68,400/)
   })
 
   it('claims the daily bonus (coins credited locally, never cash)', () => {
