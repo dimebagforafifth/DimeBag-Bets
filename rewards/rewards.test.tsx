@@ -34,16 +34,23 @@ const btnIn = (label: string, contains: string) =>
   [...card(label).querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes(contains))!
 
 describe('Rewards hub', () => {
-  it('renders the focused core — rank, rakeback, daily, free spins, store, leaderboard — no coins', () => {
+  it('renders the focused core — rank, active boost, rakeback, daily, free spins — no coins', () => {
     render()
     expect(host.querySelector('.rw-h1')?.textContent).toBe('Rewards')
     expect(text()).toMatch(/Rank/)
+    expect(text()).toMatch(/Profit Boost/) // the active promo banner
     expect(text()).toMatch(/Rakeback/)
     expect(text()).toMatch(/Daily bonus/)
     expect(text()).toMatch(/Free spins/)
-    expect(text()).toMatch(/Store/)
-    expect(text()).toMatch(/Top players/)
     expect(text()).not.toMatch(/coin/i)
+  })
+
+  it('a winning bet in the demo applies the active profit boost', () => {
+    render()
+    const before = getPlayerRewards('p-marco').rakebackAccrued
+    act(() => btnIn('Demo controls', 'Win a $50 bet').click())
+    // the $50 wager still accrued rakeback (5% of $50 = $2.50)
+    expect(getPlayerRewards('p-marco').rakebackAccrued).toBe(before + 250)
   })
 
   it('claims rakeback into the balance (accrued zeroes)', () => {

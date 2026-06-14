@@ -13,6 +13,8 @@ import {
   claimDaily,
   playFreeSpin,
   redeemStoreItem,
+  activeBoost,
+  applyProfitBoost,
   __resetRewardsPlayers,
 } from './players.js'
 import {
@@ -173,6 +175,31 @@ describe('store — affordability is enforced; redeeming moves credits + grants 
     setBalance('p-dana', 10_000_000)
     // p-dana already owns flair-gold in the seed
     expect(redeemStoreItem('p-dana', 'flair-gold', NOW)).toMatchObject({ ok: false, reason: 'Already owned.' })
+  })
+})
+
+describe('profit boost — adds % to winning profit, capped at the stake limit', () => {
+  it('credits boostPct% of the profit on up to maxStake of stake', () => {
+    const boost = activeBoost()! // seeded: 25% up to $100
+    expect(boost).toMatchObject({ boostPct: 25, maxStake: 100 })
+
+    // $50 stake, $50 profit (even money) — fully under the $100 cap → +25% = $12.50
+    const before = balance('p-marco')
+    const extra = applyProfitBoost('p-marco', 5_000, 5_000, NOW)
+    expect(extra).toBe(1_250)
+    expect(balance('p-marco')).toBe(before + 1_250)
+  })
+
+  it('only boosts the profit earned on the first $cap of stake', () => {
+    // $200 stake, $200 profit, $100 cap → boost applies to half → +25% of $100 = $25
+    const extra = applyProfitBoost('p-lena', 20_000, 20_000, NOW)
+    expect(extra).toBe(2_500)
+  })
+
+  it('does nothing when promos are off or there is no active boost', () => {
+    updateRewardsConfig({ loyalty: { ...getRewardsConfig().loyalty, features: { ...getRewardsConfig().loyalty.features, promos: false } } })
+    expect(activeBoost()).toBeNull()
+    expect(applyProfitBoost('p-marco', 5_000, 5_000, NOW)).toBe(0)
   })
 })
 

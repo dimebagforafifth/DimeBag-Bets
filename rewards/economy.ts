@@ -101,7 +101,25 @@ export interface StoreItem {
   once?: boolean
 }
 
+/** The features the manager turns on/off (DraftKings/Stake-style). */
+export type RewardFeature = 'rakeback' | 'daily' | 'freeSpins' | 'promos'
+
+/** A profit-boost promo — adds `boostPct`% to the profit on a winning bet, on up to
+ *  `maxStake` credits of stake ("25% profit boost on all bets up to $100"). */
+export interface ProfitBoost {
+  id: string
+  name: string
+  boostPct: number
+  /** "up to $X" — the max stake (credits) the boost applies to. */
+  maxStake: number
+  active: boolean
+}
+
 export interface LoyaltyConfig {
+  /** Which player-facing features are live (the manager's simple on/off). */
+  features: Record<RewardFeature, boolean>
+  /** Profit-boost promos the manager runs. */
+  boosts: ProfitBoost[]
   /** Fraction of credits WAGERED accrued as rakeback (0.05 = 5%). */
   rakebackRate: number
   /** Base credits per daily claim. */
@@ -214,6 +232,8 @@ export const DEFAULT_CONFIG: RewardsConfig = {
   ],
   daily: { enabled: true, rewards: [100, 150, 250, 400, 600, 800, 1_500] },
   loyalty: {
+    features: { rakeback: true, daily: true, freeSpins: true, promos: true },
+    boosts: [{ id: 'boost-25', name: '25% Profit Boost', boostPct: 25, maxStake: 100, active: true }],
     rakebackRate: 0.05,
     dailyBase: 100,
     dailyStreakStep: 25,
@@ -263,7 +283,8 @@ const DOC: Doc<RewardsConfig> = persistedDoc<RewardsConfig>(store, 'rewards.conf
   // v2: dropped the 'store' program; balance/credit terminology throughout.
   // v3: added per-program publish schedule (goLiveAt).
   // v4: added the focused `loyalty` block (rakeback/daily/warm-up/spins/store).
-  version: 4,
+  // v5: added loyalty.features (on/off) + loyalty.boosts (profit-boost promos).
+  version: 5,
   initial: DEFAULT_CONFIG,
 })
 

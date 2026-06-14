@@ -652,3 +652,24 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* ── active profit-boost banner ── */
+.rw-boost {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(214, 177, 74, 0.12), rgba(214, 177, 74, 0.03));
+}
+.rw-boost-tag {
+  font-weight: 800;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.rw-boost-body {
+  color: var(--text);
+  font-size: 14px;
+}

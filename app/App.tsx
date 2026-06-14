@@ -13,7 +13,6 @@ import { availableToWager, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
 import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
 import { RewardsSection } from '../rewards/index.js'
-import { runDueSchedules } from '../rewards/publishing.js'
 import './rewards-accrual.js' // side effect: accrue rewards from real wagers
 import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook/index.js'
 import { formatMoney } from '../games/shared/money.js'
@@ -180,12 +179,6 @@ export function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0 })
   }, [activeSection, liveGame?.key])
-
-  // Catch up any reward feature whose scheduled go-live has passed — publishes it (and
-  // relays the alert) once. Idempotent: a published feature clears its schedule.
-  useEffect(() => {
-    void runDueSchedules(Date.now())
-  }, [])
 
   // A signed-in PLAYER plays as themselves: pin the current player to their own node
   // (and they get no player-switcher). Operators/agents keep the switcher for play-as.

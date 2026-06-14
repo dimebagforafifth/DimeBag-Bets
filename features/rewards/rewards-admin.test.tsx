@@ -51,7 +51,7 @@ describe('rewards admin — role filtering', () => {
     expect(keys).toContain('rewards-comp') // the comp tool
     expect(keys).not.toContain('tier-config') // never the global config
     expect(keys).not.toContain('rewards-economy')
-    expect(keys).not.toContain('rewards-promos')
+    expect(keys).not.toContain('rewards-control')
   })
 
   it('a player sees nothing at all', () => {

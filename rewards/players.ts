@@ -20,7 +20,7 @@
  */
 
 import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
-import { getRewardsConfig, recordIssuance } from './economy.js'
+import { getRewardsConfig, recordIssuance, type ProfitBoost } from './economy.js'
 import { adjustFigure } from '../app/manager-actions.js'
 import { getBook } from '../app/book-store.js'
 
@@ -351,6 +351,53 @@ export function redeemStoreItem(memberId: string, itemId: string, _now: number):
     return next
   })
   return { ok: true }
+}
+
+/* ------------------------------- profit boost ------------------------------ */
+
+/** The active profit-boost promo, or null (none / promos off). */
+export function activeBoost(): ProfitBoost | null {
+  const l = getRewardsConfig().loyalty
+  if (!l.features.promos) return null
+  return l.boosts.find((b) => b.active && b.boostPct > 0) ?? null
+}
+
+/**
+ * Apply the active profit boost to a winning bet — DraftKings/Stake style: credit an extra
+ * `boostPct`% of the profit earned on up to `maxStake` credits of stake. Returns the extra
+ * credited (cents). No-op if there's no active boost or the bet didn't profit.
+ */
+export function applyProfitBoost(memberId: string, stakeCents: number, profitCents: number, now: number): number {
+  if (profitCents <= 0 || stakeCents <= 0) return 0
+  const boost = activeBoost()
+  if (!boost) return 0
+  const eligibleStake = Math.min(stakeCents, boost.maxStake * 100) // "up to $X"
+  const eligibleProfit = (profitCents * eligibleStake) / stakeCents
+  const extra = Math.round(eligibleProfit * (boost.boostPct / 100))
+  if (extra <= 0) return 0
+  try {
+    adjustFigure(memberId, extra, `Profit boost +${boost.boostPct}%`, 'rewards')
+    recordIssuance('promo', Math.round(extra / 100), now)
+  } catch {
+    return 0
+  }
+  return extra
+}
+
+/** Demo helper: simulate a winning bet through the real reward paths — accrues rakeback +
+ *  warm-up on the stake, credits the win, and applies any active profit boost. */
+export function demoWinningBet(memberId: string, stakeCents: number, mult: number, now: number): { profitCents: number; boostCents: number } {
+  const profitCents = Math.max(0, Math.round(stakeCents * (mult - 1)))
+  settleWager(memberId, stakeCents, now)
+  if (profitCents > 0) {
+    try {
+      adjustFigure(memberId, profitCents, 'Demo: bet won', 'rewards')
+    } catch {
+      /* member not in book (edge) */
+    }
+  }
+  const boostCents = applyProfitBoost(memberId, stakeCents, profitCents, now)
+  return { profitCents, boostCents }
 }
 
 /* ------------------------------- leaderboard ------------------------------- */
