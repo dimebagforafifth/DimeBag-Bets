@@ -1,0 +1,523 @@
+/* Rewards section — VANTAGE graphite-and-gold, scoped to `.rewards` so it reads as a
+   premium loyalty layer distinct from the casino's teal. Gold is for accents +
+   active/selected states ONLY; every label/value is high-contrast near-white. */
+.rewards {
+  --bg: #14171c;
+  --panel: #1b1f26;
+  --panel-2: #20252e;
+  --line: #2a2f39;
+  --gold: #d6b14a;
+  --up: #5bb98b;
+  --down: #d27068;
+  --text: #f4f5f7;
+  --muted: #c2c8d2;
+  --radius: 12px;
+
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: var(--text);
+  font-family: 'Saira', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---- headings / text ---- */
+.rw-h1 {
+  margin: 0;
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.rw-h2 {
+  margin: 0 0 12px;
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+}
+.rw-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.rw-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+.rw-value {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.rw-coins {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.rw-up {
+  color: var(--up);
+}
+.rw-down {
+  color: var(--down);
+}
+.rw-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ---- section header + sub-nav ---- */
+.rw-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rw-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.rw-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 13px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+.rw-tab svg {
+  width: 16px;
+  height: 16px;
+}
+.rw-tab:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+.rw-tab.is-on {
+  color: #14171c;
+  background: var(--gold);
+}
+.rw-tab:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---- cards / grid (casino-lobby-like) ---- */
+.rw-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.rw-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.rw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+.rw-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+/* quick-link tile (mirrors a game card: hover lift + gold accent) */
+.rw-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.rw-tile:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+  box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--gold) 70%, transparent);
+}
+.rw-tile:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+.rw-tile-name {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+}
+.rw-tile-hint {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* icon chip (tinted by a per-item --accent) */
+.rw-icon {
+  --accent: var(--gold);
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--panel-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.rw-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.rw-icon.is-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+.rw-icon.is-sm svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* ---- hero rank card ---- */
+.rw-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 22px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 60%),
+    var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+.rw-hero-emblem {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: var(--accent, var(--gold));
+  background: color-mix(in srgb, var(--accent, var(--gold)) 18%, var(--panel-2));
+  border: 1px solid color-mix(in srgb, var(--accent, var(--gold)) 40%, transparent);
+}
+.rw-hero-emblem svg {
+  width: 38px;
+  height: 38px;
+}
+.rw-hero-body {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- progress bar ---- */
+.rw-progress {
+  height: 9px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.rw-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 70%, #b8923a), var(--gold));
+}
+.rw-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---- KPI strip ---- */
+.rw-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+.rw-kpi {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rw-kpi strong {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 23px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- buttons ---- */
+.rw-btn {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.rw-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+.rw-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.rw-btn-primary {
+  color: #14171c;
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.rw-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---- chips (period / board / scope filters) ---- */
+.rw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rw-chip {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 13px;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+.rw-chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.rw-chip.is-on {
+  color: #14171c;
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.rw-chip:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---- tables (leaderboards) ---- */
+.rw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.rw-table th,
+.rw-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.rw-table th {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  color: var(--text);
+}
+.rw-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.rw-table tr.is-you {
+  background: color-mix(in srgb, var(--gold) 13%, transparent);
+}
+.rw-table tr.is-you td {
+  border-color: color-mix(in srgb, var(--gold) 35%, var(--line));
+}
+.rw-rankno {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-weight: 700;
+  color: var(--muted);
+  width: 2.5em;
+}
+.rw-rankno.is-top {
+  color: var(--gold);
+}
+
+/* ---- pills / tags ---- */
+.rw-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+.rw-pill.is-gold {
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+}
+.rw-pill.is-up {
+  color: var(--up);
+  border-color: color-mix(in srgb, var(--up) 45%, transparent);
+}
+
+/* ---- claimable / list rows ---- */
+.rw-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rw-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.rw-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rw-row-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+.rw-row-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---- badge grid (achievements) ---- */
+.rw-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.rw-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 18px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.rw-badge.is-locked {
+  opacity: 0.5;
+}
+.rw-badge .rw-icon {
+  width: 48px;
+  height: 48px;
+}
+.rw-badge.is-locked .rw-icon {
+  --accent: var(--muted);
+}
+.rw-badge-name {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+}
+.rw-badge-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* ---- empty + saved states ---- */
+.rw-empty {
+  margin: 0;
+  padding: 26px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+  background: var(--panel);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+.rw-saved {
+  font-size: 13px;
+  color: var(--up);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .rw-hero {
+    gap: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rw-tile,
+  .rw-tab,
+  .rw-chip {
+    transition: none;
+  }
+  .rw-tile:hover {
+    transform: none;
+  }
+}

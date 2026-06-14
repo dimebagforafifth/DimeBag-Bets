@@ -12,6 +12,7 @@ import {
 import { availableToWager, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
 import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
+import { RewardsSection } from '../rewards/index.js'
 import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { SoundToggle } from '../sound/index.js'
@@ -59,6 +60,7 @@ import '../auth/auth.css' // header identity menu styles (also used by the Login
 const NAV: { key: Section; label: string }[] = [
   { key: 'casino', label: 'Casino' },
   { key: 'sportsbook', label: 'Sportsbook' },
+  { key: 'rewards', label: 'Rewards' },
   { key: 'mybets', label: 'My Bets' },
   { key: 'leaderboard', label: 'Leaderboard' },
   { key: 'management', label: 'Management' },
@@ -284,6 +286,16 @@ export function App() {
             players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
             currentPlayerId={getCurrentPlayerId()}
           />
+        ) : activeSection === 'rewards' ? (
+          account && player ? (
+            <RewardsSection playerName={player.name} balanceCoins={Math.round(account.balance / 100)} />
+          ) : (
+            <NoPlayer
+              onManage={() => setSection('management')}
+              allSuspended={allSuspended}
+              canManage={canManage(role)}
+            />
+          )
         ) : activeSection === 'sportsbook' ? (
           account && player ? (
             <ResponsiblePlayGate playerId={account.id}>

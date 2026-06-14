@@ -12,10 +12,23 @@
 import type { Role } from '../org/index.js'
 
 /** The app's top-level sections. */
-export type Section = 'casino' | 'sportsbook' | 'mybets' | 'leaderboard' | 'management'
+export type Section =
+  | 'casino'
+  | 'sportsbook'
+  | 'rewards'
+  | 'mybets'
+  | 'leaderboard'
+  | 'management'
 
-export const ALL_SECTIONS: Section[] = ['casino', 'sportsbook', 'mybets', 'leaderboard', 'management']
-const PLAYER_SECTIONS: Section[] = ['casino', 'sportsbook', 'mybets', 'leaderboard']
+export const ALL_SECTIONS: Section[] = [
+  'casino',
+  'sportsbook',
+  'rewards',
+  'mybets',
+  'leaderboard',
+  'management',
+]
+const PLAYER_SECTIONS: Section[] = ['casino', 'sportsbook', 'rewards', 'mybets', 'leaderboard']
 const STAFF_SECTIONS: Section[] = ['management', 'leaderboard']
 
 /** The sections a role may reach. */

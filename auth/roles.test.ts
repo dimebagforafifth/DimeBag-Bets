@@ -3,7 +3,13 @@ import { allowedSections, canManage, canReach, defaultSection } from './roles.js
 
 describe('role → route access', () => {
   it('a player can play but cannot reach management', () => {
-    expect(allowedSections('player')).toEqual(['casino', 'sportsbook', 'mybets', 'leaderboard'])
+    expect(allowedSections('player')).toEqual([
+      'casino',
+      'sportsbook',
+      'rewards',
+      'mybets',
+      'leaderboard',
+    ])
     expect(canReach('player', 'management')).toBe(false)
     expect(canManage('player')).toBe(false)
     expect(defaultSection('player')).toBe('casino')
