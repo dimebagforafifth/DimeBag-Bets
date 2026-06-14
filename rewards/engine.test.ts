@@ -5,7 +5,6 @@ import {
   accrueFromWager,
   claimCashback,
   grantLockedBonus,
-  spendSpendable,
   __resetRewardsPlayers,
 } from './players.js'
 import {
@@ -27,6 +26,7 @@ import {
   agentCompUsed,
   __resetIssuance,
 } from './comp.js'
+import { getBook } from '../app/book-store.js'
 import { setAgentTile, __resetAllAgentPermissions } from '../app/agent-permissions.js'
 
 beforeEach(() => {
@@ -56,40 +56,30 @@ describe('play accrual', () => {
     expect(before.status).toBe(0)
 
     let r = accrueFromWager('pX', 400)
-    expect(r.unlockedCoins).toBe(0)
+    expect(r.unlocked).toBe(0)
     const mid = getPlayerRewards('pX')
     expect(mid.status).toBe(400) // status = stake
     expect(mid.cashbackPending).toBe(Math.round(400 * getRewardsConfig().economy.cashbackRate))
     expect(mid.locked[0].wagered).toBe(400)
 
     r = accrueFromWager('pX', 700) // total 1,100 ≥ 1,000 → unlocks
-    expect(r.unlockedCoins).toBe(1_000)
+    expect(r.unlocked).toBe(1_000)
     expect(getPlayerRewards('pX').locked).toHaveLength(0)
   })
 
-  it('claims cashback into the spendable balance', () => {
+  it('claims cashback (returned for the host to credit to the balance, never a wallet)', () => {
     accrueFromWager('pY', 10_000) // cashback = 50 at 0.5%
     const pending = getPlayerRewards('pY').cashbackPending
     expect(pending).toBeGreaterThan(0)
     const moved = claimCashback('pY')
-    expect(moved).toBe(pending)
-    expect(getPlayerRewards('pY').spendable).toBe(pending)
+    expect(moved).toBe(pending) // amount handed back to credit the figure
     expect(getPlayerRewards('pY').cashbackPending).toBe(0)
   })
 
   it('a 0-playthrough bonus unlocks instantly (no lock created)', () => {
     const out = grantLockedBonus('pZ', 500, 0, 'Instant')
-    expect(out.instantCoins).toBe(500)
+    expect(out.instant).toBe(500)
     expect(getPlayerRewards('pZ').locked).toHaveLength(0)
-  })
-
-  it('store redemption spends from spendable, never the regular balance', () => {
-    accrueFromWager('pS', 100_000)
-    claimCashback('pS')
-    const bal = getPlayerRewards('pS').spendable
-    expect(spendSpendable('pS', bal + 1)).toBe(false) // can't overspend
-    expect(spendSpendable('pS', 100)).toBe(true)
-    expect(getPlayerRewards('pS').spendable).toBe(bal - 100)
   })
 })
 
@@ -126,22 +116,23 @@ describe('comp — role / permission / downline / allowance gating', () => {
     const cap = getRewardsConfig().economy.agentWeeklyCompAllowance
     expect(compAllowanceLeft('a-e', 'agent', now)).toBe(cap)
 
-    const ok = issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'coins', amount: cap - 1_000, reason: 'loyalty', now })
+    const ok = issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'balance', amount: cap - 1_000, reason: 'loyalty', now })
     expect(ok.ok).toBe(true)
     expect(agentCompUsed('a-e', now)).toBe(cap - 1_000)
 
-    const over = issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'coins', amount: 5_000, reason: 'more', now })
+    const over = issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'balance', amount: 5_000, reason: 'more', now })
     expect(over.ok).toBe(false)
     expect(over.error).toMatch(/allowance/i)
   })
 
-  it('a coins comp credits the player’s spendable + records the comp + counts issuance', () => {
+  it('a balance comp credits the player’s real figure + records the comp + counts issuance', () => {
     const now = 1_750_000_000_000
-    const before = getPlayerRewards('p-dana').spendable
-    const res = issueComp({ actorMemberId: 'mgr', actorRole: 'manager', targetPlayerId: 'p-dana', kind: 'coins', amount: 2_500, reason: 'VIP care', now })
+    const before = getBook().members['p-dana'].account.balance
+    const res = issueComp({ actorMemberId: 'mgr', actorRole: 'manager', targetPlayerId: 'p-dana', kind: 'balance', amount: 2_500, reason: 'VIP care', now })
     expect(res.ok).toBe(true)
-    expect(getPlayerRewards('p-dana').spendable).toBe(before + 2_500)
-    expect(getPlayerRewards('p-dana').compHistory[0]).toMatchObject({ amount: 2_500, kind: 'coins', byName: 'Your Book' })
+    // credited through core in cents (2,500 units → 250,000 cents)
+    expect(getBook().members['p-dana'].account.balance).toBe(before + 250_000)
+    expect(getPlayerRewards('p-dana').compHistory[0]).toMatchObject({ amount: 2_500, kind: 'balance', byName: 'Your Book' })
   })
 })
 
@@ -177,9 +168,9 @@ describe('economy issuance ledger + caps', () => {
   })
 })
 
-describe('coins-only invariant', () => {
-  it('no rewards config surfaces a "$" / cash-value / withdrawal path (cashback is coins, allowed)', () => {
+describe('balance & status only — no coins anywhere in config', () => {
+  it('no rewards config surfaces "coins" / "$" / a cash-value / withdrawal path', () => {
     const blob = JSON.stringify(getRewardsConfig())
-    expect(blob).not.toMatch(/\$|cash[- ]?out|withdraw|real[- ]?money|cash value/i)
+    expect(blob).not.toMatch(/coin|\$|cash[- ]?out|withdraw|real[- ]?money|cash value/i)
   })
 })

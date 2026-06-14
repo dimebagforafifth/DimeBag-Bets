@@ -1,11 +1,11 @@
 /**
  * Daily — the login-bonus + streak sub-view. Shows the current login streak
  * prominently, the 7-day reward cycle as a strip (completed / claimable today /
- * upcoming), and a single primary claim for today's bonus. Coins / status only.
+ * upcoming), and a single primary claim for today's bonus. Balance & status only.
  */
 import type { CSSProperties } from 'react'
 import { Flame } from 'lucide-react'
-import { DAILY_CYCLE, coins, coinsShort, type RewardsApi } from './data.js'
+import { DAILY_CYCLE, fmt, type RewardsApi } from './data.js'
 
 export function DailyView({ api }: { api: RewardsApi }) {
   const { player } = api
@@ -47,7 +47,7 @@ export function DailyView({ api }: { api: RewardsApi }) {
             {today ? (
               <span className="rw-sub" style={{ margin: 0 }}>
                 Day {today.day} is ready — claim{' '}
-                <strong style={{ color: 'var(--gold)' }}>{coins(today.reward)}</strong>
+                <strong style={{ color: 'var(--gold)' }}>{fmt(today.reward)}</strong>
               </span>
             ) : (
               <span className="rw-pill is-gold">Cycle complete</span>
@@ -76,11 +76,11 @@ export function DailyView({ api }: { api: RewardsApi }) {
             className="rw-btn rw-btn-primary"
             disabled={alreadyClaimed}
             onClick={() =>
-              api.claim('daily-today', today.reward, `Daily bonus claimed — +${coins(today.reward)}`)
+              api.claim('daily-today', today.reward, `Daily bonus claimed — +${fmt(today.reward)}`)
             }
-            aria-label={alreadyClaimed ? 'Daily bonus already claimed' : `Claim ${coins(today.reward)}`}
+            aria-label={alreadyClaimed ? 'Daily bonus already claimed' : `Claim ${fmt(today.reward)}`}
           >
-            {alreadyClaimed ? 'Claimed' : `Claim ${coins(today.reward)}`}
+            {alreadyClaimed ? 'Claimed' : `Claim ${fmt(today.reward)}`}
           </button>
         )}
       </section>
@@ -102,14 +102,14 @@ export function DailyView({ api }: { api: RewardsApi }) {
                 className="rw-card"
                 key={d.day}
                 style={locked ? { opacity: 0.55 } : undefined}
-                aria-label={`Day ${d.day} — ${coins(d.reward)} — ${status}`}
+                aria-label={`Day ${d.day} — ${fmt(d.reward)} — ${status}`}
               >
                 <div className="rw-head" style={{ alignItems: 'center' }}>
                   <span className="rw-label">Day {d.day}</span>
                   <span className={pillClass}>{status}</span>
                 </div>
                 <div className="rw-coins" style={{ fontSize: 21, marginTop: 8 }}>
-                  +{coinsShort(d.reward)}
+                  +{fmt(d.reward)}
                 </div>
                 {d.bonus && (
                   <div className="rw-row-desc" style={{ marginTop: 4 }}>
@@ -127,14 +127,14 @@ export function DailyView({ api }: { api: RewardsApi }) {
                       api.claim(
                         'daily-today',
                         d.reward,
-                        `Daily bonus claimed — +${coins(d.reward)}`,
+                        `Daily bonus claimed — +${fmt(d.reward)}`,
                       )
                     }
                     aria-label={
-                      alreadyClaimed ? 'Daily bonus already claimed' : `Claim ${coins(d.reward)}`
+                      alreadyClaimed ? 'Daily bonus already claimed' : `Claim ${fmt(d.reward)}`
                     }
                   >
-                    {alreadyClaimed ? 'Claimed' : `Claim ${coins(d.reward)}`}
+                    {alreadyClaimed ? 'Claimed' : `Claim ${fmt(d.reward)}`}
                   </button>
                 )}
               </div>

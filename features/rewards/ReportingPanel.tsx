@@ -1,6 +1,6 @@
 /**
- * Rewards Reporting — coins issued by program, the running total, and recent comps. Read-
- * only. Manager only. Every figure is coins (no cash anywhere).
+ * Rewards Reporting — balance issued by program, the running total, and recent comps. Read-
+ * only. Manager only. Every figure is balance (no cash anywhere).
  */
 import { useMemo, useSyncExternalStore } from 'react'
 import { getBook, getBookVersion, subscribeBook } from '../../app/book-store.js'
@@ -16,7 +16,7 @@ import {
   getRewardsPlayersVersion,
   type CompRecord,
 } from '../../rewards/players.js'
-import { coins } from '../../rewards/data.js'
+import { fmt } from '../../rewards/data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
 
@@ -51,15 +51,15 @@ export function ReportingPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          What the rewards program has handed out — coins issued by program, and recent comps. All
-          coins; nothing here is cash.
+          What the rewards program has handed out — balance issued by program, and recent comps.
+          All balance; nothing here is cash.
         </p>
       </header>
 
       <section className="feat-kpis" aria-label="Issuance">
         <div className="feat-kpi">
-          <span className="feat-label">Total coins issued</span>
-          <strong>{coins(total)}</strong>
+          <span className="feat-label">Total issued</span>
+          <strong>{fmt(total)}</strong>
         </div>
         <div className="feat-kpi">
           <span className="feat-label">Programs running</span>
@@ -68,7 +68,7 @@ export function ReportingPanel({ onBack }: { onBack: () => void }) {
       </section>
 
       <section className="feat-card">
-        <h3 className="feat-h2">Coins issued by program</h3>
+        <h3 className="feat-h2">Balance issued by program</h3>
         <div className="rwa-bars">
           {rows.map(([k, v]) => (
             <div className="rwa-bar-row" key={k}>
@@ -76,7 +76,7 @@ export function ReportingPanel({ onBack }: { onBack: () => void }) {
               <div className="rwa-bar">
                 <div className="rwa-bar-fill" style={{ width: `${total > 0 ? (v / total) * 100 : 0}%` }} />
               </div>
-              <span className="rwa-bar-val">{coins(v)}</span>
+              <span className="rwa-bar-val">{fmt(v)}</span>
             </div>
           ))}
         </div>
@@ -93,7 +93,7 @@ export function ReportingPanel({ onBack }: { onBack: () => void }) {
                 <th>Player</th>
                 <th>By</th>
                 <th>Reward</th>
-                <th className="num">Coins</th>
+                <th className="num">Amount</th>
                 <th>Reason</th>
               </tr>
             </thead>
@@ -103,7 +103,7 @@ export function ReportingPanel({ onBack }: { onBack: () => void }) {
                   <td>{c.player}</td>
                   <td>{c.byName}</td>
                   <td>{c.kind}</td>
-                  <td className="num">{c.amount > 0 ? coins(c.amount) : '—'}</td>
+                  <td className="num">{c.amount > 0 ? fmt(c.amount) : '—'}</td>
                   <td>{c.reason}</td>
                 </tr>
               ))}

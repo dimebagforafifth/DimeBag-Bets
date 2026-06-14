@@ -291,10 +291,11 @@ export function App() {
             <RewardsSection
               memberId={player.id}
               playerName={player.name}
-              balanceCoins={Math.round(account.balance / 100)}
-              onCredit={(deltaCoins) => {
-                // Move REGULAR coins through core when an instant bonus is claimed.
-                if (deltaCoins > 0) grant(account, deltaCoins * 100)
+              balanceCents={account.balance}
+              availableCents={availableToWager(account)}
+              onCredit={(deltaUnits) => {
+                // Move balance through core (cents) when a reward is claimed.
+                if (deltaUnits > 0) grant(account, deltaUnits * 100)
                 refresh()
               }}
             />

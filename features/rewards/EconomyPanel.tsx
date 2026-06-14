@@ -1,6 +1,7 @@
 /**
- * Economy & budget — the guardrails that keep rewards from inflating the coin supply, plus
- * the master on/off switch per program (CLAUDE.md §4). Manager only. Coins/status only.
+ * Economy & budget — the guardrails that keep rewards from inflating the balance supply,
+ * plus the master on/off switch per program (CLAUDE.md §4). Manager only. Balance & status
+ * only.
  */
 import { useSyncExternalStore } from 'react'
 import {
@@ -13,7 +14,7 @@ import {
   type ProgramKey,
 } from '../../rewards/economy.js'
 import { totalIssued, subscribeIssuance, getIssuanceVersion } from '../../rewards/comp.js'
-import { coins } from '../../rewards/data.js'
+import { fmt } from '../../rewards/data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
 
@@ -24,7 +25,6 @@ const PROGRAM_LABEL: Record<ProgramKey, string> = {
   missions: 'Missions',
   promos: 'Promotions',
   contests: 'Contests',
-  store: 'Rewards store',
   leaderboards: 'Leaderboards',
 }
 
@@ -42,19 +42,19 @@ export function EconomyPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Caps and budgets so rewards can’t blow up the coin economy, and the master switch for each
-          program. Everything is coins — never cash.
+          Caps and budgets so rewards can’t blow up the balance economy, and the master switch for
+          each program. Everything is balance — never cash.
         </p>
       </header>
 
       <section className="feat-kpis" aria-label="Issuance">
         <div className="feat-kpi">
-          <span className="feat-label">Coins issued (all-time)</span>
-          <strong>{coins(issued)}</strong>
+          <span className="feat-label">Issued (all-time)</span>
+          <strong>{fmt(issued)}</strong>
         </div>
         <div className="feat-kpi">
           <span className="feat-label">Total cap</span>
-          <strong>{e.totalIssuanceCap > 0 ? coins(e.totalIssuanceCap) : 'Uncapped'}</strong>
+          <strong>{e.totalIssuanceCap > 0 ? fmt(e.totalIssuanceCap) : 'Uncapped'}</strong>
         </div>
         <div className="feat-kpi">
           <span className="feat-label">Cap used</span>
@@ -65,10 +65,10 @@ export function EconomyPanel({ onBack }: { onBack: () => void }) {
       <section className="feat-card">
         <h3 className="feat-h2">Budget controls</h3>
         <div className="rwa-econ-grid">
-          <Field label="Total issuance cap (coins, 0 = uncapped)" value={e.totalIssuanceCap} onChange={(v) => setEcon({ totalIssuanceCap: v })} />
-          <Field label="Weekly budget (coins, 0 = uncapped)" value={e.weeklyBudget} onChange={(v) => setEcon({ weeklyBudget: v })} />
-          <Field label="Cashback rate (basis points of coins wagered)" value={Math.round(e.cashbackRate * 10_000)} onChange={(v) => setEcon({ cashbackRate: Math.max(0, v) / 10_000 })} />
-          <Field label="Agent weekly comp allowance (coins)" value={e.agentWeeklyCompAllowance} onChange={(v) => setEcon({ agentWeeklyCompAllowance: v })} />
+          <Field label="Total issuance cap (0 = uncapped)" value={e.totalIssuanceCap} onChange={(v) => setEcon({ totalIssuanceCap: v })} />
+          <Field label="Weekly budget (0 = uncapped)" value={e.weeklyBudget} onChange={(v) => setEcon({ weeklyBudget: v })} />
+          <Field label="Cashback rate (basis points of amount wagered)" value={Math.round(e.cashbackRate * 10_000)} onChange={(v) => setEcon({ cashbackRate: Math.max(0, v) / 10_000 })} />
+          <Field label="Agent weekly comp allowance" value={e.agentWeeklyCompAllowance} onChange={(v) => setEcon({ agentWeeklyCompAllowance: v })} />
         </div>
       </section>
 

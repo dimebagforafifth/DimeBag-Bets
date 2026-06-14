@@ -4,7 +4,7 @@
  * agent-grantable permission so a manager can let an agent comp their own players. The
  * registry owner imports this array; do not edit console/registry/index.ts from here.
  */
-import { Crown, Megaphone, Trophy, HandCoins, CalendarCheck, SlidersHorizontal, BarChart3 } from 'lucide-react'
+import { Crown, Megaphone, Trophy, Gift, CalendarCheck, SlidersHorizontal, BarChart3 } from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { TierConfigPanel } from './TierConfigPanel.js'
 import { PromotionsPanel } from './PromotionsPanel.js'
@@ -26,7 +26,7 @@ export const rewardsAdminManifests: FeatureManifest[] = [
   {
     key: 'rewards-promos',
     name: 'Promotions',
-    hint: 'Build & run coin-bonus campaigns',
+    hint: 'Build & run balance-bonus campaigns',
     section: 'rewards',
     icon: Megaphone,
     Panel: PromotionsPanel,
@@ -34,7 +34,7 @@ export const rewardsAdminManifests: FeatureManifest[] = [
   {
     key: 'rewards-contests',
     name: 'Contests',
-    hint: 'Coin-prize races & standings',
+    hint: 'Prize races & standings',
     section: 'rewards',
     icon: Trophy,
     Panel: ContestsPanel,
@@ -44,9 +44,9 @@ export const rewardsAdminManifests: FeatureManifest[] = [
     // be granted (scoped to their downline + a weekly allowance).
     key: 'rewards-comp',
     name: 'Manual Comp',
-    hint: 'Hand a player coins / free plays / a badge',
+    hint: 'Hand a player balance / free plays / a badge',
     section: 'rewards',
-    icon: HandCoins,
+    icon: Gift,
     Panel: CompPanel,
   },
   {
@@ -68,7 +68,7 @@ export const rewardsAdminManifests: FeatureManifest[] = [
   {
     key: 'rewards-reporting',
     name: 'Reporting',
-    hint: 'Coins issued by program & comps',
+    hint: 'Balance issued by program & comps',
     section: 'rewards',
     icon: BarChart3,
     Panel: ReportingPanel,

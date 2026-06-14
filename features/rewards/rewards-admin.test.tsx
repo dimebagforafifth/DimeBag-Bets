@@ -60,14 +60,16 @@ describe('rewards admin — role filtering', () => {
 })
 
 describe('rewards admin — panels mount (manager)', () => {
-  it('every admin panel renders a body with no cash-value language', () => {
+  it('every admin panel renders a body with no "coins" or cash-value language', () => {
     for (const m of rewardsAdminManifests) {
       const h = host()
       const root: Root = createRoot(h)
       const Panel = m.Panel
       act(() => root.render(<Panel onBack={() => {}} />))
       expect((h.textContent ?? '').length, m.key).toBeGreaterThan(0)
-      expect(h.textContent ?? '', m.key).not.toMatch(/\$\d|cash[- ]?out|withdraw|real[- ]?money|cash value/i)
+      // balance & credit only: never "coins", never a cash-out / withdrawal path ($ is the
+      // app's money symbol and is allowed).
+      expect(h.textContent ?? '', m.key).not.toMatch(/coin|cash[- ]?out|withdraw|real[- ]?money|cash value/i)
       act(() => root.unmount())
       h.remove()
     }

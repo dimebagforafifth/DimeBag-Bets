@@ -1,6 +1,6 @@
 /**
  * Challenges/Missions + Daily/Streak config — the recurring earn loops. Define the daily
- * login cycle amounts and the missions players complete. Manager only. Coins only.
+ * login cycle amounts and the missions players complete. Manager only. Balance & status only.
  */
 import { useSyncExternalStore } from 'react'
 import {
@@ -28,7 +28,7 @@ export function ProgramsPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          The daily login cycle and the missions players complete. All rewards are coins.
+          The daily login cycle and the missions players complete. Every reward is balance.
         </p>
       </header>
 
@@ -42,7 +42,7 @@ export function ProgramsPanel({ onBack }: { onBack: () => void }) {
             Enabled
           </label>
         </div>
-        <p className="feat-sub">Coins for each day of the 7-day streak (day 7 is the streak payout).</p>
+        <p className="feat-sub">Balance for each day of the 7-day streak (day 7 is the streak payout).</p>
         <div className="rwa-daily-grid">
           {daily.rewards.map((r, i) => (
             <label key={i} className="feat-field rwa-day">
@@ -65,7 +65,7 @@ export function ProgramsPanel({ onBack }: { onBack: () => void }) {
               </label>
               <label className="feat-field rwa-pool">
                 <span>Reward</span>
-                <input className="feat-input" inputMode="numeric" value={m.rewardCoins} onChange={(e) => setMission(i, { rewardCoins: Number(e.target.value.replace(/[^\d]/g, '')) || 0 })} />
+                <input className="feat-input" inputMode="numeric" value={m.reward} onChange={(e) => setMission(i, { reward: Number(e.target.value.replace(/[^\d]/g, '')) || 0 })} />
               </label>
               <label className="feat-check">
                 <input type="checkbox" checked={m.active} onChange={(e) => setMission(i, { active: e.target.checked })} />

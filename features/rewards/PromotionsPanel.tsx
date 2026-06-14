@@ -1,7 +1,7 @@
 /**
- * Promotions Builder — create and run promos: bonus-coin campaigns, free-play drops, odds
+ * Promotions Builder — create and run promos: balance-bonus campaigns, free-play drops, odds
  * boosts, top-up matches. Each is time-boxed with a live active toggle. Manager only.
- * Coins/perks only — no cash, no cash value.
+ * Balance/perks only — no cash, no cash value.
  */
 import { useState, useSyncExternalStore } from 'react'
 import {
@@ -12,12 +12,12 @@ import {
   type Promo,
   type PromoKind,
 } from '../../rewards/economy.js'
-import { coins } from '../../rewards/data.js'
+import { fmt } from '../../rewards/data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
 
 const KIND_LABEL: Record<PromoKind, string> = {
-  bonus: 'Bonus coins',
+  bonus: 'Bonus balance',
   topup: 'Top-up match',
   freeplay: 'Free plays',
   oddsboost: 'Odds boost',
@@ -55,14 +55,14 @@ export function PromotionsPanel({ onBack }: { onBack: () => void }) {
   }
 
   const amountLabel = (p: Promo) =>
-    p.kind === 'oddsboost' ? `+${p.amount}%` : p.kind === 'freeplay' ? `${p.amount} plays` : coins(p.amount)
+    p.kind === 'oddsboost' ? `+${p.amount}%` : p.kind === 'freeplay' ? `${p.amount} plays` : fmt(p.amount)
 
   return (
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Build coin-bonus campaigns, free-play drops, odds boosts and top-up matches. Toggle one
-          live and eligible players see it at once. Coins and perks only.
+          Build balance-bonus campaigns, free-play drops, odds boosts and top-up matches. Toggle one
+          live and eligible players see it at once. Balance and perks only.
         </p>
       </header>
 
@@ -84,7 +84,7 @@ export function PromotionsPanel({ onBack }: { onBack: () => void }) {
             </select>
           </label>
           <label className="feat-field">
-            <span>{kind === 'oddsboost' ? 'Boost %' : kind === 'freeplay' ? 'Plays' : 'Coins'}</span>
+            <span>{kind === 'oddsboost' ? 'Boost %' : kind === 'freeplay' ? 'Plays' : 'Amount'}</span>
             <input className="feat-input" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ''))} />
           </label>
           <label className="feat-field">

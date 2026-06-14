@@ -1,7 +1,7 @@
 /**
  * Badges — the player's achievement collection. Grouped by category (wins /
  * streaks / tiers / milestones); each badge is an earned or locked status
- * milestone. These are purely status/cosmetic — no coins move here. Coins/status only.
+ * milestone. These are purely status/cosmetic — no balance moves here. Balance & status only.
  */
 import type { CSSProperties } from 'react'
 import { SEED_ACHIEVEMENTS, type BadgeCategory, type RewardsApi } from './data.js'

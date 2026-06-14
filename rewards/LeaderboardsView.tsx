@@ -1,8 +1,8 @@
 /**
- * Leaderboards sub-view — competitive coin/status boards. The player picks a board
+ * Leaderboards sub-view — competitive balance/status boards. The player picks a board
  * (Top Profit / Top Volume / Win Streak / Closing-Line Value), a period, and a scope
- * (Global vs Friends), then sees the standings with the coin prizes top finishers earn
- * and their own rank surfaced up top. Coins / status only — never cash.
+ * (Global vs Friends), then sees the standings with the balance prizes top finishers earn
+ * and their own rank surfaced up top. Balance & status only — never cash.
  */
 import { useMemo, useState, type CSSProperties } from 'react'
 import {
@@ -11,7 +11,7 @@ import {
   PERIOD_LABEL,
   boardRows,
   boardValue,
-  coins,
+  fmt,
   type BoardId,
   type Period,
   type Scope,
@@ -43,7 +43,7 @@ export function LeaderboardsView({ api }: { api: RewardsApi }) {
           Leaderboards
         </h2>
         <span className="rw-sub" style={{ margin: 0 }}>
-          Compete for coins &amp; status
+          Compete for prizes &amp; status
         </span>
       </div>
 
@@ -134,7 +134,7 @@ export function LeaderboardsView({ api }: { api: RewardsApi }) {
             </span>
           </div>
           <span className="rw-coins">
-            {you.prize > 0 ? `+${coins(you.prize)}` : '—'}
+            {you.prize > 0 ? `+${fmt(you.prize)}` : '—'}
           </span>
         </section>
       )}
@@ -164,7 +164,7 @@ export function LeaderboardsView({ api }: { api: RewardsApi }) {
                 <td className="num rw-value">{boardValue(boardDef, row.value)}</td>
                 <td className="num">
                   {row.prize > 0 ? (
-                    <span className="rw-coins">{coins(row.prize)}</span>
+                    <span className="rw-coins">{fmt(row.prize)}</span>
                   ) : (
                     <span className="rw-sub" style={{ margin: 0 }} aria-label="No prize">
                       —

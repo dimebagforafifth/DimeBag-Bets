@@ -1,11 +1,12 @@
 /**
- * The operator-controlled rewards CONFIG + the coin ECONOMY — the source of truth the
+ * The operator-controlled rewards CONFIG + the balance ECONOMY — the source of truth the
  * manager edits and players read (CLAUDE.md §4). Persisted on the standard doc seam.
  *
- * COINS / STATUS ONLY. Every amount here is coins, status points, a free-play count, an
- * odds-boost %, or a wagering multiplier — never cash, cash value, or a withdrawal. The
- * economy block caps total issuance so rewards can't inflate the coin supply, and tracks
- * an agent comp allowance so a granted agent can hand out coins only within a budget.
+ * BALANCE & STATUS ONLY. Every amount here is balance units, status points, a free-play
+ * count, an odds-boost %, or a wagering multiplier — never cash, cash value, or a
+ * withdrawal. The economy block caps total issuance so rewards can't inflate the balance
+ * supply, and tracks an agent comp allowance so a granted agent can hand out funds only
+ * within a budget.
  */
 
 import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
@@ -18,7 +19,6 @@ export type ProgramKey =
   | 'missions'
   | 'promos'
   | 'contests'
-  | 'store'
   | 'leaderboards'
 
 export const PROGRAM_KEYS: ProgramKey[] = [
@@ -28,7 +28,6 @@ export const PROGRAM_KEYS: ProgramKey[] = [
   'missions',
   'promos',
   'contests',
-  'store',
   'leaderboards',
 ]
 
@@ -38,9 +37,9 @@ export interface Promo {
   name: string
   desc: string
   kind: PromoKind
-  /** bonus/topup → coins; freeplay → count; oddsboost → percent. */
+  /** bonus/topup → balance units; freeplay → count; oddsboost → percent. */
   amount: number
-  /** Wagering multiplier the bonus coins carry before they unlock to regular coins
+  /** Wagering multiplier the bonus balance carries before it unlocks to the regular figure
    *  (1 = wager the bonus once). 0 = instant, no lock. NEVER a cash-out condition. */
   playthrough: number
   startsAt: number
@@ -55,9 +54,9 @@ export interface Contest {
   metric: ContestMetric
   startsAt: number
   endsAt: number
-  /** The coin prize pool, split across places by `prizes`. */
-  prizePoolCoins: number
-  prizes: number[] // coins for 1st, 2nd, …
+  /** The balance prize pool, split across places by `prizes`. */
+  prizePool: number
+  prizes: number[] // balance for 1st, 2nd, …
   status: 'scheduled' | 'running' | 'settled'
 }
 
@@ -66,24 +65,24 @@ export interface MissionDef {
   name: string
   desc: string
   goal: number
-  rewardCoins: number
+  reward: number
   active: boolean
 }
 
 export interface DailyConfig {
   enabled: boolean
-  /** Coins for each day of the 7-day streak cycle. */
+  /** Balance for each day of the 7-day streak cycle. */
   rewards: number[]
 }
 
 export interface EconomyConfig {
-  /** Hard cap on TOTAL coins the program may ever issue (0 = uncapped). */
+  /** Hard cap on TOTAL balance the program may ever issue (0 = uncapped). */
   totalIssuanceCap: number
   /** Per-week issuance budget (0 = uncapped). */
   weeklyBudget: number
-  /** Cashback rate — fraction of coins WAGERED returned over time (0.005 = 0.5%). */
+  /** Cashback rate — fraction of the amount WAGERED returned over time (0.005 = 0.5%). */
   cashbackRate: number
-  /** Coins each agent may comp per week (their discretionary allowance). */
+  /** Balance each agent may comp per week (their discretionary allowance). */
   agentWeeklyCompAllowance: number
 }
 
@@ -111,7 +110,7 @@ export const DEFAULT_CONFIG: RewardsConfig = {
     {
       id: 'promo-weekend',
       name: 'Weekend Reload',
-      desc: 'Top up your coins this weekend and get 50% bonus coins, up to 5,000.',
+      desc: 'Top up this weekend and get a 50% bonus, up to 5,000.',
       kind: 'topup',
       amount: 5_000,
       playthrough: 1,
@@ -122,7 +121,7 @@ export const DEFAULT_CONFIG: RewardsConfig = {
     {
       id: 'promo-crash-free',
       name: 'Crash Free-Play Drop',
-      desc: 'Claim 3 free plays on Crash — pure coins, no strings.',
+      desc: 'Claim 3 free plays on Crash — no strings.',
       kind: 'freeplay',
       amount: 3,
       playthrough: 0,
@@ -133,7 +132,7 @@ export const DEFAULT_CONFIG: RewardsConfig = {
     {
       id: 'promo-nba-boost',
       name: 'NBA Odds Boost',
-      desc: '+25% odds boost on any NBA moneyline this week (coin winnings only).',
+      desc: '+25% odds boost on any NBA moneyline this week (winnings as balance only).',
       kind: 'oddsboost',
       amount: 25,
       playthrough: 0,
@@ -149,7 +148,7 @@ export const DEFAULT_CONFIG: RewardsConfig = {
       metric: 'profit',
       startsAt: NOW - 3 * DAY,
       endsAt: NOW + 4 * DAY,
-      prizePoolCoins: 50_000,
+      prizePool: 50_000,
       prizes: [20_000, 12_000, 8_000, 6_000, 4_000],
       status: 'running',
     },
@@ -159,17 +158,17 @@ export const DEFAULT_CONFIG: RewardsConfig = {
       metric: 'volume',
       startsAt: NOW + 5 * DAY,
       endsAt: NOW + 12 * DAY,
-      prizePoolCoins: 30_000,
+      prizePool: 30_000,
       prizes: [12_000, 8_000, 5_000, 3_000, 2_000],
       status: 'scheduled',
     },
   ],
   missions: [
-    { id: 'place-5', name: 'Warm Up', desc: 'Place 5 bets today.', goal: 5, rewardCoins: 250, active: true },
-    { id: 'try-3-games', name: 'Sampler', desc: 'Try 3 different casino originals.', goal: 3, rewardCoins: 400, active: true },
-    { id: 'parlay-hit', name: 'Parlay Hero', desc: 'Hit a parlay of 3+ legs.', goal: 1, rewardCoins: 1_000, active: true },
-    { id: 'wager-10k', name: 'High Roller', desc: 'Wager 10,000 coins this week.', goal: 10_000, rewardCoins: 1_500, active: true },
-    { id: 'streak-3', name: 'On a Roll', desc: 'Win 3 bets in a row.', goal: 3, rewardCoins: 600, active: true },
+    { id: 'place-5', name: 'Warm Up', desc: 'Place 5 bets today.', goal: 5, reward: 250, active: true },
+    { id: 'try-3-games', name: 'Sampler', desc: 'Try 3 different casino originals.', goal: 3, reward: 400, active: true },
+    { id: 'parlay-hit', name: 'Parlay Hero', desc: 'Hit a parlay of 3+ legs.', goal: 1, reward: 1_000, active: true },
+    { id: 'wager-10k', name: 'High Roller', desc: 'Wager 10,000 this week.', goal: 10_000, reward: 1_500, active: true },
+    { id: 'streak-3', name: 'On a Roll', desc: 'Win 3 bets in a row.', goal: 3, reward: 600, active: true },
   ],
   daily: { enabled: true, rewards: [100, 150, 250, 400, 600, 800, 1_500] },
   economy: {
@@ -185,7 +184,6 @@ export const DEFAULT_CONFIG: RewardsConfig = {
     missions: true,
     promos: true,
     contests: true,
-    store: true,
     leaderboards: true,
   },
 }
@@ -194,7 +192,8 @@ export const DEFAULT_CONFIG: RewardsConfig = {
 
 const store = createStore({ namespace: 'dimebag' })
 const DOC: Doc<RewardsConfig> = persistedDoc<RewardsConfig>(store, 'rewards.config', {
-  version: 1,
+  // v2: dropped the 'store' program; balance/credit terminology throughout.
+  version: 2,
   initial: DEFAULT_CONFIG,
 })
 
@@ -256,8 +255,8 @@ export function resetRewardsConfig(): void {
 }
 
 /* ============================ the issuance ledger =========================== */
-// Every coin the program hands out — comps, cashback, daily, missions, promos — is
-// recorded here, so the economy's running total + caps actually bound issuance. The
+// Every unit of balance the program hands out — comps, cashback, daily, missions, promos —
+// is recorded here, so the economy's running total + caps actually bound issuance. The
 // total cap and the weekly budget are enforced through `canIssue`; agent comp usage is
 // tracked per week for the per-agent allowance.
 
@@ -266,9 +265,9 @@ export const weekStart = (now: number): number => Math.floor(now / WEEK) * WEEK
 
 interface IssuanceLog {
   byProgram: Record<string, number>
-  /** Coins issued per week, keyed by weekStart(now). */
+  /** Balance issued per week, keyed by weekStart(now). */
   byWeek: Record<number, number>
-  /** Agent comp coins used, keyed `${agentId}|${weekStart}`. */
+  /** Agent comp balance used, keyed `${agentId}|${weekStart}`. */
   agentComp: Record<string, number>
 }
 
@@ -301,21 +300,21 @@ export function getIssuanceVersion(): number {
   return issuanceVersion
 }
 
-/** Record coins issued by a program at `now` (optionally counting an agent's comp). */
+/** Record balance issued by a program at `now` (optionally counting an agent's comp). */
 export function recordIssuance(
   program: string,
-  coins: number,
+  amount: number,
   now: number,
   agent?: { agentId: string },
 ): void {
-  if (coins <= 0) return
-  const byProgram = { ...issuance.byProgram, [program]: (issuance.byProgram[program] ?? 0) + coins }
+  if (amount <= 0) return
+  const byProgram = { ...issuance.byProgram, [program]: (issuance.byProgram[program] ?? 0) + amount }
   const wk = weekStart(now)
-  const byWeek = { ...issuance.byWeek, [wk]: (issuance.byWeek[wk] ?? 0) + coins }
+  const byWeek = { ...issuance.byWeek, [wk]: (issuance.byWeek[wk] ?? 0) + amount }
   const agentComp = { ...issuance.agentComp }
   if (agent) {
     const key = `${agent.agentId}|${wk}`
-    agentComp[key] = (agentComp[key] ?? 0) + coins
+    agentComp[key] = (agentComp[key] ?? 0) + amount
   }
   issuance = { byProgram, byWeek, agentComp }
   issuanceBump()
@@ -334,16 +333,16 @@ export function agentCompUsed(agentId: string, now: number): number {
   return issuance.agentComp[`${agentId}|${weekStart(now)}`] ?? 0
 }
 
-/** Whether issuing `coins` now stays within the total cap AND the weekly budget. The
- *  single gate every coin-issuing path checks before handing out coins. */
-export function canIssue(coins: number, now: number): { ok: boolean; reason?: string } {
-  if (coins <= 0) return { ok: true }
+/** Whether issuing `amount` now stays within the total cap AND the weekly budget. The
+ *  single gate every balance-issuing path checks before handing out rewards. */
+export function canIssue(amount: number, now: number): { ok: boolean; reason?: string } {
+  if (amount <= 0) return { ok: true }
   const cap = config.economy.totalIssuanceCap
-  if (cap > 0 && totalIssued() + coins > cap) {
+  if (cap > 0 && totalIssued() + amount > cap) {
     return { ok: false, reason: 'The program’s total issuance cap has been reached.' }
   }
   const budget = config.economy.weeklyBudget
-  if (budget > 0 && weekIssued(now) + coins > budget) {
+  if (budget > 0 && weekIssued(now) + amount > budget) {
     return { ok: false, reason: 'This week’s rewards budget is spent.' }
   }
   return { ok: true }

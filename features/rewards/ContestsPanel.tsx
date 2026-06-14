@@ -1,7 +1,7 @@
 /**
  * Contests / leaderboard races — create races on a metric (profit / volume / streak / CLV),
- * over a window, for a COIN prize pool; start / stop / settle them. Manager only. The prize
- * pool and every prize are coins — never cash.
+ * over a window, for a BALANCE prize pool; start / stop / settle them. Manager only. The
+ * prize pool and every prize are balance — never cash.
  */
 import { useState, useSyncExternalStore } from 'react'
 import {
@@ -12,7 +12,7 @@ import {
   type Contest,
   type ContestMetric,
 } from '../../rewards/economy.js'
-import { coins } from '../../rewards/data.js'
+import { fmt } from '../../rewards/data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
 
@@ -39,19 +39,19 @@ export function ContestsPanel({ onBack }: { onBack: () => void }) {
   const setStatus = (id: string, status: Contest['status']) =>
     save(contests.map((c) => (c.id === id ? { ...c, status } : c)))
   const setPoolFor = (id: string, p: number) =>
-    save(contests.map((c) => (c.id === id ? { ...c, prizePoolCoins: p } : c)))
+    save(contests.map((c) => (c.id === id ? { ...c, prizePool: p } : c)))
   const remove = (id: string) => save(contests.filter((c) => c.id !== id))
   const create = () => {
     if (!name.trim()) return
-    const poolCoins = Number(pool) || 0
+    const poolTotal = Number(pool) || 0
     const c: Contest = {
       id: `contest-${name.trim().toLowerCase().replace(/\s+/g, '-')}-${contests.length}`,
       name: name.trim(),
       metric,
       startsAt: NOW,
       endsAt: NOW + (Number(days) || 7) * DAY,
-      prizePoolCoins: poolCoins,
-      prizes: [0.4, 0.24, 0.16, 0.12, 0.08].map((f) => Math.round(poolCoins * f)),
+      prizePool: poolTotal,
+      prizes: [0.4, 0.24, 0.16, 0.12, 0.08].map((f) => Math.round(poolTotal * f)),
       status: 'running',
     }
     save([c, ...contests])
@@ -62,8 +62,8 @@ export function ContestsPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Time-boxed races for a coin prize pool. Pick the metric and window, start it, watch the
-          standings (player side), then settle to split the pool in coins.
+          Time-boxed races for a balance prize pool. Pick the metric and window, start it, watch the
+          standings (player side), then settle to split the pool.
         </p>
       </header>
 
@@ -85,7 +85,7 @@ export function ContestsPanel({ onBack }: { onBack: () => void }) {
             </select>
           </label>
           <label className="feat-field">
-            <span>Prize pool (coins)</span>
+            <span>Prize pool</span>
             <input className="feat-input" inputMode="numeric" value={pool} onChange={(e) => setPool(e.target.value.replace(/[^\d]/g, ''))} />
           </label>
           <label className="feat-field">
@@ -104,12 +104,12 @@ export function ContestsPanel({ onBack }: { onBack: () => void }) {
             <div className="rwa-row-main">
               <span className="rwa-row-name">{c.name}</span>
               <span className="feat-sub">
-                {METRIC_LABEL[c.metric]} · pool {coins(c.prizePoolCoins)}
+                {METRIC_LABEL[c.metric]} · pool {fmt(c.prizePool)}
               </span>
             </div>
             <label className="feat-field rwa-pool">
               <span>Pool</span>
-              <input className="feat-input" inputMode="numeric" value={c.prizePoolCoins} onChange={(e) => setPoolFor(c.id, Number(e.target.value.replace(/[^\d]/g, '')) || 0)} />
+              <input className="feat-input" inputMode="numeric" value={c.prizePool} onChange={(e) => setPoolFor(c.id, Number(e.target.value.replace(/[^\d]/g, '')) || 0)} />
             </label>
             <select className="feat-input rwa-status" value={c.status} onChange={(e) => setStatus(c.id, e.target.value as Contest['status'])} aria-label={`${c.name} status`}>
               {STATUSES.map((s) => (

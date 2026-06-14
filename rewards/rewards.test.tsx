@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 /** The Rewards section: every sub-view renders populated, the claim flow works, the
- *  player's leaderboard rank shows, and NOTHING renders a "$"/cash path — coins only. */
+ *  player's leaderboard rank shows, and NOTHING renders "coins" — balance & status only. */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -26,19 +26,19 @@ afterEach(() => {
 })
 
 const render = () =>
-  act(() => root.render(<RewardsSection playerName="Marco" balanceCoins={12_500} />))
+  act(() => root.render(<RewardsSection playerName="Marco" balanceCents={12_500} />))
 const text = () => host.textContent ?? ''
 const tab = (name: string) =>
   [...host.querySelectorAll<HTMLButtonElement>('.rw-tab')].find((b) => b.textContent?.includes(name))
 const openView = (name: string) => act(() => tab(name)!.click())
 
 describe('Rewards section', () => {
-  it('lands on the overview with rank, balance, and quick links — coins only', () => {
+  it('lands on the overview with rank, balance, and quick links — no coins', () => {
     render()
     expect(host.querySelector('.rw-h1')?.textContent).toBe('Rewards')
     expect(text()).toMatch(/tier/i) // current rank
-    expect(text()).toMatch(/coins/) // amounts are in coins
-    expect(text()).not.toMatch(/\$\d/) // never a dollar amount
+    expect(text()).toMatch(/Balance/) // the figure, not a coin wallet
+    expect(text()).not.toMatch(/coin/i) // never the word "coin"
     // one sub-nav tab per view, plus quick-link tiles into the sub-views
     expect(host.querySelectorAll('.rw-tab')).toHaveLength(VIEWS.length)
     expect(host.querySelectorAll('.rw-tile').length).toBeGreaterThan(0)
@@ -55,10 +55,6 @@ describe('Rewards section', () => {
     expect(host.querySelector('.rw-table')).not.toBeNull()
     expect(host.querySelector('.rw-table tr.is-you')).not.toBeNull()
     expect(text()).toMatch(/Marco/)
-    // Store — items with coin costs, no cash
-    openView('Store')
-    expect(text()).toMatch(/Free Play|Coin Pack/i)
-    expect(text()).not.toMatch(/\$\d/)
     // Daily — the 7-day cycle
     openView('Daily')
     expect(text()).toMatch(/Day/)
@@ -73,18 +69,18 @@ describe('Rewards section', () => {
 
   it('shows only THIS player’s own status & rewards (own-only)', () => {
     // Marco — seeded Gold tier at 68,400 status
-    act(() => root.render(<RewardsSection memberId="p-marco" playerName="Marco" balanceCoins={12_500} />))
+    act(() => root.render(<RewardsSection memberId="p-marco" playerName="Marco" balanceCents={12_500} />))
     expect(text()).toMatch(/68,400/) // Marco's status
     expect(text()).toMatch(/Gold/)
 
     // Dana — a different player, different standing; never Marco's numbers
-    act(() => root.render(<RewardsSection memberId="p-dana" playerName="Dana" balanceCoins={50_000} />))
+    act(() => root.render(<RewardsSection memberId="p-dana" playerName="Dana" balanceCents={50_000} />))
     expect(text()).toMatch(/540,000/) // Dana's status
     expect(text()).toMatch(/Platinum/)
     expect(text()).not.toMatch(/68,400/)
   })
 
-  it('claims the daily bonus (coins credited + tracked in the economy ledger, never cash)', () => {
+  it('claims the daily bonus (tracked in the economy ledger, never cash)', () => {
     render()
     const before = totalIssued()
     const claimBtn = [...host.querySelectorAll<HTMLButtonElement>('button')].find(
@@ -95,6 +91,6 @@ describe('Rewards section', () => {
     expect(host.querySelector('.rw-saved')?.textContent).toMatch(/Daily bonus claimed/)
     // the claim counted toward the economy's running total (no longer bypasses the cap)
     expect(totalIssued()).toBeGreaterThan(before)
-    expect(text()).not.toMatch(/\$\d/)
+    expect(text()).not.toMatch(/coin/i)
   })
 })

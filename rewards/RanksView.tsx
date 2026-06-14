@@ -1,11 +1,11 @@
 /**
  * Ranks — the VIP-style tier ladder. A summary of the player's current tier and
  * progress to the next, then the full ladder from Rookie → Diamond with each
- * tier's coins-wagered threshold and what it unlocks. The player's current tier is
- * marked; passed tiers read as earned, upcoming tiers as locked. Coins/status only.
+ * tier's status threshold and what it unlocks. The player's current tier is
+ * marked; passed tiers read as earned, upcoming tiers as locked. Balance & status only.
  */
 import type { CSSProperties } from 'react'
-import { TIERS, tierProgress, coins, coinsShort, type RewardsApi } from './data.js'
+import { TIERS, tierProgress, num, type RewardsApi } from './data.js'
 
 export function RanksView({ api }: { api: RewardsApi }) {
   const { player } = api
@@ -20,8 +20,8 @@ export function RanksView({ api }: { api: RewardsApi }) {
           Tier ladder
         </h2>
         <p className="rw-sub">
-          Rank up through activity — coins wagered, days active and bets placed. Every tier you
-          reach unlocks bonus coins, perks and status that stick.
+          Rank up through activity — amount wagered, days active and bets placed. Every tier you
+          reach unlocks balance bonuses, perks and status that stick.
         </p>
       </header>
 
@@ -41,7 +41,7 @@ export function RanksView({ api }: { api: RewardsApi }) {
             </span>
             {prog.next ? (
               <span className="rw-sub" style={{ margin: 0 }}>
-                {coins(prog.toNext)} wagered to{' '}
+                {num(prog.toNext)} status to{' '}
                 <strong style={{ color: 'var(--text)' }}>{prog.next.name}</strong>
               </span>
             ) : (
@@ -61,8 +61,8 @@ export function RanksView({ api }: { api: RewardsApi }) {
             <div className="rw-progress-fill" style={{ width: `${prog.pct * 100}%` }} />
           </div>
           <div className="rw-progress-meta">
-            <span>{coinsShort(player.wagered)} coins wagered</span>
-            {prog.next && <span>{coinsShort(prog.next.minWagered)}</span>}
+            <span>{num(player.wagered)} status</span>
+            {prog.next && <span>{num(prog.next.minWagered)}</span>}
           </div>
         </div>
       </section>
@@ -105,7 +105,7 @@ export function RanksView({ api }: { api: RewardsApi }) {
                     >
                       <span className="rw-tile-name">{tier.name}</span>
                       <span className="rw-tile-hint">
-                        {coinsShort(tier.minWagered)} coins wagered
+                        {num(tier.minWagered)} status
                       </span>
                     </div>
                   </div>

@@ -1,25 +1,24 @@
 /**
  * Rewards — a top-level PLAYER section (sibling of Casino / Sportsbook). The loyalty/
- * status layer, now engine-backed: it reads THIS player's real reward state (status,
- * spendable, cashback, locked bonuses) and the operator's ENABLED programs (tiers, promos,
- * contests, …). A player sees only their own standing and only what the operator turned on.
+ * status layer, engine-backed: it reads THIS player's real reward state (status, cashback,
+ * locked bonuses) and the operator's ENABLED programs (tiers, promos, contests, …). A
+ * player sees only their own standing and only what the operator turned on.
  *
- * COINS / STATUS ONLY. Three kinds of value, none cash: the regular coin balance (betting,
- * read-only here), STATUS (monotonic tier points), and SPENDABLE rewards (the store
- * currency). Locked bonuses unlock to regular coins via a coins-only playthrough — never a
- * cash-out. `onCredit` lets the host move regular coins when an instant bonus is claimed.
+ * BALANCE & STATUS ONLY. Two kinds of value, neither cash: the player's regular core
+ * BALANCE (the betting figure) and STATUS (monotonic tier points). Every reward — cashback,
+ * daily, missions, promos, comps — credits the regular balance (locked bonuses unlock to it
+ * through a play-through, never a cash-out). `onCredit` moves balance through core when a
+ * reward is claimed.
  */
 import { useMemo, useState, useSyncExternalStore } from 'react'
-import { VIEWS, coins, tierForStatus, type RewardsApi, type ViewId } from './data.js'
+import { VIEWS, fmt, fmtCents, tierForStatus, type RewardsApi, type ViewId } from './data.js'
 import {
   getPlayerRewards,
   subscribeRewardsPlayers,
   getRewardsPlayersVersion,
-  addSpendable,
   markClaimed,
   isClaimed as engineIsClaimed,
   claimCashback as engineClaimCashback,
-  spendSpendable,
   grantLockedBonus,
 } from './players.js'
 import {
@@ -34,7 +33,6 @@ import {
 import { RewardsLanding } from './RewardsLanding.js'
 import { RanksView } from './RanksView.js'
 import { LeaderboardsView } from './LeaderboardsView.js'
-import { StoreView } from './StoreView.js'
 import { DailyView } from './DailyView.js'
 import { ChallengesView } from './ChallengesView.js'
 import { BadgesView } from './BadgesView.js'
@@ -47,10 +45,12 @@ export interface RewardsSectionProps {
   memberId?: string
   /** The signed-in player's display name (highlighted on the boards). */
   playerName?: string
-  /** The player's live REGULAR balance in whole COINS (read-only). */
-  balanceCoins: number
-  /** Optional: move REGULAR coins through the shared balance on an instant grant (+). */
-  onCredit?: (deltaCoins: number) => void
+  /** The player's live core BALANCE in cents (the figure; read-only here). */
+  balanceCents: number
+  /** Available CREDIT to wager in cents (credit limit + figure − pending). */
+  availableCents?: number
+  /** Move REGULAR balance through the shared core figure when a reward is claimed (+ units). */
+  onCredit?: (deltaUnits: number) => void
 }
 
 const DEMO_NOW = 1_750_000_000_000
@@ -58,7 +58,8 @@ const DEMO_NOW = 1_750_000_000_000
 export function RewardsSection({
   memberId = 'demo',
   playerName = 'You',
-  balanceCoins,
+  balanceCents,
+  availableCents = 0,
   onCredit,
 }: RewardsSectionProps) {
   const [view, setView] = useState<ViewId>('overview')
@@ -73,7 +74,8 @@ export function RewardsSection({
   const api: RewardsApi = useMemo(
     () => ({
       playerName,
-      balanceCoins,
+      balanceCents,
+      availableCents,
       player: {
         wagered: state.status, // engagement cards read this; mirror real status
         betsPlaced: 412,
@@ -82,7 +84,6 @@ export function RewardsSection({
         dailyClaimedToday: state.dailyClaimedToday,
       },
       status: state.status,
-      spendable: state.spendable,
       cashbackPending: state.cashbackPending,
       locked: state.locked,
       tiers: config.tiers,
@@ -101,15 +102,18 @@ export function RewardsSection({
         }
         markClaimed(memberId, id)
         if (amount > 0) {
-          addSpendable(memberId, amount)
+          onCredit?.(amount) // straight to the player's balance
           recordIssuance(id.startsWith('daily') ? 'daily' : 'mission', amount, DEMO_NOW)
         }
-        setFlash(label ?? `Claimed ${coins(amount)} to your rewards balance`)
+        setFlash(label ?? `Added ${fmt(amount)} to your balance`)
       },
       claimCashback: () => {
         const moved = engineClaimCashback(memberId)
-        if (moved > 0) recordIssuance('cashback', moved, DEMO_NOW)
-        setFlash(moved > 0 ? `Claimed ${coins(moved)} cashback to rewards` : 'No cashback to claim yet.')
+        if (moved > 0) {
+          onCredit?.(moved)
+          recordIssuance('cashback', moved, DEMO_NOW)
+        }
+        setFlash(moved > 0 ? `Claimed ${fmt(moved)} cashback to your balance` : 'No cashback to claim yet.')
       },
       claimPromo: (promo) => {
         if (engineIsClaimed(memberId, promo.id)) return
@@ -121,11 +125,11 @@ export function RewardsSection({
         if (promo.kind === 'topup' || promo.kind === 'bonus') {
           const out = grantLockedBonus(memberId, promo.amount, promo.playthrough, promo.name, `promo-${promo.id}`)
           recordIssuance('promo', promo.amount, DEMO_NOW)
-          if (out.instantCoins > 0) onCredit?.(out.instantCoins)
+          if (out.instant > 0) onCredit?.(out.instant)
           setFlash(
             promo.playthrough > 0
-              ? `${coins(promo.amount)} bonus added — unlocks as you play.`
-              : `${coins(promo.amount)} bonus coins added.`,
+              ? `${fmt(promo.amount)} bonus added — unlocks as you play.`
+              : `${fmt(promo.amount)} added to your balance.`,
           )
         } else if (promo.kind === 'freeplay') {
           setFlash(`${promo.amount} free play${promo.amount === 1 ? '' : 's'} added.`)
@@ -133,23 +137,9 @@ export function RewardsSection({
           setFlash(`+${promo.amount}% odds boost opted in.`)
         }
       },
-      spend: (id, cost, label) => {
-        if (engineIsClaimed(memberId, id)) return false
-        if (!spendSpendable(memberId, cost)) {
-          setFlash('Not enough rewards coins for that yet.')
-          return false
-        }
-        markClaimed(memberId, id)
-        if (id.startsWith('bonus-')) {
-          const out = grantLockedBonus(memberId, cost, 1, 'Store coin pack')
-          if (out.instantCoins > 0) onCredit?.(out.instantCoins)
-        }
-        setFlash(label ?? `Redeemed for ${coins(cost)}.`)
-        return true
-      },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [memberId, playerName, balanceCoins, state, config],
+    [memberId, playerName, balanceCents, availableCents, state, config],
   )
 
   const Active = () => {
@@ -162,8 +152,6 @@ export function RewardsSection({
         return <ContestsView api={api} />
       case 'boards':
         return <LeaderboardsView api={api} />
-      case 'store':
-        return <StoreView api={api} />
       case 'daily':
         return <DailyView api={api} />
       case 'challenges':
@@ -179,7 +167,6 @@ export function RewardsSection({
     if (v.id === 'promos') return config.enabled.promos
     if (v.id === 'contests') return config.enabled.contests
     if (v.id === 'boards') return config.enabled.leaderboards
-    if (v.id === 'store') return config.enabled.store
     if (v.id === 'daily') return config.enabled.daily
     if (v.id === 'challenges') return config.enabled.missions
     return true // overview / ranks / badges always on
@@ -190,7 +177,7 @@ export function RewardsSection({
       <div className="rw-head">
         <div className="rw-section-head">
           <h1 className="rw-h1">Rewards</h1>
-          <p className="rw-sub">Everything you can earn — rank up, climb the boards, claim coins.</p>
+          <p className="rw-sub">Everything you can earn — rank up, climb the boards, claim rewards.</p>
         </div>
         <div className="rw-head-kpis">
           <div className="rw-kpi">
@@ -198,12 +185,12 @@ export function RewardsSection({
             <strong className="rw-coins">{state.status.toLocaleString()}</strong>
           </div>
           <div className="rw-kpi">
-            <span className="rw-label">Rewards balance</span>
-            <strong className="rw-coins">{coins(state.spendable)}</strong>
+            <span className="rw-label">Balance</span>
+            <strong className="rw-coins">{fmtCents(balanceCents)}</strong>
           </div>
           <div className="rw-kpi">
-            <span className="rw-label">Coin balance</span>
-            <strong className="rw-coins rw-dim">{coins(balanceCoins)}</strong>
+            <span className="rw-label">Available credit</span>
+            <strong className="rw-coins rw-dim">{fmtCents(availableCents)}</strong>
           </div>
         </div>
       </div>

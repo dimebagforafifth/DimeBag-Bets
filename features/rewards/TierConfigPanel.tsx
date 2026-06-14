@@ -1,7 +1,7 @@
 /**
  * Tier Config — define the loyalty ladder: how many tiers, their names, the STATUS
  * threshold to reach each, and what each unlocks. Manager only. The player Ranks view +
- * tier math read straight from this. Coins/status only.
+ * tier math read straight from this. Balance & status only.
  */
 import { useSyncExternalStore } from 'react'
 import {

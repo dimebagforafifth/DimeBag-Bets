@@ -1,15 +1,16 @@
 /**
- * Manual Comp — the VIP-host tool: hand a player discretionary coins / free plays / a limit
- * boost / a badge, with a reason and a record (CLAUDE.md §4). Gated by the SAME role model:
+ * Manual Comp — the VIP-host tool: hand a player discretionary balance / free plays / a
+ * limit boost / a badge, with a reason and a record (CLAUDE.md §4). Gated by the SAME role
+ * model:
  *  - MANAGER comps any player (within the economy's total issuance cap).
  *  - AGENT (only if the manager granted 'rewards-comp') comps ONLY their downline, within
  *    their weekly comp allowance. The player picker is auto-scoped to the agent's roster.
- * COINS / STATUS ONLY — coins go to the player's spendable rewards balance; never cash.
+ * BALANCE & STATUS ONLY — funds credit the player's real balance; never cash.
  */
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { getBook, getBookVersion, subscribeBook } from '../../app/book-store.js'
 import { getViewer, subscribeViewer, getViewerVersion } from '../../app/viewer.js'
-import { coins } from '../../rewards/data.js'
+import { fmt } from '../../rewards/data.js'
 import {
   issueComp,
   compAllowanceLeft,
@@ -27,11 +28,11 @@ import { PanelShell } from '../_desk/shared.js'
 import { ScopeBar, scopedPlayers, ALL_SCOPE } from '../_desk/scope.js'
 import './rewards-admin.css'
 
-const KINDS: { kind: CompKind; label: string; coins: boolean }[] = [
-  { kind: 'coins', label: 'Bonus coins', coins: true },
-  { kind: 'freeplay', label: 'Free plays', coins: true },
-  { kind: 'limitboost', label: 'Limit boost', coins: false },
-  { kind: 'badge', label: 'Badge', coins: false },
+const KINDS: { kind: CompKind; label: string; amount: boolean }[] = [
+  { kind: 'balance', label: 'Bonus balance', amount: true },
+  { kind: 'freeplay', label: 'Free plays', amount: true },
+  { kind: 'limitboost', label: 'Limit boost', amount: false },
+  { kind: 'badge', label: 'Badge', amount: false },
 ]
 
 const NOW = 1_750_000_000_000
@@ -49,13 +50,13 @@ export function CompPanel({ onBack }: { onBack: () => void }) {
   const [target, setTarget] = useState('')
   const sel = players.some((p) => p.id === target) ? target : (players[0]?.id ?? '')
 
-  const [kind, setKind] = useState<CompKind>('coins')
+  const [kind, setKind] = useState<CompKind>('balance')
   const [amount, setAmount] = useState('1000')
   const [reason, setReason] = useState('')
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   const allowance = compAllowanceLeft(viewer.memberId, viewer.role, NOW)
-  const needsCoins = KINDS.find((k) => k.kind === kind)?.coins ?? false
+  const needsAmount = KINDS.find((k) => k.kind === kind)?.amount ?? false
 
   const submit = () => {
     setMsg(null)
@@ -65,14 +66,14 @@ export function CompPanel({ onBack }: { onBack: () => void }) {
       actorRole: viewer.role,
       targetPlayerId: sel,
       kind,
-      amount: needsCoins ? Number(amount) || 0 : 0,
+      amount: needsAmount ? Number(amount) || 0 : 0,
       reason,
       now: NOW,
     }
     const res = issueComp(req)
     if (res.ok) {
       const name = book.members[sel]?.name ?? sel
-      setMsg({ ok: true, text: `Comped ${name} — ${needsCoins ? coins(Number(amount) || 0) : kind}.` })
+      setMsg({ ok: true, text: `Comped ${name} — ${needsAmount ? fmt(Number(amount) || 0) : kind}.` })
       setReason('')
     } else {
       setMsg({ ok: false, text: res.error ?? 'Could not issue that comp.' })
@@ -85,13 +86,13 @@ export function CompPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Hand a player a discretionary reward — coins, free plays, a limit boost, or a badge — with
-          a reason that’s recorded. Coins land in their rewards balance.
+          Hand a player a discretionary reward — balance, free plays, a limit boost, or a badge —
+          with a reason that’s recorded. Funds land in the player’s balance.
           {viewer.role !== 'manager' && (
             <>
               {' '}
               You can comp your own players, up to{' '}
-              <strong>{allowance === Infinity ? '∞' : coins(allowance)}</strong> left this week.
+              <strong>{allowance === Infinity ? '∞' : fmt(allowance)}</strong> left this week.
             </>
           )}
         </p>
@@ -121,9 +122,9 @@ export function CompPanel({ onBack }: { onBack: () => void }) {
             ))}
           </select>
         </label>
-        {needsCoins && (
+        {needsAmount && (
           <label className="feat-field">
-            <span>{kind === 'freeplay' ? 'Free-play coin value' : 'Coins'}</span>
+            <span>{kind === 'freeplay' ? 'Free-play amount' : 'Amount'}</span>
             <input
               className="feat-input"
               inputMode="numeric"
@@ -156,7 +157,7 @@ export function CompPanel({ onBack }: { onBack: () => void }) {
                 <tr>
                   <th>By</th>
                   <th>Reward</th>
-                  <th className="num">Coins</th>
+                  <th className="num">Amount</th>
                   <th>Reason</th>
                 </tr>
               </thead>
@@ -165,7 +166,7 @@ export function CompPanel({ onBack }: { onBack: () => void }) {
                   <tr key={c.id}>
                     <td>{c.byName}</td>
                     <td>{c.kind}</td>
-                    <td className="num">{c.amount > 0 ? coins(c.amount) : '—'}</td>
+                    <td className="num">{c.amount > 0 ? fmt(c.amount) : '—'}</td>
                     <td>{c.reason}</td>
                   </tr>
                 ))}

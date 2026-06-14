@@ -1,18 +1,18 @@
 /**
  * Promotions sub-view — the operator's active offers the player can claim / opt into.
- * COINS & PERKS ONLY: coin-bonus campaigns, free plays on casino originals, odds boosts
- * (coin winnings only), top-up matches. No cash, no cash value. Top-up/bonus promos add
- * LOCKED bonus coins that unlock to regular coins by playing (a coins-only playthrough,
- * never a cash-out).
+ * BALANCE & PERKS ONLY: balance-bonus campaigns, free plays on casino originals, odds
+ * boosts (winnings as balance only), top-up matches. No cash, no cash value. Top-up/bonus
+ * promos add LOCKED bonus balance that unlocks to the regular figure by playing (a
+ * play-through, never a cash-out).
  */
 import type { CSSProperties } from 'react'
-import { Gift, Rocket, TrendingUp, Coins } from 'lucide-react'
-import { coins, type RewardsApi } from './data.js'
+import { Gift, Rocket, TrendingUp, Wallet } from 'lucide-react'
+import { fmt, type RewardsApi } from './data.js'
 import type { Promo, PromoKind } from './economy.js'
 
 const KIND: Record<PromoKind, { label: string; color: string; icon: typeof Gift }> = {
-  topup: { label: 'Top-up match', color: '#d6b14a', icon: Coins },
-  bonus: { label: 'Bonus coins', color: '#d6b14a', icon: Gift },
+  topup: { label: 'Top-up match', color: '#d6b14a', icon: Wallet },
+  bonus: { label: 'Bonus balance', color: '#d6b14a', icon: Gift },
   freeplay: { label: 'Free play', color: '#7fc7d9', icon: Rocket },
   oddsboost: { label: 'Odds boost', color: '#7fd99a', icon: TrendingUp },
 }
@@ -22,7 +22,7 @@ const amountLabel = (p: Promo): string =>
     ? `+${p.amount}% boost`
     : p.kind === 'freeplay'
       ? `${p.amount} free play${p.amount === 1 ? '' : 's'}`
-      : `up to ${coins(p.amount)}`
+      : `up to ${fmt(p.amount)}`
 
 export function PromotionsView({ api, now }: { api: RewardsApi; now: number }) {
   const endsInDays = (p: Promo) => Math.max(0, Math.ceil((p.endsAt - now) / 86_400_000))
@@ -32,8 +32,8 @@ export function PromotionsView({ api, now }: { api: RewardsApi; now: number }) {
         Promotions
       </h2>
       <p className="rw-sub">
-        Live offers from the book — claim coin bonuses, grab free plays, opt into odds boosts. Coins
-        and perks only.
+        Live offers from the book — claim balance bonuses, grab free plays, opt into odds boosts.
+        Balance and perks only.
       </p>
 
       {api.promos.length === 0 ? (
@@ -58,7 +58,7 @@ export function PromotionsView({ api, now }: { api: RewardsApi; now: number }) {
                   <span className="rw-label">ends in {endsInDays(p)}d</span>
                 </div>
                 {p.playthrough > 0 && (
-                  <span className="rw-lock-note">Unlocks to coins after {p.playthrough}× wagering</span>
+                  <span className="rw-lock-note">Unlocks to your balance after {p.playthrough}× wagering</span>
                 )}
                 <div className="rw-head" style={{ marginTop: 'auto' }}>
                   <button

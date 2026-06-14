@@ -1,10 +1,10 @@
 /**
- * Challenges sub-view — missions that grant coins. Completed challenges (progress ≥
- * goal) surface a Claim action that credits coins; in-progress ones show their bar.
- * Coins / status only — never cash, never a "$" amount.
+ * Challenges sub-view — missions that grant balance. Completed challenges (progress ≥
+ * goal) surface a Claim action that credits the balance; in-progress ones show their bar.
+ * Balance & status only — never cash.
  */
 import type { CSSProperties } from 'react'
-import { SEED_CHALLENGES, coins, coinsShort, type Challenge, type RewardsApi } from './data.js'
+import { SEED_CHALLENGES, fmt, num, type Challenge, type RewardsApi } from './data.js'
 
 function ChallengeRow({ c, api }: { c: Challenge; api: RewardsApi }) {
   const pct = Math.min(100, (c.progress / c.goal) * 100)
@@ -31,10 +31,10 @@ function ChallengeRow({ c, api }: { c: Challenge; api: RewardsApi }) {
         </div>
         <div className="rw-progress-meta">
           <span>
-            {coinsShort(c.progress)}/{coinsShort(c.goal)}
+            {num(c.progress)}/{num(c.goal)}
           </span>
           <span>
-            <span className="rw-coins">+{coinsShort(c.reward)}</span>
+            <span className="rw-coins">+{fmt(c.reward)}</span>
             {c.rewardExtra ? <span className="rw-pill is-gold">{c.rewardExtra}</span> : null}
           </span>
         </div>
@@ -44,9 +44,9 @@ function ChallengeRow({ c, api }: { c: Challenge; api: RewardsApi }) {
           type="button"
           className="rw-btn rw-btn-primary"
           disabled={claimed}
-          onClick={() => api.claim(c.id, c.reward, `${c.name} claimed — +${coins(c.reward)}`)}
+          onClick={() => api.claim(c.id, c.reward, `${c.name} claimed — +${fmt(c.reward)}`)}
         >
-          {claimed ? 'Claimed' : `Claim ${coins(c.reward)}`}
+          {claimed ? 'Claimed' : `Claim ${fmt(c.reward)}`}
         </button>
       ) : null}
     </div>
@@ -64,7 +64,7 @@ export function ChallengesView({ api }: { api: RewardsApi }) {
           Challenges
         </h2>
         <span className="rw-sub" style={{ margin: 0 } as CSSProperties}>
-          Complete missions to bank bonus coins
+          Complete missions to bank balance bonuses
         </span>
       </div>
 

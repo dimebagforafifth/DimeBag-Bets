@@ -1,6 +1,6 @@
 /**
  * Rewards landing — the lobby. Surfaces the player's rank + progress, what's claimable
- * right now, active challenges, and quick links into every sub-view. Coins/status only.
+ * right now, active challenges, and quick links into every sub-view. Balance & status only.
  */
 import type { CSSProperties } from 'react'
 import {
@@ -8,11 +8,12 @@ import {
   DAILY_CYCLE,
   SEED_CHALLENGES,
   tierProgress,
-  coins,
-  coinsShort,
+  fmt,
+  fmtCents,
+  num,
   type RewardsApi,
 } from './data.js'
-import { Gift, Coins, Lock } from 'lucide-react'
+import { Gift, Wallet, Lock } from 'lucide-react'
 
 export function RewardsLanding({ api }: { api: RewardsApi }) {
   const { player } = api
@@ -43,7 +44,7 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
             </span>
             {prog.next ? (
               <span className="rw-sub" style={{ margin: 0 }}>
-                {coins(prog.toNext)} wagered to <strong style={{ color: 'var(--text)' }}>{prog.next.name}</strong>
+                {num(prog.toNext)} status to <strong style={{ color: 'var(--text)' }}>{prog.next.name}</strong>
               </span>
             ) : (
               <span className="rw-pill is-gold">Top tier reached</span>
@@ -53,8 +54,8 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
             <div className="rw-progress-fill" style={{ width: `${prog.pct * 100}%` }} />
           </div>
           <div className="rw-progress-meta">
-            <span>{coinsShort(player.wagered)} coins wagered</span>
-            {prog.next && <span>{coinsShort(prog.next.minWagered)}</span>}
+            <span>{num(player.wagered)} status</span>
+            {prog.next && <span>{num(prog.next.minWagered)}</span>}
           </div>
         </div>
         <button type="button" className="rw-btn" onClick={() => api.go('ranks')}>
@@ -66,11 +67,11 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
       <section className="rw-kpis" aria-label="Your activity">
         <div className="rw-kpi">
           <span className="rw-label">Balance</span>
-          <strong className="rw-coins">{coinsShort(api.balanceCoins)}</strong>
+          <strong className="rw-coins">{fmtCents(api.balanceCents)}</strong>
         </div>
         <div className="rw-kpi">
-          <span className="rw-label">Wagered</span>
-          <strong>{coinsShort(player.wagered)}</strong>
+          <span className="rw-label">Status</span>
+          <strong>{num(player.wagered)}</strong>
         </div>
         <div className="rw-kpi">
           <span className="rw-label">Bets placed</span>
@@ -97,7 +98,7 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
             <div className="rw-row-body">
               <span className="rw-row-name">Daily login bonus · day {today.day}</span>
               <span className="rw-row-desc">
-                {coins(today.reward)}
+                {fmt(today.reward)}
                 {today.bonus ? ` + ${today.bonus}` : ''}
               </span>
             </div>
@@ -105,7 +106,7 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
               type="button"
               className="rw-btn rw-btn-primary"
               disabled={player.dailyClaimedToday || api.isClaimed('daily-today')}
-              onClick={() => api.claim('daily-today', today.reward, `Daily bonus claimed — +${coins(today.reward)}`)}
+              onClick={() => api.claim('daily-today', today.reward, `Daily bonus claimed — +${fmt(today.reward)}`)}
             >
               {api.isClaimed('daily-today') ? 'Claimed' : 'Claim'}
             </button>
@@ -119,14 +120,14 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
               <div className="rw-row-body">
                 <span className="rw-row-name">{c.name} · complete</span>
                 <span className="rw-row-desc">
-                  {coins(c.reward)}
+                  {fmt(c.reward)}
                   {c.rewardExtra ? ` + ${c.rewardExtra}` : ''}
                 </span>
               </div>
               <button
                 type="button"
                 className="rw-btn rw-btn-primary"
-                onClick={() => api.claim(c.id, c.reward, `${c.name} claimed — +${coins(c.reward)}`)}
+                onClick={() => api.claim(c.id, c.reward, `${c.name} claimed — +${fmt(c.reward)}`)}
               >
                 Claim
               </button>
@@ -135,7 +136,7 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
         </div>
       </section>
 
-      {/* Cashback & locked bonuses (the coins-only playthrough mechanics) */}
+      {/* Cashback & locked bonuses (the play-through mechanics) */}
       <section className="rw-card" aria-label="Cashback and bonuses">
         <div className="rw-head">
           <h2 className="rw-h2" style={{ margin: 0 }}>
@@ -143,13 +144,13 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
           </h2>
           {api.cashbackPending > 0 && (
             <button type="button" className="rw-btn rw-btn-primary" onClick={api.claimCashback}>
-              Claim {coins(api.cashbackPending)} cashback
+              Claim {fmt(api.cashbackPending)} cashback
             </button>
           )}
         </div>
         <p className="rw-sub" style={{ margin: '0 0 8px' }}>
-          Cashback returns a slice of every coin you wager. Bonus coins unlock to your balance as you
-          play — coins only, never convertible to money.
+          Cashback returns a slice of everything you wager. Bonus balance unlocks to your figure as
+          you play — never convertible to money.
         </p>
         {api.cashbackPending === 0 && api.locked.length === 0 ? (
           <p className="rw-row-desc">Keep playing to earn cashback and unlock bonuses.</p>
@@ -158,12 +159,12 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
             {api.cashbackPending > 0 && (
               <div className="rw-row">
                 <span className="rw-icon is-sm">
-                  <Coins aria-hidden="true" />
+                  <Wallet aria-hidden="true" />
                 </span>
                 <div className="rw-row-body">
                   <span className="rw-row-name">Cashback pending</span>
                   <span className="rw-row-desc">
-                    {coins(api.cashbackPending)} ready to claim into your rewards balance
+                    {fmt(api.cashbackPending)} ready to claim into your balance
                   </span>
                 </div>
               </div>
@@ -177,10 +178,10 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
                   </span>
                   <div className="rw-row-body">
                     <span className="rw-row-name">
-                      {coins(b.amount)} locked · {b.source}
+                      {fmt(b.amount)} locked · {b.source}
                     </span>
                     <span className="rw-row-desc">
-                      {coinsShort(b.wagered)} / {coinsShort(b.wagerRequired)} coins wagered to unlock
+                      {num(b.wagered)} / {num(b.wagerRequired)} wagered to unlock
                     </span>
                     <div className="rw-progress" style={{ marginTop: 6 }}>
                       <div className="rw-progress-fill" style={{ width: `${pct}%` }} />
@@ -220,7 +221,7 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
                   />
                 </div>
               </div>
-              <span className="rw-coins">+{coinsShort(c.reward)}</span>
+              <span className="rw-coins">+{fmt(c.reward)}</span>
             </div>
           ))}
         </div>

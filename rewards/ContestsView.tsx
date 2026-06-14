@@ -1,13 +1,13 @@
 /**
- * Contests sub-view — time-boxed races for a COIN prize pool, with live standings and the
- * player's own position. Prizes are coins only; nothing here is cash or withdrawable.
+ * Contests sub-view — time-boxed races for a BALANCE prize pool, with live standings and the
+ * player's own position. Prizes are balance only; nothing here is cash or withdrawable.
  */
-import { boardRows, boardValue, BOARDS, coins, type RewardsApi } from './data.js'
+import { boardRows, boardValue, BOARDS, fmt, type RewardsApi } from './data.js'
 import type { Contest } from './economy.js'
 
 const METRIC_LABEL: Record<Contest['metric'], string> = {
-  profit: 'Most coins won',
-  volume: 'Most coins wagered',
+  profit: 'Most won',
+  volume: 'Most wagered',
   streak: 'Longest win streak',
   clv: 'Best closing-line value',
 }
@@ -24,8 +24,8 @@ export function ContestsView({ api }: { api: RewardsApi }) {
         Contests &amp; races
       </h2>
       <p className="rw-sub">
-        Compete over a set window for a coin prize pool. Standings are live; top finishers split
-        the pool in coins.
+        Compete over a set window for a balance prize pool. Standings are live; top finishers split
+        the pool.
       </p>
 
       {api.contests.length === 0 ? (
@@ -49,12 +49,12 @@ export function ContestsView({ api }: { api: RewardsApi }) {
                 <div className="rw-contest-prizes">
                   <div className="rw-kpi">
                     <span className="rw-label">Prize pool</span>
-                    <strong className="rw-coins">{coins(c.prizePoolCoins)}</strong>
+                    <strong className="rw-coins">{fmt(c.prizePool)}</strong>
                   </div>
                   <div className="rw-prize-places">
                     {c.prizes.slice(0, 5).map((p, i) => (
                       <span key={i} className="rw-prize">
-                        <b>{i + 1}.</b> {coins(p)}
+                        <b>{i + 1}.</b> {fmt(p)}
                       </span>
                     ))}
                   </div>
@@ -65,7 +65,7 @@ export function ContestsView({ api }: { api: RewardsApi }) {
                     {you && (
                       <p className="rw-you-rank">
                         You’re <strong>#{you.rank}</strong> · {boardValue(def, you.value)}
-                        {you.prize > 0 && <span className="rw-in-money"> · in the money ({coins(you.prize)})</span>}
+                        {you.prize > 0 && <span className="rw-in-money"> · in the money ({fmt(you.prize)})</span>}
                       </p>
                     )}
                     <table className="rw-board-table">
@@ -83,7 +83,7 @@ export function ContestsView({ api }: { api: RewardsApi }) {
                             <td>{r.rank}</td>
                             <td>{r.name}</td>
                             <td className="rw-num">{boardValue(def, r.value)}</td>
-                            <td className="rw-num">{r.prize > 0 ? coins(r.prize) : '—'}</td>
+                            <td className="rw-num">{r.prize > 0 ? fmt(r.prize) : '—'}</td>
                           </tr>
                         ))}
                       </tbody>
