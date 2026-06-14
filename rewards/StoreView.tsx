@@ -29,18 +29,19 @@ export function StoreView({ api }: { api: RewardsApi }) {
           Rewards store
         </h2>
         <div className="rw-kpi">
-          <span className="rw-label">Your balance</span>
-          <strong className="rw-coins">{coins(api.balanceCoins)}</strong>
+          <span className="rw-label">Rewards balance</span>
+          <strong className="rw-coins">{coins(api.spendable)}</strong>
         </div>
       </div>
       <p className="rw-sub">
-        Spend coins on bonuses, free plays, limit boosts and flair — coins and perks only.
+        Spend your rewards balance on bonuses, free plays, limit boosts and flair — coins and perks
+        only.
       </p>
 
       <div className="rw-grid" role="list" aria-label="Store catalog">
         {STORE.map((item) => {
           const owned = api.isClaimed(item.id)
-          const cantAfford = api.balanceCoins < item.cost
+          const cantAfford = api.spendable < item.cost
           const disabled = owned || cantAfford
           const btnLabel = owned
             ? 'Owned'

@@ -521,3 +521,101 @@
     transform: none;
   }
 }
+
+/* ── Phase B: engine-backed surfaces (two-currency header, promos, contests, locked) ── */
+.rw-head-kpis {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.rw-dim {
+  color: var(--muted, #aab2c0);
+}
+.rw-empty {
+  color: var(--muted, #aab2c0);
+  font-size: 14px;
+  padding: 24px 0;
+}
+.rw-promo-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 6px 0;
+}
+.rw-lock-note {
+  font-size: 11.5px;
+  color: var(--accent-2, #d6b14a);
+  background: color-mix(in srgb, var(--accent-2, #d6b14a) 12%, transparent);
+  border-radius: 6px;
+  padding: 3px 8px;
+  align-self: flex-start;
+}
+
+/* contests */
+.rw-contest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rw-contest-prizes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.rw-prize-places {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  color: var(--muted, #aab2c0);
+}
+.rw-prize b {
+  color: var(--text, #f4f5f7);
+}
+.rw-you-rank {
+  font-size: 13.5px;
+  margin: 6px 0;
+}
+.rw-in-money {
+  color: var(--up, #5bb98b);
+}
+.rw-status-running {
+  color: #04121f;
+  background: var(--up, #5bb98b);
+}
+.rw-status-scheduled {
+  color: var(--muted, #aab2c0);
+}
+.rw-board-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.rw-board-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #aab2c0);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line, #2a2f39);
+}
+.rw-board-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line, #2a2f39);
+}
+.rw-board-table .rw-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.rw-board-table tr.is-you {
+  background: color-mix(in srgb, var(--accent-2, #d6b14a) 14%, transparent);
+}
+.rw-board-table tr.is-you td {
+  font-weight: 700;
+}

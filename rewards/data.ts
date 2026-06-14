@@ -386,36 +386,70 @@ export const PERIOD_LABEL: Record<Period, string> = {
 }
 
 // ── sub-view registry (the section's own nav) ────────────────────────────────
-export type ViewId = 'overview' | 'ranks' | 'boards' | 'store' | 'daily' | 'challenges' | 'badges'
+export type ViewId =
+  | 'overview'
+  | 'ranks'
+  | 'promos'
+  | 'contests'
+  | 'boards'
+  | 'store'
+  | 'daily'
+  | 'challenges'
+  | 'badges'
 export interface ViewDef {
   id: ViewId
   name: string
   hint: string
   icon: LucideIcon
 }
-/** The runtime API the section shell hands to every sub-view: live (coins-only)
- *  balance, the player's seeded engagement stats, claim/spend actions, and nav. */
+
+// Engine types the API surfaces to the views (type-only — no runtime cycle).
+import type { LockedBonus } from './players.js'
+import type { Promo, Contest } from './economy.js'
+
+/** The runtime API the section shell hands to every sub-view. Engine-backed: the live
+ *  regular-coin balance plus the player's STATUS (tier points) and SPENDABLE rewards
+ *  balance, their cashback + locked bonuses, the operator's ENABLED promos/contests, and
+ *  the claim/spend actions. Coins / status only — never cash. */
 export interface RewardsApi {
   playerName: string
-  /** Live balance in whole COINS (read-only display; never cash). */
+  /** Live REGULAR-coin balance (read-only display; the betting balance, never cash). */
   balanceCoins: number
   player: PlayerRewards
+  /** Monotonic STATUS points (drives the tier ladder; never spent). */
+  status: number
+  /** SPENDABLE rewards balance (redeemed in the store). */
+  spendable: number
+  /** Cashback accrued from wagering, claimable into spendable. */
+  cashbackPending: number
+  /** Bonus coins still locked behind a coins-only playthrough. */
+  locked: LockedBonus[]
+  /** The operator's live tier ladder. */
+  tiers: TierConfig[]
+  /** Enabled, in-window promotions. */
+  promos: Promo[]
+  /** Enabled contests (running / scheduled). */
+  contests: Contest[]
   isClaimed: (id: string) => boolean
-  /** Mark a reward claimed and credit `coinsAmount` (0 for perk-only claims). */
+  /** Mark a reward claimed and credit `coinsAmount` to SPENDABLE (0 for perk-only). */
   claim: (id: string, coinsAmount: number, label?: string) => void
-  /** Spend coins on a store item; returns false if the balance can't cover it. */
+  /** Claim accrued cashback into the spendable balance. */
+  claimCashback: () => void
+  /** Claim / opt into a promotion (grants a locked bonus, free plays, or a boost opt-in). */
+  claimPromo: (promo: Promo) => void
+  /** Spend from SPENDABLE on a store item; false if the balance can't cover it. */
   spend: (id: string, cost: number, label?: string) => boolean
   /** Navigate to another sub-view. */
   go: (view: ViewId) => void
-  /** A transient confirmation message (e.g. "Claimed 250 coins"). */
-  flash: string | null
 }
 
 export const VIEWS: ViewDef[] = [
-  { id: 'overview', name: 'Overview', hint: 'Your rank, claims & challenges at a glance', icon: Sparkles },
+  { id: 'overview', name: 'Overview', hint: 'Your status, rewards & claims at a glance', icon: Sparkles },
   { id: 'ranks', name: 'Ranks', hint: 'The tier ladder & what each unlocks', icon: Crown },
-  { id: 'boards', name: 'Leaderboards', hint: 'Compete for coins & status', icon: Trophy },
-  { id: 'store', name: 'Store', hint: 'Spend coins on bonuses, free plays & flair', icon: Gift },
+  { id: 'promos', name: 'Promotions', hint: 'Active offers — claim & opt in', icon: Gift },
+  { id: 'contests', name: 'Contests', hint: 'Coin-prize races & live standings', icon: Trophy },
+  { id: 'boards', name: 'Leaderboards', hint: 'Compete for coins & status', icon: TrendingUp },
+  { id: 'store', name: 'Store', hint: 'Spend rewards on bonuses, free plays & flair', icon: Coins },
   { id: 'daily', name: 'Daily', hint: 'Login bonus & streak rewards', icon: CalendarCheck },
   { id: 'challenges', name: 'Challenges', hint: 'Missions that grant coins', icon: Target },
   { id: 'badges', name: 'Badges', hint: 'Milestones you’ve collected', icon: BadgeCheck },

@@ -12,7 +12,7 @@ import {
   coinsShort,
   type RewardsApi,
 } from './data.js'
-import { Gift } from 'lucide-react'
+import { Gift, Coins, Lock } from 'lucide-react'
 
 export function RewardsLanding({ api }: { api: RewardsApi }) {
   const { player } = api
@@ -133,6 +133,65 @@ export function RewardsLanding({ api }: { api: RewardsApi }) {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Cashback & locked bonuses (the coins-only playthrough mechanics) */}
+      <section className="rw-card" aria-label="Cashback and bonuses">
+        <div className="rw-head">
+          <h2 className="rw-h2" style={{ margin: 0 }}>
+            Cashback &amp; bonuses
+          </h2>
+          {api.cashbackPending > 0 && (
+            <button type="button" className="rw-btn rw-btn-primary" onClick={api.claimCashback}>
+              Claim {coins(api.cashbackPending)} cashback
+            </button>
+          )}
+        </div>
+        <p className="rw-sub" style={{ margin: '0 0 8px' }}>
+          Cashback returns a slice of every coin you wager. Bonus coins unlock to your balance as you
+          play — coins only, never a cash-out.
+        </p>
+        {api.cashbackPending === 0 && api.locked.length === 0 ? (
+          <p className="rw-row-desc">Keep playing to earn cashback and unlock bonuses.</p>
+        ) : (
+          <div className="rw-list">
+            {api.cashbackPending > 0 && (
+              <div className="rw-row">
+                <span className="rw-icon is-sm">
+                  <Coins aria-hidden="true" />
+                </span>
+                <div className="rw-row-body">
+                  <span className="rw-row-name">Cashback pending</span>
+                  <span className="rw-row-desc">
+                    {coins(api.cashbackPending)} ready to claim into your rewards balance
+                  </span>
+                </div>
+              </div>
+            )}
+            {api.locked.map((b) => {
+              const pct = Math.min(100, (b.wagered / b.wagerRequired) * 100)
+              return (
+                <div className="rw-row" key={b.id}>
+                  <span className="rw-icon is-sm">
+                    <Lock aria-hidden="true" />
+                  </span>
+                  <div className="rw-row-body">
+                    <span className="rw-row-name">
+                      {coins(b.amount)} locked · {b.source}
+                    </span>
+                    <span className="rw-row-desc">
+                      {coinsShort(b.wagered)} / {coinsShort(b.wagerRequired)} coins wagered to unlock
+                    </span>
+                    <div className="rw-progress" style={{ marginTop: 6 }}>
+                      <div className="rw-progress-fill" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <span className="rw-coins">{Math.round(pct)}%</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
 
       {/* Active challenges */}

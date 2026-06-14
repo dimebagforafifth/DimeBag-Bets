@@ -9,7 +9,7 @@ import {
   type ComponentType,
   type CSSProperties,
 } from 'react'
-import { availableToWager, type Account } from '../core/index.js'
+import { availableToWager, grant, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
 import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
 import { RewardsSection } from '../rewards/index.js'
@@ -288,7 +288,16 @@ export function App() {
           />
         ) : activeSection === 'rewards' ? (
           account && player ? (
-            <RewardsSection playerName={player.name} balanceCoins={Math.round(account.balance / 100)} />
+            <RewardsSection
+              memberId={player.id}
+              playerName={player.name}
+              balanceCoins={Math.round(account.balance / 100)}
+              onCredit={(deltaCoins) => {
+                // Move REGULAR coins through core when an instant bonus is claimed.
+                if (deltaCoins > 0) grant(account, deltaCoins * 100)
+                refresh()
+              }}
+            />
           ) : (
             <NoPlayer
               onManage={() => setSection('management')}
