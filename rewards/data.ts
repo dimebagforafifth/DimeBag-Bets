@@ -133,6 +133,53 @@ export const TIERS: Tier[] = [
 export const tierFor = (wagered: number): Tier =>
   [...TIERS].reverse().find((t) => wagered >= t.minWagered) ?? TIERS[0]
 
+// ── operator-editable tier ladder (serializable: no icons in the persisted config) ──
+export interface TierConfig {
+  id: string
+  name: string
+  /** Status points to reach this tier (status only ever goes up). */
+  threshold: number
+  /** Plain-text perks this tier unlocks. */
+  perks: string[]
+}
+/** The default ladder the manager starts from (mapped off the display TIERS). */
+export const DEFAULT_TIERS: TierConfig[] = TIERS.map((t) => ({
+  id: t.id,
+  name: t.name,
+  threshold: t.minWagered,
+  perks: t.unlocks.map((u) => u.label),
+}))
+/** Display icon + colour for a tier id (config holds none — looked up for rendering). */
+export const TIER_VISUAL: Record<string, { icon: LucideIcon; color: string }> = Object.fromEntries(
+  TIERS.map((t) => [t.id, { icon: t.icon, color: t.color }]),
+)
+const tierVisualFallback = { icon: Sprout, color: '#8b94a3' }
+export const tierVisual = (id: string) => TIER_VISUAL[id] ?? tierVisualFallback
+
+/** The tier for a status score, from the operator's ladder. */
+export function tierForStatus(tiers: TierConfig[], status: number): TierConfig {
+  const sorted = [...tiers].sort((a, b) => a.threshold - b.threshold)
+  return [...sorted].reverse().find((t) => status >= t.threshold) ?? sorted[0]
+}
+
+export interface StatusProgress {
+  tier: TierConfig
+  next: TierConfig | null
+  pct: number
+  toNext: number
+}
+/** Progress from the current tier's floor to the next, by status points. */
+export function tierProgressFor(tiers: TierConfig[], status: number): StatusProgress {
+  const sorted = [...tiers].sort((a, b) => a.threshold - b.threshold)
+  const tier = tierForStatus(sorted, status)
+  const idx = sorted.findIndex((t) => t.id === tier.id)
+  const next = idx < sorted.length - 1 ? sorted[idx + 1] : null
+  if (!next) return { tier, next: null, pct: 1, toNext: 0 }
+  const span = next.threshold - tier.threshold
+  const into = status - tier.threshold
+  return { tier, next, pct: Math.max(0, Math.min(1, into / span)), toNext: next.threshold - status }
+}
+
 export const nextTier = (wagered: number): Tier | null => {
   const i = TIERS.findIndex((t) => t.id === tierFor(wagered).id)
   return i < TIERS.length - 1 ? TIERS[i + 1] : null

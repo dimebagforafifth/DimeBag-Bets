@@ -43,6 +43,9 @@ export const AGENT_GRANTABLE: readonly GrantableTile[] = [
   { key: 'transactions', label: 'Transactions' },
   { key: 'ledger', label: 'Ledger' },
   { key: 'agent-performance', label: 'Agent Performance' },
+  // A capability, not a console section: lets an agent comp/reward THEIR OWN players
+  // (within the manager's allowance). Gates the Player Rewards (comp) tile + the action.
+  { key: 'rewards-comp', label: 'Issue player rewards (comp)' },
 ]
 
 export const AGENT_GRANTABLE_KEYS: readonly string[] = AGENT_GRANTABLE.map((t) => t.key)
