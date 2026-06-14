@@ -8,7 +8,18 @@ import {
   spendSpendable,
   __resetRewardsPlayers,
 } from './players.js'
-import { getRewardsConfig, visiblePromos, setProgramEnabled, resetRewardsConfig } from './economy.js'
+import {
+  getRewardsConfig,
+  updateRewardsConfig,
+  visiblePromos,
+  setProgramEnabled,
+  resetRewardsConfig,
+  recordIssuance,
+  canIssue,
+  totalIssued,
+  weekIssued,
+  issuedByProgram,
+} from './economy.js'
 import {
   canComp,
   issueComp,
@@ -131,6 +142,38 @@ describe('comp — role / permission / downline / allowance gating', () => {
     expect(res.ok).toBe(true)
     expect(getPlayerRewards('p-dana').spendable).toBe(before + 2_500)
     expect(getPlayerRewards('p-dana').compHistory[0]).toMatchObject({ amount: 2_500, kind: 'coins', byName: 'Your Book' })
+  })
+})
+
+describe('economy issuance ledger + caps', () => {
+  const now = 1_750_000_000_000
+
+  it('records issuance by program and by week (every grant path is tracked)', () => {
+    recordIssuance('mission', 1_000, now)
+    recordIssuance('cashback', 500, now)
+    const after = issuedByProgram()
+    expect(after.mission).toBeGreaterThanOrEqual(1_000)
+    expect(after.cashback).toBeGreaterThanOrEqual(500)
+    expect(weekIssued(now)).toBeGreaterThanOrEqual(1_500)
+  })
+
+  it('canIssue enforces the weekly budget AND the total cap', () => {
+    const base = totalIssued()
+    updateRewardsConfig({
+      economy: { ...getRewardsConfig().economy, totalIssuanceCap: base + 1_000_000, weeklyBudget: weekIssued(now) + 600 },
+    })
+    expect(canIssue(500, now).ok).toBe(true)
+    recordIssuance('mission', 500, now)
+    // 500 already this week → another 200 would exceed the +600 weekly budget
+    expect(canIssue(200, now).ok).toBe(false)
+    expect(canIssue(200, now).reason).toMatch(/budget/i)
+
+    // lift the weekly budget; now the TOTAL cap bites
+    updateRewardsConfig({
+      economy: { ...getRewardsConfig().economy, weeklyBudget: 0, totalIssuanceCap: totalIssued() + 100 },
+    })
+    expect(canIssue(200, now).ok).toBe(false)
+    expect(canIssue(200, now).reason).toMatch(/cap/i)
   })
 })
 

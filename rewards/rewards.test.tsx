@@ -7,7 +7,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { RewardsSection } from './index.js'
 import { VIEWS } from './data.js'
 import { __resetRewardsPlayers } from './players.js'
-import { resetRewardsConfig } from './economy.js'
+import { resetRewardsConfig, __resetIssuance, totalIssued } from './economy.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 let host: HTMLElement
@@ -15,6 +15,7 @@ let root: Root
 beforeEach(() => {
   __resetRewardsPlayers()
   resetRewardsConfig()
+  __resetIssuance()
   host = document.createElement('div')
   document.body.appendChild(host)
   root = createRoot(host)
@@ -83,14 +84,17 @@ describe('Rewards section', () => {
     expect(text()).not.toMatch(/68,400/)
   })
 
-  it('claims the daily bonus (coins credited locally, never cash)', () => {
+  it('claims the daily bonus (coins credited + tracked in the economy ledger, never cash)', () => {
     render()
+    const before = totalIssued()
     const claimBtn = [...host.querySelectorAll<HTMLButtonElement>('button')].find(
       (b) => b.textContent === 'Claim',
     )!
     expect(claimBtn).toBeTruthy()
     act(() => claimBtn.click())
     expect(host.querySelector('.rw-saved')?.textContent).toMatch(/Daily bonus claimed/)
+    // the claim counted toward the economy's running total (no longer bypasses the cap)
+    expect(totalIssued()).toBeGreaterThan(before)
     expect(text()).not.toMatch(/\$\d/)
   })
 })

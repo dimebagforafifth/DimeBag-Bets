@@ -14,78 +14,34 @@
  * blown up and the manager can report on it.
  */
 
-import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { getBook } from '../app/book-store.js'
 import { downline, type Role } from '../org/index.js'
 import { isTileGranted } from '../app/agent-permissions.js'
-import { getRewardsConfig } from './economy.js'
+import {
+  getRewardsConfig,
+  canIssue,
+  recordIssuance,
+  agentCompUsed,
+  totalIssued,
+  issuedByProgram,
+  subscribeIssuance,
+  getIssuanceVersion,
+  weekStart,
+  __resetIssuance,
+} from './economy.js'
 import { addSpendable, recordComp, type CompKind } from './players.js'
 
-const WEEK = 7 * 86_400_000
-export const weekStart = (now: number): number => Math.floor(now / WEEK) * WEEK
-
-/* --------------------------- the issuance ledger --------------------------- */
-
-interface IssuanceLog {
-  /** Coins issued by program key (comp / cashback / daily / mission / promo / contest). */
-  byProgram: Record<string, number>
-  /** Agent comp coins used, keyed `${agentId}|${weekStart}`. */
-  agentComp: Record<string, number>
-}
-
-const store = createStore({ namespace: 'dimebag' })
-const DOC: Doc<IssuanceLog> = persistedDoc<IssuanceLog>(store, 'rewards.issuance', {
-  version: 1,
-  // Seeded baseline so the economy/reporting panels render populated.
-  initial: {
-    byProgram: { comp: 23_000, cashback: 41_200, daily: 18_500, mission: 9_400, promo: 14_000, contest: 50_000 },
-    agentComp: {},
-  },
-})
-
-let log: IssuanceLog = DOC.load() ?? { byProgram: {}, agentComp: {} }
-let version = 0
-const listeners = new Set<() => void>()
-function notify(): void {
-  DOC.save(log)
-  version += 1
-  listeners.forEach((l) => l())
-}
-export function subscribeIssuance(l: () => void): () => void {
-  listeners.add(l)
-  return () => {
-    listeners.delete(l)
-  }
-}
-export function getIssuanceVersion(): number {
-  return version
-}
-
-/** Record coins issued by a program (optionally counting against an agent's weekly comp). */
-export function recordIssuance(
-  program: string,
-  coins: number,
-  agent?: { agentId: string; now: number },
-): void {
-  if (coins <= 0) return
-  const byProgram = { ...log.byProgram, [program]: (log.byProgram[program] ?? 0) + coins }
-  const agentComp = { ...log.agentComp }
-  if (agent) {
-    const key = `${agent.agentId}|${weekStart(agent.now)}`
-    agentComp[key] = (agentComp[key] ?? 0) + coins
-  }
-  log = { byProgram, agentComp }
-  notify()
-}
-
-export function totalIssued(): number {
-  return Object.values(log.byProgram).reduce((a, b) => a + b, 0)
-}
-export function issuedByProgram(): Record<string, number> {
-  return log.byProgram
-}
-export function agentCompUsed(agentId: string, now: number): number {
-  return log.agentComp[`${agentId}|${weekStart(now)}`] ?? 0
+// The issuance ledger lives in economy (its home); re-exported so the admin panels can
+// keep importing it from here.
+export {
+  recordIssuance,
+  totalIssued,
+  issuedByProgram,
+  agentCompUsed,
+  subscribeIssuance,
+  getIssuanceVersion,
+  weekStart,
+  __resetIssuance,
 }
 
 /* --------------------------------- comp ----------------------------------- */
@@ -139,12 +95,12 @@ export function issueComp(req: CompRequest): CompResult {
   const gate = canComp(req.actorMemberId, req.actorRole, req.targetPlayerId)
   if (!gate.ok) return { ok: false, error: gate.reason }
 
-  const cfg = getRewardsConfig()
   const coins = req.kind === 'coins' || req.kind === 'freeplay' ? Math.max(0, Math.round(req.amount)) : 0
 
-  if (cfg.economy.totalIssuanceCap > 0 && totalIssued() + coins > cfg.economy.totalIssuanceCap) {
-    return { ok: false, error: 'The program’s total issuance cap has been reached.' }
-  }
+  // Economy guard: the program-wide total cap + the weekly budget.
+  const cap = canIssue(coins, req.now)
+  if (!cap.ok) return { ok: false, error: cap.reason }
+  // Agent-specific guard: their weekly comp allowance.
   if (req.actorRole !== 'manager' && coins > 0) {
     const left = compAllowanceLeft(req.actorMemberId, req.actorRole, req.now)
     if (coins > left) {
@@ -159,15 +115,6 @@ export function issueComp(req: CompRequest): CompResult {
     req.now,
   )
   if (coins > 0) addSpendable(req.targetPlayerId, coins) // bonus coins / free plays → spendable
-  recordIssuance(
-    'comp',
-    coins,
-    req.actorRole !== 'manager' ? { agentId: req.actorMemberId, now: req.now } : undefined,
-  )
+  recordIssuance('comp', coins, req.now, req.actorRole !== 'manager' ? { agentId: req.actorMemberId } : undefined)
   return { ok: true }
-}
-
-export function __resetIssuance(): void {
-  log = { byProgram: {}, agentComp: {} }
-  notify()
 }

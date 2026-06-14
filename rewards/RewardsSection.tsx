@@ -28,6 +28,8 @@ import {
   getRewardsConfigVersion,
   visiblePromos,
   visibleContests,
+  canIssue,
+  recordIssuance,
 } from './economy.js'
 import { RewardsLanding } from './RewardsLanding.js'
 import { RanksView } from './RanksView.js'
@@ -90,19 +92,35 @@ export function RewardsSection({
       go: setView,
       claim: (id, amount, label) => {
         if (engineIsClaimed(memberId, id)) return
+        if (amount > 0) {
+          const cap = canIssue(amount, DEMO_NOW) // total cap + weekly budget
+          if (!cap.ok) {
+            setFlash(cap.reason ?? 'Rewards budget reached — try again later.')
+            return
+          }
+        }
         markClaimed(memberId, id)
-        if (amount > 0) addSpendable(memberId, amount)
+        if (amount > 0) {
+          addSpendable(memberId, amount)
+          recordIssuance(id.startsWith('daily') ? 'daily' : 'mission', amount, DEMO_NOW)
+        }
         setFlash(label ?? `Claimed ${coins(amount)} to your rewards balance`)
       },
       claimCashback: () => {
         const moved = engineClaimCashback(memberId)
+        if (moved > 0) recordIssuance('cashback', moved, DEMO_NOW)
         setFlash(moved > 0 ? `Claimed ${coins(moved)} cashback to rewards` : 'No cashback to claim yet.')
       },
       claimPromo: (promo) => {
         if (engineIsClaimed(memberId, promo.id)) return
+        if ((promo.kind === 'topup' || promo.kind === 'bonus') && !canIssue(promo.amount, DEMO_NOW).ok) {
+          setFlash('Rewards budget reached — try again later.')
+          return
+        }
         markClaimed(memberId, promo.id)
         if (promo.kind === 'topup' || promo.kind === 'bonus') {
           const out = grantLockedBonus(memberId, promo.amount, promo.playthrough, promo.name, `promo-${promo.id}`)
+          recordIssuance('promo', promo.amount, DEMO_NOW)
           if (out.instantCoins > 0) onCredit?.(out.instantCoins)
           setFlash(
             promo.playthrough > 0

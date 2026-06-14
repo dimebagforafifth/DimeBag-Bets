@@ -254,3 +254,102 @@ export function resetRewardsConfig(): void {
   config = DEFAULT_CONFIG
   notify()
 }
+
+/* ============================ the issuance ledger =========================== */
+// Every coin the program hands out — comps, cashback, daily, missions, promos — is
+// recorded here, so the economy's running total + caps actually bound issuance. The
+// total cap and the weekly budget are enforced through `canIssue`; agent comp usage is
+// tracked per week for the per-agent allowance.
+
+const WEEK = 7 * 86_400_000
+export const weekStart = (now: number): number => Math.floor(now / WEEK) * WEEK
+
+interface IssuanceLog {
+  byProgram: Record<string, number>
+  /** Coins issued per week, keyed by weekStart(now). */
+  byWeek: Record<number, number>
+  /** Agent comp coins used, keyed `${agentId}|${weekStart}`. */
+  agentComp: Record<string, number>
+}
+
+const ISSUANCE: Doc<IssuanceLog> = persistedDoc<IssuanceLog>(store, 'rewards.issuance', {
+  // v2: added byWeek (weekly-budget tracking). Bumping reseeds the baseline.
+  version: 2,
+  initial: {
+    byProgram: { comp: 23_000, cashback: 41_200, daily: 18_500, mission: 9_400, promo: 14_000, contest: 50_000 },
+    byWeek: {},
+    agentComp: {},
+  },
+})
+
+let issuance: IssuanceLog = ISSUANCE.load() ?? { byProgram: {}, byWeek: {}, agentComp: {} }
+let issuanceVersion = 0
+const issuanceListeners = new Set<() => void>()
+function issuanceBump(): void {
+  ISSUANCE.save(issuance)
+  issuanceVersion += 1
+  issuanceListeners.forEach((l) => l())
+}
+
+export function subscribeIssuance(l: () => void): () => void {
+  issuanceListeners.add(l)
+  return () => {
+    issuanceListeners.delete(l)
+  }
+}
+export function getIssuanceVersion(): number {
+  return issuanceVersion
+}
+
+/** Record coins issued by a program at `now` (optionally counting an agent's comp). */
+export function recordIssuance(
+  program: string,
+  coins: number,
+  now: number,
+  agent?: { agentId: string },
+): void {
+  if (coins <= 0) return
+  const byProgram = { ...issuance.byProgram, [program]: (issuance.byProgram[program] ?? 0) + coins }
+  const wk = weekStart(now)
+  const byWeek = { ...issuance.byWeek, [wk]: (issuance.byWeek[wk] ?? 0) + coins }
+  const agentComp = { ...issuance.agentComp }
+  if (agent) {
+    const key = `${agent.agentId}|${wk}`
+    agentComp[key] = (agentComp[key] ?? 0) + coins
+  }
+  issuance = { byProgram, byWeek, agentComp }
+  issuanceBump()
+}
+
+export function totalIssued(): number {
+  return Object.values(issuance.byProgram).reduce((a, b) => a + b, 0)
+}
+export function issuedByProgram(): Record<string, number> {
+  return issuance.byProgram
+}
+export function weekIssued(now: number): number {
+  return issuance.byWeek[weekStart(now)] ?? 0
+}
+export function agentCompUsed(agentId: string, now: number): number {
+  return issuance.agentComp[`${agentId}|${weekStart(now)}`] ?? 0
+}
+
+/** Whether issuing `coins` now stays within the total cap AND the weekly budget. The
+ *  single gate every coin-issuing path checks before handing out coins. */
+export function canIssue(coins: number, now: number): { ok: boolean; reason?: string } {
+  if (coins <= 0) return { ok: true }
+  const cap = config.economy.totalIssuanceCap
+  if (cap > 0 && totalIssued() + coins > cap) {
+    return { ok: false, reason: 'The program’s total issuance cap has been reached.' }
+  }
+  const budget = config.economy.weeklyBudget
+  if (budget > 0 && weekIssued(now) + coins > budget) {
+    return { ok: false, reason: 'This week’s rewards budget is spent.' }
+  }
+  return { ok: true }
+}
+
+export function __resetIssuance(): void {
+  issuance = { byProgram: {}, byWeek: {}, agentComp: {} }
+  issuanceBump()
+}
