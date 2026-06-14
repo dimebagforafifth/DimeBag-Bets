@@ -21,6 +21,7 @@ import { collectionsManifests } from '../../features/collections/manifest.js'
 import { agentsManifests } from '../../features/agents/manifest.js'
 import { cashierDeskManifests } from '../../features/cashier/manifest.js'
 import { operatorManualManifests } from '../../features/help/manifest.js'
+import { rewardsAdminManifests } from '../../features/rewards/manifest.js'
 
 /** Every console feature, grouped into sections at render time by `groupBySection`.
  *  Listed in section order so each section's tiles read top-to-bottom as written. */
@@ -40,13 +41,16 @@ export const REGISTRY: FeatureManifest[] = [
   // Control
   ...controlManifests,
   ...operatorManualManifests,
+  // Rewards (the loyalty program admin)
+  ...rewardsAdminManifests,
 ]
 
-/** The four sections, in display order: Operations · Players · Catalog · Control. */
+/** The console sections, in display order. */
 export const SECTIONS: { key: ConsoleSection; label: string }[] = [
   { key: 'operations', label: 'Operations' },
   { key: 'players', label: 'Players' },
   { key: 'catalog', label: 'Catalog' },
+  { key: 'rewards', label: 'Rewards' },
   { key: 'control', label: 'Control' },
 ]
 

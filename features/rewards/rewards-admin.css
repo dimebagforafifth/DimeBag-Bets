@@ -1,0 +1,152 @@
+/* Rewards admin panels — on the console's .feat-panel charcoal/gold tokens. */
+.rwa-comp-grid,
+.rwa-econ-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.rwa-comp-reason {
+  grid-column: 1 / -1;
+}
+
+.rwa-toggles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 6px 14px;
+}
+
+.rwa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.rwa-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-muted, #aab2c0);
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--c-border, #2a2f39);
+}
+.rwa-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--c-border, #2a2f39);
+}
+.rwa-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* tier config */
+.rwa-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rwa-tier-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.rwa-tier-name {
+  font-weight: 700;
+  max-width: 220px;
+}
+.rwa-tier-th {
+  max-width: 160px;
+}
+.rwa-tier-del {
+  margin-left: auto;
+}
+
+/* promo / contest / mission rows */
+.rwa-promo-form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.rwa-grow {
+  flex: 1 1 200px;
+}
+.rwa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rwa-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.rwa-row.is-off {
+  opacity: 0.55;
+}
+.rwa-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.rwa-row-name {
+  font-weight: 700;
+  display: block;
+}
+.rwa-pool {
+  max-width: 110px;
+}
+.rwa-status {
+  max-width: 130px;
+}
+.rwa-mission {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--c-border, #2a2f39);
+}
+.rwa-mission.is-off {
+  opacity: 0.55;
+}
+
+/* daily grid */
+.rwa-daily-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+}
+.rwa-day span {
+  font-size: 11px;
+}
+
+/* reporting bars */
+.rwa-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rwa-bar-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 110px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.rwa-bar {
+  height: 10px;
+  background: var(--c-panel-2, #20252e);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.rwa-bar-fill {
+  height: 100%;
+  background: var(--c-gold, #d6b14a);
+}
+.rwa-bar-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-muted, #aab2c0);
+}

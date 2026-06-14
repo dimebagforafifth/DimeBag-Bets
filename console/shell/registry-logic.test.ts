@@ -20,30 +20,31 @@ const mk = (key: string, section: FeatureManifest['section']): FeatureManifest =
 })
 
 describe('registry', () => {
-  it('is populated from all four feature sections (post-integration)', () => {
+  it('is populated from every feature section (post-integration)', () => {
     expect(REGISTRY.length).toBeGreaterThan(0)
     expect(new Set(REGISTRY.map((m) => m.section))).toEqual(
-      new Set(['operations', 'players', 'catalog', 'control']),
+      new Set(['operations', 'players', 'catalog', 'rewards', 'control']),
     )
     // keys are unique across the whole registry
     expect(new Set(REGISTRY.map((m) => m.key)).size).toBe(REGISTRY.length)
   })
 
-  it('defines the four sections in display order', () => {
-    expect(SECTIONS.map((s) => s.key)).toEqual(['operations', 'players', 'catalog', 'control'])
-    expect(SECTIONS.map((s) => s.label)).toEqual(['Operations', 'Players', 'Catalog', 'Control'])
+  it('defines the sections in display order', () => {
+    expect(SECTIONS.map((s) => s.key)).toEqual(['operations', 'players', 'catalog', 'rewards', 'control'])
+    expect(SECTIONS.map((s) => s.label)).toEqual(['Operations', 'Players', 'Catalog', 'Rewards', 'Control'])
   })
 })
 
 describe('groupBySection', () => {
-  it('returns all four sections in order, with their manifests', () => {
+  it('returns all sections in order, with their manifests', () => {
     const reg = [mk('b', 'control'), mk('a', 'operations'), mk('c', 'players')]
     const groups = groupBySection(reg)
-    expect(groups.map((g) => g.key)).toEqual(['operations', 'players', 'catalog', 'control'])
+    expect(groups.map((g) => g.key)).toEqual(['operations', 'players', 'catalog', 'rewards', 'control'])
     expect(groups[0].items.map((m) => m.key)).toEqual(['a']) // operations
     expect(groups[1].items.map((m) => m.key)).toEqual(['c']) // players
     expect(groups[2].items).toEqual([]) // catalog empty
-    expect(groups[3].items.map((m) => m.key)).toEqual(['b']) // control
+    expect(groups[3].items).toEqual([]) // rewards empty
+    expect(groups[4].items.map((m) => m.key)).toEqual(['b']) // control
   })
 
   it('preserves manifest order within a section', () => {

@@ -14,8 +14,8 @@
 import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 
-/** The four console sections, in their display order. */
-export type ConsoleSection = 'operations' | 'players' | 'catalog' | 'control'
+/** The console sections, in their display order. */
+export type ConsoleSection = 'operations' | 'players' | 'catalog' | 'control' | 'rewards'
 
 /** The tile icon type — lucide-react's icon component. */
 export type ConsoleIcon = LucideIcon
