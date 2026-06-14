@@ -4,9 +4,10 @@
  * agent-grantable permission so a manager can let an agent comp their own players. The
  * registry owner imports this array; do not edit console/registry/index.ts from here.
  */
-import { Crown, Megaphone, Trophy, Gift, CalendarCheck, SlidersHorizontal, BarChart3 } from 'lucide-react'
+import { Crown, Megaphone, Trophy, Gift, CalendarCheck, SlidersHorizontal, BarChart3, Rocket } from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { TierConfigPanel } from './TierConfigPanel.js'
+import { PublishingPanel } from './PublishingPanel.js'
 import { PromotionsPanel } from './PromotionsPanel.js'
 import { ContestsPanel } from './ContestsPanel.js'
 import { CompPanel } from './CompPanel.js'
@@ -15,6 +16,14 @@ import { EconomyPanel } from './EconomyPanel.js'
 import { ReportingPanel } from './ReportingPanel.js'
 
 export const rewardsAdminManifests: FeatureManifest[] = [
+  {
+    key: 'rewards-publishing',
+    name: 'Feature Publishing',
+    hint: 'Turn features on, schedule & publish (+ Discord/Telegram)',
+    section: 'rewards',
+    icon: Rocket,
+    Panel: PublishingPanel,
+  },
   {
     key: 'tier-config',
     name: 'Tier Config',

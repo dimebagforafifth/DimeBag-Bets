@@ -95,6 +95,9 @@ export interface RewardsConfig {
   economy: EconomyConfig
   /** Which programs are turned on (player-visible). */
   enabled: Record<ProgramKey, boolean>
+  /** Optional scheduled go-live time per program (epoch ms; null = not scheduled). A
+   *  scheduled program stays OFF to players until its time passes and it's published. */
+  schedule: Record<ProgramKey, number | null>
 }
 
 /* ------------------------------- seed config ------------------------------- */
@@ -186,6 +189,15 @@ export const DEFAULT_CONFIG: RewardsConfig = {
     contests: true,
     leaderboards: true,
   },
+  schedule: {
+    tiers: null,
+    cashback: null,
+    daily: null,
+    missions: null,
+    promos: null,
+    contests: null,
+    leaderboards: null,
+  },
 }
 
 /* ------------------------------- the store --------------------------------- */
@@ -193,7 +205,8 @@ export const DEFAULT_CONFIG: RewardsConfig = {
 const store = createStore({ namespace: 'dimebag' })
 const DOC: Doc<RewardsConfig> = persistedDoc<RewardsConfig>(store, 'rewards.config', {
   // v2: dropped the 'store' program; balance/credit terminology throughout.
-  version: 2,
+  // v3: added per-program publish schedule (goLiveAt).
+  version: 3,
   initial: DEFAULT_CONFIG,
 })
 
@@ -231,6 +244,14 @@ export function setProgramEnabled(key: ProgramKey, on: boolean): void {
 }
 export function isProgramEnabled(key: ProgramKey): boolean {
   return config.enabled[key]
+}
+/** Set (or clear, with null) a program's scheduled go-live time. */
+export function setProgramSchedule(key: ProgramKey, goLiveAt: number | null): void {
+  config = { ...config, schedule: { ...config.schedule, [key]: goLiveAt } }
+  notify()
+}
+export function getProgramSchedule(key: ProgramKey): number | null {
+  return config.schedule[key] ?? null
 }
 
 /* -------------- player-facing reads (ENABLED programs only) ---------------- */

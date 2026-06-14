@@ -7,26 +7,13 @@ import { useSyncExternalStore } from 'react'
 import {
   getRewardsConfig,
   updateRewardsConfig,
-  setProgramEnabled,
   subscribeRewardsConfig,
   getRewardsConfigVersion,
-  PROGRAM_KEYS,
-  type ProgramKey,
 } from '../../rewards/economy.js'
 import { totalIssued, subscribeIssuance, getIssuanceVersion } from '../../rewards/comp.js'
 import { fmt } from '../../rewards/data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
-
-const PROGRAM_LABEL: Record<ProgramKey, string> = {
-  tiers: 'Tiers / ranks',
-  cashback: 'Cashback',
-  daily: 'Daily & streak',
-  missions: 'Missions',
-  promos: 'Promotions',
-  contests: 'Contests',
-  leaderboards: 'Leaderboards',
-}
 
 export function EconomyPanel({ onBack }: { onBack: () => void }) {
   useSyncExternalStore(subscribeRewardsConfig, getRewardsConfigVersion)
@@ -42,8 +29,8 @@ export function EconomyPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Caps and budgets so rewards can’t blow up the balance economy, and the master switch for
-          each program. Everything is balance — never cash.
+          Caps and budgets so rewards can’t blow up the balance economy. Everything is balance —
+          never cash. (Turn features on/off and schedule them in <strong>Feature Publishing</strong>.)
         </p>
       </header>
 
@@ -69,19 +56,6 @@ export function EconomyPanel({ onBack }: { onBack: () => void }) {
           <Field label="Weekly budget (0 = uncapped)" value={e.weeklyBudget} onChange={(v) => setEcon({ weeklyBudget: v })} />
           <Field label="Cashback rate (basis points of amount wagered)" value={Math.round(e.cashbackRate * 10_000)} onChange={(v) => setEcon({ cashbackRate: Math.max(0, v) / 10_000 })} />
           <Field label="Agent weekly comp allowance" value={e.agentWeeklyCompAllowance} onChange={(v) => setEcon({ agentWeeklyCompAllowance: v })} />
-        </div>
-      </section>
-
-      <section className="feat-card">
-        <h3 className="feat-h2">Programs</h3>
-        <p className="feat-sub">Turn a program off and players stop seeing it immediately.</p>
-        <div className="rwa-toggles">
-          {PROGRAM_KEYS.map((k) => (
-            <label key={k} className="feat-check">
-              <input type="checkbox" checked={cfg.enabled[k]} onChange={(ev) => setProgramEnabled(k, ev.target.checked)} />
-              {PROGRAM_LABEL[k]}
-            </label>
-          ))}
         </div>
       </section>
     </PanelShell>
