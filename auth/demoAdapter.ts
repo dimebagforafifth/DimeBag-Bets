@@ -17,34 +17,37 @@ const store = createLocalStore({ namespace: 'dimebag' })
 interface Cred {
   /** The linked book member id (becomes the AuthUser id). */
   id: string
-  email: string
+  /** The login handle — a username, NOT an email (everyone signs in with username + password). */
+  username: string
   password: string
   displayName: string
 }
 
 const DEMO_PASSWORD = 'demo'
-export const DEMO_OPERATOR_EMAIL = 'operator@dimebag.local'
+export const DEMO_OPERATOR_USERNAME = 'operator'
 
 /** Seeded demo logins, each linked to a member in book-store's seed (one per role). */
 const SEED_CREDS: Cred[] = [
-  { id: 'mgr', email: DEMO_OPERATOR_EMAIL, password: DEMO_PASSWORD, displayName: 'Operator' },
-  { id: 'a-e', email: 'agent@dimebag.local', password: DEMO_PASSWORD, displayName: 'East Desk Agent' },
-  { id: 'p-marco', email: 'marco@dimebag.local', password: DEMO_PASSWORD, displayName: 'Marco' },
+  { id: 'mgr', username: DEMO_OPERATOR_USERNAME, password: DEMO_PASSWORD, displayName: 'Operator' },
+  { id: 'a-e', username: 'agent', password: DEMO_PASSWORD, displayName: 'East Desk Agent' },
+  { id: 'p-marco', username: 'marco', password: DEMO_PASSWORD, displayName: 'Marco' },
 ]
 
-const CREDS: Doc<Cred[]> = persistedDoc(store, 'auth.demoCreds', { version: 1, initial: SEED_CREDS })
-const SESSION: Doc<Session | null> = persistedDoc(store, 'auth.session', { version: 1, initial: null })
+// version 2: credentials are keyed by USERNAME (was email). Bumping discards any stale
+// email-shaped creds/session persisted in a browser and re-seeds the username logins.
+const CREDS: Doc<Cred[]> = persistedDoc(store, 'auth.demoCreds', { version: 2, initial: SEED_CREDS })
+const SESSION: Doc<Session | null> = persistedDoc(store, 'auth.session', { version: 2, initial: null })
 // Once we've bootstrapped (or the user has explicitly acted), getSession() won't
 // auto-log-in again — so signing out actually stays signed out.
-const BOOTSTRAPPED: Doc<boolean> = persistedDoc(store, 'auth.bootstrapped', { version: 1, initial: false })
+const BOOTSTRAPPED: Doc<boolean> = persistedDoc(store, 'auth.bootstrapped', { version: 2, initial: false })
 
 function sessionFor(c: Cred): Session {
-  const user: AuthUser = { id: c.id, email: c.email, displayName: c.displayName }
+  const user: AuthUser = { id: c.id, username: c.username, displayName: c.displayName }
   return { user, token: `demo-${c.id}`, expiresAt: null }
 }
 
-function normEmail(email: string): string {
-  return email.trim().toLowerCase()
+function normUsername(username: string): string {
+  return username.trim().toLowerCase()
 }
 
 export function createDemoAdapter(): AuthAdapter {
@@ -58,7 +61,7 @@ export function createDemoAdapter(): AuthAdapter {
       // login. After an explicit sign-out (BOOTSTRAPPED stays true) we stay signed out.
       if (!BOOTSTRAPPED.load()) {
         BOOTSTRAPPED.save(true)
-        const op = CREDS.load().find((c) => c.email === DEMO_OPERATOR_EMAIL)
+        const op = CREDS.load().find((c) => c.username === DEMO_OPERATOR_USERNAME)
         if (op) {
           const session = sessionFor(op)
           SESSION.save(session)
@@ -68,24 +71,24 @@ export function createDemoAdapter(): AuthAdapter {
       return null
     },
 
-    async signIn(email, password) {
-      const c = CREDS.load().find((x) => x.email === normEmail(email))
-      if (!c || c.password !== password) throw new Error('Invalid email or password')
+    async signIn(username, password) {
+      const c = CREDS.load().find((x) => x.username === normUsername(username))
+      if (!c || c.password !== password) throw new Error('Invalid username or password')
       BOOTSTRAPPED.save(true)
       const session = sessionFor(c)
       SESSION.save(session)
       return session
     },
 
-    async signUp(email, password, displayName) {
-      const e = normEmail(email)
-      if (!e || !password) throw new Error('Email and password are required')
+    async signUp(username, password, displayName) {
+      const u = normUsername(username)
+      if (!u || !password) throw new Error('Username and password are required')
       const creds = CREDS.load()
-      if (creds.some((c) => c.email === e)) throw new Error('An account with that email already exists')
+      if (creds.some((c) => c.username === u)) throw new Error('That username is already taken')
       // A brand-new signup has no book node yet — an operator recruits/links them
       // later (in real mode via Agent 1's accounts table). Until then they're signed
       // in but unlinked, so the app shows them the "no player" state. // TODO(api)
-      const cred: Cred = { id: `user-${e}`, email: e, password, displayName: displayName?.trim() || e }
+      const cred: Cred = { id: `user-${u}`, username: u, password, displayName: displayName?.trim() || u }
       CREDS.save([...creds, cred])
       BOOTSTRAPPED.save(true)
       const session = sessionFor(cred)
@@ -101,13 +104,13 @@ export function createDemoAdapter(): AuthAdapter {
 }
 
 /**
- * REDACTED credential list for the operator console — id + email only, NEVER the
+ * REDACTED credential list for the operator console — id + username only, NEVER the
  * password. The console's Customer Admin reads this to show a login STATUS (does this
  * member have a login?) without the demo password ever leaving this module. See
  * auth/credentials.ts. // TODO(api): in real mode this comes from Supabase, not here.
  */
-export function listDemoCreds(): ReadonlyArray<{ id: string; email: string }> {
-  return CREDS.load().map((c) => ({ id: c.id, email: c.email }))
+export function listDemoCreds(): ReadonlyArray<{ id: string; username: string }> {
+  return CREDS.load().map((c) => ({ id: c.id, username: c.username }))
 }
 
 /** Test helper: restore the demo auth store to its seeded, signed-out state. */

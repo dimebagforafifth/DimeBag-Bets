@@ -6,13 +6,13 @@
 
 import { useState, type FormEvent } from 'react'
 import { useAuth } from './AuthProvider.js'
-import { DEMO_OPERATOR_EMAIL } from './demoAdapter.js'
+import { DEMO_OPERATOR_USERNAME } from './demoAdapter.js'
 import './auth.css'
 
 export function Login() {
   const { signIn, signUp, isDemo } = useAuth()
   const [mode, setMode] = useState<'in' | 'up'>('in')
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +32,9 @@ export function Login() {
 
   function submit(e: FormEvent) {
     e.preventDefault()
-    void run(() => (mode === 'in' ? signIn(email, password) : signUp(email, password, displayName)))
+    void run(() =>
+      mode === 'in' ? signIn(username, password) : signUp(username, password, displayName),
+    )
   }
 
   return (
@@ -51,12 +53,15 @@ export function Login() {
           </label>
         )}
         <label className="auth-field">
-          <span>Email</span>
+          <span>Username</span>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
           />
         </label>
@@ -94,13 +99,13 @@ export function Login() {
               className="auth-demo-btn"
               type="button"
               disabled={busy}
-              onClick={() => void run(() => signIn(DEMO_OPERATOR_EMAIL, 'demo'))}
+              onClick={() => void run(() => signIn(DEMO_OPERATOR_USERNAME, 'demo'))}
             >
               Continue as operator (demo)
             </button>
             <p className="auth-demo-hint">
-              Demo logins (password <code>demo</code>): {DEMO_OPERATOR_EMAIL} · agent@dimebag.local ·
-              marco@dimebag.local
+              Demo logins (password <code>demo</code>): <code>{DEMO_OPERATOR_USERNAME}</code> ·{' '}
+              <code>agent</code> · <code>marco</code>
             </p>
           </div>
         )}

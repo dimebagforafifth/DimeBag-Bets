@@ -31,11 +31,13 @@ export function createSupabaseAdapter(): AuthAdapter {
     async getSession() {
       return null
     },
-    // TODO(api): return mapSession(await sb.auth.signInWithPassword({ email, password }))
+    // Login is username + password (no email). TODO(api): resolve the username to its
+    // account server-side (a usernames table / synthetic email), then
+    //   return mapSession(await sb.auth.signInWithPassword({ ...resolved, password }))
     async signIn() {
       return notWired()
     },
-    // TODO(api): return mapSession(await sb.auth.signUp({ email, password, options: { data: { displayName } } }))
+    // TODO(api): create the account from { username, password, options: { data: { displayName } } }
     async signUp() {
       return notWired()
     },

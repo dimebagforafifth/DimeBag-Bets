@@ -36,7 +36,7 @@ describe('route role-gating', () => {
   beforeEach(() => __resetDemoAuth())
 
   it('a player sees the play tabs but NOT Management', async () => {
-    await createDemoAdapter().signIn('marco@dimebag.local', 'demo') // persist a player session
+    await createDemoAdapter().signIn('marco', 'demo') // persist a player session
     const { host, root } = await mountApp()
     const labels = navLabels(host)
     expect(labels).toContain('Casino')

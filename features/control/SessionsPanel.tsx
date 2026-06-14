@@ -52,8 +52,8 @@ export function SessionsPanel({ onBack }: { onBack: () => void }) {
                 <td>{user.displayName}</td>
               </tr>
               <tr>
-                <th>Email</th>
-                <td>{user.email}</td>
+                <th>Username</th>
+                <td>{user.username}</td>
               </tr>
               <tr>
                 <th>Identity</th>

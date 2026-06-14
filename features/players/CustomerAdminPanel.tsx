@@ -370,7 +370,7 @@ function CustomerRow({
             className="custadm-reset"
             onClick={sendReset}
             disabled={!cred.hasLogin}
-            title={cred.email ?? 'No login on file'}
+            title={cred.username ? `@${cred.username}` : 'No login on file'}
           >
             Send reset
           </button>

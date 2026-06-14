@@ -12,7 +12,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createAuthAdapter } from './adapter.js'
-import { DEMO_OPERATOR_EMAIL } from './demoAdapter.js'
+import { DEMO_OPERATOR_USERNAME } from './demoAdapter.js'
 import type { AuthAdapter, AuthContextValue, AuthStatus, Session } from './types.js'
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -41,16 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [adapter])
 
   const signIn = useCallback(
-    async (email: string, password: string) => {
-      const s = await adapter.signIn(email, password)
+    async (username: string, password: string) => {
+      const s = await adapter.signIn(username, password)
       setSession(s)
       setStatus('authenticated')
     },
     [adapter],
   )
   const signUp = useCallback(
-    async (email: string, password: string, displayName?: string) => {
-      const s = await adapter.signUp(email, password, displayName)
+    async (username: string, password: string, displayName?: string) => {
+      const s = await adapter.signUp(username, password, displayName)
       setSession(s)
       setStatus('authenticated')
     },
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  *  (and standalone component tests) render exactly as before auth was introduced. */
 const FALLBACK: AuthContextValue = {
   status: 'authenticated',
-  user: { id: 'mgr', email: DEMO_OPERATOR_EMAIL, displayName: 'Operator' },
+  user: { id: 'mgr', username: DEMO_OPERATOR_USERNAME, displayName: 'Operator' },
   isDemo: true,
   async signIn() {},
   async signUp() {},

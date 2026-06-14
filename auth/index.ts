@@ -18,7 +18,7 @@ export { supabaseAuthReady } from './config.js'
 export type { AuthUser, Session, AuthStatus, AuthAdapter, AuthContextValue } from './types.js'
 
 // Demo adapter helpers (the working path until Supabase is wired; tests reset state).
-export { DEMO_OPERATOR_EMAIL, __resetDemoAuth } from './demoAdapter.js'
+export { DEMO_OPERATOR_USERNAME, __resetDemoAuth } from './demoAdapter.js'
 
 // Operator credential status + password reset (redacted — never exposes a password).
 export {

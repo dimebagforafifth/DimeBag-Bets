@@ -15,7 +15,9 @@
 export interface AuthUser {
   /** The session identity id — resolved to a book member via auth/accountLink. */
   id: string
-  email: string
+  /** The login handle. Username-only — no email is used to sign in (managers, agents
+   *  and players all log in with a username + password). */
+  username: string
   displayName: string
   /**
    * Which BOOK (tenant) this identity belongs to. Optional + backward-compatible:
@@ -43,8 +45,8 @@ export interface AuthAdapter {
   readonly kind: 'demo' | 'supabase'
   /** The persisted session if one exists (the demo adapter may bootstrap one). */
   getSession(): Promise<Session | null>
-  signIn(email: string, password: string): Promise<Session>
-  signUp(email: string, password: string, displayName?: string): Promise<Session>
+  signIn(username: string, password: string): Promise<Session>
+  signUp(username: string, password: string, displayName?: string): Promise<Session>
   signOut(): Promise<void>
 }
 
@@ -55,7 +57,7 @@ export interface AuthContextValue {
   user: AuthUser | null
   /** True when the local demo adapter is live (no Supabase keys / not yet wired). */
   isDemo: boolean
-  signIn(email: string, password: string): Promise<void>
-  signUp(email: string, password: string, displayName?: string): Promise<void>
+  signIn(username: string, password: string): Promise<void>
+  signUp(username: string, password: string, displayName?: string): Promise<void>
   signOut(): Promise<void>
 }
