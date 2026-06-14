@@ -309,7 +309,7 @@ export function boardRows(board: BoardId, period: Period, scope: Scope, youName 
   for (let i = 0; i < (scope === 'friends' ? 9 : 15); i++) {
     const rank = i + 1
     const decay = 1 - i * 0.055
-    let value =
+    const value =
       board === 'streak'
         ? Math.max(1, Math.round(base.streak * decay * (scope === 'friends' ? 0.8 : 1)))
         : board === 'clv'
