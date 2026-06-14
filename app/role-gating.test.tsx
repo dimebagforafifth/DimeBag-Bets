@@ -47,9 +47,24 @@ describe('route role-gating', () => {
     host.remove()
   })
 
-  it('the operator sees Management', async () => {
+  it('the operator (manager) sees Management', async () => {
     const { host, root } = await mountApp() // demo bootstraps the operator session
     expect(navLabels(host)).toContain('Management')
+    act(() => root.unmount())
+    host.remove()
+  })
+
+  it('an agent sees Management but only their granted tiles (scoped console)', async () => {
+    await createDemoAdapter().signIn('agent', 'demo') // East Desk agent session
+    const { host, root } = await mountApp()
+    expect(navLabels(host)).toContain('Management')
+    // granted-by-default agent tiles show…
+    expect(host.textContent).toContain('Customer Admin')
+    expect(host.textContent).toContain('Collections')
+    // …but manager-only tiles never do
+    expect(host.textContent).not.toContain('Branding')
+    expect(host.textContent).not.toContain('Sportsbook Lines')
+    expect(host.textContent).not.toContain('Roles & Access')
     act(() => root.unmount())
     host.remove()
   })

@@ -272,3 +272,31 @@
   font-weight: 700;
   color: var(--c-muted, #aab2c0);
 }
+
+/* Console access — the manager's per-agent tool grant grid (in the member editor). */
+.agt-access {
+  margin-top: 6px;
+  border-top: 1px solid var(--c-border, #2a2f39);
+  padding-top: 12px;
+}
+.agt-access-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.agt-access-reset {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+.agt-access-note {
+  margin: 4px 0 10px;
+}
+.agt-access-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 6px 14px;
+}
+.agt-access-item {
+  font-size: 13px;
+}

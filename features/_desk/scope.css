@@ -27,3 +27,16 @@
   outline: none;
   border-color: var(--c-gold, #d6b14a);
 }
+/* Locked scope for an agent — their book only, no choice. */
+.scope-bar-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--c-panel-2, #20252e);
+  border: 1px dashed var(--c-border, #2a2f39);
+  border-radius: 8px;
+  color: var(--c-muted, #aab2c0);
+  padding: 7px 10px;
+  font-size: 12.5px;
+  font-family: 'Saira', system-ui, sans-serif;
+}

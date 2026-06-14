@@ -20,8 +20,11 @@ import { Console } from '../console/shell/index.js'
 // (console/registry/index.ts), so the console mounts the whole feature set directly.
 import { REGISTRY } from '../console/registry/index.js'
 import { consoleFigures } from './console-figures.js'
+import { registryForRole } from './console-access.js'
+import { setViewer } from './viewer.js'
+import { subscribeAgentPermissions, getAgentPermissionsVersion } from './agent-permissions.js'
 import { getAnalyticsRecords } from '../manager/reporting/index.js'
-import type { Member, Role } from '../org/index.js'
+import { rosterOf, type Member, type Role } from '../org/index.js'
 import {
   getBook,
   getBookVersion,
@@ -102,6 +105,18 @@ export function App() {
   const activeSection = visibleSections.includes(section) ? section : defaultSection(role)
   // Audit/adjust entries carry the REAL signed-in identity, not a hardcoded 'operator'.
   const actor = user?.displayName ?? 'operator'
+
+  // Role-based access. Tell the scope kit WHO is operating (so an agent's data is clamped
+  // to their downline), and hand the console only the tiles this role may see: a manager
+  // gets everything, an agent only the tiles the manager granted them.
+  useEffect(() => {
+    setViewer(authMember?.id ?? 'mgr', role)
+  }, [authMember?.id, role])
+  const permsVersion = useSyncExternalStore(subscribeAgentPermissions, getAgentPermissionsVersion)
+  const consoleRegistry = useMemo(
+    () => registryForRole(REGISTRY, role, authMember?.id ?? null),
+    [role, authMember?.id, permsVersion],
+  )
 
   const player = getCurrentPlayer() // an ACTIVE player, or null
   const account = player?.account ?? null
@@ -236,15 +251,22 @@ export function App() {
       <main className={`app-main${activeSection === 'management' ? ' is-console' : ''}`}>
         {activeSection === 'management' && canManage(role) ? (
           (() => {
+            // An agent's figures strip is scoped to their downline (balance = their
+            // subtree net; week/today + active count = their roster only).
+            const roster =
+              (role === 'agent' || role === 'subagent') && authMember
+                ? rosterOf(book, authMember.id)
+                : null
             const fig = consoleFigures(
               book,
               getAnalyticsRecords(),
               Date.now(),
-              activePlayers.length,
+              roster ? roster.filter((p) => p.active).length : activePlayers.length,
+              roster ? { scopeId: authMember!.id, accountIds: new Set(roster.map((p) => p.id)) } : {},
             )
             return (
               <Console
-                registry={REGISTRY}
+                registry={consoleRegistry}
                 brand="DimeBag-Bets"
                 username={actor}
                 onSignOut={signOut}

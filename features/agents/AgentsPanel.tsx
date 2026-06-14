@@ -26,6 +26,14 @@ import {
 } from '../../org/index.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { adjustFigure } from '../../app/manager-actions.js'
+import {
+  AGENT_GRANTABLE,
+  grantedTiles,
+  setAgentTile,
+  resetAgentPermissions,
+  subscribeAgentPermissions,
+  getAgentPermissionsVersion,
+} from '../../app/agent-permissions.js'
 import { formatMoney, toCents, toSignedCents } from '../../games/shared/money.js'
 import { PanelShell, Figure } from '../_desk/shared.js'
 import { InfoDot } from '../_desk/Tooltip.js'
@@ -262,6 +270,7 @@ export function AgentsPanel({ onBack }: { onBack: () => void }) {
 function MemberEditor({ member, org }: { member: Member; org: Org }) {
   const isPlayer = member.role === 'player'
   const isManager = member.role === 'manager'
+  const isAgent = member.role === 'agent' || member.role === 'subagent'
 
   const [credit, setCredit] = useState(String(member.account.creditLimit / 100))
   const [amount, setAmount] = useState('')
@@ -450,6 +459,9 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
         </label>
       )}
 
+      {/* Console access — which management tools this agent gets (manager-controlled) */}
+      {isAgent && <AgentAccess agentId={member.id} />}
+
       {error && (
         <p className="feat-empty feat-down" role="alert">
           {error}
@@ -461,5 +473,47 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
         </p>
       )}
     </div>
+  )
+}
+
+/**
+ * Console access for an agent — the manager picks which management tiles this agent gets.
+ * The agent sees ONLY the granted tiles (app/console-access) and every tool is data-scoped
+ * to their own downline (features/_desk/scope). Writes persist immediately.
+ */
+function AgentAccess({ agentId }: { agentId: string }) {
+  useSyncExternalStore(subscribeAgentPermissions, getAgentPermissionsVersion)
+  const granted = grantedTiles(agentId)
+  return (
+    <section className="agt-access" aria-label="Console access">
+      <div className="agt-access-head">
+        <span className="feat-label">
+          Console access <InfoDot id="figure" />
+        </span>
+        <button
+          type="button"
+          className="feat-btn agt-access-reset"
+          onClick={() => resetAgentPermissions(agentId)}
+        >
+          Reset to default
+        </button>
+      </div>
+      <p className="feat-sub agt-access-note">
+        The agent only sees the tiles you grant here, and every tool is limited to their own
+        downline — they never see other agents or the whole book.
+      </p>
+      <div className="agt-access-grid">
+        {AGENT_GRANTABLE.map((t) => (
+          <label key={t.key} className="feat-check agt-access-item">
+            <input
+              type="checkbox"
+              checked={granted.has(t.key)}
+              onChange={(e) => setAgentTile(agentId, t.key, e.target.checked)}
+            />
+            {t.label}
+          </label>
+        ))}
+      </div>
+    </section>
   )
 }
