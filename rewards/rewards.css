@@ -619,3 +619,36 @@
 .rw-board-table tr.is-you td {
   font-weight: 700;
 }
+
+/* ── simplified hub: claim cards, big numbers, demo control ── */
+.rw-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.rw-stat .rw-btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.rw-big {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.rw-perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.rw-demo {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(214, 177, 74, 0.06), transparent);
+}
+.rw-demo-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

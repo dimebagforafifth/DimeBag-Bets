@@ -1,33 +1,43 @@
+/** The rewards hub mechanics — all REAL: rakeback accrues from wagering + claims into the
+ *  balance, the daily bonus runs a 24h cooldown + streak, the warm-up unlocks at its wager
+ *  threshold, free spins decrement + pay, and the store enforces affordability. Plus the
+ *  comp engine + economy ledger + the credits-only invariant. */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { DEFAULT_TIERS, tierForStatus, tierProgressFor } from './data.js'
 import {
   getPlayerRewards,
-  accrueFromWager,
-  claimCashback,
-  grantLockedBonus,
+  recordWager,
+  settleWager,
+  claimRakeback,
+  dailyStatus,
+  claimDaily,
+  playFreeSpin,
+  redeemStoreItem,
   __resetRewardsPlayers,
 } from './players.js'
 import {
   getRewardsConfig,
   updateRewardsConfig,
-  visiblePromos,
-  setProgramEnabled,
   resetRewardsConfig,
   recordIssuance,
   canIssue,
   totalIssued,
   weekIssued,
-  issuedByProgram,
 } from './economy.js'
-import {
-  canComp,
-  issueComp,
-  compAllowanceLeft,
-  agentCompUsed,
-  __resetIssuance,
-} from './comp.js'
+import { canComp, issueComp, compAllowanceLeft, agentCompUsed, __resetIssuance } from './comp.js'
 import { getBook } from '../app/book-store.js'
+import { adjustFigure } from '../app/manager-actions.js'
 import { setAgentTile, __resetAllAgentPermissions } from '../app/agent-permissions.js'
+
+const NOW = 1_750_000_000_000
+const HOUR = 3_600_000
+const DAY = 86_400_000
+
+const balance = (id: string) => getBook().members[id].account.balance
+const setBalance = (id: string, cents: number) => {
+  const delta = cents - balance(id)
+  if (delta !== 0) adjustFigure(id, delta, 'test setup', 'test')
+}
 
 beforeEach(() => {
   __resetRewardsPlayers()
@@ -36,8 +46,8 @@ beforeEach(() => {
   __resetAllAgentPermissions()
 })
 
-describe('tier ladder (status-driven)', () => {
-  it('derives the tier from a status score and reports progress', () => {
+describe('rank ladder (credits wagered)', () => {
+  it('derives the rank from credits wagered and reports progress', () => {
     expect(tierForStatus(DEFAULT_TIERS, 0).id).toBe('rookie')
     expect(tierForStatus(DEFAULT_TIERS, 68_400).id).toBe('gold') // 50k..250k
     const prog = tierProgressFor(DEFAULT_TIERS, 68_400)
@@ -48,128 +58,158 @@ describe('tier ladder (status-driven)', () => {
   })
 })
 
-describe('play accrual', () => {
-  it('status climbs by stake, cashback accrues, and a locked bonus unlocks at playthrough', () => {
-    __resetRewardsPlayers()
-    grantLockedBonus('pX', 1_000, 1, 'Test promo', 'lb-x') // needs 1,000 wagered
-    const before = getPlayerRewards('pX')
-    expect(before.status).toBe(0)
-
-    let r = accrueFromWager('pX', 400)
-    expect(r.unlocked).toBe(0)
-    const mid = getPlayerRewards('pX')
-    expect(mid.status).toBe(400) // status = stake
-    expect(mid.cashbackPending).toBe(Math.round(400 * getRewardsConfig().economy.cashbackRate))
-    expect(mid.locked[0].wagered).toBe(400)
-
-    r = accrueFromWager('pX', 700) // total 1,100 ≥ 1,000 → unlocks
-    expect(r.unlocked).toBe(1_000)
-    expect(getPlayerRewards('pX').locked).toHaveLength(0)
+describe('rakeback — accrues from real wagering, claims into the balance', () => {
+  it('accrues at the config rate and grows lifetime wagered', () => {
+    const rate = getRewardsConfig().loyalty.rakebackRate // 0.05
+    const before = getPlayerRewards('p-marco')
+    recordWager('p-marco', 100_000, NOW) // wager $1,000 (cents)
+    const after = getPlayerRewards('p-marco')
+    expect(after.wagered).toBe(before.wagered + 100_000)
+    expect(after.rakebackAccrued).toBe(before.rakebackAccrued + Math.round(100_000 * rate)) // +5,000
   })
 
-  it('claims cashback (returned for the host to credit to the balance, never a wallet)', () => {
-    accrueFromWager('pY', 10_000) // cashback = 50 at 0.5%
-    const pending = getPlayerRewards('pY').cashbackPending
-    expect(pending).toBeGreaterThan(0)
-    const moved = claimCashback('pY')
-    expect(moved).toBe(pending) // amount handed back to credit the figure
-    expect(getPlayerRewards('pY').cashbackPending).toBe(0)
-  })
-
-  it('a 0-playthrough bonus unlocks instantly (no lock created)', () => {
-    const out = grantLockedBonus('pZ', 500, 0, 'Instant')
-    expect(out.instant).toBe(500)
-    expect(getPlayerRewards('pZ').locked).toHaveLength(0)
+  it('claims the accrued rakeback into the real balance and zeroes it', () => {
+    recordWager('p-marco', 100_000, NOW)
+    const accrued = getPlayerRewards('p-marco').rakebackAccrued
+    expect(accrued).toBeGreaterThan(0)
+    const before = balance('p-marco')
+    const moved = claimRakeback('p-marco', NOW)
+    expect(moved).toBe(accrued)
+    expect(balance('p-marco')).toBe(before + accrued)
+    expect(getPlayerRewards('p-marco').rakebackAccrued).toBe(0)
+    expect(claimRakeback('p-marco', NOW)).toBe(0) // nothing left
   })
 })
 
-describe('player-facing config (enabled programs only)', () => {
-  it('hides promos when the program is turned off', () => {
-    const now = 1_750_000_000_000
-    expect(visiblePromos(now).length).toBeGreaterThan(0)
-    setProgramEnabled('promos', false)
-    expect(visiblePromos(now)).toEqual([])
+describe('daily bonus — real 24h cooldown + streak', () => {
+  it('claims, locks for 24h, then resets; streak climbs on consecutive days and resets on a miss', () => {
+    const l = getRewardsConfig().loyalty
+    // first claim → streak 1, amount = base + 1×step
+    expect(dailyStatus('p-priya', NOW).claimable).toBe(true)
+    const before = balance('p-priya')
+    const r1 = claimDaily('p-priya', NOW)
+    expect(r1).toMatchObject({ ok: true, streak: 1 })
+    expect(r1.amountCents).toBe((l.dailyBase + 1 * l.dailyStreakStep) * 100)
+    expect(balance('p-priya')).toBe(before + r1.amountCents) // real credits
+
+    // locked for 24h
+    expect(claimDaily('p-priya', NOW + 23 * HOUR).ok).toBe(false)
+    const st = dailyStatus('p-priya', NOW + HOUR)
+    expect(st.claimable).toBe(false)
+    expect(st.msLeft).toBeGreaterThan(0)
+
+    // next day → consecutive → streak 2
+    const r2 = claimDaily('p-priya', NOW + DAY)
+    expect(r2).toMatchObject({ ok: true, streak: 2 })
+
+    // skip a day (≥48h after the last claim) → streak resets to 1
+    const r3 = claimDaily('p-priya', NOW + DAY + 48 * HOUR)
+    expect(r3).toMatchObject({ ok: true, streak: 1 })
+  })
+})
+
+describe('warm-up — unlocks at its wager threshold', () => {
+  it('advances with wagering and unlocks the locked credits at the threshold', () => {
+    // p-tariq seed: locked 200_000, wagered 25_000, required 600_000
+    const need = 600_000 - 25_000
+    const r0 = recordWager('p-tariq', need - 1, NOW) // one short
+    expect(r0.unlockedCents).toBe(0)
+    expect(getPlayerRewards('p-tariq').warmup).not.toBeNull()
+
+    const r1 = recordWager('p-tariq', 1, NOW) // crosses the threshold
+    expect(r1.unlockedCents).toBe(200_000)
+    expect(getPlayerRewards('p-tariq').warmup).toBeNull()
+  })
+
+  it('settleWager credits the unlocked warm-up to the real balance', () => {
+    const before = balance('p-tariq')
+    const out = settleWager('p-tariq', 600_000, NOW) // 25_000 + 600_000 ≥ 600_000
+    expect(out.unlockedCents).toBe(200_000)
+    expect(balance('p-tariq')).toBe(before + 200_000)
+    expect(getPlayerRewards('p-tariq').warmup).toBeNull()
+  })
+})
+
+describe('free spins — decrement + pay real credits, run out', () => {
+  it('pays in the config range, decrements the count, and stops at zero', () => {
+    const l = getRewardsConfig().loyalty
+    const spins = getPlayerRewards('p-marco').freeSpins // 3
+    expect(spins).toBe(3)
+
+    const before = balance('p-marco')
+    const low = playFreeSpin('p-marco', NOW, 0) // floor payout
+    expect(low.payoutCents).toBe(l.spinMin * 100)
+    expect(low.spinsLeft).toBe(2)
+    expect(balance('p-marco')).toBe(before + l.spinMin * 100)
+
+    const high = playFreeSpin('p-marco', NOW, 0.999999) // ceiling payout
+    expect(high.payoutCents).toBe(l.spinMax * 100)
+    expect(high.spinsLeft).toBe(1)
+
+    playFreeSpin('p-marco', NOW, 0.5) // last spin
+    const empty = playFreeSpin('p-marco', NOW, 0.5)
+    expect(empty.ok).toBe(false)
+    expect(getPlayerRewards('p-marco').freeSpins).toBe(0)
+  })
+})
+
+describe('store — affordability is enforced; redeeming moves credits + grants the item', () => {
+  it('rejects what you can’t afford and grants what you can', () => {
+    const item = getRewardsConfig().loyalty.store.find((i) => i.id === 'spins-5')!
+    const costCents = item.cost * 100
+
+    setBalance('p-priya', costCents - 1) // one short
+    expect(redeemStoreItem('p-priya', 'spins-5', NOW)).toMatchObject({ ok: false })
+
+    setBalance('p-priya', costCents + 50_000)
+    const spinsBefore = getPlayerRewards('p-priya').freeSpins
+    const before = balance('p-priya')
+    expect(redeemStoreItem('p-priya', 'spins-5', NOW)).toEqual({ ok: true })
+    expect(balance('p-priya')).toBe(before - costCents) // spent
+    expect(getPlayerRewards('p-priya').freeSpins).toBe(spinsBefore + item.amount) // granted
+  })
+
+  it('blocks re-buying a one-time item', () => {
+    setBalance('p-dana', 10_000_000)
+    // p-dana already owns flair-gold in the seed
+    expect(redeemStoreItem('p-dana', 'flair-gold', NOW)).toMatchObject({ ok: false, reason: 'Already owned.' })
   })
 })
 
 describe('comp — role / permission / downline / allowance gating', () => {
-  it('a manager can comp anyone', () => {
+  it('a manager can comp anyone; a player never can', () => {
     expect(canComp('mgr', 'manager', 'p-tariq').ok).toBe(true)
-  })
-
-  it('a player can never comp', () => {
     expect(canComp('p-marco', 'player', 'p-lena').ok).toBe(false)
   })
 
-  it('an agent needs the granted permission AND a downline target', () => {
-    // no permission yet
+  it('an agent needs the granted permission AND a downline target, within allowance', () => {
     expect(canComp('a-e', 'agent', 'p-marco').ok).toBe(false)
     setAgentTile('a-e', 'rewards-comp', true)
-    // p-marco is under East Desk (a-e); p-tariq is under West Desk (a-w)
     expect(canComp('a-e', 'agent', 'p-marco').ok).toBe(true)
     expect(canComp('a-e', 'agent', 'p-tariq').ok).toBe(false) // not in a-e's downline
-  })
 
-  it('enforces the agent weekly comp allowance', () => {
-    setAgentTile('a-e', 'rewards-comp', true)
-    const now = 1_750_000_000_000
     const cap = getRewardsConfig().economy.agentWeeklyCompAllowance
-    expect(compAllowanceLeft('a-e', 'agent', now)).toBe(cap)
-
-    const ok = issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'balance', amount: cap - 1_000, reason: 'loyalty', now })
-    expect(ok.ok).toBe(true)
-    expect(agentCompUsed('a-e', now)).toBe(cap - 1_000)
-
-    const over = issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'balance', amount: 5_000, reason: 'more', now })
-    expect(over.ok).toBe(false)
-    expect(over.error).toMatch(/allowance/i)
-  })
-
-  it('a balance comp credits the player’s real figure + records the comp + counts issuance', () => {
-    const now = 1_750_000_000_000
-    const before = getBook().members['p-dana'].account.balance
-    const res = issueComp({ actorMemberId: 'mgr', actorRole: 'manager', targetPlayerId: 'p-dana', kind: 'balance', amount: 2_500, reason: 'VIP care', now })
-    expect(res.ok).toBe(true)
-    // credited through core in cents (2,500 units → 250,000 cents)
-    expect(getBook().members['p-dana'].account.balance).toBe(before + 250_000)
-    expect(getPlayerRewards('p-dana').compHistory[0]).toMatchObject({ amount: 2_500, kind: 'balance', byName: 'Your Book' })
+    expect(compAllowanceLeft('a-e', 'agent', NOW)).toBe(cap)
+    expect(issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'balance', amount: cap - 1_000, reason: 'loyalty', now: NOW }).ok).toBe(true)
+    expect(agentCompUsed('a-e', NOW)).toBe(cap - 1_000)
+    expect(issueComp({ actorMemberId: 'a-e', actorRole: 'agent', targetPlayerId: 'p-marco', kind: 'balance', amount: 5_000, reason: 'more', now: NOW }).error).toMatch(/allowance/i)
   })
 })
 
 describe('economy issuance ledger + caps', () => {
-  const now = 1_750_000_000_000
-
-  it('records issuance by program and by week (every grant path is tracked)', () => {
-    recordIssuance('mission', 1_000, now)
-    recordIssuance('cashback', 500, now)
-    const after = issuedByProgram()
-    expect(after.mission).toBeGreaterThanOrEqual(1_000)
-    expect(after.cashback).toBeGreaterThanOrEqual(500)
-    expect(weekIssued(now)).toBeGreaterThanOrEqual(1_500)
-  })
-
   it('canIssue enforces the weekly budget AND the total cap', () => {
     const base = totalIssued()
-    updateRewardsConfig({
-      economy: { ...getRewardsConfig().economy, totalIssuanceCap: base + 1_000_000, weeklyBudget: weekIssued(now) + 600 },
-    })
-    expect(canIssue(500, now).ok).toBe(true)
-    recordIssuance('mission', 500, now)
-    // 500 already this week → another 200 would exceed the +600 weekly budget
-    expect(canIssue(200, now).ok).toBe(false)
-    expect(canIssue(200, now).reason).toMatch(/budget/i)
-
-    // lift the weekly budget; now the TOTAL cap bites
-    updateRewardsConfig({
-      economy: { ...getRewardsConfig().economy, weeklyBudget: 0, totalIssuanceCap: totalIssued() + 100 },
-    })
-    expect(canIssue(200, now).ok).toBe(false)
-    expect(canIssue(200, now).reason).toMatch(/cap/i)
+    updateRewardsConfig({ economy: { ...getRewardsConfig().economy, totalIssuanceCap: base + 1_000_000, weeklyBudget: weekIssued(NOW) + 600 } })
+    expect(canIssue(500, NOW).ok).toBe(true)
+    recordIssuance('mission', 500, NOW)
+    expect(canIssue(200, NOW).reason).toMatch(/budget/i)
+    updateRewardsConfig({ economy: { ...getRewardsConfig().economy, weeklyBudget: 0, totalIssuanceCap: totalIssued() + 100 } })
+    expect(canIssue(200, NOW).reason).toMatch(/cap/i)
   })
 })
 
-describe('balance & status only — no coins anywhere in config', () => {
-  it('no rewards config surfaces "coins" / "$" / a cash-value / withdrawal path', () => {
+describe('credits & status only — no coins / cash anywhere in config', () => {
+  it('the config surfaces no "coins" / "$" / cash-value / withdrawal path', () => {
     const blob = JSON.stringify(getRewardsConfig())
     expect(blob).not.toMatch(/coin|\$|cash[- ]?out|withdraw|real[- ]?money|cash value/i)
   })

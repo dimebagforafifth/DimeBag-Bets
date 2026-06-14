@@ -20,10 +20,12 @@ export function EconomyPanel({ onBack }: { onBack: () => void }) {
   useSyncExternalStore(subscribeIssuance, getIssuanceVersion)
   const cfg = getRewardsConfig()
   const e = cfg.economy
+  const l = cfg.loyalty
   const issued = totalIssued()
   const capPct = e.totalIssuanceCap > 0 ? Math.min(100, (issued / e.totalIssuanceCap) * 100) : 0
 
   const setEcon = (patch: Partial<typeof e>) => updateRewardsConfig({ economy: { ...e, ...patch } })
+  const setLoyalty = (patch: Partial<typeof l>) => updateRewardsConfig({ loyalty: { ...l, ...patch } })
 
   return (
     <PanelShell onBack={onBack}>
@@ -56,6 +58,25 @@ export function EconomyPanel({ onBack }: { onBack: () => void }) {
           <Field label="Weekly budget (0 = uncapped)" value={e.weeklyBudget} onChange={(v) => setEcon({ weeklyBudget: v })} />
           <Field label="Cashback rate (basis points of amount wagered)" value={Math.round(e.cashbackRate * 10_000)} onChange={(v) => setEcon({ cashbackRate: Math.max(0, v) / 10_000 })} />
           <Field label="Agent weekly comp allowance" value={e.agentWeeklyCompAllowance} onChange={(v) => setEcon({ agentWeeklyCompAllowance: v })} />
+        </div>
+      </section>
+
+      <section className="feat-card">
+        <h3 className="feat-h2">Rewards hub — what players get</h3>
+        <p className="feat-sub">
+          The live values behind the player Rewards hub. Change a number and the hub updates for
+          every player. Credits only — no cash.
+        </p>
+        <div className="rwa-econ-grid">
+          <Field label="Rakeback rate (% of credits wagered)" value={Math.round(l.rakebackRate * 100)} onChange={(v) => setLoyalty({ rakebackRate: Math.max(0, v) / 100 })} />
+          <Field label="Daily bonus — base credits" value={l.dailyBase} onChange={(v) => setLoyalty({ dailyBase: v })} />
+          <Field label="Daily bonus — credits per streak day" value={l.dailyStreakStep} onChange={(v) => setLoyalty({ dailyStreakStep: v })} />
+          <Field label="Daily bonus — streak cap (days)" value={l.dailyMaxStreak} onChange={(v) => setLoyalty({ dailyMaxStreak: v })} />
+          <Field label="Daily cooldown (hours)" value={Math.round(l.dailyCooldownMs / 3_600_000)} onChange={(v) => setLoyalty({ dailyCooldownMs: Math.max(1, v) * 3_600_000 })} />
+          <Field label="Warm-up bonus — locked credits" value={l.warmupGrant} onChange={(v) => setLoyalty({ warmupGrant: v })} />
+          <Field label="Warm-up — wager multiple to unlock" value={l.warmupWagerX} onChange={(v) => setLoyalty({ warmupWagerX: Math.max(1, v) })} />
+          <Field label="Free spin — min payout (credits)" value={l.spinMin} onChange={(v) => setLoyalty({ spinMin: v })} />
+          <Field label="Free spin — max payout (credits)" value={l.spinMax} onChange={(v) => setLoyalty({ spinMax: v })} />
         </div>
       </section>
     </PanelShell>

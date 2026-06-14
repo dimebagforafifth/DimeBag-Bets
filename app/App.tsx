@@ -9,11 +9,12 @@ import {
   type ComponentType,
   type CSSProperties,
 } from 'react'
-import { availableToWager, grant, type Account } from '../core/index.js'
+import { availableToWager, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
 import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
 import { RewardsSection } from '../rewards/index.js'
 import { runDueSchedules } from '../rewards/publishing.js'
+import './rewards-accrual.js' // side effect: accrue rewards from real wagers
 import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { SoundToggle } from '../sound/index.js'
@@ -300,11 +301,6 @@ export function App() {
               playerName={player.name}
               balanceCents={account.balance}
               availableCents={availableToWager(account)}
-              onCredit={(deltaUnits) => {
-                // Move balance through core (cents) when a reward is claimed.
-                if (deltaUnits > 0) grant(account, deltaUnits * 100)
-                refresh()
-              }}
             />
           ) : (
             <NoPlayer

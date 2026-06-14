@@ -86,6 +86,43 @@ export interface EconomyConfig {
   agentWeeklyCompAllowance: number
 }
 
+/* ----- the focused hub: one config block the manager sets, no magic numbers ----- */
+export type StoreItemKind = 'spins' | 'status' | 'cosmetic'
+export interface StoreItem {
+  id: string
+  name: string
+  desc: string
+  /** Credits to spend (deducted from the player's balance). */
+  cost: number
+  kind: StoreItemKind
+  /** spins → free spins granted; status → status/rank points; cosmetic → 0. */
+  amount: number
+  /** One-time (cosmetics) vs repeatable (spin packs). */
+  once?: boolean
+}
+
+export interface LoyaltyConfig {
+  /** Fraction of credits WAGERED accrued as rakeback (0.05 = 5%). */
+  rakebackRate: number
+  /** Base credits per daily claim. */
+  dailyBase: number
+  /** Extra credits per consecutive-day streak (capped at dailyMaxStreak). */
+  dailyStreakStep: number
+  /** Streak length at which the daily bonus stops growing. */
+  dailyMaxStreak: number
+  /** Cooldown before the daily bonus can be claimed again (24h). */
+  dailyCooldownMs: number
+  /** Locked "warm-up" bonus credits a new player gets (unlock by wagering). */
+  warmupGrant: number
+  /** Wager multiple to unlock the warm-up bonus (required = grant × X). */
+  warmupWagerX: number
+  /** Free-spin payout range (credits). */
+  spinMin: number
+  spinMax: number
+  /** The rewards store catalogue. */
+  store: StoreItem[]
+}
+
 export interface RewardsConfig {
   tiers: TierConfig[]
   promos: Promo[]
@@ -93,6 +130,8 @@ export interface RewardsConfig {
   missions: MissionDef[]
   daily: DailyConfig
   economy: EconomyConfig
+  /** The simplified rewards-hub knobs (rakeback, daily, warm-up, spins, store). */
+  loyalty: LoyaltyConfig
   /** Which programs are turned on (player-visible). */
   enabled: Record<ProgramKey, boolean>
   /** Optional scheduled go-live time per program (epoch ms; null = not scheduled). A
@@ -174,6 +213,23 @@ export const DEFAULT_CONFIG: RewardsConfig = {
     { id: 'streak-3', name: 'On a Roll', desc: 'Win 3 bets in a row.', goal: 3, reward: 600, active: true },
   ],
   daily: { enabled: true, rewards: [100, 150, 250, 400, 600, 800, 1_500] },
+  loyalty: {
+    rakebackRate: 0.05,
+    dailyBase: 100,
+    dailyStreakStep: 25,
+    dailyMaxStreak: 7,
+    dailyCooldownMs: 86_400_000,
+    warmupGrant: 500,
+    warmupWagerX: 3,
+    spinMin: 10,
+    spinMax: 300,
+    store: [
+      { id: 'spins-5', name: '5 Free Spins', desc: 'Add 5 spins to your wheel.', cost: 1_000, kind: 'spins', amount: 5 },
+      { id: 'spins-15', name: '15 Free Spins', desc: 'Add 15 spins — better value.', cost: 2_600, kind: 'spins', amount: 15 },
+      { id: 'rank-boost', name: 'Rank Boost', desc: 'Add 2,500 toward your next rank.', cost: 1_500, kind: 'status', amount: 2_500 },
+      { id: 'flair-gold', name: 'Gold Name Flair', desc: 'A gold glow on your name.', cost: 5_000, kind: 'cosmetic', amount: 0, once: true },
+    ],
+  },
   economy: {
     totalIssuanceCap: 50_000_000,
     weeklyBudget: 2_000_000,
@@ -206,7 +262,8 @@ const store = createStore({ namespace: 'dimebag' })
 const DOC: Doc<RewardsConfig> = persistedDoc<RewardsConfig>(store, 'rewards.config', {
   // v2: dropped the 'store' program; balance/credit terminology throughout.
   // v3: added per-program publish schedule (goLiveAt).
-  version: 3,
+  // v4: added the focused `loyalty` block (rakeback/daily/warm-up/spins/store).
+  version: 4,
   initial: DEFAULT_CONFIG,
 })
 
