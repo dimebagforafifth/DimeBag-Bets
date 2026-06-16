@@ -12,6 +12,7 @@ export {
   setSlate,
   resetBookOdds,
   connectOddsCache,
+  connectSnapshot,
   hydrateFromCache,
   assembleEvents,
   createRestOddsCacheReader,

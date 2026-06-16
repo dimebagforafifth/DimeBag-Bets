@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "poll:once": "vite-node scripts/poll-odds-once.ts",
-    "poll:loop": "vite-node scripts/poll-odds-loop.ts"
+    "poll:loop": "vite-node scripts/poll-odds-loop.ts",
+    "dev:snapshot": "vite-node scripts/dev-snapshot.ts"
   },
   "engines": {
     "node": "20.x"

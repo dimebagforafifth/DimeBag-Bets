@@ -193,6 +193,51 @@ export interface ConnectOddsCacheOptions {
   intervalMs?: number
   /** Injectable scheduler (tests pass a no-op); default uses setInterval. */
   schedule?: (tick: () => void, ms: number) => () => void
+  /**
+   * DEV ONLY: load a pre-polled real slate from a same-origin JSON URL instead of
+   * Supabase (for a local real-odds demo with no Supabase project). Defaults to the
+   * `VITE_SGO_SNAPSHOT_URL` build env. Unset → normal Supabase/mock behaviour.
+   */
+  snapshotUrl?: string
+}
+
+/** Read a Vite build-time env var defensively (undefined outside a Vite bundle). */
+function viteEnv(name: string): string | undefined {
+  try {
+    const meta = import.meta as unknown as { env?: Record<string, string | undefined> }
+    return meta?.env?.[name]
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * DEV bridge: drive the slate from a static JSON snapshot of NormalizedEvent[] (what
+ * `scripts/dev-snapshot.ts` writes from a real SGO poll), refreshing on an interval.
+ * Lets the browser show REAL games with no Supabase project. Returns a disposer.
+ */
+export function connectSnapshot(
+  url: string,
+  intervalMs = 30_000,
+  fetchImpl?: FetchLike,
+): () => void {
+  const f = fetchImpl ?? (globalThis.fetch as FetchLike)
+  let disposed = false
+  const tick = async (): Promise<void> => {
+    if (disposed) return
+    try {
+      const res = await f(url)
+      if (res.ok) setSlate((await res.json()) as NormalizedEvent[], 'live')
+    } catch {
+      /* keep the last good slate */
+    }
+  }
+  void tick()
+  const t = setInterval(() => void tick(), intervalMs)
+  return () => {
+    disposed = true
+    clearInterval(t)
+  }
 }
 
 /**
@@ -211,6 +256,10 @@ export interface ConnectOddsCacheOptions {
  * Returns a disposer.
  */
 export function connectOddsCache(opts: ConnectOddsCacheOptions = {}): () => void {
+  // DEV: a local real-odds snapshot (no Supabase) takes precedence when configured.
+  const snapshotUrl = opts.snapshotUrl ?? viteEnv('VITE_SGO_SNAPSHOT_URL')
+  if (snapshotUrl) return connectSnapshot(snapshotUrl, opts.intervalMs)
+
   const reader =
     opts.reader ??
     (() => {
