@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_DICE_CONFIG,
+  effectiveTarget,
   isWin,
   multiplierFor,
+  MAX_WIN_CHANCE,
+  MIN_WIN_CHANCE,
   rollFromSeeds,
   verifyRoll,
   winChance,
@@ -67,6 +70,40 @@ describe('isWin', () => {
     expect(isWin(40, 50, 'over')).toBe(false)
     expect(isWin(40, 50, 'under')).toBe(true)
     expect(isWin(60, 50, 'under')).toBe(false)
+  })
+})
+
+describe('effectiveTarget (priced odds == settled odds)', () => {
+  it('is the requested target inside the band', () => {
+    expect(effectiveTarget(50, 'over')).toBe(50)
+    expect(effectiveTarget(25, 'under')).toBe(25)
+  })
+
+  it('moves with the clamp so the settled target matches the priced chance', () => {
+    // over 0.5 would be 99.5% — clamped to MAX (98), so it settles at over 2.
+    expect(winChance(0.5, 'over')).toBe(MAX_WIN_CHANCE)
+    expect(effectiveTarget(0.5, 'over')).toBeCloseTo(100 - MAX_WIN_CHANCE, 10) // 2
+    // over 99.995 would be ~0.005% — clamped to MIN (0.01), settles at over 99.99.
+    expect(winChance(99.995, 'over')).toBe(MIN_WIN_CHANCE)
+    expect(effectiveTarget(99.995, 'over')).toBeCloseTo(100 - MIN_WIN_CHANCE, 10)
+  })
+
+  it('closes the player-positive-EV exploit at a clamped low target', () => {
+    // The old bug: priced at the clamped 98% but settled against the raw 99.5%
+    // target → EV > 1 (player profits). Now both use the clamped target, so the
+    // realized win rate can never exceed the priced chance and EV stays ≤ 1.
+    const target = 0.5
+    const direction = 'over'
+    const chance = winChance(target, direction) // 98
+    const mult = multiplierFor(chance)
+    let wins = 0
+    const N = 20000
+    for (let n = 0; n < N; n++) {
+      if (isWin(rollFromSeeds('srv', 'cli', n), target, direction)) wins++
+    }
+    const ev = (wins / N) * mult
+    expect(ev).toBeLessThanOrEqual(1) // never a player edge
+    expect(ev).toBeGreaterThan(0.95) // and still near the intended ~99% RTP
   })
 })
 

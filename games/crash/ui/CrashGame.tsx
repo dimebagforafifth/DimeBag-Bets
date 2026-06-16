@@ -6,6 +6,7 @@ import {
   crashRound,
   createCrashGame,
   DEFAULT_CRASH_CONFIG,
+  frameDecision,
   multiplierAt,
   randomServerSeed,
   revealProof,
@@ -75,18 +76,22 @@ export function CrashGame({
     if (!g || g.status !== 'active') return
     const m = multiplierAt(now - startRef.current)
 
-    if (m >= g.crashPoint) {
+    // Auto-cashout is resolved before the crash (see frameDecision): on a dropped
+    // frame `m` can leap past both the target and the crash point at once, and a
+    // crossed cashout target must still pay.
+    const decision = frameDecision(m, g.crashPoint, cashoutAt)
+    if (decision.type === 'cashout') {
+      cashOut(account, g, decision.at)
+      setLive(decision.at)
+      finish(g)
+      play('win')
+      return
+    }
+    if (decision.type === 'crash') {
       crashRound(account, g)
       setLive(g.crashPoint)
       finish(g)
       play('boom')
-      return
-    }
-    if (cashoutAt && cashoutAt < g.crashPoint && m >= cashoutAt) {
-      cashOut(account, g, cashoutAt)
-      setLive(cashoutAt)
-      finish(g)
-      play('win')
       return
     }
     const rung = Math.floor((m - 1) * 4) // a rising tick every 0.25× climbed
@@ -580,7 +585,7 @@ function Fairness({
         </Row>
         <Row label="Nonce">{game && !ended ? game.nonce : nextNonce}</Row>
         <Row label="Server seed (hashed)">
-          <code className="seed">{game ? game.serverSeedHash : 'committed when you bet'}</code>
+          <code className="seed">{game ? game.serverSeedHash : 'generated when you bet'}</code>
         </Row>
         {proof && (
           <>

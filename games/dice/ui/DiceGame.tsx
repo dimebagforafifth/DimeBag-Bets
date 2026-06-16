@@ -89,7 +89,10 @@ export function DiceGame({
             <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.floor(b / 2)))}>
               ½
             </button>
-            <button className="chip" onClick={() => setBet((b) => Math.min(available, b * 2))}>
+            <button
+              className="chip"
+              onClick={() => setBet((b) => Math.max(1, Math.min(available, b * 2)))}
+            >
               2×
             </button>
           </div>
@@ -110,8 +113,8 @@ export function DiceGame({
         <p className="dice-hint">
           {round
             ? round.won
-              ? `Rolled ${round.roll.toFixed(2)} — won ${formatPoints(Math.round(bet * (round.multiplier - 1)))}`
-              : `Rolled ${round.roll.toFixed(2)} — lost ${formatPoints(bet)}`
+              ? `Rolled ${round.roll.toFixed(2)} — won ${formatPoints(Math.round(round.stake * (round.multiplier - 1)))}`
+              : `Rolled ${round.roll.toFixed(2)} — lost ${formatPoints(round.stake)}`
             : 'Set your odds and roll'}
         </p>
         {error && <p className="dice-error">{error}</p>}
@@ -158,7 +161,10 @@ export function DiceGame({
           <Field label="Win chance" value={chance.toFixed(4)} suffix="%" />
         </div>
         {round?.won && (
-          <WinPopup multiplier={round.multiplier} amount={Math.round(bet * (round.multiplier - 1))} />
+          <WinPopup
+            multiplier={round.multiplier}
+            amount={Math.round(round.stake * (round.multiplier - 1))}
+          />
         )}
       </section>
 
@@ -257,7 +263,7 @@ function Fairness({
         </Row>
         <Row label="Nonce">{round ? round.nonce : nextNonce}</Row>
         <Row label="Server seed (hashed)">
-          <code className="seed">{round ? round.serverSeedHash : 'committed when you bet'}</code>
+          <code className="seed">{round ? round.serverSeedHash : 'generated when you bet'}</code>
         </Row>
         {round && (
           <>

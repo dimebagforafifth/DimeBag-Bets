@@ -128,7 +128,10 @@ export function PlinkoGame({ account, onBalanceChange }: PlinkoGameProps) {
             <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.floor(b / 2)))}>
               ½
             </button>
-            <button className="chip" onClick={() => setBet((b) => Math.min(available, b * 2))}>
+            <button
+              className="chip"
+              onClick={() => setBet((b) => Math.max(1, Math.min(available, b * 2)))}
+            >
               2×
             </button>
           </div>
@@ -300,7 +303,7 @@ function Fairness({
         </Row>
         <Row label="Nonce">{round ? round.nonce : nextNonce}</Row>
         <Row label="Server seed (hashed)">
-          <code className="seed">{round ? round.serverSeedHash : 'committed when you bet'}</code>
+          <code className="seed">{round ? round.serverSeedHash : 'generated when you bet'}</code>
         </Row>
         {round && (
           <>

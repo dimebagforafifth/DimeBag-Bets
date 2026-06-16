@@ -30,11 +30,13 @@ export type {
   CrashStatus,
   CreateCrashOptions,
   CrashProof,
+  FrameDecision,
 } from './engine.js'
 export {
   randomServerSeed,
   createCrashGame,
   cashOut,
   crashRound,
+  frameDecision,
   revealProof,
 } from './engine.js'
