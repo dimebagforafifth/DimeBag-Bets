@@ -12,7 +12,12 @@ export {
   setSlate,
   resetBookOdds,
   connectOddsCache,
+  hydrateFromCache,
+  assembleEvents,
+  createRestOddsCacheReader,
   isLiveOdds,
+  type OddsCacheReader,
+  type ConnectOddsCacheOptions,
 } from './odds-source.js'
 export { mockSlate, MOCK_LEAGUES } from './mockBook.js'
 

@@ -3,7 +3,6 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  useRef,
   useState,
   useSyncExternalStore,
   type ComponentType,
@@ -11,10 +10,13 @@ import {
 } from 'react'
 import { availableToWager, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
-import { Sportsbook } from '../sportsbook/ui/Sportsbook.js'
+// The sportsbook section renders the SGO contract-native book (app/book): it consumes
+// the odds CONTRACT via the cache hook (mock until connectOddsCache flips it to the live
+// Supabase cache) and places through `core`. The legacy `sportsbook/` module stays in the
+// tree (its own tests pass) for futures/trading/cash-out to be harvested later.
+import { BookView, connectOddsCache } from './book/index.js'
 import { RewardsSection } from '../rewards/index.js'
 import './rewards-accrual.js' // side effect: accrue rewards from real wagers
-import { createMockFeed, createStore, type SportsbookStore } from '../sportsbook/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { SoundToggle } from '../sound/index.js'
 import { Console } from '../console/shell/index.js'
@@ -26,7 +28,7 @@ import { registryForRole } from './console-access.js'
 import { setViewer } from './viewer.js'
 import { subscribeAgentPermissions, getAgentPermissionsVersion } from './agent-permissions.js'
 import { getAnalyticsRecords } from '../manager/reporting/index.js'
-import { rosterOf, type Member, type Role } from '../org/index.js'
+import { rosterOf, type Role } from '../org/index.js'
 import {
   getBook,
   getBookVersion,
@@ -97,7 +99,7 @@ export function App() {
   // THIS player's core Account, so wins/losses move their figure and roll up the
   // tree (Agent → Sub-Agent → Manager). Null only if the book has no players.
   const book = getBook()
-  const { user, signOut } = useAuth()
+  const { user, signOut, isDemo } = useAuth()
   // Who's signed in → their book member → role → which sections they may reach. App
   // already subscribes to the book, so this re-resolves live if the member changes.
   const authMember = memberForUser(user?.id)
@@ -133,37 +135,10 @@ export function App() {
   const activePlayers = listPlayers().filter((p) => p.active)
   const allSuspended = !player && listPlayers().length > 0
 
-  // The active player's sportsbook store (its own live feed), created lazily when
-  // the sportsbook is opened, settling bets against THAT player's figure.
-  const storesRef = useRef<Map<string, SportsbookStore>>(new Map())
-  function sbStoreFor(p: Member): SportsbookStore {
-    let store = storesRef.current.get(p.id)
-    if (!store) {
-      store = createStore(p.account, { feed: createMockFeed(), onBalanceChange: refresh })
-      storesRef.current.set(p.id, store)
-    }
-    return store
-  }
-  // Only the ACTIVE player's feed should run. Each store owns a 5s feed timer, so
-  // when you switch who you're playing as, tear down every other player's store —
-  // otherwise their timers accumulate (settling off-screen) until App unmounts.
-  useEffect(() => {
-    const id = player?.id
-    for (const [pid, s] of storesRef.current) {
-      if (pid !== id) {
-        s.destroy()
-        storesRef.current.delete(pid)
-      }
-    }
-  }, [player?.id])
-  // Tear down everything on unmount.
-  useEffect(() => {
-    const stores = storesRef.current
-    return () => {
-      for (const s of stores.values()) s.destroy()
-      stores.clear()
-    }
-  }, [])
+  // Flip the book's odds source to the live Supabase cache the feed-lane poller fills.
+  // A no-op with no Supabase keys (the built-in mock stays), so this is safe to always
+  // run; the disposer stops the refresh loop on unmount.
+  useEffect(() => connectOddsCache(), [])
 
   // Tag new ledger entries with whatever's on screen, so each logged bet shows
   // which game (or the sportsbook) it came from.
@@ -265,7 +240,9 @@ export function App() {
               getAnalyticsRecords(),
               Date.now(),
               roster ? roster.filter((p) => p.active).length : activePlayers.length,
-              roster ? { scopeId: authMember!.id, accountIds: new Set(roster.map((p) => p.id)) } : {},
+              roster
+                ? { scopeId: authMember!.id, accountIds: new Set(roster.map((p) => p.id)) }
+                : {},
             )
             return (
               <Console
@@ -305,7 +282,14 @@ export function App() {
         ) : activeSection === 'sportsbook' ? (
           account && player ? (
             <ResponsiblePlayGate playerId={account.id}>
-              <Sportsbook account={account} store={sbStoreFor(player)} />
+              <BookView
+                account={account}
+                playerName={player.name}
+                role={role}
+                viewerId={authMember?.id ?? player.id}
+                isDemo={isDemo}
+                onBalanceChange={refresh}
+              />
             </ResponsiblePlayGate>
           ) : (
             <NoPlayer
@@ -356,9 +340,7 @@ export function App() {
         )}
       </main>
 
-      <footer className="app-footer">
-        Play money — dollars for fun, no buy-in, no cash-out.
-      </footer>
+      <footer className="app-footer">Play money — dollars for fun, no buy-in, no cash-out.</footer>
     </div>
   )
 }

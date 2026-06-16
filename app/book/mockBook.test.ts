@@ -6,10 +6,10 @@
  */
 import { describe, it, expect } from 'vitest'
 import { mockSlate, MOCK_LEAGUES } from './mockBook.js'
-import type { MarketPeriod, MarketType } from '../../lib/odds/contract.js'
+import type { Period, MarketType } from '../../lib/odds/contract.js'
 
 const MARKET_TYPES: MarketType[] = ['moneyline', 'spread', 'total', 'prop']
-const PERIODS: MarketPeriod[] = ['game', '1h', '2h', '1q', '2q', '3q', '4q', 'ot']
+const PERIODS: Period[] = ['game', '1h', '2h', '1q', '2q', '3q', '4q', 'ot']
 
 describe('mock slate — contract conformance', () => {
   it('every event/market/selection matches the contract shape', () => {

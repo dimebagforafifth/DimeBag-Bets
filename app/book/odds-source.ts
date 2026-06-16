@@ -3,17 +3,32 @@
  * external store (subscribe / getSnapshot / version), mirrored into React with
  * `useSyncExternalStore` (the same pattern as book-store / the ledger).
  *
- * Today it is seeded from the mock slate (app/book/mockBook.ts). When the FEED
- * lane (Agent 1) is live, `connectOddsCache()` hydrates from the Supabase cache
- * tables (odds_events/odds_markets/odds_selections) and subscribes to realtime
- * postgres_changes, calling `setSlate()` on every push — so the UI never rewrites,
- * only the source flips. See the // SEAM in `connectOddsCache`.
+ * It is seeded from the mock slate (app/book/mockBook.ts) and `connectOddsCache()`
+ * flips it to the LIVE Supabase cache the feed lane's poller fills (odds_events /
+ * odds_markets / odds_selections) — `assembleEvents()` re-builds NormalizedEvent[]
+ * from the rows and `setSlate(..., 'live')` pushes it to every consumer. With no
+ * Supabase keys the mock stays as the offline fallback, so the UI never rewrites —
+ * the source just flips. Realtime push is a one-line swap (see the // SEAM there).
  *
  * The UI ALWAYS reads `priceDisplay` off these selections; it never sees the feed.
  */
 
 import { useSyncExternalStore } from 'react'
-import type { NormalizedEvent } from '../../lib/odds/contract.js'
+import type {
+  NormalizedEvent,
+  NormalizedMarket,
+  Period,
+  Selection,
+  OddsEventRow,
+  OddsMarketRow,
+  OddsSelectionRow,
+} from '../../lib/odds/contract.js'
+import {
+  getSupabaseEnv,
+  type EnvSource,
+  type SupabaseEnv,
+  type FetchLike,
+} from '../../persistence/index.js'
 import { mockSlate } from './mockBook.js'
 
 export type OddsSourceKind = 'mock' | 'live'
@@ -70,24 +85,158 @@ export function isLiveOdds(): boolean {
   return source === 'live'
 }
 
+/* ----------------------- the Supabase cache read side -------------------- */
+/* The feed lane's poller (lib/odds/poller.ts) WRITES the three cache tables; this
+ * is the inverse — read the rows and re-assemble NormalizedEvent[] for the UI. The
+ * shapes are the contract's *Row types, so this stays in lockstep with the writer. */
+
+/** Re-assemble cache rows into NormalizedEvent[] — the exact inverse of the poller's
+ *  buildRows(). Pure: markets group under their event, selections under their market. */
+export function assembleEvents(
+  eventRows: OddsEventRow[],
+  marketRows: OddsMarketRow[],
+  selectionRows: OddsSelectionRow[],
+): NormalizedEvent[] {
+  const selByMarket = new Map<string, Selection[]>()
+  for (const r of selectionRows) {
+    const sel: Selection = {
+      selectionId: r.selection_id,
+      side: r.side,
+      ...(r.line == null ? {} : { line: r.line }),
+      priceRaw: { american: r.price_raw_american, decimal: r.price_raw_decimal },
+      priceDisplay: { american: r.price_display_american, decimal: r.price_display_decimal },
+      bookmaker: r.bookmaker,
+      available: r.available,
+    }
+    const list = selByMarket.get(r.market_id) ?? []
+    list.push(sel)
+    selByMarket.set(r.market_id, list)
+  }
+  const mktByEvent = new Map<string, NormalizedMarket[]>()
+  for (const r of marketRows) {
+    const market: NormalizedMarket = {
+      marketId: r.market_id,
+      type: r.type,
+      period: r.period as Period,
+      ...(r.stat_id == null ? {} : { statId: r.stat_id }),
+      ...(r.player_id == null ? {} : { playerId: r.player_id }),
+      selections: selByMarket.get(r.market_id) ?? [],
+    }
+    const list = mktByEvent.get(r.event_id) ?? []
+    list.push(market)
+    mktByEvent.set(r.event_id, list)
+  }
+  return eventRows.map((r) => ({
+    eventId: r.event_id,
+    leagueId: r.league_id,
+    sport: r.sport,
+    home: r.home,
+    away: r.away,
+    startsAt: r.starts_at,
+    status: r.status,
+    markets: mktByEvent.get(r.event_id) ?? [],
+  }))
+}
+
+/** Reads the current cache rows. The default hits the Supabase REST API; tests inject
+ *  an in-memory reader (e.g. backed by the poller's OddsCache) for the full loop. */
+export interface OddsCacheReader {
+  read(): Promise<{
+    events: OddsEventRow[]
+    markets: OddsMarketRow[]
+    selections: OddsSelectionRow[]
+  }>
+}
+
+/** A PostgREST reader over the three cache tables (anon key + RLS, same as the rest of
+ *  the Supabase layer). Constructed only when the env keys are present. */
+export function createRestOddsCacheReader(
+  env: SupabaseEnv,
+  fetchImpl?: FetchLike,
+): OddsCacheReader {
+  const f = fetchImpl ?? (globalThis.fetch as unknown as FetchLike)
+  const headers = { apikey: env.anonKey, Authorization: `Bearer ${env.anonKey}` }
+  async function get<T>(table: string): Promise<T[]> {
+    const res = await f(`${env.url}/rest/v1/${table}?select=*`, { headers })
+    if (!res.ok) throw new Error(`odds cache read ${table} failed (${res.status})`)
+    return (await res.json()) as T[]
+  }
+  return {
+    async read() {
+      const [events, markets, selections] = await Promise.all([
+        get<OddsEventRow>('odds_events'),
+        get<OddsMarketRow>('odds_markets'),
+        get<OddsSelectionRow>('odds_selections'),
+      ])
+      return { events, markets, selections }
+    },
+  }
+}
+
+/** One hydrate cycle: read the cache, assemble, and push it into the store as the live
+ *  source. Returns the assembled slate (awaitable in tests). */
+export async function hydrateFromCache(reader: OddsCacheReader): Promise<NormalizedEvent[]> {
+  const { events, markets, selections } = await reader.read()
+  const assembled = assembleEvents(events, markets, selections)
+  setSlate(assembled, 'live')
+  return assembled
+}
+
+export interface ConnectOddsCacheOptions {
+  /** Inject a reader (tests / a custom transport). Default: a REST reader from the env. */
+  reader?: OddsCacheReader
+  /** Inject the env source (tests); default reads the ambient SUPABASE_* keys. */
+  envSource?: EnvSource
+  /** Injectable fetch for the default REST reader (tests). */
+  fetchImpl?: FetchLike
+  /** Re-poll interval for the cache (ms). */
+  intervalMs?: number
+  /** Injectable scheduler (tests pass a no-op); default uses setInterval. */
+  schedule?: (tick: () => void, ms: number) => () => void
+}
+
 /**
- * Connect the Supabase cache as the live source.
+ * Connect the Supabase odds cache as the LIVE source for `useBookOdds()`.
  *
- *  // SEAM — depends on the FEED lane (Agent 1) having created + populated
- *  odds_events / odds_markets / odds_selections. When it has, this:
- *    1. SELECTs the current rows, assembles NormalizedEvent[] (joining markets →
- *       selections), and calls setSlate(events, 'live').
- *    2. Subscribes to realtime postgres_changes on those tables and re-assembles
- *       on each push, calling setSlate(...) again.
- *  Until then it is a no-op and the mock slate stays in force, so the book renders
- *  populated. The flip is this one function — no UI change.
+ * With the env keys present (or an injected reader) it hydrates the slate from the
+ * cache tables the poller fills, then refreshes on an interval. With NO keys it is a
+ * no-op and the built-in mock stays in force, so the book always renders populated —
+ * the mock is the offline fallback, the flip to live is just this connect call.
+ *
+ *  // SEAM (realtime): the migration already adds the three tables to the
+ *  `supabase_realtime` publication, so this can move from interval polling to
+ *  `postgres_changes` pushes the moment a supabase-js client is added as a dep —
+ *  swap the scheduler for a channel subscription; `hydrateFromCache` stays the same.
  *
  * Returns a disposer.
  */
-export function connectOddsCache(): () => void {
-  // SEAM: hydrate + subscribe to the Supabase odds cache here once Agent 1 lands.
-  // e.g. const ch = supabase.channel('odds').on('postgres_changes', { table: 'odds_selections' }, reload)
-  return () => {}
+export function connectOddsCache(opts: ConnectOddsCacheOptions = {}): () => void {
+  const reader =
+    opts.reader ??
+    (() => {
+      const env = getSupabaseEnv(opts.envSource)
+      return env ? createRestOddsCacheReader(env, opts.fetchImpl) : null
+    })()
+  if (!reader) return () => {} // no keys → mock fallback stays live
+
+  let disposed = false
+  const tick = () => {
+    if (disposed) return
+    // A failed read holds the last good slate — never throw out of the loop.
+    void hydrateFromCache(reader).catch(() => {})
+  }
+  tick() // initial hydrate
+  const schedule =
+    opts.schedule ??
+    ((fn, ms) => {
+      const t = setInterval(fn, ms)
+      return () => clearInterval(t)
+    })
+  const stop = schedule(tick, opts.intervalMs ?? 15_000)
+  return () => {
+    disposed = true
+    stop()
+  }
 }
 
 /** React hook: the current slate + which source is driving it. */
