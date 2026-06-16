@@ -109,6 +109,35 @@ export function crashRound(account: Account, game: CrashGame): void {
   resolveWager(account, game.wager, 'loss')
 }
 
+/** What a single animation/clock frame should do, given the live multiplier. */
+export type FrameDecision =
+  | { type: 'climb' }
+  | { type: 'cashout'; at: number }
+  | { type: 'crash' }
+
+/**
+ * Decide a frame's action from the live multiplier `m`, the committed
+ * `crashPoint`, and the player's optional auto-cashout target.
+ *
+ * The auto-cashout is checked BEFORE the crash on purpose: frames can be dropped
+ * (background tab, GC, a slow device), so `m` can jump from below the target to
+ * at/past the crash point in one step. A valid target (1 < cashoutAt < crashPoint)
+ * is always crossed before the crash, so the player must be paid at it — checking
+ * the crash first would wrongly grade that frame a loss. Pure + deterministic so
+ * the per-frame logic can be unit-tested without the requestAnimationFrame loop.
+ */
+export function frameDecision(
+  m: number,
+  crashPoint: number,
+  cashoutAt: number | null,
+): FrameDecision {
+  if (cashoutAt != null && cashoutAt > 1 && cashoutAt < crashPoint && m >= cashoutAt) {
+    return { type: 'cashout', at: cashoutAt }
+  }
+  if (m >= crashPoint) return { type: 'crash' }
+  return { type: 'climb' }
+}
+
 /** Provably-fair disclosure for a finished round, for player verification. */
 export interface CrashProof {
   serverSeed: string

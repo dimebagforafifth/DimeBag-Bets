@@ -114,7 +114,11 @@ export function KenoGame({
       setRound(r)
       setShown(0)
       playSound('bet')
-      // Pop the drawn numbers in one at a time; land the result + balance last.
+      // The figure already moved inside playKeno; refresh now so `available`
+      // stays honest during the reveal animation (a second bet is blocked by
+      // `revealing` anyway). The result chime + history land when the draw ends.
+      onBalanceChange()
+      // Pop the drawn numbers in one at a time; land the result last.
       let hitsSounded = 0
       const step = (i: number) => {
         setShown(i)
@@ -128,7 +132,6 @@ export function KenoGame({
           timerRef.current = window.setTimeout(() => step(i + 1), REVEAL_MS)
         } else {
           setHistory((h) => [{ multiplier: r.multiplier, won: r.won }, ...h].slice(0, 16))
-          onBalanceChange()
           playSound(r.won ? 'win' : 'lose')
           signalReveal(account.id) // all numbers are in — free the bet button now
         }
@@ -167,7 +170,10 @@ export function KenoGame({
             <button className="chip" onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
               ½
             </button>
-            <button className="chip" onClick={() => setBet((b) => Math.min(available, b * 2))}>
+            <button
+              className="chip"
+              onClick={() => setBet((b) => Math.max(1, Math.min(available, b * 2)))}
+            >
               2×
             </button>
           </div>
@@ -259,7 +265,7 @@ export function KenoGame({
         <Fairness
           round={done ? round : null}
           clientSeed={clientSeed}
-          nextNonce={nonceRef.current + (round ? 0 : 1)}
+          nextNonce={nonceRef.current + 1}
           onClientSeed={setClientSeed}
         />
       </section>
@@ -359,7 +365,7 @@ function Fairness({
         </Row>
         <Row label="Nonce">{round ? round.nonce : nextNonce}</Row>
         <Row label="Server seed (hashed)">
-          <code className="seed">{round ? round.serverSeedHash : 'committed when you bet'}</code>
+          <code className="seed">{round ? round.serverSeedHash : 'generated when you bet'}</code>
         </Row>
         {round && (
           <>

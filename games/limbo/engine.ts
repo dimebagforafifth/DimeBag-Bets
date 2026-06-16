@@ -19,6 +19,9 @@ import {
 export interface LimboRound {
   result: number
   target: number
+  /** The stake the round was actually played at (so display can't drift from the
+   *  bet input being edited afterward). */
+  stake: number
   won: boolean
   winChance: number
   serverSeed: string
@@ -47,17 +50,22 @@ export function playLimbo(account: Account, opts: PlayLimboOptions): LimboRound 
   }
   const config = opts.config ?? DEFAULT_LIMBO_CONFIG
   const serverSeed = opts.serverSeed ?? randomServerSeed()
+  // Quantize the target to the 0.01 grid the result lives on, so the win check
+  // (result ≥ target), the payout, and the displayed winChance are all derived
+  // from the same number — otherwise an off-grid target overstates the odds.
+  const target = Math.round(opts.target * 100) / 100
 
   const wager = placeWager(account, opts.stake)
   const result = limboFromSeeds(serverSeed, opts.clientSeed, opts.nonce, config)
-  const won = result >= opts.target
-  resolveWager(account, wager, won ? 'win' : 'loss', won ? opts.target : undefined)
+  const won = result >= target
+  resolveWager(account, wager, won ? 'win' : 'loss', won ? target : undefined)
 
   return {
     result,
-    target: opts.target,
+    target,
+    stake: opts.stake,
     won,
-    winChance: winChanceFor(opts.target, config),
+    winChance: winChanceFor(target, config),
     serverSeed,
     serverSeedHash: hashServerSeed(serverSeed),
     clientSeed: opts.clientSeed,

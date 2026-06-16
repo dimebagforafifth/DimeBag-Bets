@@ -41,10 +41,22 @@ export function verifyRoll(
   return rollFromSeeds(serverSeed, clientSeed, nonce) === expected
 }
 
-/** The win chance (%) for a target + direction. */
+/** The win chance (%) for a target + direction — the priced probability. */
 export function winChance(target: number, direction: DiceDirection): number {
   const chance = direction === 'over' ? 100 - target : target
   return Math.min(MAX_WIN_CHANCE, Math.max(MIN_WIN_CHANCE, chance))
+}
+
+/**
+ * The target the round actually settles against. When the requested target would
+ * push the win chance outside the [MIN,MAX] band, `winChance` clamps it (to keep
+ * the payout bounded) — so the settled target must move to match, or the priced
+ * odds and the settled odds disagree and the edge is wrong (even negative) at the
+ * extremes. Inside the band this is exactly `target`, so normal play is unchanged.
+ */
+export function effectiveTarget(target: number, direction: DiceDirection): number {
+  const chance = winChance(target, direction)
+  return direction === 'over' ? 100 - chance : chance
 }
 
 /** The payout multiplier for a win chance under a house config. */
@@ -53,7 +65,12 @@ export function multiplierFor(chance: number, config: DiceHouseConfig = DEFAULT_
   return Math.floor(raw * 10000) / 10000
 }
 
-/** Did this roll win, for the chosen target + direction? */
+/**
+ * Did this roll win? Settles against the effective (clamped) target so the win
+ * condition always matches the priced `winChance` — closing the extreme-target
+ * mismatch where a clamped chance was paid against the raw, unclamped target.
+ */
 export function isWin(roll: number, target: number, direction: DiceDirection): boolean {
-  return direction === 'over' ? roll > target : roll < target
+  const t = effectiveTarget(target, direction)
+  return direction === 'over' ? roll > t : roll < t
 }
