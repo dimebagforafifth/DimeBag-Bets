@@ -3,3 +3,12 @@ dist/
 coverage/
 *.log
 .DS_Store
+
+# Local env / secrets — NEVER commit (the SGO API key + Supabase keys live here).
+# .env.example IS tracked (it documents the vars, with no real values).
+.env
+.env.local
+.env.*.local
+
+# Dev-only live odds snapshot (real games pulled at runtime — data, not code).
+public/dev-odds.json
