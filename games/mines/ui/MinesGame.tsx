@@ -339,7 +339,7 @@ function Fairness({
         </Row>
         <Row label="Nonce">{game && !ended ? game.nonce : nextNonce}</Row>
         <Row label="Server seed (hashed)">
-          <code className="seed">{game ? game.serverSeedHash : 'committed when you bet'}</code>
+          <code className="seed">{game ? game.serverSeedHash : 'generated when you bet'}</code>
         </Row>
         {proof && (
           <>

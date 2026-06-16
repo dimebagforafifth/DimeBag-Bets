@@ -5,6 +5,7 @@ import {
   createCrashGame,
   cashOut,
   crashRound,
+  frameDecision,
   revealProof,
 } from './engine.js'
 import { crashPointFromSeeds, verifyCrashPoint, type CrashHouseConfig } from './fair.js'
@@ -114,6 +115,31 @@ describe('instant-bust rounds (the house edge in action)', () => {
     expect(() => cashOut(a, g, 1.01)).toThrow(/too late/)
     crashRound(a, g)
     expect(a.balance).toBe(-100)
+  })
+})
+
+describe('frameDecision (per-frame auto-cashout vs crash)', () => {
+  it('climbs while below both the target and the crash point', () => {
+    expect(frameDecision(1.4, 2.0, 1.5)).toEqual({ type: 'climb' })
+  })
+
+  it('auto-cashes once the target is reached, below the crash point', () => {
+    expect(frameDecision(1.5, 2.0, 1.5)).toEqual({ type: 'cashout', at: 1.5 })
+  })
+
+  it('crashes when no target is set and the crash point is hit', () => {
+    expect(frameDecision(2.0, 2.0, null)).toEqual({ type: 'crash' })
+  })
+
+  it('a dropped frame past BOTH target and crash still pays the target (the bug)', () => {
+    // target 1.99, crash 2.00, but a lagged frame jumps straight to 2.5×.
+    // Checking the crash first (the old order) would wrongly grade this a loss.
+    expect(frameDecision(2.5, 2.0, 1.99)).toEqual({ type: 'cashout', at: 1.99 })
+  })
+
+  it('crashes when the target sits at/above the crash point (never reachable)', () => {
+    expect(frameDecision(2.0, 2.0, 2.0)).toEqual({ type: 'crash' })
+    expect(frameDecision(2.5, 2.0, 3.0)).toEqual({ type: 'crash' })
   })
 })
 

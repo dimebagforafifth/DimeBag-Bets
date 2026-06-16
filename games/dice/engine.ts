@@ -21,6 +21,9 @@ export interface DiceRound {
   roll: number
   target: number
   direction: DiceDirection
+  /** The stake the round was actually played at (so display can't drift from the
+   *  bet input being edited afterward). */
+  stake: number
   won: boolean
   /** The payout multiplier the round was settled at (only meaningful on a win). */
   multiplier: number
@@ -65,6 +68,7 @@ export function playDice(account: Account, opts: PlayDiceOptions): DiceRound {
     roll,
     target: opts.target,
     direction: opts.direction,
+    stake: opts.stake,
     won,
     multiplier,
     winChance: chance,

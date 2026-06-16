@@ -99,25 +99,79 @@ function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
 }
 
 function GameIcon({ kind }: { kind: string }) {
-  if (kind === 'crash') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M14 3c3.5 1.5 5.5 5 5 9l-3.5 3.5-4-4L15 8a4 4 0 0 0-1-5z"
-          fill="currentColor"
-        />
-        <path d="M9.5 14.5 7 17m2-5-3 1 1.5 3 3-1z" fill="currentColor" opacity="0.6" />
-        <circle cx="14.5" cy="8.5" r="1.4" fill="#0a1622" />
-      </svg>
-    )
+  switch (kind) {
+    case 'crash':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M14 3c3.5 1.5 5.5 5 5 9l-3.5 3.5-4-4L15 8a4 4 0 0 0-1-5z"
+            fill="currentColor"
+          />
+          <path d="M9.5 14.5 7 17m2-5-3 1 1.5 3 3-1z" fill="currentColor" opacity="0.6" />
+          <circle cx="14.5" cy="8.5" r="1.4" fill="#0a1622" />
+        </svg>
+      )
+    case 'dice':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4.5" fill="currentColor" />
+          <g fill="#0a1622">
+            <circle cx="8" cy="8" r="1.5" />
+            <circle cx="16" cy="8" r="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="8" cy="16" r="1.5" />
+            <circle cx="16" cy="16" r="1.5" />
+          </g>
+        </svg>
+      )
+    case 'limbo':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M3 20 9 12l3.5 3.5L21 6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M15 6h6v6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    case 'keno':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <g fill="currentColor">
+            {[6, 12, 18].map((y) =>
+              [6, 12, 18].map((x) => (
+                <circle
+                  key={`${x}-${y}`}
+                  cx={x}
+                  cy={y}
+                  r="2.1"
+                  opacity={(x === 12) === (y === 12) ? 1 : 0.35}
+                />
+              )),
+            )}
+          </g>
+        </svg>
+      )
+    case 'plinko':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <g fill="currentColor" opacity="0.55">
+            <circle cx="12" cy="5" r="1.3" />
+            <circle cx="8.5" cy="10" r="1.3" />
+            <circle cx="15.5" cy="10" r="1.3" />
+            <circle cx="5" cy="15" r="1.3" />
+            <circle cx="12" cy="15" r="1.3" />
+            <circle cx="19" cy="15" r="1.3" />
+          </g>
+          <circle cx="12" cy="20.5" r="2.3" fill="currentColor" />
+        </svg>
+      )
+    default:
+      // gem (mines)
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2 22 9l-10 13L2 9 12 2z" fill="currentColor" />
+          <path d="M12 2 22 9l-10 4L2 9 12 2z" fill="#fff" opacity="0.25" />
+        </svg>
+      )
   }
-  // gem (mines)
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 2 22 9l-10 13L2 9 12 2z" fill="currentColor" />
-      <path d="M12 2 22 9l-10 4L2 9 12 2z" fill="#fff" opacity="0.25" />
-    </svg>
-  )
 }
 
 /** Points are shown with a "$" but carry no monetary value (§1). */
