@@ -30,7 +30,13 @@ export {
 } from './pricing.js'
 export type { PricingOptions, PricedSelection } from './pricing.js'
 
-export { SGOProvider, normalizeEvent, parseOddId, marketTypeOf, statusOf } from './providers/SGOProvider.js'
+export {
+  SGOProvider,
+  normalizeEvent,
+  parseOddId,
+  marketTypeOf,
+  statusOf,
+} from './providers/SGOProvider.js'
 export type { SGOProviderConfig, ParsedOddId } from './providers/SGOProvider.js'
 export { MockProvider, MOCK_EVENTS } from './providers/MockProvider.js'
 export { TheOddsAPIProvider } from './providers/TheOddsAPIProvider.js'
@@ -45,3 +51,16 @@ export {
   SCAFFOLDED_LEAGUES,
 } from './poller.js'
 export type { OddsCache, PollerConfig, PollResult, SupabaseLike } from './poller.js'
+
+// Scheduled polling — keep a deployed cache fresh (a cron / route / loop triggers
+// runPollCycle; mock stays default, live only on SGO_LIVE=1). See api/poll-odds.ts.
+export {
+  runPollCycle,
+  schedulePolling,
+  pollIntervalSeconds,
+  isLiveMode,
+  DEFAULT_POLL_INTERVAL_SECONDS,
+  MIN_POLL_INTERVAL_SECONDS,
+} from './schedule.js'
+export type { PollCycleResult, RunPollCycleOptions, Scheduler } from './schedule.js'
+export { createRestOddsCache } from './rest-cache.js'

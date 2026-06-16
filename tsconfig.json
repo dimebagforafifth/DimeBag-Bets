@@ -15,5 +15,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["core", "games", "sportsbook", "app", "persistence", "ledger", "sportsdata", "manager", "org", "vip", "sound", "auth", "console", "features", "lib"]
+  "include": ["core", "games", "sportsbook", "app", "persistence", "ledger", "sportsdata", "manager", "org", "vip", "sound", "auth", "console", "features", "lib", "api", "scripts"]
 }

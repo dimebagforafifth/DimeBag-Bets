@@ -13,7 +13,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "poll:once": "vite-node scripts/poll-odds-once.ts",
+    "poll:loop": "vite-node scripts/poll-odds-loop.ts"
   },
   "engines": {
     "node": "20.x"
