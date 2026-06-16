@@ -121,6 +121,27 @@ price; ToS re: non-real-money unverified.
 > obtainable. For a non-real-money product these carry the most contractual
 > friction and cost, with little upside over an aggregator data feed.
 
+### Odds-API comparison (pros / cons / cost / docs)
+
+> Cost = third-party estimate unless marked **(published)**. Verify sales-gated
+> figures (see the manual fill-in tracker below).
+
+| Provider | Type | Free tier | Paid cost | Pros | Cons | Docs / links |
+|---|---|---|---|---|---|---|
+| **The Odds API** ⭐ | Aggregator data | 500 credits/mo, commercial OK **(published)** | $30 / $59 / $119 / $249 mo **(published)** | Only real free *commercial* tier; broad multi-sport; scores+`completed` endpoint for grading; dead-simple REST/JSON; ToS allow apps where data isn't the product | REST polling only (no push); props paid + US-centric; credit cost scales with markets×regions | [site](https://the-odds-api.com/) · [docs](https://the-odds-api.com/liveapi/guides/v4/) · [pricing/FAQ](https://the-odds-api.com/#get-access) · [markets](https://the-odds-api.com/sports-odds-data/betting-markets.html) |
+| **API-Sports / API-Football** | Data + stats | 100 req/day **(published)** | $19 / $29 / $39 mo **(published)** | Cheapest paid; live odds even on free; excellent **player stats** for prop grading; commercial OK on free | Basic markets only (h2h/O-U/handicap); no tennis/UFC/esports odds; REST polling | [site](https://api-sports.io/) · [docs](https://www.api-football.com/documentation-v3) · [pricing](https://www.api-football.com/pricing) |
+| **BetsAPI / b365api** | bet365 scrape | none ($1 day-trial) | from ~$10/mo | Broadest cheap coverage incl. **tennis/UFC/boxing/esports**; InPlay + Results | Scraped bet365 → legal/ToS risk; commercial terms unverified; REST polling | [site](https://betsapi.com/) · [docs](https://betsapi.com/docs/) · [pricing](https://betsapi.com/mm/pricing_table) |
+| **SportMonks** | Soccer data | 2 leagues | €29 / €99 / €249 mo (+ odds add-on) | Rich soccer data/stats + predictions; 14-day full trial | Soccer only; odds are a paid add-on (sales-priced); conflicting free-tier ToS language | [site](https://www.sportmonks.com/football-api/) · [pricing](https://www.sportmonks.com/football-api/plans-pricing/) |
+| **Goalserve** | Multi-sport data | none | ~$250–$800/mo | Broad coverage; in-game player stats; pre + in-play | No free tier; pricey for MVP; XML/JSON polling | [site](https://www.goalserve.com/) · [odds pricing](https://www.goalserve.com/en/sport-data-feeds/odds-api/prices) |
+| **OpticOdds** | Aggregator **+ grader** | none | ~$5,000/mo (often per-sport) | 100+ books; props/alts/futures; **SSE push stream**; turnkey **grader** (Won/Lost/Refunded/Half) — biggest grading time-saver | Expensive; **active Swish lawsuit** over data sourcing; ToS 403-blocked/unverified | [site](https://opticodds.com/sports-betting-api) · [docs](https://developer.opticodds.com/) · [grader](https://developer.opticodds.com/reference/get_grader-odds) |
+| **OddsJam** | Aggregator | none | ~$500–$1k+ entry; enterprise higher | 100+ books; props/alts; auto-grading + injury/settlement alerts; historical/backtesting | WebSocket = enterprise tier only; same Swish lawsuit; ToS unverified | [site](https://oddsjam.com/odds-api) |
+| **LSports (OddService)** | Aggregator data | none | contact sales | 100+ sports incl. esports; **0–1s in-play**; settlement in one feed; XML/JSON + WebSocket | No public price; ToS re: non-real-money unverified | [site](https://www.lsports.eu/oddservice/) |
+| **SportsDataIO** | Data + verification | trial | contact sales | Scores/stats/props/futures; **settlement-verification** layer (pauses payouts on mismatch) | Props in separate warehouse/key; not a full grader; sales-priced | [site](https://sportsdata.io/) · [betting feeds](https://sportsdata.io/live-odds-api) |
+| **Sportradar** | Official feed | none | ~$5k–$30k+/mo | Official low-latency data; WebSocket push; managed trading; deepest coverage | Built for **licensed operators**; sales-gated; costly; states it won't sell to unlicensed ops | [site](https://sportradar.com/) · [dev portal](https://developer.sportradar.com/) |
+| **Genius Sports** | Official feed | none | ~$4k–$6k+/mo | Official **NFL** betting data; sub-second; trading services | **Licensed sportsbooks only**; exclusive-rights premium pricing | [site](https://www.geniussports.com/) · [odds feeds](https://www.geniussports.com/bet/odds-feeds-api/) |
+| **Kambi** | Turnkey platform | n/a | contact sales | Full sportsbook + Odds Feed+ + algorithmic managed trading | **Licensed B2C operators only**, 60+ regulated jurisdictions | [site](https://www.kambi.com/) |
+| **Betby** | Turnkey platform | n/a | contact sales | Iframe sportsbook + managed risk; fast integration | Operator platform, not a data feed; real-money oriented | [site](https://betby.com/sportsbook/) |
+
 ## 1B. Bet types & grading — what you actually need
 
 To grade the bet types in CLAUDE.md §4 yourself, you need **(a) a scores +
@@ -194,6 +215,20 @@ settlement-**verification** layer (alerts to pause payouts on data mismatch).
 rev-share + integration via an aggregator), and likely **unavailable/inapplicable**
 to a non-redeemable points app. Not recommended for the MVP.
 
+### Live-dealer studio comparison (pros / cons / cost / docs)
+
+| Studio | Model | Serves non-real-money? | Cost (est., verify) | Pros | Cons | Link |
+|---|---|---|---|---|---|---|
+| **Evolution** | B2B live studios | Yes — on sweeps (Stake.us, High 5, WOW Vegas) | Rev-share % of GGR (unpublished) | Market leader; huge catalog incl. game shows; GLI/eCOGRA tested; already on social platforms | GGR rev-share has no basis for non-redeemable points; exiting some US states (CA Sept 2025); reached via aggregator | [evolution.com](https://www.evolution.com/) |
+| **Ezugi** (Evolution-owned) | B2B live | Yes — explicitly adapted for sweeps | unpublished | Sweeps-friendly; lower barrier than the majors; 1,000+ operators | Same GGR/onboarding unknowns for a points app | [ezugi.com](https://www.ezugi.com/) |
+| **Pragmatic Play Live** | B2B live | **Requires licensed operator** | ~10–20% GGR (third-party est.) | Single API w/ slots + live + virtuals; fast (3–5 wk) integration | Requires proof of license; exited CA sweeps Sept 2025 | [pragmaticplay.com/live-casino](https://www.pragmaticplay.com/en/live-casino/) |
+| **Playtech Live** | B2B live | Selective — licensed/large brands only | contact sales | Tier-1 production quality; 180+ licensees | Highest barrier; no social/sweeps product found | [playtech.com](https://www.playtech.com/) |
+
+> Across all four, **rev-share keys off GGR (gross gaming revenue) you don't have**
+> in a closed-loop points model — so standard commercial terms don't map, and
+> whether any studio would onboard a non-redeemable points app is undocumented
+> (direct inquiry required).
+
 ## 2B. Self-hosting your own dealer stream — if you ever want real video
 
 Protocol baseline: **WebRTC ~100–400ms** (sub-second, harder to scale) ·
@@ -201,14 +236,14 @@ Protocol baseline: **WebRTC ~100–400ms** (sub-second, harder to scale) ·
 to **close before the reveal**, so either sub-second WebRTC or LL-HLS with a
 betting-cutoff buffer.
 
-| Platform | Latency | Pricing basis (est., verify) | Bet-sync mechanism | Note |
-|---|---|---|---|---|
-| **LiveKit** (cloud or **self-host OSS**) | sub-second WebRTC | ~$0.0005/min connection + ~$0.10–0.12/GB egress | **Data tracks / `publishData`** for game state | First-class **React/TS SDK**; self-hostable = lowest marginal cost. **Best fit.** |
-| **Amazon IVS Real-Time** | sub-second WebRTC | per **participant-hour** (exact rate unverified); audio-only ⅒ | **Timed Metadata** frame-synced to all viewers | Up to 10k–25k viewers/stage (source conflict). |
-| **Agora** | sub-second | HD ~$3.99 / Full-HD ~$8.99 per 1,000 min; 10k free min/mo | RTM signaling / data streams | Pricier per-minute at scale. |
-| **Cloudflare Stream** | ~2–5s (HLS) | **$5/1k min stored + $1/1k delivered, no egress fee** | none frame-synced | Cheapest broadcast; **not sub-second**. |
-| **Mux** | ~4–7s (LL-HLS) | ~$0.032/min encode + per-min delivery | timed metadata likely a gap | Good SDKs; not real-time. |
-| **Raw WebRTC** | sub-second | servers + bandwidth only | build your own | Cheapest at scale, highest eng. effort. |
+| Platform | Latency | Pricing (est., verify) | Pros | Cons | Docs |
+|---|---|---|---|---|---|
+| **LiveKit** ⭐ (cloud or self-host OSS) | sub-second WebRTC | ~$0.0005/min connection + ~$0.10–0.12/GB egress | Best fit: first-class **React/TS SDK**; **data tracks** for bet/game-state sync; **self-hostable** → lowest marginal cost | Cloud egress adds up at scale; you operate the SFU if self-hosting | [site](https://livekit.io/) · [docs](https://docs.livekit.io/) · [pricing](https://livekit.io/pricing) |
+| **Amazon IVS Real-Time** | sub-second WebRTC | per **participant-hour** (rate unverified); audio-only ⅒ | **Timed Metadata** frame-synced to every viewer; AWS-managed scale (10k–25k/stage) | Participant-hour cost grows with audience; AWS lock-in; exact rates unverified | [site](https://aws.amazon.com/ivs/) · [pricing](https://aws.amazon.com/ivs/pricing/) · [calculator](https://ivs.rocks/calculator/) |
+| **Agora** | sub-second WebRTC | HD ~$3.99 / Full-HD ~$8.99 per 1,000 min; 10k free min/mo | Mature SDKs + React; RTM signaling/data channel for state sync | Priciest per-minute at scale; "standard-minute" multipliers complicate cost | [site](https://www.agora.io/) · [pricing](https://www.agora.io/en/pricing/) |
+| **Cloudflare Stream** | ~2–5s (HLS) | **$5/1k min stored + $1/1k delivered, no egress fee** | Cheapest one-to-many broadcast; flat per-minute regardless of resolution | **Not sub-second** (a separate Realtime/Calls product does WebRTC); no frame-synced metadata | [site](https://www.cloudflare.com/products/cloudflare-stream/) · [docs](https://developers.cloudflare.com/stream/) · [pricing](https://developers.cloudflare.com/stream/pricing/) |
+| **Mux** | ~4–7s (LL-HLS) | ~$0.032/min encode + per-min delivery; $20→$100 usage | Excellent web/React SDKs; simple pipeline | Not real-time; live timed-metadata appears to be a gap | [site](https://www.mux.com/) · [pricing](https://www.mux.com/pricing/video) |
+| **Raw WebRTC** (mediasoup/Janus) | sub-second | servers + bandwidth only | Cheapest at scale; full control | You build SFU/TURN/signaling/scaling; highest eng. effort | [mediasoup](https://mediasoup.org/) · [Janus](https://janus.conf.meetecho.com/) |
 
 **Order-of-magnitude, one 1080p table, 1000 concurrent viewers/hr:** Cloudflare
 ~$60 (laggy) < Mux (per-min) < LiveKit/raw-WebRTC ~$70–170 (sub-second) < Agora
@@ -229,6 +264,14 @@ shifts, and ops — a business line, not a feature.**
   LiveAvatar** (~$0.10–0.25/min). Viable only as **one shared rendered feed**;
   per-viewer avatar APIs don't scale (1000 viewers ≈ $6,000/hr).
 
+### Simulated-dealer comparison (pros / cons / cost / docs)
+
+| Approach | What it is | Cost (est.) | Pros | Cons | Link |
+|---|---|---|---|---|---|
+| **Pre-rendered / looped clips or 2D-3D in-browser animation** ⭐ | Cosmetic visual layer triggered by the provably-fair `core` outcome | **~$0 marginal** (static CDN assets) | Cheapest by an order of magnitude; infinite scale; zero licensing; fits points-only + provably-fair ethos; works offline-of-any-vendor | Not "real" video; up-front art/animation production effort | in-house (CDN/Vercel) |
+| **Unreal MetaHuman + Convai NeuroSync** | Real-time photoreal avatar with live TTS lipsync | Engine free; GPU/compute cost to render | Photoreal; responsive/interactive | Heavy GPU; complex pipeline; must render **one shared feed** + stream it | [metahuman.com](https://www.metahuman.com/) · [convai.com](https://convai.com/) |
+| **HeyGen LiveAvatar** | Hosted real-time AI avatar over WebRTC | ~$0.095/min (Lite) – $0.25/min (Full); $19/mo starter; ent. ~$24k min | Turnkey talking avatar; no studio | **Per-viewer** billing doesn't scale to concurrency; expensive | [heygen.com](https://www.heygen.com/) |
+
 ---
 
 ## Phased adoption plan (mapped to CLAUDE.md §8)
@@ -247,6 +290,31 @@ shifts, and ops — a business line, not a feature.**
   Evolution/Ezugi (content) or LiveKit/IVS (self-host) become relevant.
 
 ---
+
+## Manual fill-in tracker (data we could not acquire)
+
+> Blank cells are values that were sales-gated or behind a 403. Fill in as you
+> confirm them; flip Status to ✅ when done.
+
+| # | Item to confirm | Provider | Value to fill in | Where to get it | Status |
+|---|---|---|---|---|---|
+| 1 | Non-real-money use allowed under ToS? | The Odds API | ____ (yes/no + clause) | Full ToS / support email | ☐ |
+| 2 | Exact monthly price + any minimum commit | OpticOdds | $______/mo | Sales quote | ☐ |
+| 3 | Exact entry price + WebSocket tier | OddsJam | $______/mo; WS tier ____ | Sales quote | ☐ |
+| 4 | Exact price + packaging | LSports | $______ | Sales quote | ☐ |
+| 5 | Starter price + min commit | Sportradar | $______/mo | Sales quote | ☐ |
+| 6 | Starter price (esp. NFL data) | Genius Sports | $______/mo | Sales quote | ☐ |
+| 7 | Odds add-on price | SportMonks | €______ | Sales quote | ☐ |
+| 8 | Non-real-money / license clause in API ToS | OpticOdds, OddsJam, LSports | ____ (allowed?) | API ToS (was 403) | ☐ |
+| 9 | Swish Analytics lawsuit outcome | OpticOdds / OddsJam | ____ (resolved?) | Court docket / news | ☐ |
+| 10 | Will they onboard a **non-redeemable points** app? | Evolution / Ezugi | ____ (yes/no + terms) | Direct commercial inquiry | ☐ |
+| 11 | Rev-share % + setup/integration cost | Evolution / Ezugi / Pragmatic | ____ % / $______ | Sales quote | ☐ |
+| 12 | Real-time participant-hour rate (SD/HD/FHD) | AWS IVS | $______/participant-hr | [pricing](https://aws.amazon.com/ivs/pricing/) / [calc](https://ivs.rocks/calculator/) | ☐ |
+| 13 | Max viewers per real-time stage | AWS IVS | ____ (10k vs 25k) | AWS docs | ☐ |
+| 14 | Connection-minute + egress per-GB rates | LiveKit | $____/min; $____/GB | [pricing](https://livekit.io/pricing) | ☐ |
+| 15 | Standard-minute multiplier ratios | Agora | ____ | [pricing](https://www.agora.io/en/pricing/) | ☐ |
+| 16 | Live frame-synced timed-metadata support? | Mux | ____ (yes/no) | Mux docs | ☐ |
+| 17 | DimeBag's own max-payout / parlay cap | (internal) | ____ | Product decision | ☐ |
 
 ## Things to verify directly before committing (blocked by 403 / estimated)
 
