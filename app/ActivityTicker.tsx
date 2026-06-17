@@ -58,17 +58,12 @@ function ActivityRow({ item }: { item: TickerItem }) {
         {won ? (
           <>
             won <strong>{formatMoney(item.profit)}</strong>
-            {item.multiplier >= 2 && <span className="activity-mult">{item.multiplier.toFixed(2)}×</span>}
-            {item.big && (
-              <span className="activity-big" aria-label="big win">
-                🔥
-              </span>
+            {item.multiplier >= 2 && (
+              <span className="activity-mult">{item.multiplier.toFixed(2)}×</span>
             )}
           </>
         ) : returned ? (
-          <>
-            {item.outcome === 'push' ? 'pushed' : 'voided'} — stake back
-          </>
+          <>{item.outcome === 'push' ? 'pushed' : 'voided'} — stake back</>
         ) : (
           <>
             lost <strong>{formatMoney(item.stake)}</strong>
