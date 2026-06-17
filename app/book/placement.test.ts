@@ -11,6 +11,7 @@ import { resetBookOdds, getBookOddsSnapshot } from './odds-source.js'
 import { legFromSelection, parlayPrice, type SlipLeg } from './slip.js'
 import { placeBookBet, settleBookBet, __resetPlacement } from './placement.js'
 import { getBets, __resetBets } from './bets-store.js'
+import { suspendMarket, __resetRiskControls } from '../risk-controls.js'
 
 const NOW = 1_750_000_000_000
 
@@ -77,6 +78,17 @@ describe('single bet — place holds pending, settle moves the figure', () => {
     expect(a.pending).toBe(0)
     expect(a.balance).toBe(before - 8_000)
     expect(getBets().find((b) => b.id === bet.id)!.status).toBe('lost')
+  })
+
+  it('refuses a leg on a market the risk desk has suspended (placing nothing)', () => {
+    const l = leg(0, 'moneyline', 0)
+    suspendMarket(l.marketType) // risk desk suspends this market type (A's interlock)
+    try {
+      expect(() => place('p-lena', [l], 'single', 5_000)).toThrow(/suspended/)
+      expect(getBets()).toHaveLength(0) // nothing held in core
+    } finally {
+      __resetRiskControls() // don't leak the suspension into other tests
+    }
   })
 
   it('a push returns the stake, figure unchanged', () => {

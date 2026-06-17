@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { createMemoryStore } from '../persistence/index.js'
+import { createMemoryStore, type FetchLike } from '../persistence/index.js'
 import { createStoredVault, verifyServerSeed } from '../core/fairness-authority.js'
-import { seedStoreFromKv, vaultFromEnv, handleFairness } from './fairness.js'
+import {
+  seedStoreFromKv,
+  createFairnessSeedStore,
+  vaultFromEnv,
+  handleFairness,
+} from './fairness.js'
 
 /**
  * A↔B interlock: B's durable seed seam (`createStoredVault`) fulfilled by A's persistence
@@ -39,5 +44,67 @@ describe('A↔B interlock — KVStore-backed durable seed vault', () => {
     const back = (await handleFairness({ action: 'reveal', commitId: commit.commitId }, vault))
       .body as { serverSeed: string; serverSeedHash: string }
     expect(verifyServerSeed(back.serverSeed, back.serverSeedHash)).toBe(true)
+  })
+
+  it('OFF by default: anon key WITHOUT the service-role key still falls back to derived', async () => {
+    // The durable table is service-role-only, so anon-only config must NOT switch it on.
+    const vault = vaultFromEnv({ SUPABASE_URL: 'https://p.supabase.co', SUPABASE_ANON_KEY: 'anon' })
+    const reveal = await vault.reveal('id-needs-no-commit') // derived can reveal with no commit
+    expect(verifyServerSeed(reveal.serverSeed, reveal.serverSeedHash)).toBe(true)
+  })
+})
+
+/**
+ * Round-3 security repoint: the runtime durable store targets the dedicated, service-role-only
+ * `fairness_seeds` table (migration 0006), NOT the read-own `kv_documents` table. A fake
+ * PostgREST server proves the round-trip, the table, and the service-role auth — no network.
+ */
+describe('durable seed store → fairness_seeds (service-role, not kv_documents)', () => {
+  function fakeSupabase() {
+    const table = new Map<string, string>() // commit_id → server_seed
+    const calls: { method: string; url: string; apikey?: string; auth?: string }[] = []
+    const fetchImpl: FetchLike = async (url, init) => {
+      const method = init?.method ?? 'GET'
+      const h = (init?.headers ?? {}) as Record<string, string>
+      calls.push({ method, url, apikey: h.apikey, auth: h.Authorization })
+      if (method === 'POST') {
+        const row = JSON.parse(init?.body as string) as { commit_id: string; server_seed: string }
+        table.set(row.commit_id, row.server_seed)
+        return { ok: true, status: 201, json: async () => [], text: async () => '' }
+      }
+      const id = decodeURIComponent(url.match(/commit_id=eq\.([^&]+)/)?.[1] ?? '')
+      const seed = table.get(id)
+      return {
+        ok: true,
+        status: 200,
+        json: async () => (seed ? [{ server_seed: seed }] : []),
+        text: async () => '',
+      }
+    }
+    return { fetchImpl, calls }
+  }
+
+  const env = { url: 'https://proj.supabase.co', anonKey: 'ANON-must-not-be-used' }
+
+  it('round-trips commit → reveal against fairness_seeds, authed with the SERVICE-ROLE key', async () => {
+    const { fetchImpl, calls } = fakeSupabase()
+    const vault = createStoredVault(createFairnessSeedStore(env, 'SERVICE-ROLE-KEY', fetchImpl))
+    const commit = await vault.commit()
+    const reveal = await vault.reveal(commit.commitId)
+    expect(verifyServerSeed(reveal.serverSeed, commit.serverSeedHash)).toBe(true)
+    // every call hit /fairness_seeds (never kv_documents) and authed with the service-role key
+    expect(calls.length).toBeGreaterThanOrEqual(2)
+    expect(calls.every((c) => c.url.includes('/fairness_seeds'))).toBe(true)
+    expect(calls.some((c) => c.url.includes('kv_documents'))).toBe(false)
+    expect(
+      calls.every((c) => c.apikey === 'SERVICE-ROLE-KEY' && c.auth === 'Bearer SERVICE-ROLE-KEY'),
+    ).toBe(true)
+    expect(calls.some((c) => (c.apikey ?? '').includes('ANON'))).toBe(false)
+  })
+
+  it('rejects an unknown commitId (no row in fairness_seeds)', async () => {
+    const { fetchImpl } = fakeSupabase()
+    const vault = createStoredVault(createFairnessSeedStore(env, 'SERVICE-ROLE-KEY', fetchImpl))
+    await expect(vault.reveal('never-stored')).rejects.toThrow(/unknown commitId/)
   })
 })

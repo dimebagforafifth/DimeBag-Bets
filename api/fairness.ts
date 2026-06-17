@@ -35,13 +35,15 @@ import {
   DEFAULT_CRASH_CONFIG,
   type CrashHouseConfig,
 } from '../games/crash/fair.js'
-// A↔B interlock (CLAUDE.md §6): the durable seed seam is fulfilled by A's Supabase-backed
-// KVStore. Imported here at the composition root only; OFF until Supabase keys are present.
+// The durable seed seam (CLAUDE.md §6). Imported here at the composition root only; OFF until
+// Supabase keys are present. The runtime durable store is the dedicated, service-role-only
+// `fairness_seeds` table (migration 0006) — see createFairnessSeedStore below.
 import {
-  createStore,
-  isSupabaseConfigured,
+  getSupabaseEnv,
   type EnvSource,
+  type FetchLike,
   type KVStore,
+  type SupabaseEnv,
   type SupabaseStore,
 } from '../persistence/index.js'
 
@@ -88,19 +90,68 @@ export function seedStoreFromKv(store: KVStore): SeedStore {
   }
 }
 
-/** The Supabase-backed seed store, namespaced to its own keyspace (audit trail of issued seeds). */
-export function createKvSeedStore(envSource?: EnvSource): SeedStore {
-  return seedStoreFromKv(createStore({ namespace: 'fairness-seeds', envSource }))
+/** The server-only service-role key (bypasses RLS). The durable seed store needs it because
+ *  `fairness_seeds` grants nothing to anon/authenticated — only `service_role` may touch it. */
+function serviceRoleKey(env: EnvSource): string | undefined {
+  const k = env.SUPABASE_SERVICE_ROLE_KEY
+  return k && k.trim() ? k.trim() : undefined
 }
 
 /**
- * Build the authority from an env bag. With Supabase keys present → the DURABLE vault (a fresh
- * CSPRNG seed per commit, stored via A's backend — per-round randomness + an audit trail).
- * With NO keys → the stateless DERIVED vault (== `defaultVault`), so this is OFF by default and
- * byte-for-byte the no-backend behaviour. This is the seam production flips by dropping in keys.
+ * The runtime DURABLE seed store — backed by the dedicated `fairness_seeds` table (migration
+ * 0006) via PostgREST + the SERVICE-ROLE key. One row per issued seed: commit_id → server_seed.
+ *
+ * SECURITY (B, round 3): this is deliberately NOT the generic `kv_documents` table the round-2
+ * wiring used. kv_documents carries a read-own RLS policy, so a client could read its OWN
+ * unrevealed seed and pre-compute the outcome. `fairness_seeds` has RLS with NO client policies
+ * and no anon/authenticated grants, so ONLY this server endpoint (service_role, which bypasses
+ * RLS) can read or write it — the seed stays secret until the server reveals it. Server-only:
+ * the service-role key must never reach the browser.
+ */
+export function createFairnessSeedStore(
+  env: SupabaseEnv,
+  serviceKey: string,
+  fetchImpl?: FetchLike,
+): SeedStore {
+  const doFetch = fetchImpl ?? (globalThis.fetch as unknown as FetchLike)
+  const base = `${env.url}/rest/v1/fairness_seeds`
+  const headers = (extra: Record<string, string> = {}): Record<string, string> => ({
+    apikey: serviceKey,
+    Authorization: `Bearer ${serviceKey}`,
+    'Content-Type': 'application/json',
+    ...extra,
+  })
+  return {
+    async put(commitId, serverSeed) {
+      const res = await doFetch(base, {
+        method: 'POST',
+        headers: headers({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+        body: JSON.stringify({ commit_id: commitId, server_seed: serverSeed }),
+      })
+      if (!res.ok) throw new Error(`fairness_seeds upsert failed (${res.status})`)
+    },
+    async get(commitId) {
+      const url = `${base}?select=server_seed&commit_id=eq.${encodeURIComponent(commitId)}`
+      const res = await doFetch(url, { headers: headers() })
+      if (!res.ok) throw new Error(`fairness_seeds read failed (${res.status})`)
+      const rows = (await res.json()) as Array<{ server_seed: string }>
+      return rows[0]?.server_seed
+    },
+  }
+}
+
+/**
+ * Build the authority from an env bag. With the Supabase URL + SERVICE-ROLE key present → the
+ * DURABLE vault (a fresh CSPRNG seed per commit, stored in `fairness_seeds` — per-round
+ * randomness + an audit trail, secret until reveal). Otherwise → the stateless DERIVED vault
+ * (== `defaultVault`), so this is OFF by default and byte-for-byte the no-backend behaviour.
+ * (The service-role key, not just the anon key, is the gate — the durable table is unreachable
+ * without it, so falling back to derived is the only correct no-service-role behaviour.)
  */
 export function vaultFromEnv(env: EnvSource = {}): SeedVault {
-  if (isSupabaseConfigured(env)) return createStoredVault(createKvSeedStore(env))
+  const sb = getSupabaseEnv(env)
+  const serviceKey = serviceRoleKey(env)
+  if (sb && serviceKey) return createStoredVault(createFairnessSeedStore(sb, serviceKey))
   return defaultVault(env)
 }
 

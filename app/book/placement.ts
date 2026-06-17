@@ -40,6 +40,7 @@ import {
   type SlipMode,
 } from './slip.js'
 import { SGP_MAX_LEGS } from '../../lib/odds/pricing.js'
+import { isMarketSuspended } from '../risk-controls.js'
 import { cashOutMath, cashOutQuote } from './cashout.js'
 import { toReturnCents } from './odds-format.js'
 import {
@@ -86,6 +87,14 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
   const { account, playerName, placedBy, legs, mode, stakeCents, now } = input
   if (legs.length === 0) throw new Error('add a selection first')
   if (!Number.isInteger(stakeCents) || stakeCents <= 0) throw new Error('enter a stake')
+
+  // Risk interlock (A): refuse any leg on a market the risk desk has suspended (keyed by
+  // market type or sport). The toggle + state live in app/risk-controls; placement enforces.
+  for (const leg of legs) {
+    if (isMarketSuspended(leg.marketType) || (leg.sport != null && isMarketSuspended(leg.sport))) {
+      throw new Error('this market is suspended')
+    }
+  }
 
   const isParlay = mode === 'parlay' && legs.length >= 2
   if (isParlay) {
