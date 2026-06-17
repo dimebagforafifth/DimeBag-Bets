@@ -20,7 +20,8 @@ import type {
   OddsFeedProvider,
   Price,
 } from './contract.js'
-import { applyPricing, DEFAULT_MARGIN } from './pricing.js'
+import { applyPricing, resolveMargin, type MarginConfig } from './pricing.js'
+import { getMarginConfig } from './margin-config.js'
 import { MockProvider } from './providers/MockProvider.js'
 import { SGOProvider } from './providers/SGOProvider.js'
 
@@ -68,7 +69,12 @@ export interface PollerConfig {
   provider?: OddsFeedProvider
   cache: OddsCache
   leagues?: readonly string[]
+  /** Flat house margin (legacy). Wrapped as `{ base: margin }` when no `marginConfig` is given. */
   margin?: number
+  /** Operator hold posture (base + per-market overrides). Wins over `margin`. When BOTH are
+   *  absent the poller reads the live `getMarginConfig()` each cycle, so a console posture
+   *  change reprices the next poll. */
+  marginConfig?: MarginConfig
   /** ISO timestamp source (injectable for deterministic tests). */
   now?: () => string
   /** Called when ONE league's fetch fails (e.g. a plan-gated league 4xx's). The cycle
@@ -84,11 +90,13 @@ export interface PollResult {
   overridesPreserved: number
 }
 
-/** Flatten a slate into cache rows, preserving overrides. Pure (given `overrides` + `now`). */
+/** Flatten a slate into cache rows, preserving overrides. Pure (given `overrides` + `now`).
+ *  `margin` is either a flat rate (applied to every market) or an operator `MarginConfig`
+ *  whose per-market override decides each market's juice. */
 export function buildRows(
   events: NormalizedEvent[],
   overrides: Map<string, Price>,
-  margin: number,
+  margin: number | MarginConfig,
   now: string,
 ): {
   events: OddsEventRow[]
@@ -100,6 +108,9 @@ export function buildRows(
   const marketRows: OddsMarketRow[] = []
   const selectionRows: OddsSelectionRow[] = []
   let overridesPreserved = 0
+
+  // Normalize a flat rate to a config so per-market resolution is uniform.
+  const marginConfig: MarginConfig = typeof margin === 'number' ? { base: margin } : margin
 
   for (const e of events) {
     eventRows.push({
@@ -113,6 +124,8 @@ export function buildRows(
       updated_at: now,
     })
     for (const m of e.markets) {
+      // The juice for THIS market type — its per-market override, or the operator's base.
+      const marketMargin = resolveMargin(marginConfig, m.type)
       marketRows.push({
         market_id: m.marketId,
         event_id: e.eventId,
@@ -126,7 +139,7 @@ export function buildRows(
         const override = overrides.get(s.selectionId) ?? null
         // applyPricing ALWAYS recomputes display from the fresh raw price (margin), unless an
         // override is supplied — then the override wins and the manual line is preserved.
-        const priced = applyPricing(s.priceRaw, { margin, override })
+        const priced = applyPricing(s.priceRaw, { margin: marketMargin, override })
         if (priced.override) overridesPreserved++
         selectionRows.push({
           selection_id: s.selectionId,
@@ -153,7 +166,8 @@ export class Poller {
   private readonly provider: OddsFeedProvider
   private readonly cache: OddsCache
   private readonly leagues: readonly string[]
-  private readonly margin: number
+  /** An explicit margin override (flat rate or config). null = read the live store per cycle. */
+  private readonly marginOverride: MarginConfig | null
   private readonly now: () => string
   private readonly onLeagueError: (league: string, error: unknown) => void
   private timer: ReturnType<typeof setInterval> | null = null
@@ -163,7 +177,7 @@ export class Poller {
     this.provider = cfg.provider ?? selectProvider()
     this.cache = cfg.cache
     this.leagues = cfg.leagues ?? ACTIVE_LEAGUES
-    this.margin = cfg.margin ?? DEFAULT_MARGIN
+    this.marginOverride = cfg.marginConfig ?? (cfg.margin != null ? { base: cfg.margin } : null)
     this.now = cfg.now ?? (() => new Date().toISOString())
     this.onLeagueError = cfg.onLeagueError ?? (() => {})
   }
@@ -189,7 +203,9 @@ export class Poller {
       }
     }
     const overrides = await this.cache.getOverrides(events.map((e) => e.eventId))
-    const rows = buildRows(events, overrides, this.margin, this.now())
+    // Explicit config wins; otherwise the live operator posture, read fresh each cycle.
+    const marginConfig = this.marginOverride ?? getMarginConfig()
+    const rows = buildRows(events, overrides, marginConfig, this.now())
     // Events + markets first (FK parents), then selections.
     await this.cache.writeEvents(rows.events)
     await this.cache.writeMarkets(rows.markets)

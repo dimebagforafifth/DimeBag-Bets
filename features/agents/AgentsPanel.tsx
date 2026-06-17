@@ -37,6 +37,7 @@ import {
 import { formatMoney, toCents, toSignedCents } from '../../games/shared/money.js'
 import { PanelShell, Figure } from '../_desk/shared.js'
 import { InfoDot } from '../_desk/Tooltip.js'
+import { CommissionEditor } from './CommissionEditor.js'
 import './agents.css'
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -66,7 +67,11 @@ export function buildForest(org: Org): TreeNode {
 }
 
 /** Flatten the tree to visible rows, skipping the children of collapsed nodes. */
-export function flatten(node: TreeNode, collapsed: ReadonlySet<string>, out: TreeNode[] = []): TreeNode[] {
+export function flatten(
+  node: TreeNode,
+  collapsed: ReadonlySet<string>,
+  out: TreeNode[] = [],
+): TreeNode[] {
   out.push(node)
   if (!collapsed.has(node.member.id)) {
     for (const c of node.children) flatten(c, collapsed, out)
@@ -275,7 +280,9 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
   const [credit, setCredit] = useState(String(member.account.creditLimit / 100))
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
-  const [maxw, setMaxw] = useState(member.account.maxWager ? String(member.account.maxWager / 100) : '')
+  const [maxw, setMaxw] = useState(
+    member.account.maxWager ? String(member.account.maxWager / 100) : '',
+  )
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
 
@@ -441,11 +448,7 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
             </div>
           </div>
           <label className="feat-check">
-            <input
-              type="checkbox"
-              checked={!!member.account.bettingLocked}
-              onChange={toggleLock}
-            />
+            <input type="checkbox" checked={!!member.account.bettingLocked} onChange={toggleLock} />
             Betting locked
           </label>
         </>
@@ -458,6 +461,9 @@ function MemberEditor({ member, org }: { member: Member; org: Org }) {
           Active
         </label>
       )}
+
+      {/* Commission — how this agent is paid (split / profit-share / redline) */}
+      {isAgent && <CommissionEditor member={member} />}
 
       {/* Console access — which management tools this agent gets (manager-controlled) */}
       {isAgent && <AgentAccess agentId={member.id} />}

@@ -17,11 +17,12 @@
  * Pure + dependency-free so it tests in isolation and the contract stays standalone.
  */
 
-import type { Price } from './contract.js'
+import type { MarketType, Price } from './contract.js'
 
 /** Default book margin — the fractional haircut on net winnings (4.5%). */
 export const DEFAULT_MARGIN = 0.045
-const MAX_MARGIN = 0.5
+/** The hard ceiling on any configured margin — no book runs more than 50% juice. */
+export const MAX_MARGIN = 0.5
 
 /* ----------------------------- conversions ------------------------------ */
 
@@ -91,6 +92,59 @@ export function applyPricing(raw: Price, opts: PricingOptions = {}): PricedSelec
     return { priceRaw, priceDisplay: { ...opts.override }, override: true }
   }
   return { priceRaw, priceDisplay: applyMargin(priceRaw, opts.margin), override: false }
+}
+
+/* ------------------- configurable margin (per market) ------------------- */
+/*
+ * The Pinnacle-vs-recreational knob. The margin above is a single fixed rate; a real
+ * operator wants to set their HOLD POSTURE as a SETTING — fat juice on a soft book, or
+ * thin juice / high limits to court sharper action — and to run different juice on
+ * different market types (props always carry more than the main lines). `MarginConfig`
+ * makes the RATE configurable while the margin MATH (`applyMargin`) is untouched: the
+ * caller resolves which rate a given market gets, then hands it to the same pipeline. The
+ * correlated-SGP pricing below is unaffected — it still takes a single `margin` and now
+ * simply receives the resolved per-market rate instead of a hard-coded constant.
+ */
+
+/**
+ * An operator's hold posture: a `base` margin for any market, plus optional per-market
+ * overrides. Every rate is the same fractional haircut `applyMargin` consumes — only WHICH
+ * rate a market gets is configurable. A market absent from `perMarket` uses `base`.
+ */
+export interface MarginConfig {
+  /** The operator's default house margin (fractional haircut on net winnings). */
+  base: number
+  /** Per-market-type overrides; a market not listed falls back to `base`. */
+  perMarket?: Partial<Record<MarketType, number>>
+}
+
+/** Named hold postures an operator picks as a starting point, then fine-tunes. */
+export type MarginPosture = 'recreational' | 'balanced' | 'sharp'
+
+/**
+ * Starting presets. RECREATIONAL runs fat juice (soft players, lower limits); SHARP runs
+ * thin juice (low-margin / high-limit, Pinnacle style); BALANCED is the legacy flat
+ * DEFAULT_MARGIN. Recreational/sharp run props a touch fatter than the main lines, mirroring
+ * real books; an operator can override any market after adopting a posture.
+ */
+export const MARGIN_POSTURES: Readonly<Record<MarginPosture, MarginConfig>> = {
+  recreational: { base: 0.065, perMarket: { prop: 0.085 } },
+  balanced: { base: DEFAULT_MARGIN },
+  sharp: { base: 0.02, perMarket: { prop: 0.03 } },
+}
+
+/** The default operator config: the legacy flat DEFAULT_MARGIN on every market, so a book
+ *  with no posture configured prices byte-for-byte as it did before this control existed. */
+export const DEFAULT_MARGIN_CONFIG: MarginConfig = { base: DEFAULT_MARGIN }
+
+/**
+ * The margin to apply to ONE market: its per-market override if set, otherwise the config's
+ * base, otherwise (no config at all) DEFAULT_MARGIN. Always clamped to [0, MAX_MARGIN]. Pure.
+ */
+export function resolveMargin(config: MarginConfig | undefined, market?: MarketType): number {
+  if (!config) return DEFAULT_MARGIN
+  const override = market != null ? config.perMarket?.[market] : undefined
+  return clamp(override ?? config.base, 0, MAX_MARGIN)
 }
 
 /* ------------------- correlated same-game parlay (SGP) ------------------ */

@@ -26,6 +26,7 @@ import {
   createOrg,
   getMember,
   membersByRole,
+  setCommissionModel,
   settleOrgWeek,
   type Member,
   type Org,
@@ -43,6 +44,13 @@ function seedDemoOrg(): Org {
   addSubAgent(org, { name: 'South Region', creditLimit: 20_000_000, id: 'sa-s' })
   addAgent(org, 'sa-n', { name: 'East Desk', creditLimit: 5_000_000, id: 'a-e' })
   addAgent(org, 'sa-s', { name: 'West Desk', creditLimit: 5_000_000, id: 'a-w' })
+  // Each tier on a different commission model so the per-member editor + settlement read as
+  // real: a split master, a profit-share agent, and two redline desks (one carrying a red
+  // figure still to be made up). All credits/cents; settlement honours the model.
+  setCommissionModel(org, 'sa-n', { model: 'split', pct: 15 })
+  setCommissionModel(org, 'sa-s', { model: 'redline', pct: 25, carryoverCents: -180_000 })
+  setCommissionModel(org, 'a-e', { model: 'profit_share', pct: 20 })
+  setCommissionModel(org, 'a-w', { model: 'redline', pct: 30, carryoverCents: -50_000 })
   const mk = (parent: string, name: string, credit: number, bal: number, id: string) => {
     const p = addPlayer(org, parent, { name, creditLimit: credit, id })
     p.account.balance = bal // a seeded figure so the roll-up reads as real
