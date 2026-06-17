@@ -68,7 +68,7 @@
   font-variant-numeric: tabular-nums;
 }
 .videopoker-payrow.is-hit {
-  background: color-mix(in srgb, var(--accent, #7c5cff) 28%, var(--surface-2));
+  background: color-mix(in srgb, var(--gem) 28%, var(--surface-2));
 }
 .videopoker-payrow.is-hit .videopoker-payname,
 .videopoker-payrow.is-hit .videopoker-paymult {
@@ -94,8 +94,8 @@
   background: var(--surface-2);
 }
 .pill-win {
-  color: var(--green);
-  border-color: color-mix(in srgb, var(--green) 35%, transparent);
+  color: var(--gem);
+  border-color: color-mix(in srgb, var(--gem) 35%, transparent);
 }
 .pill-loss {
   color: var(--muted);
@@ -191,34 +191,34 @@
   transform: none;
 }
 .videopoker-card.is-held {
-  border-color: var(--accent, #7c5cff);
+  border-color: var(--gold);
   box-shadow:
-    0 0 0 2px var(--accent, #7c5cff),
-    0 0 16px color-mix(in srgb, var(--accent, #7c5cff) 55%, transparent);
+    0 0 0 2px var(--gold),
+    0 0 16px color-mix(in srgb, var(--gold) 55%, transparent);
   transform: translateY(-4px);
 }
 /* the cards that actually made the winning hand — gold glow + lift + soft pulse so
    it's obvious HOW the hand won. Applied only after the roll-in finishes (resultShown),
    so it never fights the deal animation. */
 .videopoker-card.is-win {
-  border-color: #ffd24a;
+  border-color: var(--gem);
   transform: translateY(-4px);
   box-shadow:
-    0 0 0 2px #ffd24a,
-    0 0 20px color-mix(in srgb, #ffd24a 65%, transparent);
+    0 0 0 2px var(--gem),
+    0 0 20px color-mix(in srgb, var(--gem) 65%, transparent);
   animation: vp-win-pulse 1.1s ease-in-out infinite;
 }
 @keyframes vp-win-pulse {
   0%,
   100% {
     box-shadow:
-      0 0 0 2px #ffd24a,
-      0 0 14px color-mix(in srgb, #ffd24a 50%, transparent);
+      0 0 0 2px var(--gem),
+      0 0 14px color-mix(in srgb, var(--gem) 50%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 3px #ffe27a,
-      0 0 28px color-mix(in srgb, #ffd24a 88%, transparent);
+      0 0 0 3px var(--gold-bright),
+      0 0 28px color-mix(in srgb, var(--gem) 88%, transparent);
   }
 }
 /* real card face: rank+suit pip index in two corners + a large centre suit */
@@ -265,7 +265,7 @@
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--accent, #7c5cff);
+  color: var(--gold);
 }
 .videopoker-holdbtn {
   width: 100px;

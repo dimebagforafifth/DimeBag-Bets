@@ -208,7 +208,7 @@
   font-variant-numeric: tabular-nums;
 }
 .coinflip-stat:first-child .coinflip-stat-value {
-  color: #3fb98a; /* a positive tint on the win chance */
+  color: var(--gem); /* a positive tint on the win chance */
 }
 
 .coinflip-calls {
@@ -228,7 +228,10 @@
   background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
-  transition: transform 0.08s ease, border-color 0.12s ease, background 0.12s ease;
+  transition:
+    transform 0.08s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
 .coinflip-call:hover {
   transform: translateY(-1px);
@@ -434,7 +437,9 @@
   align-items: center;
   gap: 7px;
   perspective: 800px;
-  transition: opacity 0.2s ease, filter 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
 }
 .coinflip-coin-cell.is-busted {
   opacity: 0.4;
@@ -472,26 +477,62 @@
   animation: coinflip-toss-tails 0.8s linear forwards;
 }
 @keyframes coinflip-toss-heads {
-  0% { transform: translateY(0) rotateY(0) scale(0.97); }
-  12% { transform: translateY(-38px) rotateY(150deg) scale(1.04); }
-  24% { transform: translateY(-62px) rotateY(305deg) scale(1.07); }
-  42% { transform: translateY(-74px) rotateY(540deg) scale(1.08); }
-  60% { transform: translateY(-55px) rotateY(760deg) scale(1.06); }
-  74% { transform: translateY(-26px) rotateY(940deg) scale(1.03); }
-  85% { transform: translateY(0) rotateY(1080deg) scale(1); }
-  92% { transform: translateY(-9px) rotateY(1080deg) scale(1.02); }
-  100% { transform: translateY(0) rotateY(1080deg) scale(1); }
+  0% {
+    transform: translateY(0) rotateY(0) scale(0.97);
+  }
+  12% {
+    transform: translateY(-38px) rotateY(150deg) scale(1.04);
+  }
+  24% {
+    transform: translateY(-62px) rotateY(305deg) scale(1.07);
+  }
+  42% {
+    transform: translateY(-74px) rotateY(540deg) scale(1.08);
+  }
+  60% {
+    transform: translateY(-55px) rotateY(760deg) scale(1.06);
+  }
+  74% {
+    transform: translateY(-26px) rotateY(940deg) scale(1.03);
+  }
+  85% {
+    transform: translateY(0) rotateY(1080deg) scale(1);
+  }
+  92% {
+    transform: translateY(-9px) rotateY(1080deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) rotateY(1080deg) scale(1);
+  }
 }
 @keyframes coinflip-toss-tails {
-  0% { transform: translateY(0) rotateY(0) scale(0.97); }
-  12% { transform: translateY(-38px) rotateY(175deg) scale(1.04); }
-  24% { transform: translateY(-62px) rotateY(356deg) scale(1.07); }
-  42% { transform: translateY(-74px) rotateY(630deg) scale(1.08); }
-  60% { transform: translateY(-55px) rotateY(887deg) scale(1.06); }
-  74% { transform: translateY(-26px) rotateY(1097deg) scale(1.03); }
-  85% { transform: translateY(0) rotateY(1260deg) scale(1); }
-  92% { transform: translateY(-9px) rotateY(1260deg) scale(1.02); }
-  100% { transform: translateY(0) rotateY(1260deg) scale(1); }
+  0% {
+    transform: translateY(0) rotateY(0) scale(0.97);
+  }
+  12% {
+    transform: translateY(-38px) rotateY(175deg) scale(1.04);
+  }
+  24% {
+    transform: translateY(-62px) rotateY(356deg) scale(1.07);
+  }
+  42% {
+    transform: translateY(-74px) rotateY(630deg) scale(1.08);
+  }
+  60% {
+    transform: translateY(-55px) rotateY(887deg) scale(1.06);
+  }
+  74% {
+    transform: translateY(-26px) rotateY(1097deg) scale(1.03);
+  }
+  85% {
+    transform: translateY(0) rotateY(1260deg) scale(1);
+  }
+  92% {
+    transform: translateY(-9px) rotateY(1260deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) rotateY(1260deg) scale(1);
+  }
 }
 .coinflip-coin.is-lg {
   width: 150px;
@@ -546,7 +587,12 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.45) 50%, transparent 64%);
+  background: linear-gradient(
+    115deg,
+    transparent 36%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 64%
+  );
   background-size: 250% 100%;
   animation: coin-sheen 3.6s ease-in-out infinite;
   pointer-events: none;
@@ -567,7 +613,9 @@
   z-index: 1;
   font-size: 2.9em;
   line-height: 1;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0.45em rgba(255, 255, 255, 0.4);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.45),
+    0 0 0.45em rgba(255, 255, 255, 0.4);
 }
 /* heads = gold */
 .coinflip-face.is-heads {

@@ -51,7 +51,10 @@
   border-radius: 8px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 .slots-pay-row--note {
   opacity: 0.85;
@@ -59,9 +62,10 @@
 }
 .slots-pay-row.is-hit {
   transform: translateY(-1px);
-  background: color-mix(in srgb, var(--accent, #ff5b8a) 24%, var(--surface-2));
-  box-shadow: 0 0 0 1px var(--accent, #ff5b8a),
-    0 0 14px color-mix(in srgb, var(--accent, #ff5b8a) 50%, transparent);
+  background: color-mix(in srgb, var(--gem) 24%, var(--surface-2));
+  box-shadow:
+    0 0 0 1px var(--gem),
+    0 0 14px color-mix(in srgb, var(--gem) 50%, transparent);
 }
 .slots-pay-symbols {
   font-size: 17px;
@@ -71,7 +75,7 @@
   font-size: 13px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: #fff;
+  color: var(--gem);
 }
 
 /* ---- history pills ---- */
@@ -94,9 +98,9 @@
   color: var(--muted);
 }
 .pill-win {
-  color: var(--gem, #2bd576);
-  border-color: color-mix(in srgb, var(--gem, #2bd576) 55%, transparent);
-  background: color-mix(in srgb, var(--gem, #2bd576) 16%, var(--surface-2));
+  color: var(--gem);
+  border-color: color-mix(in srgb, var(--gem) 55%, transparent);
+  background: color-mix(in srgb, var(--gem) 16%, var(--surface-2));
 }
 .pill-loss {
   color: var(--red, #ec4863);
@@ -113,15 +117,15 @@
   gap: 10px;
   padding: 16px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #11202b, #0b141c);
+  background: linear-gradient(180deg, var(--surface-2), var(--bg));
   border: 1px solid var(--line);
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 .slots-machine.is-win {
   box-shadow:
     inset 0 2px 10px rgba(0, 0, 0, 0.45),
-    0 0 0 2px var(--accent, #ff5b8a),
-    0 0 26px 2px color-mix(in srgb, var(--accent, #ff5b8a) 45%, transparent);
+    0 0 0 2px var(--gem),
+    0 0 26px 2px color-mix(in srgb, var(--gem) 45%, transparent);
 }
 
 .slots-reel {
@@ -129,14 +133,14 @@
   height: 96px;
   overflow: hidden;
   border-radius: 10px;
-  background: radial-gradient(circle at 50% 40%, #1c2c38, #0d171f);
+  background: radial-gradient(circle at 50% 40%, var(--surface-2), var(--bg));
   border: 1px solid rgba(255, 255, 255, 0.06);
   /* soft fade top and bottom so symbols scroll in/out of a window */
   -webkit-mask: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
   mask: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent);
 }
 .slots-reel.is-active {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, #ff5b8a) 30%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gem) 30%, transparent);
 }
 
 .slots-strip {
@@ -194,8 +198,8 @@
   pointer-events: none;
 }
 .slots-winline.is-win {
-  background: var(--accent, #ff5b8a);
-  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--accent, #ff5b8a) 70%, transparent);
+  background: var(--gem);
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--gem) 70%, transparent);
   animation: slots-linepulse 0.9s ease-out;
 }
 @keyframes slots-linepulse {

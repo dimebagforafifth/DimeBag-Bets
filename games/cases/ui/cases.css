@@ -13,7 +13,7 @@
   background:
     radial-gradient(
       130% 120% at 50% -30%,
-      color-mix(in srgb, var(--accent, #ffb84d) 9%, transparent) 0%,
+      color-mix(in srgb, var(--accent, var(--gold)) 9%, transparent) 0%,
       transparent 55%
     ),
     var(--surface);
@@ -97,8 +97,12 @@
     color-mix(in srgb, var(--swatch) 74%, #0b141c) 100%
   );
   border: 1px solid color-mix(in srgb, var(--swatch) 60%, #000);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 5px rgba(0, 0, 0, 0.3);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 5px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 .cases-swatch:hover:not(:disabled) {
   transform: translateY(-2px);
@@ -110,7 +114,8 @@
 }
 .cases-swatch.is-active,
 .cases-swatch.is-hit {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--swatch) 80%, #fff),
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--swatch) 80%, #fff),
     0 0 12px color-mix(in srgb, var(--swatch) 65%, transparent);
 }
 /* the full odds table — every outcome's multiplier + % chance — floated above the
@@ -128,7 +133,7 @@
   padding: 10px 14px;
   border-radius: 10px;
   white-space: nowrap;
-  background: #0d1822;
+  background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
 }
@@ -189,7 +194,7 @@
   transform: translateX(-50%);
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid #0d1822;
+  border-top: 6px solid var(--surface);
 }
 
 /* ---- history pills (top of the stage) ---- */
@@ -212,9 +217,9 @@
   color: var(--muted);
 }
 .pill-win {
-  color: var(--accent, #ffb84d);
-  border-color: color-mix(in srgb, var(--accent, #ffb84d) 55%, transparent);
-  background: color-mix(in srgb, var(--accent, #ffb84d) 16%, var(--surface-2));
+  color: var(--accent, var(--gold));
+  border-color: color-mix(in srgb, var(--accent, var(--gold)) 55%, transparent);
+  background: color-mix(in srgb, var(--accent, var(--gold)) 16%, var(--surface-2));
 }
 .pill-loss {
   color: var(--red, #ec4863);
@@ -235,11 +240,11 @@
   background:
     radial-gradient(
       85% 130% at 50% 50%,
-      color-mix(in srgb, var(--accent, #ffb84d) 16%, transparent) 0%,
+      color-mix(in srgb, var(--accent, var(--gold)) 16%, transparent) 0%,
       transparent 62%
     ),
-    linear-gradient(180deg, #1a3550 0%, #0b1620 100%);
-  border: 1px solid color-mix(in srgb, var(--accent, #ffb84d) 24%, var(--line));
+    linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%);
+  border: 1px solid color-mix(in srgb, var(--accent, var(--gold)) 24%, var(--line));
   box-shadow:
     inset 0 2px 18px rgba(0, 0, 0, 0.5),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05),
@@ -258,11 +263,11 @@
 }
 .cases-reel-edge.is-l {
   left: 0;
-  background: linear-gradient(90deg, #0e2034 0%, rgba(14, 32, 52, 0) 100%);
+  background: linear-gradient(90deg, var(--bg) 0%, rgba(15, 18, 23, 0) 100%);
 }
 .cases-reel-edge.is-r {
   right: 0;
-  background: linear-gradient(270deg, #0e2034 0%, rgba(14, 32, 52, 0) 100%);
+  background: linear-gradient(270deg, var(--bg) 0%, rgba(15, 18, 23, 0) 100%);
 }
 /* a glassy top sheen across the whole window */
 .cases-reel::before {
@@ -309,11 +314,11 @@
 }
 /* on a win the whole reel frame lights up BRIGHT in the result's own colour */
 .cases-reel.is-win {
-  border-color: color-mix(in srgb, var(--win-color, var(--accent, #ffb84d)) 60%, var(--line));
+  border-color: color-mix(in srgb, var(--win-color, var(--accent, var(--gold))) 60%, var(--line));
   box-shadow:
     inset 0 2px 18px rgba(0, 0, 0, 0.5),
-    0 0 0 2px var(--win-color, var(--accent, #ffb84d)),
-    0 0 40px 4px color-mix(in srgb, var(--win-color, var(--accent, #ffb84d)) 60%, transparent),
+    0 0 0 2px var(--win-color, var(--accent, var(--gold))),
+    0 0 40px 4px color-mix(in srgb, var(--win-color, var(--accent, var(--gold))) 60%, transparent),
     0 10px 34px rgba(0, 0, 0, 0.35);
 }
 
@@ -328,8 +333,10 @@
   height: 0;
   border-left: 9px solid transparent;
   border-right: 9px solid transparent;
-  border-bottom: 13px solid var(--win-color, var(--accent, #ffb84d));
-  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--win-color, var(--accent, #ffb84d)) 80%, transparent));
+  border-bottom: 13px solid var(--win-color, var(--accent, var(--gold)));
+  filter: drop-shadow(
+    0 0 7px color-mix(in srgb, var(--win-color, var(--accent, var(--gold))) 80%, transparent)
+  );
   z-index: 3;
   pointer-events: none;
 }
@@ -363,7 +370,7 @@
   justify-content: center;
   /* bland by default — every closed case looks the same; the tile only takes its
      tier colour when it opens (see .is-landed), keeping the prize a mystery */
-  background: linear-gradient(180deg, #163049 0%, #0b1722 100%);
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%);
   border: 1px solid var(--line);
   border-bottom: 3px solid color-mix(in srgb, var(--case-neutral) 40%, var(--line));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -467,30 +474,72 @@
   animation: cases-chest-bloom 0.9s ease-out 0.3s both;
 }
 @keyframes cases-chest-rattle {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-1.5px); }
-  45% { transform: translateX(1.5px); }
-  70% { transform: translateX(-1px); }
-  85% { transform: translateX(1px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-1.5px);
+  }
+  45% {
+    transform: translateX(1.5px);
+  }
+  70% {
+    transform: translateX(-1px);
+  }
+  85% {
+    transform: translateX(1px);
+  }
 }
 @keyframes cases-chest-interior-in {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 @keyframes cases-chest-bloom {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-  45% { opacity: 0.92; transform: translate(-50%, -50%) scale(1.05); }
-  100% { opacity: 0.42; transform: translate(-50%, -50%) scale(1.4); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  45% {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 0.42;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
 }
 @keyframes cases-chest-rays {
-  0% { opacity: 0; transform: scaleY(0.2); }
-  45% { opacity: 0.6; transform: scaleY(1.05); }
-  100% { opacity: 0; transform: scaleY(1.15); }
+  0% {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+  45% {
+    opacity: 0.6;
+    transform: scaleY(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(1.15);
+  }
 }
 @keyframes cases-lid-open {
-  0% { transform: rotateX(0deg) translateY(0); opacity: 1; }
-  45% { transform: rotateX(40deg) translateY(-2px); opacity: 1; }
-  100% { transform: rotateX(50deg) translateY(-10px); opacity: 0; }
+  0% {
+    transform: rotateX(0deg) translateY(0);
+    opacity: 1;
+  }
+  45% {
+    transform: rotateX(40deg) translateY(-2px);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(50deg) translateY(-10px);
+    opacity: 0;
+  }
 }
 
 /* ---- the prize result, popped up OVER the marker/cursor (no popup card) ---- */
@@ -518,7 +567,9 @@
     color-mix(in srgb, var(--swatch) 48%, rgba(8, 16, 22, 0.95)) 100%
   );
   border: 1px solid color-mix(in srgb, var(--swatch) 80%, #fff);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 14px color-mix(in srgb, var(--swatch) 85%, transparent);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 0 14px color-mix(in srgb, var(--swatch) 85%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
     0 0 0 1px color-mix(in srgb, var(--swatch) 45%, transparent),
@@ -540,9 +591,18 @@
   pointer-events: none;
 }
 @keyframes cases-result-rise {
-  0% { opacity: 0; transform: translate(-50%, -50%) translateY(20px) scale(0.5); }
-  55% { opacity: 1; transform: translate(-50%, -50%) translateY(-15px) scale(1.18); }
-  100% { opacity: 1; transform: translate(-50%, -50%) translateY(-16px) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(20px) scale(0.5);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-15px) scale(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-16px) scale(1);
+  }
 }
 
 /* the winning tile gets a soft tier glow + a richer contact shadow to seat the prize */
@@ -553,7 +613,7 @@
       color-mix(in srgb, var(--swatch) 26%, transparent) 0%,
       transparent 72%
     ),
-    linear-gradient(180deg, #163049 0%, #0b1722 100%);
+    linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%);
   border-color: color-mix(in srgb, var(--swatch) 45%, var(--line));
 }
 /* a winning case blazes BRIGHT in its result colour — this is the payoff (no popup) */
@@ -564,7 +624,7 @@
       color-mix(in srgb, var(--swatch) 58%, transparent) 0%,
       transparent 72%
     ),
-    linear-gradient(180deg, #173a52 0%, #0b1722 100%);
+    linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%);
   border-color: color-mix(in srgb, var(--swatch) 72%, var(--line));
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--swatch) 62%, transparent),

@@ -58,14 +58,21 @@
   position: relative;
   background: repeating-conic-gradient(from -12deg, var(--body) 0 42deg, var(--edge) 42deg 60deg);
   box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5);
-  transition: transform 0.1s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease;
 }
 .baccarat-chipbtn::before {
   content: '';
   position: absolute;
   inset: 21%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--body) 78%, #fff), var(--body) 78%);
+  background: radial-gradient(
+    circle at 50% 34%,
+    color-mix(in srgb, var(--body) 78%, #fff),
+    var(--body) 78%
+  );
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--body) 55%, #000);
 }
 .baccarat-chipbtn-val {
@@ -83,7 +90,9 @@
 }
 .baccarat-chipbtn.is-on {
   transform: translateY(-3px) scale(1.08);
-  box-shadow: 0 0 0 3px var(--gem), 0 7px 12px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 3px var(--gem),
+    0 7px 12px rgba(0, 0, 0, 0.5);
 }
 /* shared chip palette (rack buttons + the tokens on the felt) */
 .baccarat .tone-white {
@@ -186,7 +195,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  background: #0b141c;
+  background: var(--bg);
   border-radius: 6px;
   padding: 4px;
   overflow-x: auto;
@@ -284,7 +293,9 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 18px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 70px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 70px rgba(0, 0, 0, 0.4);
 }
 .baccarat-hand {
   --c: var(--bac-player);
@@ -294,7 +305,10 @@
   padding: 12px;
   border-radius: 14px;
   border: 1px solid transparent;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 .baccarat-hand.is-player {
   --c: var(--bac-player);
@@ -393,7 +407,9 @@
   border-radius: 999px;
   white-space: nowrap;
   background: color-mix(in srgb, var(--c) 32%, rgba(0, 0, 0, 0.4));
-  box-shadow: inset 0 0 0 1px var(--c), 0 0 18px -6px color-mix(in srgb, var(--c) 80%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--c),
+    0 0 18px -6px color-mix(in srgb, var(--c) 80%, transparent);
 }
 .baccarat-winner.is-player {
   --c: var(--bac-player);
@@ -414,7 +430,9 @@
   border-radius: 9px;
   background: linear-gradient(160deg, #ffffff 0%, #eef2f6 100%);
   color: #16202b;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   animation: baccarat-deal 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .baccarat-card.is-red {
@@ -456,7 +474,9 @@
   background:
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.07) 0 6px, transparent 6px 12px),
     linear-gradient(160deg, #7c1f2e 0%, #4a1019 100%);
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.07), inset 0 0 0 1px rgba(0, 0, 0, 0.3),
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.3),
     0 8px 18px rgba(0, 0, 0, 0.4);
   animation: none;
 }
@@ -497,7 +517,11 @@
   background: color-mix(in srgb, var(--c) 10%, var(--surface-2));
   color: var(--text);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
 }
 .baccarat-spot.is-playerPair {
   grid-area: ppair;
@@ -548,7 +572,9 @@
 .baccarat-spot.is-hit {
   border-color: var(--c);
   background: color-mix(in srgb, var(--c) 26%, var(--surface-2));
-  box-shadow: 0 0 0 2px var(--c), 0 0 24px -4px var(--c);
+  box-shadow:
+    0 0 0 2px var(--c),
+    0 0 24px -4px var(--c);
 }
 .baccarat-spot.is-miss {
   opacity: 0.45;
@@ -575,7 +601,11 @@
   position: absolute;
   inset: 20%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--body) 78%, #fff), var(--body) 78%);
+  background: radial-gradient(
+    circle at 50% 34%,
+    color-mix(in srgb, var(--body) 78%, #fff),
+    var(--body) 78%
+  );
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--body) 55%, #000);
 }
 .baccarat-chiptoken-val {
@@ -609,7 +639,7 @@
   min-height: 20px;
 }
 .baccarat-result.is-win {
-  color: var(--green);
+  color: var(--gem);
 }
 .baccarat-result.is-push {
   color: var(--bac-tie);

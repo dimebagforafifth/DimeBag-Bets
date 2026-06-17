@@ -39,7 +39,7 @@
   font-size: 13.5px;
 }
 .readout-result.is-win {
-  color: var(--accent);
+  color: var(--gem);
 }
 .readout-result.is-loss {
   color: var(--red);
@@ -72,7 +72,9 @@
   background: none;
   padding: 0;
   cursor: default;
-  transition: filter 0.2s ease, transform 0.06s ease;
+  transition:
+    filter 0.2s ease,
+    transform 0.06s ease;
   /* just a depth shadow for the whole scene — the red glow lives on the balloon
      body only (.balloon-scale), so the pump is never haloed */
   filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
@@ -372,18 +374,26 @@
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 0.2px;
-  color: #fff;
-  background: var(--accent);
+  color: #14171c; /* graphite text reads crisp on gold */
+  background: var(--gold);
   cursor: pointer;
-  box-shadow: 0 4px 0 color-mix(in srgb, var(--accent) 50%, #000), 0 7px 14px rgba(0, 0, 0, 0.35);
-  transition: transform 0.05s ease, background 0.15s ease, opacity 0.15s ease, box-shadow 0.05s ease;
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--gold) 50%, #000),
+    0 7px 14px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.05s ease,
+    background 0.15s ease,
+    opacity 0.15s ease,
+    box-shadow 0.05s ease;
 }
 .pump-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 85%, #fff);
+  background: var(--gold-bright);
 }
 .pump-btn:active:not(:disabled) {
   transform: translateY(4px); /* the whole key presses down onto its base */
-  box-shadow: 0 0 0 color-mix(in srgb, var(--accent) 50%, #000), 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 0 0 color-mix(in srgb, var(--gold) 50%, #000),
+    0 2px 6px rgba(0, 0, 0, 0.3);
 }
 .pump-btn:disabled {
   opacity: 0.45;

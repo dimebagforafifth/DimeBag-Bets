@@ -1,4 +1,12 @@
-import { memo, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet } from '../../../core/index.js'
 import {
@@ -129,9 +137,7 @@ export function CasesGame({
       timer.current = window.setTimeout(() => {
         setOpening(false)
         play('chest') // the satisfying unlatch + lid creak the instant the case opens
-        setHistory((h) =>
-          [{ multiplier: r.multiplier, won: r.multiplier > 1 }, ...h].slice(0, 16),
-        )
+        setHistory((h) => [{ multiplier: r.multiplier, won: r.multiplier > 1 }, ...h].slice(0, 16))
         // hold the win/loss cue until the case has popped open and shown the prize
         soundTimer.current = window.setTimeout(
           () => play(r.multiplier > 1 ? 'win' : 'lose'),
@@ -147,145 +153,146 @@ export function CasesGame({
 
   return (
     <>
-    <div className="cases" style={{ '--accent': '#ffb84d' } as CSSProperties}>
-      <span className="sr-only" role="status" aria-live="polite">
-        {showResult
-          ? `Opened ${round!.multiplier}×${round!.multiplier > 1 ? ', you won' : ', no win'}`
-          : ''}
-      </span>
+      <div className="cases" style={{ '--accent': 'var(--gold)' } as CSSProperties}>
+        <span className="sr-only" role="status" aria-live="polite">
+          {showResult
+            ? `Opened ${round!.multiplier}×${round!.multiplier > 1 ? ', you won' : ', no win'}`
+            : ''}
+        </span>
 
-      <section className="cases-panel">
-        <label className="field">
-          <span className="field-label">Bet amount</span>
-          <div className="field-bet">
-            <span className="field-prefix">$</span>
-            <NumberInput
-              className="field-input"
-              value={bet / 100}
-              min={0.01}
-              disabled={opening}
-              onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
-            />
-            <button
-              className="chip"
-              disabled={opening}
-              onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}
-            >
-              ½
-            </button>
-            <button
-              className="chip"
-              disabled={opening}
-              onClick={() => setBet((b) => Math.min(available, b * 2))}
-            >
-              2×
-            </button>
-          </div>
-        </label>
-
-        <div className="field">
-          <span className="field-label">Risk</span>
-          <div className="cases-chips">
-            {RISKS.map((r) => (
-              <button
-                key={r}
-                className={`chip ${risk === r ? 'is-on' : ''}`}
-                aria-pressed={risk === r}
+        <section className="cases-panel">
+          <label className="field">
+            <span className="field-label">Bet amount</span>
+            <div className="field-bet">
+              <span className="field-prefix">$</span>
+              <NumberInput
+                className="field-input"
+                value={bet / 100}
+                min={0.01}
                 disabled={opening}
-                onClick={() => setRisk(r)}
+                onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
+              />
+              <button
+                className="chip"
+                disabled={opening}
+                onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}
               >
-                {r[0].toUpperCase() + r.slice(1)}
+                ½
               </button>
+              <button
+                className="chip"
+                disabled={opening}
+                onClick={() => setBet((b) => Math.min(available, b * 2))}
+              >
+                2×
+              </button>
+            </div>
+          </label>
+
+          <div className="field">
+            <span className="field-label">Risk</span>
+            <div className="cases-chips">
+              {RISKS.map((r) => (
+                <button
+                  key={r}
+                  className={`chip ${risk === r ? 'is-on' : ''}`}
+                  aria-pressed={risk === r}
+                  disabled={opening}
+                  onClick={() => setRisk(r)}
+                >
+                  {r[0].toUpperCase() + r.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button className="action action-bet" onClick={openIt} disabled={betInvalid || resolving}>
+            Open case
+          </button>
+
+          {error && <p className="cases-error">{error}</p>}
+          {bet > available && !error && (
+            <p className="cases-error">
+              Stake exceeds what you can wager ({formatMoney(available)}).
+            </p>
+          )}
+        </section>
+
+        <section className="cases-stage">
+          <ChestDefs />
+          <div className="cases-historybar">
+            {history.map((h, i) => (
+              <span key={i} className={`pill ${h.won ? 'pill-win' : 'pill-loss'}`}>
+                {formatMult(h.multiplier)}×
+              </span>
             ))}
           </div>
-        </div>
 
-        <button className="action action-bet" onClick={openIt} disabled={betInvalid || resolving}>
-          Open case
-        </button>
-
-        {error && <p className="cases-error">{error}</p>}
-        {bet > available && !error && (
-          <p className="cases-error">Stake exceeds what you can wager ({formatMoney(available)}).</p>
-        )}
-
-      </section>
-
-      <section className="cases-stage">
-        <ChestDefs />
-        <div className="cases-historybar">
-          {history.map((h, i) => (
-            <span key={i} className={`pill ${h.won ? 'pill-win' : 'pill-loss'}`}>
-              {formatMult(h.multiplier)}×
-            </span>
-          ))}
-        </div>
-
-        <div
-          className={`cases-reel ${showResult && round!.multiplier > 1 ? 'is-win' : ''}`}
-          style={
-            showResult && round!.multiplier > 1
-              ? ({ '--win-color': colorFor(round!.multiplier, colors) } as CSSProperties)
-              : undefined
-          }
-        >
-          <span className="cases-marker" />
-          <span className="cases-reel-edge is-l" />
-          <span className="cases-reel-edge is-r" />
           <div
-            className="cases-strip"
-            style={{
-              transform: `translateX(${offset}px)`,
-              transition: animate
-                ? `transform ${OPEN_MS}ms cubic-bezier(0.12, 0.7, 0.16, 1)`
-                : 'none',
-            }}
+            className={`cases-reel ${showResult && round!.multiplier > 1 ? 'is-win' : ''}`}
+            style={
+              showResult && round!.multiplier > 1
+                ? ({ '--win-color': colorFor(round!.multiplier, colors) } as CSSProperties)
+                : undefined
+            }
           >
-            {strip.map((m, i) => {
-              const landed = showResult && i === LANDING
-              return (
-                <div
-                  key={i}
-                  className={`cases-cell ${landed ? 'is-landed' : ''} ${
-                    landed && round!.multiplier > 1 ? 'is-win' : ''
-                  }`}
-                  style={{ '--swatch': colorFor(m, colors) } as CSSProperties}
-                >
-                  <CaseBox open={landed} variant={i} />
-                </div>
-              )
-            })}
-          </div>
-          {showResult && (
+            <span className="cases-marker" />
+            <span className="cases-reel-edge is-l" />
+            <span className="cases-reel-edge is-r" />
             <div
-              key={round!.nonce}
-              className={`cases-reel-result ${round!.multiplier > 1 ? 'is-win' : 'is-loss'}`}
-              style={{ '--swatch': colorFor(round!.multiplier, colors) } as CSSProperties}
+              className="cases-strip"
+              style={{
+                transform: `translateX(${offset}px)`,
+                transition: animate
+                  ? `transform ${OPEN_MS}ms cubic-bezier(0.12, 0.7, 0.16, 1)`
+                  : 'none',
+              }}
             >
-              {formatMult(round!.multiplier)}×
+              {strip.map((m, i) => {
+                const landed = showResult && i === LANDING
+                return (
+                  <div
+                    key={i}
+                    className={`cases-cell ${landed ? 'is-landed' : ''} ${
+                      landed && round!.multiplier > 1 ? 'is-win' : ''
+                    }`}
+                    style={{ '--swatch': colorFor(m, colors) } as CSSProperties}
+                  >
+                    <CaseBox open={landed} variant={i} />
+                  </div>
+                )
+              })}
             </div>
-          )}
-        </div>
+            {showResult && (
+              <div
+                key={round!.nonce}
+                className={`cases-reel-result ${round!.multiplier > 1 ? 'is-win' : 'is-loss'}`}
+                style={{ '--swatch': colorFor(round!.multiplier, colors) } as CSSProperties}
+              >
+                {formatMult(round!.multiplier)}×
+              </div>
+            )}
+          </div>
 
-        <CasePayouts
-          legend={legend}
-          colors={colors}
-          show={showOdds}
-          onToggle={() => setShowOdds((v) => !v)}
-          hit={showResult ? round!.multiplier : null}
-        />
+          <CasePayouts
+            legend={legend}
+            colors={colors}
+            show={showOdds}
+            onToggle={() => setShowOdds((v) => !v)}
+            hit={showResult ? round!.multiplier : null}
+          />
 
-        <Fairness
-          round={showResult ? round : null}
-          clientSeed={clientSeed}
-          nextNonce={nonceRef.current + (round ? 0 : 1)}
-          editable={!opening}
-          onClientSeed={setClientSeed}
-        />
-      </section>
-    </div>
-    {/* How to play sits between the game card and the per-game ledger rendered below it */}
-    <Rules points={CASES_RULES} />
+          <Fairness
+            round={showResult ? round : null}
+            clientSeed={clientSeed}
+            nextNonce={nonceRef.current + (round ? 0 : 1)}
+            editable={!opening}
+            onClientSeed={setClientSeed}
+          />
+        </section>
+      </div>
+      {/* How to play sits between the game card and the per-game ledger rendered below it */}
+      <Rules points={CASES_RULES} />
     </>
   )
 }
@@ -304,17 +311,34 @@ function LidEmblem({ kind }: { kind: string }) {
     case 'round':
       return (
         <>
-          <circle cx="100" cy="41" r="5" fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.6" />
+          <circle
+            cx="100"
+            cy="41"
+            r="5"
+            fill="url(#chestBrass)"
+            stroke="url(#chestBrassEdge)"
+            strokeWidth="0.6"
+          />
           <circle cx="100" cy="41" r="2" fill="url(#chestRivet)" />
         </>
       )
     case 'sparkle':
       return (
-        <path d="M100 34 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z" fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.6" />
+        <path
+          d="M100 34 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"
+          fill="url(#chestBrass)"
+          stroke="url(#chestBrassEdge)"
+          strokeWidth="0.6"
+        />
       )
     case 'plus':
       return (
-        <path d="M97 35 h6 v3.5 h3.5 v6 h-3.5 v3.5 h-6 v-3.5 h-3.5 v-6 h3.5 Z" fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.6" />
+        <path
+          d="M97 35 h6 v3.5 h3.5 v6 h-3.5 v3.5 h-6 v-3.5 h-3.5 v-6 h3.5 Z"
+          fill="url(#chestBrass)"
+          stroke="url(#chestBrassEdge)"
+          strokeWidth="0.6"
+        />
       )
     case 'studs':
       return (
@@ -327,7 +351,12 @@ function LidEmblem({ kind }: { kind: string }) {
     case 'diamond':
     default:
       return (
-        <path d="M100 34 l6.5 7 -6.5 7 -6.5 -7 Z" fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.6" />
+        <path
+          d="M100 34 l6.5 7 -6.5 7 -6.5 -7 Z"
+          fill="url(#chestBrass)"
+          stroke="url(#chestBrassEdge)"
+          strokeWidth="0.6"
+        />
       )
   }
 }
@@ -390,8 +419,26 @@ const CaseBox = memo(function CaseBox({ open, variant = 0 }: { open: boolean; va
         </g>
         {/* two vertical brass straps with rivets */}
         <g>
-          <rect x="55" y="80" width="11" height="60" rx="2" fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.8" />
-          <rect x="134" y="80" width="11" height="60" rx="2" fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.8" />
+          <rect
+            x="55"
+            y="80"
+            width="11"
+            height="60"
+            rx="2"
+            fill="url(#chestBrass)"
+            stroke="url(#chestBrassEdge)"
+            strokeWidth="0.8"
+          />
+          <rect
+            x="134"
+            y="80"
+            width="11"
+            height="60"
+            rx="2"
+            fill="url(#chestBrass)"
+            stroke="url(#chestBrassEdge)"
+            strokeWidth="0.8"
+          />
           <circle cx="60.5" cy="100" r="1.8" fill="url(#chestRivet)" />
           <circle cx="60.5" cy="132" r="1.8" fill="url(#chestRivet)" />
           <circle cx="139.5" cy="100" r="1.8" fill="url(#chestRivet)" />
@@ -410,7 +457,14 @@ const CaseBox = memo(function CaseBox({ open, variant = 0 }: { open: boolean; va
             <polygon points="100,92 72,36 82,44" />
             <polygon points="100,92 130,42 140,54" />
           </g>
-          <ellipse className="cases-chest-innerlight" cx="100" cy="88" rx="66" ry="13" fill="url(#chestInnerLight)" />
+          <ellipse
+            className="cases-chest-innerlight"
+            cx="100"
+            cy="88"
+            rx="66"
+            ry="13"
+            fill="url(#chestInnerLight)"
+          />
         </g>
       </svg>
 
@@ -443,17 +497,40 @@ const CaseBox = memo(function CaseBox({ open, variant = 0 }: { open: boolean; va
           </g>
         </g>
         {/* lit top edge + crisp outline */}
-        <path d="M16 78 C16 40 56 28 100 28 C144 28 184 40 184 78" fill="none" stroke="url(#chestRimLight)" strokeWidth="2" strokeLinecap="round" />
-        <path d="M16 78 C16 40 56 28 100 28 C144 28 184 40 184 78 Z" fill="none" stroke="url(#chestWoodEdge)" strokeWidth="1.5" />
+        <path
+          d="M16 78 C16 40 56 28 100 28 C144 28 184 40 184 78"
+          fill="none"
+          stroke="url(#chestRimLight)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M16 78 C16 40 56 28 100 28 C144 28 184 40 184 78 Z"
+          fill="none"
+          stroke="url(#chestWoodEdge)"
+          strokeWidth="1.5"
+        />
         <circle cx="60.5" cy="56" r="1.8" fill="url(#chestRivet)" />
         <circle cx="139.5" cy="56" r="1.8" fill="url(#chestRivet)" />
         {/* a small brass emblem — its shape varies by variant for visual variety */}
         <LidEmblem kind={CHEST_EMBLEM[v]} />
         {/* ornate brass lock plate on the lid front — lifts away with the lid */}
         <g>
-          <path d="M82 48 h36 v13 q0 13 -18 17 q-18 -4 -18 -17 Z" fill="url(#chestLock)" stroke="url(#chestBrassEdge)" strokeWidth="1" />
+          <path
+            d="M82 48 h36 v13 q0 13 -18 17 q-18 -4 -18 -17 Z"
+            fill="url(#chestLock)"
+            stroke="url(#chestBrassEdge)"
+            strokeWidth="1"
+          />
           <path d="M85 50 h9 v24 q-6 -2 -9 -10 Z" fill="url(#chestLockShine)" />
-          <circle cx="100" cy="61" r="5" fill="none" stroke="url(#chestBrassEdge)" strokeWidth="0.9" />
+          <circle
+            cx="100"
+            cy="61"
+            r="5"
+            fill="none"
+            stroke="url(#chestBrassEdge)"
+            strokeWidth="0.9"
+          />
           <circle cx="100" cy="61" r="3.2" fill="#180d04" />
           <path d="M98.4 63 h3.2 l1.1 9 h-5.4 Z" fill="#180d04" />
         </g>
@@ -473,38 +550,58 @@ function ChestDefs() {
         {/* ---- 5 wood stains for closed-chest variety (body + lid each) ---- */}
         {/* A — classic oak */}
         <linearGradient id="chestWoodA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#a86b33" /><stop offset="38%" stopColor="#8a5226" /><stop offset="100%" stopColor="#4f2b14" />
+          <stop offset="0%" stopColor="#a86b33" />
+          <stop offset="38%" stopColor="#8a5226" />
+          <stop offset="100%" stopColor="#4f2b14" />
         </linearGradient>
         <linearGradient id="chestLidA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#a86b33" /><stop offset="45%" stopColor="#7a4620" /><stop offset="100%" stopColor="#5d3318" />
+          <stop offset="0%" stopColor="#a86b33" />
+          <stop offset="45%" stopColor="#7a4620" />
+          <stop offset="100%" stopColor="#5d3318" />
         </linearGradient>
         {/* B — dark walnut */}
         <linearGradient id="chestWoodB" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7a4a2a" /><stop offset="38%" stopColor="#5a3318" /><stop offset="100%" stopColor="#33200f" />
+          <stop offset="0%" stopColor="#7a4a2a" />
+          <stop offset="38%" stopColor="#5a3318" />
+          <stop offset="100%" stopColor="#33200f" />
         </linearGradient>
         <linearGradient id="chestLidB" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#84512e" /><stop offset="45%" stopColor="#5a331a" /><stop offset="100%" stopColor="#3a2410" />
+          <stop offset="0%" stopColor="#84512e" />
+          <stop offset="45%" stopColor="#5a331a" />
+          <stop offset="100%" stopColor="#3a2410" />
         </linearGradient>
         {/* C — red mahogany */}
         <linearGradient id="chestWoodC" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#9c5638" /><stop offset="38%" stopColor="#7a3820" /><stop offset="100%" stopColor="#451d10" />
+          <stop offset="0%" stopColor="#9c5638" />
+          <stop offset="38%" stopColor="#7a3820" />
+          <stop offset="100%" stopColor="#451d10" />
         </linearGradient>
         <linearGradient id="chestLidC" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#a85e3a" /><stop offset="45%" stopColor="#7a3a1f" /><stop offset="100%" stopColor="#52260f" />
+          <stop offset="0%" stopColor="#a85e3a" />
+          <stop offset="45%" stopColor="#7a3a1f" />
+          <stop offset="100%" stopColor="#52260f" />
         </linearGradient>
         {/* D — golden honey */}
         <linearGradient id="chestWoodD" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#b8893f" /><stop offset="38%" stopColor="#956322" /><stop offset="100%" stopColor="#583714" />
+          <stop offset="0%" stopColor="#b8893f" />
+          <stop offset="38%" stopColor="#956322" />
+          <stop offset="100%" stopColor="#583714" />
         </linearGradient>
         <linearGradient id="chestLidD" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#c2954f" /><stop offset="45%" stopColor="#8a5d28" /><stop offset="100%" stopColor="#5c3a16" />
+          <stop offset="0%" stopColor="#c2954f" />
+          <stop offset="45%" stopColor="#8a5d28" />
+          <stop offset="100%" stopColor="#5c3a16" />
         </linearGradient>
         {/* E — weathered grey-brown */}
         <linearGradient id="chestWoodE" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#86735c" /><stop offset="38%" stopColor="#5e4a38" /><stop offset="100%" stopColor="#342619" />
+          <stop offset="0%" stopColor="#86735c" />
+          <stop offset="38%" stopColor="#5e4a38" />
+          <stop offset="100%" stopColor="#342619" />
         </linearGradient>
         <linearGradient id="chestLidE" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#90795f" /><stop offset="45%" stopColor="#5e4631" /><stop offset="100%" stopColor="#372818" />
+          <stop offset="0%" stopColor="#90795f" />
+          <stop offset="45%" stopColor="#5e4631" />
+          <stop offset="100%" stopColor="#372818" />
         </linearGradient>
         <linearGradient id="chestWoodEdge" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#6b3e1e" />
@@ -595,8 +692,7 @@ function CasePayouts({
             </div>
           ))}
           <div className="cases-odds-edge">
-            Average return <strong>{returnPct}%</strong> · House edge{' '}
-            <strong>{edgePct}%</strong>
+            Average return <strong>{returnPct}%</strong> · House edge <strong>{edgePct}%</strong>
           </div>
         </div>
       )}
@@ -668,7 +764,11 @@ function legendRows(tiers: Tier[]): { multiplier: number; probability: number }[
 
 /** A short multiplier label (e.g. 0, 1.98, 707.14). */
 function formatMult(m: number): string {
-  return m === 0 ? '0' : m >= 100 ? Math.round(m).toString() : (Math.round(m * 100) / 100).toString()
+  return m === 0
+    ? '0'
+    : m >= 100
+      ? Math.round(m).toString()
+      : (Math.round(m * 100) / 100).toString()
 }
 
 /** A probability as a percentage (never "1 in N"): whole % for common outcomes,

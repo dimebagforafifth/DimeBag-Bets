@@ -60,7 +60,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius);
-  background: radial-gradient(120% 90% at 50% 115%, #1d2540 0%, var(--bg) 70%);
+  background: radial-gradient(120% 90% at 50% 115%, var(--surface-2) 0%, var(--bg) 70%);
   border: 1px solid var(--line);
 }
 .limbo-history {
@@ -90,11 +90,15 @@
 }
 .limbo-result.is-win .limbo-multiplier {
   color: var(--gem);
-  text-shadow: 0 0 32px rgba(var(--gem-glow), 0.55), 0 2px 18px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 0 32px rgba(var(--gem-glow), 0.55),
+    0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .limbo-result.is-loss .limbo-multiplier {
   color: var(--red);
-  text-shadow: 0 0 32px rgba(237, 65, 99, 0.4), 0 2px 18px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 0 32px rgba(237, 65, 99, 0.4),
+    0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .limbo-caption {
   font-size: 13px;
