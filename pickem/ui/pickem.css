@@ -1,0 +1,422 @@
+/* Pick'em — graphite-and-gold, consuming the GLOBAL design tokens (app/theme.css) under a
+   .pk scope. No local palette: every colour/space/radius is a var(--token).
+   // SEAM (Agent D): final visual polish + motion is yours; this is functional + on-brand. */
+
+.pk {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.pk-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.pk-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.pk-title {
+  font-family: var(--font-head);
+  font-size: var(--text-2xl);
+  color: var(--text);
+  margin: 0;
+}
+.pk-sub {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  margin: 0;
+  max-width: 56ch;
+}
+
+/* ------------------------------- the board ------------------------------- */
+.pk-game {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.pk-game-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+.pk-game-name {
+  font-family: var(--font-head);
+  font-size: var(--text-md);
+  color: var(--text);
+}
+.pk-game-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--faint);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pk-live {
+  color: var(--green);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  font-weight: 700;
+}
+
+.pk-ladder {
+  display: flex;
+  flex-direction: column;
+}
+.pk-proj {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--line);
+}
+.pk-proj:first-child {
+  border-top: none;
+}
+.pk-proj.is-picked {
+  background: rgba(var(--gold-glow), 0.08);
+}
+.pk-proj-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pk-proj-player {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.pk-proj-line {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.pk-proj-num {
+  color: var(--text);
+}
+
+.pk-pick {
+  min-width: 64px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease,
+    background 0.12s ease;
+}
+.pk-pick:hover:not(:disabled) {
+  border-color: var(--muted);
+  color: var(--text);
+}
+.pk-pick:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pk-pick.is-on {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--bg);
+}
+
+/* ------------------------------- the slip -------------------------------- */
+.pk-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: sticky;
+  top: var(--space-4);
+}
+.pk-slip,
+.pk-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+.pk-slip-head,
+.pk-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-3);
+}
+.pk-slip-h,
+.pk-panel-h {
+  font-family: var(--font-head);
+  font-size: var(--text-lg);
+  color: var(--text);
+  margin: 0;
+}
+.pk-clear,
+.pk-demo-btn {
+  background: none;
+  border: none;
+  color: var(--faint);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.pk-clear:hover,
+.pk-demo-btn:hover {
+  color: var(--gold);
+}
+.pk-slip-empty,
+.pk-empty {
+  color: var(--faint);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.pk-leg {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.pk-leg-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pk-leg-player {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.pk-leg-pick {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.pk-leg-pick .is-higher {
+  color: var(--green);
+}
+.pk-leg-pick .is-lower {
+  color: var(--red);
+}
+.pk-leg-x {
+  background: none;
+  border: none;
+  color: var(--faint);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+.pk-leg-x:hover {
+  color: var(--red);
+}
+
+.pk-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+.pk-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-head);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pk-mode:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pk-mode.is-on {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.pk-mode-sub {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--faint);
+  text-transform: none;
+}
+
+.pk-stake {
+  margin-bottom: var(--space-3);
+}
+.pk-stake-label {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-1);
+}
+.pk-stake-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-num);
+  font-size: var(--text-lg);
+}
+.pk-quicks {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.pk-quick {
+  flex: 1;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.pk-quick:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.pk-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.pk-summary-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+.pk-mult,
+.pk-towin {
+  font-family: var(--font-num);
+  font-weight: 700;
+  color: var(--gold);
+}
+.pk-edge {
+  color: var(--faint);
+  font-size: var(--text-xs);
+}
+
+.pk-submit {
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--gold);
+  color: var(--bg);
+  font-family: var(--font-head);
+  font-size: var(--text-md);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pk-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pk-submit:hover:not(:disabled) {
+  background: var(--gold-bright);
+}
+.pk-err {
+  color: var(--red);
+  font-size: var(--text-xs);
+  margin: var(--space-2) 0 0;
+}
+
+/* ------------------------------ my entries ------------------------------- */
+.pk-entry {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+}
+.pk-entry:first-of-type {
+  border-top: none;
+}
+.pk-entry-main {
+  min-width: 0;
+}
+.pk-entry-label {
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.pk-entry-mult {
+  color: var(--gold);
+  font-family: var(--font-num);
+}
+.pk-entry-picks {
+  color: var(--faint);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+.pk-entry-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.pk-entry-stake {
+  color: var(--muted);
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+}
+.pk-status {
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.pk-status.is-open {
+  color: var(--muted);
+}
+.pk-status.is-won {
+  color: var(--green);
+}
+.pk-status.is-lost {
+  color: var(--red);
+}
+.pk-status.is-void {
+  color: var(--faint);
+}
+
+@media (max-width: 760px) {
+  .pk {
+    grid-template-columns: 1fr;
+  }
+  .pk-aside {
+    position: static;
+  }
+}
