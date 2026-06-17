@@ -66,7 +66,8 @@
   /* real asphalt: a fine grain (SVG fractal-noise tile) over a faint shoulder
      gradient, with an inset vignette so the road reads lit from above. */
   background-color: #23292f;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
     linear-gradient(180deg, #2f373f 0%, #262d34 50%, #2f373f 100%);
   box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.5);
 }
@@ -94,10 +95,13 @@
   top: 0;
   bottom: 0;
   left: 0;
-  background: repeating-linear-gradient(180deg, transparent 0 40px, rgba(0, 0, 0, 0.16) 40px 42px),
+  background:
+    repeating-linear-gradient(180deg, transparent 0 40px, rgba(0, 0, 0, 0.16) 40px 42px),
     linear-gradient(180deg, #8a9099, #757b84);
   border-right: 4px solid #cfd6dd;
-  box-shadow: inset -10px 0 14px rgba(0, 0, 0, 0.28), 3px 0 9px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset -10px 0 14px rgba(0, 0, 0, 0.28),
+    3px 0 9px rgba(0, 0, 0, 0.45);
   z-index: 1;
 }
 
@@ -142,7 +146,7 @@
   background: rgba(var(--gem-glow), 0.2);
 }
 .chick-lane.is-current {
-  background: rgba(255, 178, 58, 0.1);
+  background: rgba(var(--gem-glow), 0.1);
 }
 .chick-lane.is-passed {
   background: rgba(var(--gem-glow), 0.05);
@@ -200,7 +204,7 @@
 }
 .chick-lane.is-current .chick-spot {
   border-style: solid;
-  border-color: rgba(255, 178, 58, 0.7);
+  border-color: rgba(var(--gem-glow), 0.7);
 }
 .chick-lane.is-passed .chick-spot {
   opacity: 0.45;
@@ -382,20 +386,44 @@
   animation: chick-glow-b 0.66s steps(1, end) infinite;
 }
 @keyframes chick-flash-a {
-  0%, 45% { opacity: 1; }
-  50%, 100% { opacity: 0.12; }
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.12;
+  }
 }
 @keyframes chick-flash-b {
-  0%, 45% { opacity: 0.12; }
-  50%, 100% { opacity: 1; }
+  0%,
+  45% {
+    opacity: 0.12;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
 }
 @keyframes chick-glow-a {
-  0%, 45% { opacity: 0.5; }
-  50%, 100% { opacity: 0.05; }
+  0%,
+  45% {
+    opacity: 0.5;
+  }
+  50%,
+  100% {
+    opacity: 0.05;
+  }
 }
 @keyframes chick-glow-b {
-  0%, 45% { opacity: 0.05; }
-  50%, 100% { opacity: 0.5; }
+  0%,
+  45% {
+    opacity: 0.05;
+  }
+  50%,
+  100% {
+    opacity: 0.5;
+  }
 }
 .chick-veh {
   width: 100%;

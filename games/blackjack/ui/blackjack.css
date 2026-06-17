@@ -92,7 +92,7 @@
 }
 .action.bj-act:hover:not(:disabled) {
   border-color: var(--muted);
-  background: #1d2935;
+  background: var(--surface-2);
 }
 /* a disabled move keeps its white label (the icon dims to signal it's unavailable),
    so the whole column reads white rather than greying out */
@@ -230,12 +230,16 @@
   flex-shrink: 0; /* each hand keeps its full width — never squeezed so cards collide */
   border-radius: 12px;
   padding: 6px 8px;
-  transition: box-shadow 0.18s ease, background 0.18s ease;
+  transition:
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 /* the hand it's your turn to play (after a split) — a soft gold glow */
 .bj-side.is-active {
   background: rgba(216, 186, 112, 0.08);
-  box-shadow: 0 0 0 1px rgba(216, 186, 112, 0.5), 0 0 18px rgba(216, 186, 112, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(216, 186, 112, 0.5),
+    0 0 18px rgba(216, 186, 112, 0.22);
 }
 /* per-hand result label — each split hand shows its own */
 .bj-hand-result {
@@ -247,7 +251,7 @@
   text-align: center;
 }
 .bj-hand-result.is-win {
-  color: #6dffa6;
+  color: var(--gem);
 }
 .bj-hand-result.is-loss {
   color: #ff8197;
@@ -311,7 +315,7 @@
   letter-spacing: 0.3px;
 }
 .bj-outcome.is-win {
-  color: #6dffa6;
+  color: var(--gem);
 }
 .bj-outcome.is-loss {
   color: #ff8197;
@@ -343,7 +347,9 @@
   user-select: none;
   /* glide the size change when a hand splits (cards step down to the split size)
      instead of snapping */
-  transition: width 0.25s ease, height 0.25s ease;
+  transition:
+    width 0.25s ease,
+    height 0.25s ease;
   /* a calm glide in from the shoe — no spin, no overshoot, so the felt feels still */
   animation: card-in 0.3s cubic-bezier(0.22, 0.7, 0.3, 1);
 }
@@ -411,7 +417,9 @@
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px),
     repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px);
   border: 3px solid #f6f7f9;
-  box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(0, 0, 0, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.35);
 }
 /* a card pitched off the dealer's shoe and across the felt — it flies in from
    the upper right with a flick of spin, skids, then settles square in the hand */
@@ -489,8 +497,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: repeating-conic-gradient(from 0deg, var(--edge) 0deg 7deg, transparent 7deg 45deg),
-    var(--body);
+  background:
+    repeating-conic-gradient(from 0deg, var(--edge) 0deg 7deg, transparent 7deg 45deg), var(--body);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   animation: bj-chip-drop 0.26s cubic-bezier(0.22, 1.4, 0.5, 1) backwards;
 }
@@ -553,7 +561,7 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: #f5c451;
+  color: var(--gold);
   text-align: center;
 }
 .bj-insurance-pop {
@@ -579,18 +587,18 @@
   padding: 18px 20px;
   border-radius: 16px;
   text-align: center;
-  background: linear-gradient(180deg, #1f2e3c, #16222d);
-  border: 1px solid color-mix(in srgb, #f5c451 45%, var(--line));
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
   box-shadow:
     0 18px 44px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(245, 196, 81, 0.15),
+    0 0 0 1px rgba(var(--gold-glow), 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   animation: bj-ins-pop 0.32s cubic-bezier(0.2, 1.3, 0.4, 1) both;
 }
 .bj-insurance-title {
   font-size: 19px;
   font-weight: 800;
-  color: #f5c451;
+  color: var(--gold);
   letter-spacing: 0.3px;
 }
 .bj-insurance-buttons {
@@ -600,13 +608,13 @@
   width: 100%;
 }
 .bj-felt-legend.is-insurance {
-  color: #f5c451;
+  color: var(--gold);
   font-weight: 800;
 }
 .bj-insure-yes {
-  background: linear-gradient(180deg, #f7d164, #e7ac24);
-  color: #2a2105;
-  border: 1px solid #c8901a;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color: #14171c;
+  border: 1px solid var(--gold-press);
   font-weight: 800;
 }
 .bj-insure-yes:hover:not(:disabled) {
@@ -632,7 +640,7 @@
   font-variant-numeric: tabular-nums;
 }
 .bj-insurance-result.is-won {
-  color: #6dffa6;
+  color: var(--gem);
 }
 .bj-insurance-result.is-lost {
   color: var(--muted);

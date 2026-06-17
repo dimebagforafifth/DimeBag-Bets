@@ -63,10 +63,12 @@
   background: var(--surface-2);
   box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.22);
   cursor: pointer;
-  transition: transform 0.06s ease, background 0.12s ease;
+  transition:
+    transform 0.06s ease,
+    background 0.12s ease;
 }
 .tile:hover:not(:disabled) {
-  background: #2b4255;
+  background: var(--surface-2);
   transform: translateY(-1px);
 }
 .tile:disabled {

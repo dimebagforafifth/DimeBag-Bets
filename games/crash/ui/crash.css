@@ -222,7 +222,7 @@
   padding: 3px 9px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(8, 18, 26, 0.7);
+  background: rgba(15, 18, 23, 0.7);
   backdrop-filter: blur(2px);
 }
 .pill-hot {
@@ -262,11 +262,15 @@
 .crash-stage.is-running .crash-multiplier,
 .crash-stage.is-cashed .crash-multiplier {
   color: var(--gem);
-  text-shadow: 0 0 30px rgba(var(--gem-glow), 0.55), 0 2px 18px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 0 30px rgba(var(--gem-glow), 0.55),
+    0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .crash-stage.is-busted .crash-multiplier {
   color: var(--red);
-  text-shadow: 0 0 30px rgba(237, 65, 99, 0.5), 0 2px 18px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 0 30px rgba(237, 65, 99, 0.5),
+    0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .crash-caption {
   font-size: 13px;

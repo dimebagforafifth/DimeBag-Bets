@@ -755,7 +755,7 @@ body {
   transition: background 0.12s ease;
 }
 .stepper-btn:hover:not(:disabled) {
-  background: #294056;
+  background: var(--line); /* graphite hover, lifted from the surface-2 button (was a stray navy) */
 }
 .stepper-btn:disabled {
   opacity: 0.5;
