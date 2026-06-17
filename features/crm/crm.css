@@ -1,0 +1,216 @@
+/* CRM / integrity / analytics console surface — on the app-grid shell's
+   charcoal/gold `.feat-panel` tokens (see operations/shared.css). Only crm-*
+   helpers below; all colour comes from the shared feat tokens (--up/--down/--gem
+   /--gold/--line/--surface…). No new palette. */
+@import '../operations/shared.css';
+
+/* ---- generic chip rows (segment tags, shared keys) ---- */
+.crm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.crm-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* ---- pills (segment / band / severity) ---- */
+.crm-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+/* risk bands → feat tokens */
+.crm-band-clean {
+  color: var(--up);
+  border-color: color-mix(in srgb, var(--up) 50%, transparent);
+  background: color-mix(in srgb, var(--up) 12%, transparent);
+}
+.crm-band-watch {
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 50%, transparent);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+.crm-band-sharp {
+  color: var(--down);
+  border-color: color-mix(in srgb, var(--down) 55%, transparent);
+  background: color-mix(in srgb, var(--down) 14%, transparent);
+}
+.crm-band-flagged {
+  color: #14171c;
+  border-color: var(--down);
+  background: var(--down);
+}
+
+/* abuse severity → feat tokens */
+.crm-sev-low {
+  color: var(--muted);
+  border-color: var(--line);
+  background: var(--surface-2);
+}
+.crm-sev-medium {
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 50%, transparent);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+.crm-sev-high {
+  color: #14171c;
+  border-color: var(--down);
+  background: var(--down);
+}
+
+/* ---- CSS-bar chart (hold by sport) ---- */
+.crm-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.crm-bar-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 150px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.crm-bar-label {
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crm-bar {
+  height: 10px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.crm-bar-fill {
+  height: 100%;
+  background: var(--gem);
+}
+.crm-bar-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* ---- figure-trend sparkline (inline SVG) ---- */
+.crm-spark {
+  display: block;
+  width: 100%;
+  height: 96px;
+}
+.crm-spark-area {
+  fill: color-mix(in srgb, var(--gem) 18%, transparent);
+}
+.crm-spark-line {
+  fill: none;
+  stroke: var(--gem);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---- parlay-mix readout ---- */
+.crm-mix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.crm-mix-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.crm-mix-cell strong {
+  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- abuse cluster cards ---- */
+.crm-clusters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.crm-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.crm-cluster-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.crm-cluster-kind {
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.crm-cluster-ev {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---- cohort-retention grid ---- */
+.crm-cohort {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+.crm-cohort-row {
+  display: grid;
+  grid-template-columns: 70px 56px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.crm-cohort-cells {
+  display: flex;
+  gap: 4px;
+}
+.crm-cohort-cell {
+  width: 44px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+  /* shade is driven inline via --shade (0..1) → green tint, no new palette */
+  background: color-mix(in srgb, var(--up) calc(var(--shade, 0) * 70%), var(--surface));
+  color: var(--text);
+}
+.crm-cohort-head {
+  color: var(--muted);
+}
+.crm-muted {
+  color: var(--muted);
+}
