@@ -1,0 +1,316 @@
+/* Community / social surface — consumes the GLOBAL design tokens (app/theme.css): the
+   graphite canvas + the one gold accent, green/red kept narrow to win/loss + figure. No
+   per-feature palette (Stake-style polish is D's standing directive).
+   // SEAM (D): final spacing/polish pass against the tokens if desired. */
+
+.sc {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-7);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.sc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.sc-h1 {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--text-2xl, 28px);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+.sc-tabs {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+.sc-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.sc-tab.is-on {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.sc-flash {
+  background: rgba(var(--gold-glow), 0.12);
+  border: 1px solid var(--gold);
+  color: var(--gold-bright);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  animation: sc-fade 4s forwards;
+}
+@keyframes sc-fade {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.sc-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sc-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+.sc-link {
+  background: 0;
+  border: 0;
+  color: var(--gold);
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.sc-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+.sc-card-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.sc-avatar {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--gold);
+  font-family: var(--font-head);
+  font-weight: 700;
+}
+.sc-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.sc-name {
+  font-weight: 600;
+}
+.sc-sub {
+  color: var(--faint);
+  font-size: var(--text-xs);
+}
+.sc-pill {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px var(--space-2);
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.sc-pill.is-won {
+  color: var(--green);
+  border-color: var(--green);
+}
+.sc-pill.is-lost {
+  color: var(--red);
+  border-color: var(--red);
+}
+.sc-pill.is-open {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.sc-legs {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sc-leg {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+.sc-pick {
+  font-weight: 600;
+}
+.sc-odds {
+  font-family: var(--font-num);
+  color: var(--muted);
+}
+
+.sc-stake {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.sc-stake strong {
+  color: var(--text);
+  font-family: var(--font-num);
+}
+.sc-price {
+  font-family: var(--font-num);
+  color: var(--gold);
+}
+.sc-return {
+  margin-left: auto;
+  color: var(--faint);
+}
+
+.sc-reacts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.sc-react {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+.sc-react.is-on {
+  border-color: var(--gold);
+  background: rgba(var(--gold-glow), 0.12);
+}
+.sc-rc {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.sc-spacer {
+  flex: 1;
+}
+
+.sc-tail,
+.sc-ghost {
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--line);
+}
+.sc-tail {
+  background: var(--gold);
+  color: #1a1407;
+  border-color: var(--gold);
+}
+.sc-tail:hover {
+  background: var(--gold-bright);
+}
+.sc-ghost {
+  background: transparent;
+  color: var(--text);
+}
+.sc-ghost:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+.sc-ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sc-comments {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sc-comment {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.sc-cname {
+  color: var(--text);
+  font-weight: 600;
+}
+.sc-addc {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.sc-input {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text);
+  font: inherit;
+}
+.sc-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.sc-friends {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sc-counts {
+  color: var(--muted);
+}
+.sc-counts strong {
+  color: var(--text);
+}
+.sc-people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sc-person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
