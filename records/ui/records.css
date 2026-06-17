@@ -1,0 +1,306 @@
+/* Profile / verified-record surface. Layout only — all colours/spacing come from the global
+   design tokens in app/theme.css. // SEAM: Agent D may refine spacing/hierarchy. */
+
+.records {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: var(--space-4);
+  color: var(--text);
+}
+
+.records-empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--muted);
+}
+
+/* tone helpers */
+.records .is-up {
+  color: var(--green);
+}
+.records .is-down {
+  color: var(--red);
+}
+.records .is-even {
+  color: var(--muted);
+}
+
+/* header */
+.records-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.records-id {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.records-name {
+  font-family: var(--font-head);
+  font-size: var(--text-2xl);
+  margin: 0;
+}
+.records-tier {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  /* Dark text on the bright rank colour. Reuses the darkest global token. */
+  /* SEAM: Agent D may prefer a dedicated --text-on-accent token in theme.css. */
+  color: var(--bg);
+  background: var(--rank, var(--gold));
+}
+.records-verified {
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.records-demo {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.records-head-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.records-switch {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: var(--text-sm);
+}
+.records-share {
+  white-space: nowrap;
+}
+.records-tierbar {
+  grid-column: 1 / -1;
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.records-tierbar-fill {
+  height: 100%;
+  background: var(--gold);
+}
+
+/* period toggle */
+.records-periods {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+/* headline stat grid */
+.records-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.records-stats .stat.is-big {
+  grid-column: span 1;
+}
+@media (max-width: 720px) {
+  .records-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* cards row */
+.records-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+@media (max-width: 720px) {
+  .records-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.records-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+.records-card-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.records-card-value {
+  font-family: var(--font-num);
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+.records-card-sub {
+  font-size: var(--text-xs);
+  color: var(--faint);
+}
+
+/* sections */
+.records-section {
+  margin-bottom: var(--space-4);
+}
+.records-h2 {
+  font-family: var(--font-head);
+  font-size: var(--text-lg);
+  margin: 0 0 var(--space-2);
+}
+
+/* badges */
+.records-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.records-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.records-badge-label {
+  font-weight: 800;
+  font-size: var(--text-sm);
+}
+.records-badge-detail {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.records-badge.tone-gold .records-badge-label {
+  color: var(--gold-bright);
+}
+.records-badge.tone-green .records-badge-label {
+  color: var(--green);
+}
+.records-badge.tone-red .records-badge-label {
+  color: var(--red);
+}
+
+/* casino/sportsbook split */
+.records-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.records-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+.records-side-title {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.records-side-net {
+  font-family: var(--font-num);
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+.records-side-sub {
+  font-size: var(--text-xs);
+  color: var(--faint);
+}
+
+/* by-game table */
+.records-table {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.records-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.4fr 1.4fr;
+  gap: var(--space-2);
+  padding: 8px var(--space-3);
+  font-size: var(--text-sm);
+  border-top: 1px solid var(--line);
+}
+.records-row:first-child {
+  border-top: none;
+}
+.records-row.is-head {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+/* recent results */
+.records-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.records-recent-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+.records-result {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.records-result.is-win {
+  color: var(--green);
+}
+.records-result.is-loss {
+  color: var(--red);
+}
+.records-result.is-push,
+.records-result.is-void {
+  color: var(--muted);
+}
+.records-recent-profit {
+  font-family: var(--font-num);
+  font-weight: 700;
+}
+
+/* integrity footnote */
+.records-integrity {
+  font-size: var(--text-xs);
+  color: var(--faint);
+  margin-top: var(--space-3);
+}
+.records-integrity code {
+  color: var(--muted);
+}
