@@ -9,7 +9,10 @@ import {
   legFromSelection,
   isSameGame,
   parlayPrice,
+  sgpPrice,
+  combinedDecimal,
   relatedConflicts,
+  contradictoryLegs,
   movedLegKeys,
   slipQuote,
   pickLabel,
@@ -21,10 +24,12 @@ const ev0 = slate[0]
 const ev1 = slate[1]
 const ml = (e = ev0) => e.markets.find((m) => m.type === 'moneyline')!
 const total = (e = ev0) => e.markets.find((m) => m.type === 'total')!
+const altTotal = (e = ev0) => e.markets.find((m) => m.marketId.endsWith('-tot-alt'))!
 
 const homeLeg = legFromSelection(ev0, ml(), ml().selections[0])
 const awayLeg = legFromSelection(ev0, ml(), ml().selections[1])
 const overLeg = legFromSelection(ev0, total(), total().selections[0])
+const underLeg = legFromSelection(ev0, total(), total().selections[1])
 const otherGameLeg = legFromSelection(ev1, ml(ev1), ml(ev1).selections[0])
 
 describe('slip — pricing + parlay', () => {
@@ -63,6 +68,54 @@ describe('slip — pricing + parlay', () => {
     expect(relatedConflicts([homeLeg, awayLeg]).sort()).toEqual([awayLeg.key, homeLeg.key].sort())
     // different markets on the same game are fine
     expect(relatedConflicts([homeLeg, overLeg])).toEqual([])
+  })
+})
+
+describe('slip — correlated same-game parlay (SGP)', () => {
+  it('legFromSelection locks a de-vigged true probability and the sport', () => {
+    expect(homeLeg.sport).toBe(ev0.sport)
+    expect(homeLeg.trueProb).toBeGreaterThan(0)
+    expect(homeLeg.trueProb).toBeLessThan(1)
+    // the two moneyline sides' true probs de-vig to ~1
+    expect((homeLeg.trueProb ?? 0) + (awayLeg.trueProb ?? 0)).toBeCloseTo(1, 6)
+  })
+
+  it('prices a same-game parlay with correlation, never longer than independent', () => {
+    expect(isSameGame([homeLeg, overLeg])).toBe(true)
+    const combined = combinedDecimal([homeLeg, overLeg])
+    expect(combined.sgp).toBe(true)
+    expect(combined.decimal).toBe(sgpPrice([homeLeg, overLeg]))
+    // correlation can only shorten: SGP ≤ the naive independent product (4dp granularity)
+    expect(combined.decimal).toBeLessThanOrEqual(parlayPrice([homeLeg, overLeg]) + 1e-3)
+  })
+
+  it('a cross-game parlay stays on the independent product (no SGP)', () => {
+    const combined = combinedDecimal([homeLeg, otherGameLeg])
+    expect(combined.sgp).toBe(false)
+    expect(combined.decimal).toBe(parlayPrice([homeLeg, otherGameLeg]))
+  })
+
+  it('slipQuote uses the SGP price for a same-game parlay', () => {
+    const q = slipQuote([homeLeg, overLeg], 'parlay', 5_000)
+    expect(q.decimal).toBe(sgpPrice([homeLeg, overLeg]))
+  })
+
+  it('flags contradictory legs: over + under on the same total across alt lines', () => {
+    const altUnder = legFromSelection(ev0, altTotal(), altTotal().selections[1]) // an under
+    // different markets (main vs alt) so relatedConflicts misses it…
+    expect(relatedConflicts([overLeg, altUnder])).toEqual([])
+    // …but it's the same total family with opposing sides → contradictory
+    expect(contradictoryLegs([overLeg, altUnder]).sort()).toEqual(
+      [altUnder.key, overLeg.key].sort(),
+    )
+  })
+
+  it('flags over + under on the very same prop/total as contradictory', () => {
+    expect(contradictoryLegs([overLeg, underLeg]).sort()).toEqual(
+      [overLeg.key, underLeg.key].sort(),
+    )
+    // independent markets are not contradictory
+    expect(contradictoryLegs([homeLeg, overLeg])).toEqual([])
   })
 })
 

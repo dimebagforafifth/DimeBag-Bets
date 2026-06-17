@@ -8,7 +8,14 @@
 
 import { formatMoney } from '../../games/shared/money.js'
 import { americanFromDecimal, formatAmerican } from './odds-format.js'
-import { isSameGame, relatedConflicts, slipQuote, type SlipLeg, type SlipMode } from './slip.js'
+import {
+  contradictoryLegs,
+  isSameGame,
+  relatedConflicts,
+  slipQuote,
+  type SlipLeg,
+  type SlipMode,
+} from './slip.js'
 
 const QUICK = [1_000, 2_500, 10_000] // $10 / $25 / $100 in cents
 
@@ -41,7 +48,10 @@ export function BetSlip({
 }) {
   const effMode: SlipMode = legs.length >= 2 ? mode : 'single'
   const quote = slipQuote(legs, effMode, stakeCents)
-  const conflicts = effMode === 'parlay' ? relatedConflicts(legs) : []
+  const conflicts =
+    effMode === 'parlay'
+      ? [...new Set([...relatedConflicts(legs), ...contradictoryLegs(legs)])]
+      : []
   const sameGame = isSameGame(legs)
   const needsAccept = movedKeys.size > 0
   const overAvailable = quote.totalStakeCents > available
@@ -92,7 +102,11 @@ export function BetSlip({
 
           {legs.length >= 2 && (
             <>
-              {sameGame && mode === 'parlay' && <span className="bk-sgp">Same-game parlay</span>}
+              {sameGame && mode === 'parlay' && (
+                <span className="bk-sgp" title="Legs on one game are priced for correlation">
+                  Same-game parlay · correlated price
+                </span>
+              )}
               <div className="bk-modes">
                 <button
                   type="button"
@@ -140,7 +154,7 @@ export function BetSlip({
 
           {effMode === 'parlay' && (
             <div className="bk-summary">
-              <span className="bk-summary-k">Parlay odds</span>
+              <span className="bk-summary-k">{sameGame ? 'SGP odds' : 'Parlay odds'}</span>
               <span className="bk-summary-v">
                 {formatAmerican(americanFromDecimal(quote.decimal))}
               </span>
@@ -166,7 +180,9 @@ export function BetSlip({
           )}
 
           {conflicts.length > 0 && (
-            <p className="bk-err">Related selections can’t be parlayed — switch to Singles.</p>
+            <p className="bk-err">
+              Related or contradictory selections can’t be parlayed — switch to Singles.
+            </p>
           )}
           {overAvailable && !error && (
             <p className="bk-err">Stake exceeds what’s available to wager.</p>

@@ -22,7 +22,24 @@ export {
 } from './odds-source.js'
 export { mockSlate, MOCK_LEAGUES } from './mockBook.js'
 
-export { placeBookBet, settleBookBet, accountFor, __resetPlacement } from './placement.js'
+export {
+  placeBookBet,
+  settleBookBet,
+  cashOutBookBet,
+  accountFor,
+  __resetPlacement,
+  type CashOutResult,
+} from './placement.js'
+
+export {
+  cashOutQuote,
+  cashOutMath,
+  liveWinProbability,
+  liveLegWinProbability,
+  DEFAULT_CASHOUT_MARGIN,
+  type CashOutQuote,
+  type CashOutMath,
+} from './cashout.js'
 
 export {
   betsForViewer,
@@ -40,8 +57,11 @@ export {
   legFromSelection,
   slipQuote,
   parlayPrice,
+  sgpPrice,
+  combinedDecimal,
   isSameGame,
   relatedConflicts,
+  contradictoryLegs,
   movedLegKeys,
   type SlipLeg,
   type SlipMode,

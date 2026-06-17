@@ -27,8 +27,18 @@ export {
   makeOverride,
   applyMargin,
   applyPricing,
+  // correlated same-game parlay (SGP) pricing
+  SGP_MAX_LEGS,
+  MAX_SGP_DECIMAL,
+  DEFAULT_SGP_CORRELATION,
+  SPORT_CORRELATION,
+  correlationForSport,
+  impliedProbability,
+  devig,
+  correlatedJoint,
+  priceSgp,
 } from './pricing.js'
-export type { PricingOptions, PricedSelection } from './pricing.js'
+export type { PricingOptions, PricedSelection, SgpQuote } from './pricing.js'
 
 export {
   SGOProvider,
@@ -48,7 +58,10 @@ export {
   selectProvider,
   createSupabaseOddsCache,
   ACTIVE_LEAGUES,
+  CORE_LEAGUES,
+  EXTENDED_LEAGUES,
   SCAFFOLDED_LEAGUES,
+  SGO_LEAGUE_REFERENCE,
 } from './poller.js'
 export type { OddsCache, PollerConfig, PollResult, SupabaseLike } from './poller.js'
 
