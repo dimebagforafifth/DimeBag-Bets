@@ -19,6 +19,7 @@ import {
   type PumpGame as PumpGameState,
   type PumpHouseConfig,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -59,11 +60,16 @@ interface PumpProps {
  * The Pump vertical slice (CLAUDE.md §7) — one clean view, one primary action.
  * All money flows through `core` via the engine; this component holds no points.
  */
-export function PumpGame({ account, houseConfig = DEFAULT_HOUSE_CONFIG, onBalanceChange }: PumpProps) {
+export function PumpGame({
+  account,
+  houseConfig = DEFAULT_HOUSE_CONFIG,
+  onBalanceChange,
+}: PumpProps) {
   const [bet, setBet] = useState(1000) // cents ($10.00)
   const [difficulty, setDifficulty] = useState<PumpDifficulty>('medium')
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<PumpGameState | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -83,15 +89,21 @@ export function PumpGame({ account, houseConfig = DEFAULT_HOUSE_CONFIG, onBalanc
     }
   })
 
-  function start() {
+  // The pop layout's server seed now comes from the platform fairness AUTHORITY (commit hash
+  // before play → reveal after), not a browser randomServerSeed(). The pop math is unchanged.
+  async function start() {
+    if (inFlightRef.current || game?.status === 'active') return
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const next = createPumpGame(account, {
         stake: bet,
         difficulty,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       setGame(next)
@@ -99,6 +111,8 @@ export function PumpGame({ account, houseConfig = DEFAULT_HOUSE_CONFIG, onBalanc
       play('bet')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -138,7 +152,12 @@ export function PumpGame({ account, houseConfig = DEFAULT_HOUSE_CONFIG, onBalanc
     <div className="pump">
       <section className="pump-panel">
         <BetField value={bet} disabled={!idle} max={available} onChange={setBet} />
-        {canCash && <ProfitReadout total={Math.round(bet * currentMultiplier(game!))} multiplier={currentMultiplier(game!)} />}
+        {canCash && (
+          <ProfitReadout
+            total={Math.round(bet * currentMultiplier(game!))}
+            multiplier={currentMultiplier(game!)}
+          />
+        )}
 
         <label className="field">
           <span className="field-label">Difficulty</span>
@@ -175,7 +194,13 @@ export function PumpGame({ account, houseConfig = DEFAULT_HOUSE_CONFIG, onBalanc
       </section>
 
       <section className="pump-stage">
-        <Balloon game={game} difficulty={difficulty} tick={pumpTick} onPump={doPump} canPump={canPump} />
+        <Balloon
+          game={game}
+          difficulty={difficulty}
+          tick={pumpTick}
+          onPump={doPump}
+          canPump={canPump}
+        />
         <button className="pump-btn" onClick={doPump} disabled={!canPump}>
           {active ? 'Pump' : 'Place a bet to pump'}
         </button>
@@ -252,8 +277,14 @@ function Readout({
   if (!game) {
     return (
       <dl className="readout">
-        <Stat label="First pump" value={`${compact(pumpMultiplier(difficulty, 1, houseConfig))}×`} />
-        <Stat label="Top win" value={`${compact(pumpMultiplier(difficulty, maxPumps(difficulty), houseConfig))}×`} />
+        <Stat
+          label="First pump"
+          value={`${compact(pumpMultiplier(difficulty, 1, houseConfig))}×`}
+        />
+        <Stat
+          label="Top win"
+          value={`${compact(pumpMultiplier(difficulty, maxPumps(difficulty), houseConfig))}×`}
+        />
       </dl>
     )
   }
@@ -360,7 +391,16 @@ function Balloon({
               feeding the balloon stays exactly the same size and position */}
           <g className="pump-rig">
             <rect x="2" y="330" width="64" height="12" rx="4" fill="#1b2630" />
-            <rect x="14" y="263" width="40" height="67" rx="8" fill="#2b3947" stroke="#465666" strokeWidth="2" />
+            <rect
+              x="14"
+              y="263"
+              width="40"
+              height="67"
+              rx="8"
+              fill="#2b3947"
+              stroke="#465666"
+              strokeWidth="2"
+            />
             <rect x="50" y="281" width="22" height="11" rx="3" fill="#465666" />
             <rect x="25" y="257" width="18" height="9" rx="3" fill="#161f28" />
 
@@ -461,7 +501,13 @@ function Fairness({
   const verified = useMemo(
     () =>
       proof
-        ? verifyPops(proof.serverSeed, proof.clientSeed, proof.nonce, proof.difficulty, proof.popPositions)
+        ? verifyPops(
+            proof.serverSeed,
+            proof.clientSeed,
+            proof.nonce,
+            proof.difficulty,
+            proof.popPositions,
+          )
         : null,
     [proof],
   )

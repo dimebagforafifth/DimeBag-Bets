@@ -22,6 +22,7 @@ import {
   type CasesRound,
   type Tier,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
 import { play } from '../../../sound/index.js'
@@ -60,6 +61,7 @@ export function CasesGame({
   const [risk, setRisk] = useState<CasesRisk>('medium')
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<CasesRound | null>(null)
   const [opening, setOpening] = useState(false)
@@ -99,17 +101,23 @@ export function CasesGame({
     [],
   )
 
-  function openIt() {
+  // The open's server seed now comes from the platform fairness AUTHORITY (commit hash before
+  // play → reveal after), not a browser randomServerSeed(). The tier math is unchanged.
+  async function openIt() {
+    if (inFlightRef.current || opening) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     setShowOdds(false) // close the odds panel when a new case opens
     clearTimeout(soundTimer.current)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const r = playCases(account, {
         stake: bet,
         risk,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       onBalanceChange()
@@ -146,6 +154,8 @@ export function CasesGame({
       }, OPEN_MS)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 

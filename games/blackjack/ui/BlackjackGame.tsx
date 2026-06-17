@@ -22,6 +22,7 @@ import {
   type BlackjackResult,
   type Card,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -59,8 +60,10 @@ const BLACKJACK_RULES: ReactNode[] = [
   'When you stand, the dealer reveals and draws to 17 (standing on all 17s). Closest to 21 wins; an equal total is a push (bet back).',
   'If the dealer’s up card is an Ace, you’re offered insurance — a side bet of half your stake that pays 2:1 if the dealer has blackjack.',
   <>
-    <strong>Blackjack (an ace + a ten on your first two cards) pays 3:2; a regular win pays even
-    money.</strong> The deck is provably-fair — shuffled from a seed committed before the deal.
+    <strong>
+      Blackjack (an ace + a ten on your first two cards) pays 3:2; a regular win pays even money.
+    </strong>{' '}
+    The deck is provably-fair — shuffled from a seed committed before the deal.
   </>,
 ]
 
@@ -69,6 +72,7 @@ export function BlackjackGame({ account, onBalanceChange }: BlackjackGameProps) 
   const [seats, setSeats] = useState<number[]>([1]) // occupied seat ids; centre by default
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<BJGame | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -223,11 +227,22 @@ export function BlackjackGame({ account, onBalanceChange }: BlackjackGameProps) 
     )
   }
 
-  function deal() {
+  // The shoe's server seed now comes from the platform fairness AUTHORITY (commit hash
+  // before play → reveal after), not a browser randomServerSeed(). The shuffle is unchanged.
+  async function deal() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
-      const g = createBlackjackGame(account, { stake: bet, clientSeed, nonce: nonceRef.current, seats })
+      const g = createBlackjackGame(account, {
+        stake: bet,
+        clientSeed,
+        nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
+        seats,
+      })
       setGame(g)
       onBalanceChange()
       play('bet')
@@ -235,6 +250,8 @@ export function BlackjackGame({ account, onBalanceChange }: BlackjackGameProps) 
       setDealing(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -245,8 +262,7 @@ export function BlackjackGame({ account, onBalanceChange }: BlackjackGameProps) 
     onBalanceChange()
     // Release one ledger entry per wager that resolved this round (a split, a double,
     // or an insurance side bet adds more), so every entry clears — and the lock with it.
-    const wagerCount =
-      g.hands.reduce((n, h) => n + h.wagers.length, 0) + (g.insuranceWager ? 1 : 0)
+    const wagerCount = g.hands.reduce((n, h) => n + h.wagers.length, 0) + (g.insuranceWager ? 1 : 0)
     for (let i = 0; i < wagerCount; i++) signalReveal(account.id)
     const net = totalReturned(g) - totalWagered(g)
     play(net > 0 ? 'win' : net < 0 ? 'boom' : 'lose')
@@ -281,7 +297,8 @@ export function BlackjackGame({ account, onBalanceChange }: BlackjackGameProps) 
       return
     }
     const showdown = game.hands.some((h) => !isBust(h.cards))
-    if (showdown) revealDealer() // flip the hole + draw, then announce
+    if (showdown)
+      revealDealer() // flip the hole + draw, then announce
     else {
       announce(game) // everyone busted — no dealer reveal
       redraw()
@@ -451,7 +468,11 @@ export function BlackjackGame({ account, onBalanceChange }: BlackjackGameProps) 
       </section>
 
       <section className="bj-table">
-        <Side cards={game?.dealer ?? []} hideHole={playing || revealHold || insurancePhase} max={dealerShown} />
+        <Side
+          cards={game?.dealer ?? []}
+          hideHole={playing || revealHold || insurancePhase}
+          max={dealerShown}
+        />
 
         <div className="bj-divider">
           {settled && !revealing && game!.hands.length === 1 ? (
@@ -504,7 +525,9 @@ export function BlackjackGame({ account, onBalanceChange }: BlackjackGameProps) 
                   No
                 </button>
               </div>
-              {!insuranceAffordable && <span className="bj-insurance-warn">Not enough to insure.</span>}
+              {!insuranceAffordable && (
+                <span className="bj-insurance-warn">Not enough to insure.</span>
+              )}
             </div>
           </div>
         )}
@@ -707,7 +730,9 @@ function PlayerArea({
           return (
             <div key={id} className={`bj-seatpick-slot ${on ? 'is-on' : ''}`}>
               <span className="bj-seatpick-name">{SEAT_NAME[id]}</span>
-              <span className="bj-seatpick-state">{on ? `You · ${formatMoney(bet)}` : 'Empty'}</span>
+              <span className="bj-seatpick-state">
+                {on ? `You · ${formatMoney(bet)}` : 'Empty'}
+              </span>
             </div>
           )
         })}
@@ -820,31 +845,31 @@ function ChipStack({ cents }: { cents: number }) {
         ) : (
           <div className="bj-chips">
             {stacks.map(({ denom, count }) => {
-            const shown = Math.min(count, 8) // tall stacks read fine capped at 8
-            return (
-              <div className="chip-stack" key={denom.v}>
-                <div className="chip-pile" style={{ height: `${46 + (shown - 1) * 7}px` }}>
-                  {Array.from({ length: shown }, (_, i) => (
-                    <span
-                      key={i}
-                      className="bj-chip"
-                      style={{
-                        ['--body' as string]: denom.body,
-                        ['--edge' as string]: denom.edge,
-                        ['--face' as string]: denom.face,
-                        bottom: `${i * 7}px`,
-                        zIndex: i,
-                      }}
-                    >
-                      {i === shown - 1 && <span className="bj-chip-label">{denom.label}</span>}
-                    </span>
-                  ))}
+              const shown = Math.min(count, 8) // tall stacks read fine capped at 8
+              return (
+                <div className="chip-stack" key={denom.v}>
+                  <div className="chip-pile" style={{ height: `${46 + (shown - 1) * 7}px` }}>
+                    {Array.from({ length: shown }, (_, i) => (
+                      <span
+                        key={i}
+                        className="bj-chip"
+                        style={{
+                          ['--body' as string]: denom.body,
+                          ['--edge' as string]: denom.edge,
+                          ['--face' as string]: denom.face,
+                          bottom: `${i * 7}px`,
+                          zIndex: i,
+                        }}
+                      >
+                        {i === shown - 1 && <span className="bj-chip-label">{denom.label}</span>}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="chip-count">×{count}</span>
                 </div>
-                <span className="chip-count">×{count}</span>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
         )}
       </div>
       <span className="bj-betspot-total">{formatMoney(cents)}</span>
@@ -875,7 +900,11 @@ function Readout({
     const net = totalReturned(game) - totalWagered(game)
     return (
       <p className={`readout-result ${net > 0 ? 'is-win' : net < 0 ? 'is-loss' : ''}`}>
-        {net > 0 ? `Won ${formatMoney(net)}` : net < 0 ? `Lost ${formatMoney(-net)}` : 'Push — bet returned'}
+        {net > 0
+          ? `Won ${formatMoney(net)}`
+          : net < 0
+            ? `Lost ${formatMoney(-net)}`
+            : 'Push — bet returned'}
       </p>
     )
   }

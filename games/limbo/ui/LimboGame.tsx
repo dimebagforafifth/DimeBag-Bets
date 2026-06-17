@@ -12,6 +12,7 @@ import {
   type LimboHouseConfig,
   type LimboRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -54,6 +55,7 @@ export function LimboGame({
   const [target, setTarget] = useState(2)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<LimboRound | null>(null)
   const [display, setDisplay] = useState(1)
@@ -94,15 +96,21 @@ export function LimboGame({
     rafRef.current = requestAnimationFrame(step)
   }
 
-  function play() {
+  // The server seed now comes from the platform fairness AUTHORITY (commit hash before play →
+  // reveal after), not a browser randomServerSeed(). The payout/draw math is unchanged.
+  async function play() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const r = playLimbo(account, {
         stake: bet,
         target,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       setRound(r)
@@ -111,6 +119,8 @@ export function LimboGame({
       animateTo(r.result, r.won)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -212,7 +222,9 @@ export function LimboGame({
         </button>
         {error && <p className="limbo-error">{error}</p>}
         {bet > available && !error && (
-          <p className="limbo-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
+          <p className="limbo-error">
+            Stake exceeds what you can wager ({formatPoints(available)}).
+          </p>
         )}
 
         <Rules points={LIMBO_RULES} />
@@ -240,7 +252,8 @@ function Fairness({
   onClientSeed: (s: string) => void
 }) {
   const verified = useMemo(
-    () => (round ? verifyLimbo(round.serverSeed, round.clientSeed, round.nonce, round.result) : null),
+    () =>
+      round ? verifyLimbo(round.serverSeed, round.clientSeed, round.nonce, round.result) : null,
     [round],
   )
   return (

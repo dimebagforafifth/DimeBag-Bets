@@ -14,6 +14,7 @@ import {
   type CoinFlipGame as CoinFlipGameState,
   type CoinFlipHouseConfig,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -31,8 +32,8 @@ const COINFLIP_RULES: ReactNode[] = [
   'Cash Out any time to bank every surviving coin at the running multiplier.',
   'The track under the coins fills a slot for each surviving flip, so you can see how far the streak has run.',
   <>
-    <strong>Each coin wins its stake × the running multiplier</strong>, which grows 1.96× per correct
-    call. Every flip is provably fair.
+    <strong>Each coin wins its stake × the running multiplier</strong>, which grows 1.96× per
+    correct call. Every flip is provably fair.
   </>,
 ]
 
@@ -61,12 +62,15 @@ export function CoinFlipGame({
   const [coins, setCoins] = useState(1) // how many coins this bet plays (1..10)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   // Every coin in the current round is its own independent CoinFlip wager/streak.
   // The array is mutated in place + redraw. One call flips all the still-active coins.
   const gamesRef = useRef<CoinFlipGameState[]>([])
   const [history, setHistory] = useState<{ multiplier: number; won: boolean }[]>([])
-  const [cashWin, setCashWin] = useState<{ stake: number; multiplier: number; key: number } | null>(null)
+  const [cashWin, setCashWin] = useState<{ stake: number; multiplier: number; key: number } | null>(
+    null,
+  )
   const [error, setError] = useState<string | null>(null)
   // The side the most recent flip actually called — shown so a 'random' pick is never hidden.
   const [lastCall, setLastCall] = useState<CoinFace | null>(null)
@@ -104,7 +108,8 @@ export function CoinFlipGame({
   // The multiplier the surviving coins share after `revealed` won flips — iterated to
   // match the engine's per-step rounding exactly.
   let shownMultiplier = 1
-  for (let i = 0; i < revealed; i++) shownMultiplier = Math.round(shownMultiplier * step * 100) / 100
+  for (let i = 0; i < revealed; i++)
+    shownMultiplier = Math.round(shownMultiplier * step * 100) / 100
 
   // A coin's SHOWN state — a bust only counts once its flip has actually landed.
   function coinShown(g: CoinFlipGameState): 'alive' | 'busted' | 'cashed' {
@@ -127,28 +132,42 @@ export function CoinFlipGame({
   const maxOne = maxBet(account) // per-wager cap — each coin must fit it
   const wagerable = availableToWager(account)
   const totalStake = bet * coins // the combined stake across all coins
-  const betInvalid =
-    !Number.isInteger(bet) || bet < 1 || bet > maxOne || totalStake > wagerable
+  const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > maxOne || totalStake > wagerable
   const resolving = useResolving(account.id)
 
   // The profit box shows what you'd bank cashing now: every surviving coin × the
   // multiplier you've SEEN.
   const totalReturn = Math.round(aliveShown * bet * (shownLive ? shownMultiplier : 1))
 
-  function start() {
+  // Each coin's server seed now comes from the platform fairness AUTHORITY (commit hash before
+  // play → reveal after), not a browser randomServerSeed(). Every coin is its own independent
+  // round (own nonce + own seed), so each is minted in turn; the coin math is unchanged.
+  async function start() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     if (totalStake > wagerable) {
       setError(`Not enough — needs ${formatMoney(totalStake)}.`)
+      inFlightRef.current = false
       return
     }
     try {
-      const next: CoinFlipGameState[] = []
-      for (let i = 0; i < coins; i++) {
+      // Mint every coin's server seed FIRST (the only awaited step). Only once all seeds are in
+      // hand do we place the wagers — the createCoinFlip calls below are synchronous and
+      // all-or-nothing, so a mid-mint failure can never strand a partial set of stakes in
+      // `pending` (those coins would be untracked by gamesRef and useSettleOnExit).
+      const seeds: string[] = []
+      for (let i = 0; i < coins; i++) seeds.push((await fairnessClient.mintRound()).serverSeed)
+      const next = seeds.map((serverSeed) => {
         nonceRef.current += 1
-        next.push(
-          createCoinFlip(account, { stake: bet, clientSeed, nonce: nonceRef.current, config: houseConfig }),
-        )
-      }
+        return createCoinFlip(account, {
+          stake: bet,
+          clientSeed,
+          nonce: nonceRef.current,
+          serverSeed,
+          config: houseConfig,
+        })
+      })
       gamesRef.current = next
       setCashWin(null)
       setLastCall(null) // fresh round — no call made yet
@@ -157,6 +176,8 @@ export function CoinFlipGame({
       redraw()
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -237,10 +258,18 @@ export function CoinFlipGame({
               disabled={locked}
               onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
             />
-            <button className="chip" disabled={locked} onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
+            <button
+              className="chip"
+              disabled={locked}
+              onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}
+            >
               ½
             </button>
-            <button className="chip" disabled={locked} onClick={() => setBet((b) => Math.min(maxOne, b * 2))}>
+            <button
+              className="chip"
+              disabled={locked}
+              onClick={() => setBet((b) => Math.min(maxOne, b * 2))}
+            >
               2×
             </button>
           </div>
@@ -306,15 +335,27 @@ export function CoinFlipGame({
             {/* locked while coins are in the air (uniformly, win or lose, so the
                 disabled state never tips the result) — re-enabled when they land. */}
             <div className="coinflip-calls">
-              <button className="coinflip-call is-heads" disabled={!fullyRevealed} onClick={() => doFlip('heads')}>
+              <button
+                className="coinflip-call is-heads"
+                disabled={!fullyRevealed}
+                onClick={() => doFlip('heads')}
+              >
                 <span className="coinflip-call-main">Heads</span>
                 <span className="coinflip-call-mult">{step.toFixed(2)}×</span>
               </button>
-              <button className="coinflip-call is-tails" disabled={!fullyRevealed} onClick={() => doFlip('tails')}>
+              <button
+                className="coinflip-call is-tails"
+                disabled={!fullyRevealed}
+                onClick={() => doFlip('tails')}
+              >
                 <span className="coinflip-call-main">Tails</span>
                 <span className="coinflip-call-mult">{step.toFixed(2)}×</span>
               </button>
-              <button className="coinflip-call is-random" disabled={!fullyRevealed} onClick={() => doFlip(randomFace())}>
+              <button
+                className="coinflip-call is-random"
+                disabled={!fullyRevealed}
+                onClick={() => doFlip(randomFace())}
+              >
                 <span className="coinflip-call-main">Random</span>
                 <span className="coinflip-call-mult">{step.toFixed(2)}×</span>
               </button>
@@ -337,7 +378,9 @@ export function CoinFlipGame({
 
         {error && <p className="coinflip-error">{error}</p>}
         {totalStake > wagerable && !error && (
-          <p className="coinflip-error">Stake exceeds what you can wager ({formatMoney(wagerable)}).</p>
+          <p className="coinflip-error">
+            Stake exceeds what you can wager ({formatMoney(wagerable)}).
+          </p>
         )}
       </section>
 
@@ -375,7 +418,9 @@ export function CoinFlipGame({
                 ))
               : games.map((g, i) => {
                   const s = coinShown(g)
-                  const face: CoinFace = g.results.length ? g.results[g.results.length - 1] : 'heads'
+                  const face: CoinFace = g.results.length
+                    ? g.results[g.results.length - 1]
+                    : 'heads'
                   return (
                     <div key={i} className={`coinflip-coin-cell is-${s === 'alive' ? 'live' : s}`}>
                       <Coin face={face} spins={g.results.length} sizeClass={sizeClass} />
@@ -398,7 +443,8 @@ export function CoinFlipGame({
             {coins === 1
               ? Array.from({ length: STREAK_SLOTS }).map((_, i) => {
                   const g = games[0]
-                  if (!g || i >= revealed) return <span key={i} className="coinflip-slot is-empty" />
+                  if (!g || i >= revealed)
+                    return <span key={i} className="coinflip-slot is-empty" />
                   const face = g.results[i]
                   const won = g.calls[i] === face
                   return (
@@ -430,7 +476,12 @@ export function CoinFlipGame({
         />
 
         {cashWin && (
-          <WinPopup key={cashWin.key} multiplier={cashWin.multiplier} stake={cashWin.stake} delayMs={POPUP_DELAY_MS} />
+          <WinPopup
+            key={cashWin.key}
+            multiplier={cashWin.multiplier}
+            stake={cashWin.stake}
+            delayMs={POPUP_DELAY_MS}
+          />
         )}
       </section>
     </div>
@@ -476,16 +527,23 @@ function Fairness({
         serverSeed: g.serverSeed,
         ok: verifyCoinFlips(g.serverSeed, g.clientSeed, g.nonce, g.calls, g.results),
       })),
-    [games, ended],
+    [games],
   )
   return (
     <details className="fairness">
       <summary>Provably fair</summary>
       <div className="fairness-body">
         <Row label="Client seed">
-          <input className="seed-input" value={clientSeed} disabled={!editable} onChange={(e) => onClientSeed(e.target.value)} />
+          <input
+            className="seed-input"
+            value={clientSeed}
+            disabled={!editable}
+            onChange={(e) => onClientSeed(e.target.value)}
+          />
         </Row>
-        <Row label="Next nonce">{games.length ? `${rows[0].nonce}–${rows[rows.length - 1].nonce}` : nextNonce}</Row>
+        <Row label="Next nonce">
+          {games.length ? `${rows[0].nonce}–${rows[rows.length - 1].nonce}` : nextNonce}
+        </Row>
         {ended &&
           rows.map((r, i) => (
             <Row key={i} label={`Coin ${i + 1} (nonce ${r.nonce})`}>

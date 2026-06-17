@@ -11,6 +11,7 @@ import {
   type BaccaratRound,
   type BaccaratWinner,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -27,13 +28,17 @@ const BACCARAT_RULES: ReactNode[] = [
     Banker bets push (stake back).
   </>,
   <>
-    <strong>Player Pair / Banker Pair pay 11:1</strong> when that hand's first two cards share a rank.
-    Cards come off a real 8-deck shoe; every deal is reproducible from the seed revealed after the round —
-    provably fair.
+    <strong>Player Pair / Banker Pair pay 11:1</strong> when that hand's first two cards share a
+    rank. Cards come off a real 8-deck shoe; every deal is reproducible from the seed revealed after
+    the round — provably fair.
   </>,
 ]
 
-const WINNER_LABEL: Record<BaccaratWinner, string> = { player: 'Player', banker: 'Banker', tie: 'Tie' }
+const WINNER_LABEL: Record<BaccaratWinner, string> = {
+  player: 'Player',
+  banker: 'Banker',
+  tie: 'Tie',
+}
 
 /** Chip denominations on the rack (cents). */
 const CHIP_SIZES = [100, 500, 1000, 2500, 10000]
@@ -62,6 +67,7 @@ export function BaccaratGame({ account, onBalanceChange }: BaccaratGameProps) {
   const [lastPlacements, setLastPlacements] = useState<{ spot: BaccaratBet; amount: number }[]>([])
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<BaccaratRound | null>(null)
   const [staked, setStaked] = useState(0)
@@ -80,7 +86,10 @@ export function BaccaratGame({ account, onBalanceChange }: BaccaratGameProps) {
     return m
   }, [placements])
   const totalStaked = useMemo(() => placements.reduce((a, p) => a + p.amount, 0), [placements])
-  const lastTotal = useMemo(() => lastPlacements.reduce((a, p) => a + p.amount, 0), [lastPlacements])
+  const lastTotal = useMemo(
+    () => lastPlacements.reduce((a, p) => a + p.amount, 0),
+    [lastPlacements],
+  )
   const hasBets = placements.length > 0
   const canRebet = !hasBets && lastPlacements.length > 0 && !dealing && !resolving
 
@@ -95,8 +104,12 @@ export function BaccaratGame({ account, onBalanceChange }: BaccaratGameProps) {
     return s
   }, [round])
 
-  const shownPlayer = dealing ? dealSeq.slice(0, dealStep).filter((s) => s === 'player').length : undefined
-  const shownBanker = dealing ? dealSeq.slice(0, dealStep).filter((s) => s === 'banker').length : undefined
+  const shownPlayer = dealing
+    ? dealSeq.slice(0, dealStep).filter((s) => s === 'player').length
+    : undefined
+  const shownBanker = dealing
+    ? dealSeq.slice(0, dealStep).filter((s) => s === 'banker').length
+    : undefined
   const showResult = round != null && !dealing
 
   // Drive the card-by-card reveal: one card every DEAL_STEP_MS, then a settle beat
@@ -108,7 +121,11 @@ export function BaccaratGame({ account, onBalanceChange }: BaccaratGameProps) {
         setDealing(false)
         setRoad((r) => [
           ...r,
-          { winner: round.deal.winner, playerPair: round.deal.playerPair, bankerPair: round.deal.bankerPair },
+          {
+            winner: round.deal.winner,
+            playerPair: round.deal.playerPair,
+            bankerPair: round.deal.bankerPair,
+          },
         ])
         signalReveal(account.id) // result on the felt → release its ledger entry
         play(round.totalProfit > 0 ? 'win' : round.totalProfit < 0 ? 'lose' : 'draw')
@@ -161,18 +178,29 @@ export function BaccaratGame({ account, onBalanceChange }: BaccaratGameProps) {
     play('select')
   }
 
-  function deal() {
+  // The deal's server seed now comes from the platform fairness AUTHORITY (commit hash before
+  // play → reveal after), not a browser randomServerSeed(). The deal/settlement math is unchanged.
+  async function deal() {
     if (dealing || !hasBets) return
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     if (totalStaked > available) {
       setError(`Stake exceeds what you can wager (${formatMoney(available)}).`)
+      inFlightRef.current = false
       return
     }
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const bets = {} as Record<BaccaratBet, number>
       for (const p of placements) bets[p.spot] = (bets[p.spot] ?? 0) + p.amount
-      const r = playBaccarat(account, { bets, clientSeed, nonce: nonceRef.current })
+      const r = playBaccarat(account, {
+        bets,
+        clientSeed,
+        nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
+      })
       onBalanceChange()
       play('deal')
       setRound(r)
@@ -183,6 +211,8 @@ export function BaccaratGame({ account, onBalanceChange }: BaccaratGameProps) {
       setDealing(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -401,7 +431,15 @@ function BetChip({ cents }: { cents: number }) {
   )
 }
 
-function ChipRack({ value, disabled, onChange }: { value: number; disabled: boolean; onChange: (n: number) => void }) {
+function ChipRack({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: number
+  disabled: boolean
+  onChange: (n: number) => void
+}) {
   return (
     <div className="field">
       <span className="field-label">Chip size</span>
@@ -500,12 +538,15 @@ const ROAD_COLS = 22
 /** Big-road grid: P/B streaks run DOWN a column; a different result starts a new
  *  column; a streak that hits the floor (or an occupied cell) bends RIGHT (the
  *  "dragon tail"); ties annotate the last cell. Standard casino algorithm. */
-export function buildBigRoad(road: RoadEntry[]): ({ winner: 'player' | 'banker'; ties: number } | null)[][] {
+export function buildBigRoad(
+  road: RoadEntry[],
+): ({ winner: 'player' | 'banker'; ties: number } | null)[][] {
   const grid: ({ winner: 'player' | 'banker'; ties: number } | null)[][] = []
   const ensure = (col: number) => {
     while (grid.length <= col) grid.push(Array(ROAD_ROWS).fill(null))
   }
-  const at = (col: number, row: number) => (row >= 0 && row < ROAD_ROWS ? grid[col]?.[row] ?? null : undefined)
+  const at = (col: number, row: number) =>
+    row >= 0 && row < ROAD_ROWS ? (grid[col]?.[row] ?? null) : undefined
 
   // `startCol` = the column a run BEGAN in (its top row). A new run starts to the
   // right of the previous run's START, NOT the right of where the last marker
@@ -588,7 +629,9 @@ function Scoreboard({ road }: { road: RoadEntry[] }) {
   if (road.length === 0) {
     return (
       <div className="baccarat-scoreboard is-empty">
-        <span className="baccarat-score-empty">The bead plate &amp; big road fill in as you play</span>
+        <span className="baccarat-score-empty">
+          The bead plate &amp; big road fill in as you play
+        </span>
       </div>
     )
   }
@@ -658,7 +701,8 @@ function Fairness({
   onClientSeed: (s: string) => void
 }) {
   const verified = useMemo(
-    () => (round ? verifyBaccarat(round.serverSeed, round.clientSeed, round.nonce, round.deal) : null),
+    () =>
+      round ? verifyBaccarat(round.serverSeed, round.clientSeed, round.nonce, round.deal) : null,
     [round],
   )
   return (

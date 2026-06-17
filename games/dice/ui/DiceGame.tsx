@@ -12,6 +12,7 @@ import {
   type DiceHouseConfig,
   type DiceRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
 import { play } from '../../../sound/index.js'
@@ -24,8 +25,8 @@ const DICE_RULES: ReactNode[] = [
   'A number from 0.00 to 100.00 is rolled. You win if it lands on your chosen side of the line.',
   'A narrower target is less likely but pays more; a wider one wins often but pays less.',
   <>
-    <strong>Payout = bet × multiplier</strong> — a narrower target pays a higher multiplier. The roll is
-    provably fair.
+    <strong>Payout = bet × multiplier</strong> — a narrower target pays a higher multiplier. The
+    roll is provably fair.
   </>,
 ]
 
@@ -55,7 +56,8 @@ export function DiceGame({
   const [mode, setMode] = useState<'manual' | 'auto'>('manual')
   const [autoOn, setAutoOn] = useState(false)
   const autoTimerRef = useRef(0)
-  const rollRef = useRef<() => boolean>(() => false)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
+  const rollRef = useRef<() => Promise<boolean>>(async () => false)
 
   const available = maxBet(account)
   const chance = winChance(target, direction)
@@ -66,9 +68,15 @@ export function DiceGame({
   const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available || multiplier <= 1
   const resolving = useResolving(account.id)
 
-  function roll(): boolean {
+  // The server seed now comes from the platform fairness AUTHORITY (commit hash before play →
+  // reveal), not a browser randomServerSeed(). Returns false only on a real failure (so auto
+  // stops); a skipped re-entrant tick returns true so auto keeps running.
+  async function roll(): Promise<boolean> {
+    if (inFlightRef.current) return true // a mint is already in flight — skip, don't stop auto
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const r = playDice(account, {
         stake: bet,
@@ -76,6 +84,7 @@ export function DiceGame({
         direction,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       setRound(r)
@@ -87,6 +96,8 @@ export function DiceGame({
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
       return false
+    } finally {
+      inFlightRef.current = false
     }
   }
   rollRef.current = roll
@@ -95,7 +106,9 @@ export function DiceGame({
     setAutoOn(true)
     clearInterval(autoTimerRef.current)
     autoTimerRef.current = window.setInterval(() => {
-      if (!rollRef.current()) stopAuto() // out of funds → stop
+      void rollRef.current().then((ok) => {
+        if (!ok) stopAuto() // out of funds / error → stop
+      })
     }, AUTO_INTERVAL)
   }
   function stopAuto() {
@@ -105,7 +118,6 @@ export function DiceGame({
   useEffect(() => () => clearInterval(autoTimerRef.current), [])
   useEffect(() => {
     if (mode === 'manual') stopAuto()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
   return (
@@ -169,14 +181,20 @@ export function DiceGame({
             Stop Auto
           </button>
         ) : (
-          <button className="action action-bet" onClick={startAuto} disabled={betInvalid || resolving}>
+          <button
+            className="action action-bet"
+            onClick={startAuto}
+            disabled={betInvalid || resolving}
+          >
             Start Auto
           </button>
         )}
 
         {error && <p className="dice-error">{error}</p>}
         {bet > available && !error && (
-          <p className="dice-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
+          <p className="dice-error">
+            Stake exceeds what you can wager ({formatPoints(available)}).
+          </p>
         )}
       </section>
 

@@ -36,6 +36,22 @@ describe('fairness client — talking to the endpoint', () => {
       verifyCrashPoint(res.serverSeed, 'my-seed', 9, res.crashPoint, DEFAULT_CRASH_CONFIG),
     ).toBe(true)
   })
+
+  it('mintRound commits then reveals a seed in one call, hash matching (the all-games seam)', async () => {
+    const client = createFairnessClient({ fetchImpl: serverFetch() })
+    const minted = await client.mintRound()
+    expect(minted.serverSeed).toMatch(/^[0-9a-f]{64}$/)
+    expect(verifyServerSeed(minted.serverSeed, minted.serverSeedHash)).toBe(true)
+  })
+
+  it('mintRound works with no server (in-process authority) and stays consistent', async () => {
+    const client = createFairnessClient({ fetchImpl: offlineFetch })
+    const minted = await client.mintRound()
+    expect(verifyServerSeed(minted.serverSeed, minted.serverSeedHash)).toBe(true)
+    // a re-reveal of the same commit returns the same seed (derived vault is stateless)
+    const again = await client.reveal(minted.commitId)
+    expect(again.serverSeed).toBe(minted.serverSeed)
+  })
 })
 
 describe('fairness client — offline fallback (no server, e.g. local dev / tests)', () => {

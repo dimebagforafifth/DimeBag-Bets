@@ -14,6 +14,7 @@ import {
   type WheelRisk,
   type WheelRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -50,6 +51,7 @@ export function WheelGame({
   const [segments, setSegments] = useState(30)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<WheelRound | null>(null)
   const [spinning, setSpinning] = useState(false)
@@ -59,7 +61,10 @@ export function WheelGame({
   const timer = useRef(0)
 
   const available = maxBet(account)
-  const table = useMemo(() => buildWheel(risk, segments, houseConfig), [risk, segments, houseConfig])
+  const table = useMemo(
+    () => buildWheel(risk, segments, houseConfig),
+    [risk, segments, houseConfig],
+  )
   const tiers = useMemo(() => legend(table), [table])
   const betInvalid = !Number.isInteger(bet) || bet < 1 || bet > available || spinning
   const resolving = useResolving(account.id)
@@ -69,9 +74,14 @@ export function WheelGame({
   const colors = useMemo(() => buildColorMap(table), [table])
   const gradient = useMemo(() => conicGradient(table, colors), [table, colors])
 
-  function spin() {
+  // The server seed now comes from the platform fairness AUTHORITY (commit hash before play →
+  // reveal after), not a browser randomServerSeed(). The spin math is unchanged.
+  async function spin() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const r = playWheel(account, {
         stake: bet,
@@ -79,6 +89,7 @@ export function WheelGame({
         segments,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       onBalanceChange()
@@ -109,6 +120,8 @@ export function WheelGame({
       }, SPIN_MS)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -133,10 +146,18 @@ export function WheelGame({
               disabled={spinning}
               onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
             />
-            <button className="chip" disabled={spinning} onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
+            <button
+              className="chip"
+              disabled={spinning}
+              onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}
+            >
               ½
             </button>
-            <button className="chip" disabled={spinning} onClick={() => setBet((b) => Math.min(available, b * 2))}>
+            <button
+              className="chip"
+              disabled={spinning}
+              onClick={() => setBet((b) => Math.min(available, b * 2))}
+            >
               2×
             </button>
           </div>
@@ -182,7 +203,9 @@ export function WheelGame({
 
         {error && <p className="wheel-error">{error}</p>}
         {bet > available && !error && (
-          <p className="wheel-error">Stake exceeds what you can wager ({formatMoney(available)}).</p>
+          <p className="wheel-error">
+            Stake exceeds what you can wager ({formatMoney(available)}).
+          </p>
         )}
       </section>
 
@@ -202,7 +225,9 @@ export function WheelGame({
             style={{
               background: gradient,
               transform: `rotate(${rotation}deg)`,
-              transition: spinning ? `transform ${SPIN_MS}ms cubic-bezier(0.16, 1, 0.3, 1)` : 'none',
+              transition: spinning
+                ? `transform ${SPIN_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`
+                : 'none',
             }}
           />
           <div className={`wheel-hub ${showResult && round!.multiplier > 1 ? 'is-win' : ''}`}>
