@@ -63,6 +63,10 @@ export interface RunPollCycleOptions {
   allowMockRefresh?: boolean
   leagues?: readonly string[]
   now?: () => string
+  /** Hook for a league that fails to poll (e.g. a plan-gated EPL/UFC 4xx). Defaults to a
+   *  console.warn so a deploy SEES which leagues didn't resolve; the cycle skips them and
+   *  caches the rest. */
+  onLeagueError?: (league: string, error: unknown) => void
 }
 
 /**
@@ -106,9 +110,14 @@ function poll(
   cache: OddsCache,
   opts: RunPollCycleOptions,
 ): Promise<PollResult> {
+  const onLeagueError =
+    opts.onLeagueError ??
+    ((league: string, error: unknown) =>
+      console.warn(`[odds] skipped league ${league} (likely plan-gated): ${String(error)}`))
   const poller = new Poller({
     provider,
     cache,
+    onLeagueError,
     ...(opts.leagues ? { leagues: opts.leagues } : {}),
     ...(opts.now ? { now: opts.now } : {}),
   })

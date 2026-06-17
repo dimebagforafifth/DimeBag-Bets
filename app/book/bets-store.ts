@@ -34,6 +34,9 @@ export interface BookBet {
   settledAt?: number
   /** Total returned on settle (stake + profit; 0 on a loss). */
   returnCents?: number
+  /** Cumulative cash realized from cash-outs (a partial accrues here while the bet stays
+   *  open; a full cash-out sets status 'cashed' and returnCents to this total). */
+  cashedOutCents?: number
 }
 
 let bets: BookBet[] = []
@@ -75,6 +78,38 @@ export function settleBetRecord(
   at: number,
 ): void {
   bets = bets.map((b) => (b.id === id ? { ...b, status, returnCents, settledAt: at } : b))
+  notify()
+}
+
+/** Close a bet by a FULL cash-out: status 'cashed', with returnCents = the cumulative
+ *  cash realized (this cash-out + any earlier partials). */
+export function cashOutBetRecord(id: string, finalCashCents: number, at: number): void {
+  bets = bets.map((b) => {
+    if (b.id !== id) return b
+    const cashedOutCents = (b.cashedOutCents ?? 0) + finalCashCents
+    return { ...b, status: 'cashed', returnCents: cashedOutCents, settledAt: at, cashedOutCents }
+  })
+  notify()
+}
+
+/** Record a PARTIAL cash-out: the bet stays open on a reduced stake, and the cash taken
+ *  so far accrues in `cashedOutCents`. The remaining stake settles normally later. */
+export function partialCashOutRecord(
+  id: string,
+  newStakeCents: number,
+  cashedCents: number,
+  at: number,
+): void {
+  bets = bets.map((b) =>
+    b.id === id
+      ? {
+          ...b,
+          stakeCents: newStakeCents,
+          cashedOutCents: (b.cashedOutCents ?? 0) + cashedCents,
+          settledAt: at,
+        }
+      : b,
+  )
   notify()
 }
 

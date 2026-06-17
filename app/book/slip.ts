@@ -13,6 +13,7 @@ import type {
   Price,
   Selection,
 } from '../../lib/odds/contract.js'
+import { correlationForSport, devig, impliedProbability, priceSgp } from '../../lib/odds/pricing.js'
 import { parlayDecimal, profitCents, toReturnCents } from './odds-format.js'
 
 export type SlipMode = 'single' | 'parlay'
@@ -35,6 +36,11 @@ export interface SlipLeg {
   pick: string
   /** The `priceDisplay` LOCKED when the leg was added. */
   price: Price
+  /** SGO sportID of the event (e.g. 'BASKETBALL') — picks the SGP correlation factor. */
+  sport?: string
+  /** The leg's de-vigged TRUE win probability, locked at add time from its market's raw
+   *  prices. Same-game parlay pricing combines these with correlation (see priceSgp). */
+  trueProb?: number
 }
 
 const STAT_LABEL: Record<string, string> = {
@@ -65,7 +71,23 @@ export function pickLabel(event: NormalizedEvent, market: NormalizedMarket, s: S
   }
 }
 
-/** Build a slip leg from a selection in its event/market. Locks `priceDisplay`. */
+/**
+ * The leg's TRUE (de-vigged) win probability, taken from its market's RAW prices. We
+ * de-vig only across the coherent opposing pair at the SAME line (so an alt-line market
+ * that bundles several lines isn't normalized as one big market); for moneyline (no
+ * line) that's the two sides. Falls back to the lone implied prob if there's no pair.
+ */
+function trueProbForLeg(market: NormalizedMarket, s: Selection): number {
+  const line = s.line ?? null
+  const pool = market.selections.filter((x) => (x.line ?? null) === line)
+  const group = pool.length >= 1 ? pool : market.selections
+  const idx = group.findIndex((x) => x.selectionId === s.selectionId)
+  if (idx < 0) return impliedProbability(s.priceRaw.american)
+  return devig(group.map((x) => x.priceRaw.american))[idx]
+}
+
+/** Build a slip leg from a selection in its event/market. Locks `priceDisplay`, and
+ *  locks the de-vigged true probability + sport for same-game-parlay pricing. */
 export function legFromSelection(
   event: NormalizedEvent,
   market: NormalizedMarket,
@@ -85,20 +107,41 @@ export function legFromSelection(
     ...(s.line === undefined ? {} : { line: s.line }),
     pick: pickLabel(event, market, s),
     price: { ...s.priceDisplay },
+    sport: event.sport,
+    trueProb: trueProbForLeg(market, s),
   }
 }
 
-/** Whether every leg is on the SAME event — a same-game parlay (priced here as a
- *  straight parlay; the real correlated-SGP engine layers on top, see // SEAM in
- *  placement.ts). With <2 legs there is no parlay, so it's not an SGP. */
+/** Whether every leg is on the SAME event — a same-game parlay, priced with correlation
+ *  via `sgpPrice`/`combinedDecimal` (see lib/odds/pricing.priceSgp). With <2 legs there is
+ *  no parlay, so it's not an SGP. */
 export function isSameGame(legs: SlipLeg[]): boolean {
   if (legs.length < 2) return false
   return legs.every((l) => l.eventId === legs[0].eventId)
 }
 
-/** The combined parlay price for the slip (capped at the house max). */
+/** The INDEPENDENT combined parlay price (product of leg decimals, capped) — correct for
+ *  a cross-game parlay where the legs really are independent. */
 export function parlayPrice(legs: SlipLeg[]): number {
   return parlayDecimal(legs.map((l) => l.price.decimal))
+}
+
+/** The correlated SAME-GAME-parlay price: combine the legs' locked true probabilities
+ *  with the sport's correlation, re-apply the house margin, and never exceed the naive
+ *  independent product (so correlation only ever shortens). See lib/odds/pricing.priceSgp. */
+export function sgpPrice(legs: SlipLeg[]): number {
+  if (legs.length < 2) return legs[0]?.price.decimal ?? 1
+  const trueProbs = legs.map((l) => l.trueProb ?? impliedProbability(l.price.american))
+  const rho = correlationForSport(legs[0]?.sport)
+  const independentDisplayDecimal = parlayDecimal(legs.map((l) => l.price.decimal))
+  return priceSgp(trueProbs, { rho, independentDisplayDecimal }).decimal
+}
+
+/** The combined price for a parlay slip: a correlated SGP price when every leg is on the
+ *  SAME game, otherwise the independent product. `sgp` flags which path was taken. */
+export function combinedDecimal(legs: SlipLeg[]): { decimal: number; sgp: boolean } {
+  if (isSameGame(legs)) return { decimal: sgpPrice(legs), sgp: true }
+  return { decimal: parlayPrice(legs), sgp: false }
 }
 
 export interface SlipQuote {
@@ -122,7 +165,7 @@ export function slipQuote(legs: SlipLeg[], mode: SlipMode, stakeCents: number): 
     return { totalStakeCents: 0, toReturnCents: 0, profitCents: 0, decimal: 1 }
   }
   if (mode === 'parlay' && legs.length >= 2) {
-    const decimal = parlayPrice(legs)
+    const { decimal } = combinedDecimal(legs)
     return {
       totalStakeCents: stakeCents,
       toReturnCents: toReturnCents(stakeCents, decimal),
@@ -153,6 +196,45 @@ export function relatedConflicts(legs: SlipLeg[]): string[] {
     else seen.set(k, l.key)
   }
   return [...new Set(bad)]
+}
+
+/** Sides that directly oppose each other and so can't share a parlay/SGP. */
+const OPPOSITE_SIDE: Readonly<Record<string, string>> = {
+  over: 'under',
+  under: 'over',
+  home: 'away',
+  away: 'home',
+  yes: 'no',
+  no: 'yes',
+}
+
+/**
+ * CONTRADICTORY legs in a slip: opposing sides of the same stat FAMILY on one event —
+ * a player's Over AND Under on the same prop (even across a main + an alternate line),
+ * both teams' moneyline, both sides of the same spread/total. These are mutually
+ * exclusive / negatively correlated and must never be combined (you'd be guaranteed a
+ * loser). Broader than `relatedConflicts`, which only catches the identical market.
+ * Returns the conflicting keys.
+ */
+export function contradictoryLegs(legs: SlipLeg[]): string[] {
+  const bad = new Set<string>()
+  for (let i = 0; i < legs.length; i++) {
+    for (let j = i + 1; j < legs.length; j++) {
+      const a = legs[i]
+      const b = legs[j]
+      if (a.eventId !== b.eventId) continue
+      const sameFamily =
+        a.marketType === b.marketType &&
+        a.marketPeriod === b.marketPeriod &&
+        (a.statId ?? '') === (b.statId ?? '') &&
+        (a.playerId ?? '') === (b.playerId ?? '')
+      if (sameFamily && OPPOSITE_SIDE[a.side] === b.side) {
+        bad.add(a.key)
+        bad.add(b.key)
+      }
+    }
+  }
+  return [...bad]
 }
 
 /** Legs whose live `priceDisplay` has moved since they were added — the slip must

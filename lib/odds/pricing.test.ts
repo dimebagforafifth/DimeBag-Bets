@@ -9,6 +9,12 @@ import {
   applyPricing,
   makeOverride,
   DEFAULT_MARGIN,
+  impliedProbability,
+  devig,
+  correlatedJoint,
+  priceSgp,
+  correlationForSport,
+  DEFAULT_SGP_CORRELATION,
 } from './pricing.js'
 
 /* ------------------------------------------------------------------ *
@@ -297,3 +303,103 @@ describe('applyPricing — override wins', () => {
 function round4(n: number): number {
   return Math.round(n * 1e4) / 1e4
 }
+
+/* ------------------------------------------------------------------ *
+ * correlated same-game parlay (SGP) pricing
+ * ------------------------------------------------------------------ */
+
+describe('impliedProbability', () => {
+  it('inverts a favourite and an underdog correctly', () => {
+    expect(impliedProbability(-110)).toBeCloseTo(0.5238, 4)
+    expect(impliedProbability(150)).toBeCloseTo(0.4, 4)
+    expect(impliedProbability(100)).toBe(0.5)
+    expect(impliedProbability(0)).toBe(0)
+  })
+})
+
+describe('devig — strip the overround to true marginals', () => {
+  it('normalizes a two-way market so the true probs sum to 1', () => {
+    // -110 / -110 → each implied 0.5238, overround ~1.0476 → de-vigged 0.5 / 0.5
+    const [a, b] = devig([-110, -110])
+    expect(a).toBeCloseTo(0.5, 6)
+    expect(b).toBeCloseTo(0.5, 6)
+    expect(a + b).toBeCloseTo(1, 9)
+  })
+
+  it('keeps the favourite the higher probability after de-vig', () => {
+    const [home, away] = devig([-200, 170]) // favourite home
+    expect(home).toBeGreaterThan(away)
+    expect(home + away).toBeCloseTo(1, 9)
+  })
+
+  it('returns implied probs unchanged when there is nothing to normalize', () => {
+    expect(devig([])).toEqual([])
+    expect(devig([0])).toEqual([0])
+  })
+})
+
+describe('correlatedJoint — joint probability with correlation', () => {
+  it('equals the independent product when ρ = 0', () => {
+    expect(correlatedJoint([0.5, 0.5], 0)).toBeCloseTo(0.25, 9)
+    expect(correlatedJoint([0.6, 0.4, 0.5], 0)).toBeCloseTo(0.12, 9)
+  })
+
+  it('is STRICTLY GREATER than independent for ρ > 0 (positive correlation)', () => {
+    const indep = 0.5 * 0.5
+    const joint = correlatedJoint([0.5, 0.5], 0.1)
+    expect(joint).toBeGreaterThan(indep)
+    // 0.25 + 0.1·√(0.25·0.25) = 0.25 + 0.1·0.25 = 0.275
+    expect(joint).toBeCloseTo(0.275, 9)
+  })
+
+  it('never exceeds the smallest marginal (Fréchet upper bound)', () => {
+    const joint = correlatedJoint([0.9, 0.3], 0.95)
+    expect(joint).toBeLessThanOrEqual(0.3 + 1e-9)
+  })
+
+  it('a single leg is just its own probability', () => {
+    expect(correlatedJoint([0.42], 0.2)).toBeCloseTo(0.42, 9)
+  })
+})
+
+describe('priceSgp — honest same-game parlay pricing', () => {
+  it('prices a correlated SGP SHORTER than the independent fair price', () => {
+    const probs = devig([-110, -110]).map(() => 0.5) // two true 50% legs
+    const indepFair = 1 / (0.5 * 0.5) // 4.0
+    const sgp = priceSgp([0.5, 0.5], { rho: 0.1 })
+    expect(sgp.jointProb).toBeGreaterThan(sgp.independentProb)
+    expect(sgp.fairDecimal).toBeLessThan(indepFair) // correlation shortened it
+    expect(probs.length).toBe(2)
+  })
+
+  it('applies the house margin (priced decimal < fair decimal)', () => {
+    const sgp = priceSgp([0.5, 0.5], { rho: 0.1 })
+    expect(sgp.decimal).toBeLessThan(sgp.fairDecimal)
+  })
+
+  it('never exceeds the independent display rail (correlation only shortens)', () => {
+    const rail = 3.4
+    const sgp = priceSgp([0.5, 0.5], { rho: 0.1, independentDisplayDecimal: rail })
+    expect(sgp.decimal).toBeLessThanOrEqual(rail)
+  })
+
+  it('caps at the 299-to-1 ceiling for tiny joint probabilities', () => {
+    const sgp = priceSgp([0.02, 0.02, 0.02], { rho: 0 })
+    expect(sgp.decimal).toBeLessThanOrEqual(300)
+  })
+
+  it('ρ = 0 reproduces the independent fair price (before margin/rail)', () => {
+    const sgp = priceSgp([0.5, 0.5], { rho: 0, margin: 0 })
+    expect(sgp.fairDecimal).toBeCloseTo(4.0, 4)
+    expect(sgp.decimal).toBeCloseTo(4.0, 4) // no margin, no rail
+  })
+})
+
+describe('correlationForSport — per-sport defaults', () => {
+  it('returns the matrix value (case-insensitive) and the fallback otherwise', () => {
+    expect(correlationForSport('FOOTBALL')).toBe(0.12)
+    expect(correlationForSport('basketball')).toBe(0.1)
+    expect(correlationForSport('UNKNOWN')).toBe(DEFAULT_SGP_CORRELATION)
+    expect(correlationForSport(undefined)).toBe(DEFAULT_SGP_CORRELATION)
+  })
+})

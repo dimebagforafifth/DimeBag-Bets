@@ -125,6 +125,25 @@ describe('parlay — combined price, re-price on void, any-loss loses', () => {
   })
 })
 
+describe('same-game parlay (SGP)', () => {
+  it('prices a same-game parlay below the independent product (correlation)', () => {
+    const legs = [leg(0, 'moneyline', 0), leg(0, 'total', 0)] // same event ev0, two markets
+    const [bet] = place('p-priya', legs, 'parlay', 5_000)
+    const indep = parlayPrice(legs)
+    expect(bet.decimal).toBeLessThanOrEqual(indep + 1e-3)
+    expect(bet.decimal).toBeGreaterThan(1)
+  })
+
+  it('refuses contradictory legs (over + under on the same total), placing nothing', () => {
+    const a = acct('p-lena')
+    const before = { balance: a.balance, pending: a.pending }
+    const legs = [leg(0, 'total', 0), leg(0, 'total', 1)] // over + under, same market
+    expect(() => place('p-lena', legs, 'parlay', 5_000)).toThrow(/related or contradictory/i)
+    expect(a.pending).toBe(before.pending)
+    expect(getBets()).toHaveLength(0)
+  })
+})
+
 describe('limits', () => {
   it('refuses a stake beyond availableToWager and places nothing', () => {
     const a = acct('p-tariq') // available = 200,000 + (−120,000) = 80,000

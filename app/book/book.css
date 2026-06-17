@@ -655,6 +655,52 @@
   border-color: var(--bk-gold);
 }
 
+/* ------------------------------- cash-out -------------------------------- */
+/* SEAM (Agent D): styled with the book-local --bk-* tokens to stay functional + on-brand;
+   fold these into the global design-token theme when it lands. */
+.bk-cashout-grp {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.bk-cashout {
+  background: var(--bk-gold);
+  color: var(--bk-graphite);
+  border: 1px solid var(--bk-gold);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: var(--bk-font);
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bk-cashout:hover {
+  background: var(--bk-gold-press);
+  border-color: var(--bk-gold-press);
+}
+.bk-cashout-half {
+  background: transparent;
+  color: var(--bk-text);
+  border: 1px solid var(--bk-line);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-family: var(--bk-font);
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+}
+.bk-cashout-half:hover {
+  border-color: var(--bk-gold);
+  color: var(--bk-gold);
+}
+.bk-betrow-cashed {
+  color: var(--bk-win);
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
 /* ------------------------------ responsive ------------------------------- */
 @media (max-width: 880px) {
   .bk {

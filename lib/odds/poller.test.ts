@@ -4,12 +4,16 @@ import {
   Poller,
   selectProvider,
   ACTIVE_LEAGUES,
+  CORE_LEAGUES,
+  EXTENDED_LEAGUES,
   type OddsCache,
 } from './poller.js'
 import { MockProvider, MOCK_EVENTS } from './providers/MockProvider.js'
 import { applyMargin, priceFromAmerican, makeOverride, DEFAULT_MARGIN } from './pricing.js'
 import type {
+  ListEventsOptions,
   NormalizedEvent,
+  OddsFeedProvider,
   OddsEventRow,
   OddsMarketRow,
   OddsSelectionRow,
@@ -108,7 +112,9 @@ describe('buildRows — flattening NormalizedEvent[] into snake_case cache rows'
       updated_at: NOW,
     })
 
-    const mlMarket: OddsMarketRow | undefined = markets.find((m) => m.market_id === 'ev-1:moneyline:game')
+    const mlMarket: OddsMarketRow | undefined = markets.find(
+      (m) => m.market_id === 'ev-1:moneyline:game',
+    )
     expect(mlMarket).toEqual({
       market_id: 'ev-1:moneyline:game',
       event_id: 'ev-1',
@@ -120,7 +126,9 @@ describe('buildRows — flattening NormalizedEvent[] into snake_case cache rows'
     })
 
     // moneyline home selection: no line → line === null, snake_case raw+display present
-    const mlHome: OddsSelectionRow | undefined = selections.find((s) => s.selection_id === 'ev-1-ml-home')
+    const mlHome: OddsSelectionRow | undefined = selections.find(
+      (s) => s.selection_id === 'ev-1-ml-home',
+    )
     expect(mlHome).toBeDefined()
     expect(mlHome!.market_id).toBe('ev-1:moneyline:game')
     expect(mlHome!.event_id).toBe('ev-1')
@@ -231,10 +239,12 @@ describe('buildRows — override preservation', () => {
     ])
     const { overridesPreserved, selections } = buildRows(slate, overrides, DEFAULT_MARGIN, NOW)
     expect(overridesPreserved).toBe(2)
-    expect(selections.filter((s) => s.override).map((s) => s.selection_id).sort()).toEqual([
-      'ev-1-ml-home',
-      'ev-1-sp-away',
-    ])
+    expect(
+      selections
+        .filter((s) => s.override)
+        .map((s) => s.selection_id)
+        .sort(),
+    ).toEqual(['ev-1-ml-home', 'ev-1-sp-away'])
   })
 
   it('ignores override entries that match no selection', () => {
@@ -349,7 +359,12 @@ describe('Poller.pollOnce — drives provider → cache', () => {
 
     const result = await poller.pollOnce()
     expect(result).toEqual({ events: 0, markets: 0, selections: 0, overridesPreserved: 0 })
-    expect(cache.calls).toEqual(['getOverrides(0)', 'writeEvents', 'writeMarkets', 'writeSelections'])
+    expect(cache.calls).toEqual([
+      'getOverrides(0)',
+      'writeEvents',
+      'writeMarkets',
+      'writeSelections',
+    ])
   })
 })
 
@@ -387,5 +402,72 @@ describe('ACTIVE_LEAGUES default scope', () => {
     const poller = new Poller({ provider: new MockProvider(), cache, now: () => NOW })
     const result = await poller.pollOnce()
     expect(result.events).toBe(MOCK_EVENTS.length)
+  })
+
+  it('splits CORE (verified) and EXTENDED (plan-gated) and keeps EPL/UFC as correct codes', () => {
+    expect(CORE_LEAGUES).toEqual(['NFL', 'NBA', 'MLB', 'NHL'])
+    // EPL + UFC are the SGO codes — kept, just isolated because they may 4xx on free tier.
+    expect(EXTENDED_LEAGUES).toContain('EPL')
+    expect(EXTENDED_LEAGUES).toContain('UFC')
+    expect(ACTIVE_LEAGUES).toEqual([...CORE_LEAGUES, ...EXTENDED_LEAGUES])
+  })
+})
+
+/** A provider that returns one event per league but THROWS for chosen leagues (mimics SGO
+ *  returning 4xx for a plan-gated league like EPL/UFC on the free tier). */
+class PartialFailProvider implements OddsFeedProvider {
+  readonly name = 'partial'
+  readonly attempted: string[] = []
+  constructor(private readonly failLeagues: string[]) {}
+  async listEvents(leagueIds: string[], _opts: ListEventsOptions = {}): Promise<NormalizedEvent[]> {
+    const league = leagueIds[0] ?? ''
+    this.attempted.push(league)
+    if (this.failLeagues.includes(league)) throw new Error(`SGO 400 for ${league}`)
+    return [
+      {
+        eventId: `ev-${league}`,
+        leagueId: league,
+        sport: 'TEST',
+        home: 'H',
+        away: 'A',
+        startsAt: NOW,
+        status: 'pre',
+        markets: [],
+      },
+    ]
+  }
+  async getEvent(): Promise<NormalizedEvent | null> {
+    return null
+  }
+}
+
+describe('Poller.pollOnce — per-league fault isolation', () => {
+  it('a league that 4xx s is skipped (others still cache) and reported via onLeagueError', async () => {
+    const provider = new PartialFailProvider(['EPL', 'UFC'])
+    const cache = new FakeCache()
+    const failed: string[] = []
+    const poller = new Poller({
+      provider,
+      cache,
+      leagues: ['NFL', 'NBA', 'EPL', 'UFC'],
+      now: () => NOW,
+      onLeagueError: (league) => failed.push(league),
+    })
+
+    const result = await poller.pollOnce()
+
+    // every league was attempted independently
+    expect(provider.attempted).toEqual(['NFL', 'NBA', 'EPL', 'UFC'])
+    // the two good leagues cached; the two plan-gated ones were skipped, not fatal
+    expect(result.events).toBe(2)
+    expect(cache.events.map((e) => e.league_id).sort()).toEqual(['NBA', 'NFL'])
+    expect(failed.sort()).toEqual(['EPL', 'UFC'])
+    // still wrote in FK order even with failures
+    expect(cache.calls).toEqual([
+      'getOverrides(2)',
+      'writeEvents',
+      'writeMarkets',
+      'writeSelections',
+    ])
   })
 })
