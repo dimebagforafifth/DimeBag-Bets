@@ -11,6 +11,13 @@
 import type { Account } from '../core/index.js'
 import { settleWeek } from '../core/index.js'
 import type { Member, MemberProfile, Org, Role } from './types.js'
+import {
+  computeCommission,
+  isCommissionModel,
+  type CommissionConfig,
+  type CommissionModel,
+  type CommissionResult,
+} from './commission.js'
 
 /**
  * Tier rank — lower sits higher in the tree. The single placement rule is
@@ -150,9 +157,7 @@ export function addPlayer(org: Org, parentId: string, opts: NewMember): Member {
 /** Members of a given role that a new `role` member could be placed under — i.e.
  *  every active member of a strictly higher tier. Drives the parent picker. */
 export function eligibleParents(org: Org, role: Role): Member[] {
-  return Object.values(org.members).filter(
-    (m) => m.active && ROLE_TIER[m.role] < ROLE_TIER[role],
-  )
+  return Object.values(org.members).filter((m) => m.active && ROLE_TIER[m.role] < ROLE_TIER[role])
 }
 
 /* -------------------------------- reading ------------------------------- */
@@ -239,12 +244,15 @@ export function setCreditLimit(org: Org, id: string, creditLimit: number): void 
 
   const allocated = allocatedCredit(org, id)
   if (creditLimit < allocated) {
-    throw new Error(`${member.name} has already granted ${allocated} downstream — can't go below that`)
+    throw new Error(
+      `${member.name} has already granted ${allocated} downstream — can't go below that`,
+    )
   }
   if (member.parentId) {
     const parent = getMember(org, member.parentId)
     // headroom = parent's limit minus what's allocated to the OTHER siblings
-    const headroom = parent.account.creditLimit - (allocatedCredit(org, parent.id) - member.account.creditLimit)
+    const headroom =
+      parent.account.creditLimit - (allocatedCredit(org, parent.id) - member.account.creditLimit)
     if (creditLimit > headroom) {
       throw new Error(`that credit exceeds ${parent.name}'s available credit to grant`)
     }
@@ -385,9 +393,11 @@ export function bookPending(org: Org, id: string): number {
 /* ------------------------------ agent rollups --------------------------- */
 
 /**
- * Set (or clear) an agent's / master agent's commission split — the percent (0–100) of
- * their downline's net losses they keep at weekly settlement. Players and the manager
- * carry no split. Pass null (or 0) to clear.
+ * Set (or clear) an agent's / master agent's commission RATE — the percent (0–100) they
+ * keep at weekly settlement. Players and the manager carry no split. Pass null (or 0) to
+ * clear. This is the legacy rate-only setter; if the member already carries an explicit
+ * commission MODEL it adjusts that model's rate (and clearing removes it), so the two write
+ * paths never diverge — `setCommissionModel` is the canonical setter for choosing a model.
  */
 export function setCommissionPct(org: Org, id: string, pct: number | null): void {
   const member = getMember(org, id)
@@ -396,12 +406,66 @@ export function setCommissionPct(org: Org, id: string, pct: number | null): void
   }
   if (pct == null || pct === 0) {
     delete member.commissionPct
+    delete member.commission // keep the rate-only and model setters consistent
     return
   }
   if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
     throw new Error(`commission must be a percent 0–100 (or null to clear), got ${pct}`)
   }
   member.commissionPct = pct
+  if (member.commission) member.commission.pct = pct // adjust the active model's rate in lockstep
+}
+
+/**
+ * The effective commission arrangement for a member: their explicit `commission` model if
+ * set, otherwise their legacy `commissionPct` read as a PROFIT-SHARE config (so old books
+ * keep settling identically), otherwise null (players, the manager, or no split). Carries
+ * the stored redline carryover through. Pure read.
+ */
+export function commissionConfigOf(member: Member): CommissionConfig | null {
+  if (member.role !== 'agent' && member.role !== 'subagent') return null
+  if (member.commission) return member.commission
+  if (member.commissionPct && member.commissionPct > 0) {
+    return { model: 'profit_share', pct: member.commissionPct }
+  }
+  return null
+}
+
+/**
+ * Set (or clear, with null) an agent's / master agent's commission MODEL — split,
+ * profit-share, or redline — plus its rate. Validates role, model, and percent. Clearing
+ * removes both the model and the legacy `commissionPct` so the agent carries no split. A
+ * redline config keeps any existing carryover unless one is explicitly supplied.
+ */
+export function setCommissionModel(
+  org: Org,
+  id: string,
+  config: { model: CommissionModel; pct: number; carryoverCents?: number } | null,
+): void {
+  const member = getMember(org, id)
+  if (member.role !== 'agent' && member.role !== 'subagent') {
+    throw new Error('only agents and master agents carry a commission split')
+  }
+  if (config == null) {
+    delete member.commission
+    delete member.commissionPct
+    return
+  }
+  if (!isCommissionModel(config.model)) {
+    throw new Error(`unknown commission model: ${String(config.model)}`)
+  }
+  if (!Number.isFinite(config.pct) || config.pct < 0 || config.pct > 100) {
+    throw new Error(`commission must be a percent 0–100, got ${config.pct}`)
+  }
+  const next: CommissionConfig = { model: config.model, pct: config.pct }
+  if (config.model === 'redline') {
+    // Preserve the running red figure across edits unless one is explicitly passed.
+    const carry = config.carryoverCents ?? member.commission?.carryoverCents ?? 0
+    next.carryoverCents = Math.min(0, Math.round(carry))
+  }
+  member.commission = next
+  // Mirror the rate onto the legacy field so older read paths stay consistent.
+  member.commissionPct = config.pct
 }
 
 /** Every PLAYER anywhere beneath `id` — an agent's or master agent's whole roster. */
@@ -430,16 +494,16 @@ export function agentPlayerNet(org: Org, id: string): number {
 }
 
 /**
- * The commission an agent / master agent has earned this period: `commissionPct%` of
- * their players' net LOSSES (0 when the players are net up — standard PPH: the agent
- * shares the book's win off their roster, not its loss). Pure read; nothing moves
- * until settlement nets it.
+ * The commission an agent / master agent has earned this period under their model — a
+ * preview against the current roster net and (for redline) the stored carryover. SPLIT can
+ * be NEGATIVE when the roster beat the book; PROFIT-SHARE and REDLINE never go below 0.
+ * Pure read; nothing moves until settlement nets it. Agents with no split earn 0.
  */
 export function agentCommission(org: Org, id: string): number {
-  const pct = getMember(org, id).commissionPct ?? 0
-  if (pct <= 0) return 0
-  const playersLost = Math.max(0, -agentPlayerNet(org, id)) // the book's win off this roster
-  return Math.round((playersLost * pct) / 100)
+  const config = commissionConfigOf(getMember(org, id))
+  if (!config) return 0
+  const bookNet = -agentPlayerNet(org, id) // book POV: positive = the book won off the roster
+  return computeCommission(config, bookNet).commissionCents
 }
 
 export interface AgentPerformance {
@@ -458,7 +522,9 @@ export interface AgentPerformance {
   exposure: number
   /** Commission % carried (0 if none). */
   commissionPct: number
-  /** Commission earned this period (see `agentCommission`). */
+  /** Which commission model the agent is paid under (null if they carry no split). */
+  commissionModel: CommissionModel | null
+  /** Commission earned this period (see `agentCommission`; SPLIT can be negative). */
   commission: number
 }
 
@@ -472,7 +538,8 @@ export function agentPerformance(org: Org, id: string): AgentPerformance {
   const sub = downline(org, id)
   const players = sub.filter((x) => x.role === 'player')
   const playerNet = players.reduce((s, p) => s + p.account.balance, 0)
-  const pct = m.commissionPct ?? 0
+  const config = commissionConfigOf(m)
+  const commission = config ? computeCommission(config, -playerNet).commissionCents : 0
   return {
     agentId: id,
     name: m.name,
@@ -482,8 +549,9 @@ export function agentPerformance(org: Org, id: string): AgentPerformance {
     subAgents: sub.filter((x) => x.role === 'agent' || x.role === 'subagent').length,
     playerNet,
     exposure: players.reduce((s, p) => s + p.account.pending, 0),
-    commissionPct: pct,
-    commission: pct > 0 ? Math.round((Math.max(0, -playerNet) * pct) / 100) : 0,
+    commissionPct: config?.pct ?? 0,
+    commissionModel: config?.model ?? null,
+    commission,
   }
 }
 
@@ -493,6 +561,52 @@ export function allAgents(org: Org): Member[] {
   return Object.values(org.members)
     .filter((m) => m.role === 'agent' || m.role === 'subagent')
     .sort((a, b) => ROLE_TIER[a.role] - ROLE_TIER[b.role] || a.name.localeCompare(b.name))
+}
+
+/** One agent's commission for the current week — what `settleOrgWeek` distributes/persists. */
+export interface AgentCommissionLine {
+  agentId: string
+  name: string
+  role: Role
+  model: CommissionModel
+  /** The rate (0–100) applied. */
+  pct: number
+  /** Book POV roster net this week (positive = the book won off the roster), in cents. */
+  rosterNetCents: number
+  /** Commission earned this week, in cents (negative only under SPLIT). */
+  commissionCents: number
+  /** REDLINE carryover BEFORE this week, in cents (≤ 0). */
+  carryoverBeforeCents: number
+  /** REDLINE carryover AFTER this week, in cents (≤ 0). 0 for the other models. */
+  carryoverAfterCents: number
+}
+
+/**
+ * The commission distribution for the whole book this week: one line per agent / master
+ * agent that carries a split, graded under their model against their roster net (and, for
+ * redline, their stored carryover). Pure read — `settleOrgWeek` is what persists the
+ * advanced redline carryover and stamps these onto the statement.
+ */
+export function agentDistribution(org: Org): AgentCommissionLine[] {
+  const lines: AgentCommissionLine[] = []
+  for (const m of allAgents(org)) {
+    const config = commissionConfigOf(m)
+    if (!config) continue
+    const bookNet = -agentPlayerNet(org, m.id) // book POV: positive = the book won off the roster
+    const result: CommissionResult = computeCommission(config, bookNet)
+    lines.push({
+      agentId: m.id,
+      name: m.name,
+      role: m.role,
+      model: result.model,
+      pct: config.pct,
+      rosterNetCents: result.rosterNetCents,
+      commissionCents: result.commissionCents,
+      carryoverBeforeCents: Math.min(0, Math.round(config.carryoverCents ?? 0)),
+      carryoverAfterCents: result.carryoverCents,
+    })
+  }
+  return lines
 }
 
 /** Merge a patch into a member's profile (contact/identity/notes). Only the given
@@ -525,7 +639,9 @@ export function removeMember(org: Org, id: string): void {
   const reports = directReports(org, id)
   if (reports.length > 0) {
     const n = reports.length
-    throw new Error(`${member.name} still has ${n} member${n === 1 ? '' : 's'} under them — move or remove those first`)
+    throw new Error(
+      `${member.name} still has ${n} member${n === 1 ? '' : 's'} under them — move or remove those first`,
+    )
   }
   if (member.account.pending !== 0) {
     throw new Error(`${member.name} has a live bet pending — wait for it to settle`)
@@ -548,6 +664,23 @@ export interface Settlement {
   parentId: string | null
   /** Positive = the level above owes this member; negative = this member owes up. */
   amount: number
+  /** Commission this agent earns under their model this week, in cents (agents only;
+   *  negative only under SPLIT). Absent for members carrying no split. */
+  commission?: number
+  /** Which model produced `commission` (agents with a split only). */
+  commissionModel?: CommissionModel
+}
+
+/** Stamp each agent's commission (from the distribution) onto their statement line. */
+function withCommission(
+  statement: Settlement[],
+  distribution: AgentCommissionLine[],
+): Settlement[] {
+  const byId = new Map(distribution.map((d) => [d.agentId, d]))
+  return statement.map((line) => {
+    const d = byId.get(line.memberId)
+    return d ? { ...line, commission: d.commissionCents, commissionModel: d.model } : line
+  })
 }
 
 /**
@@ -583,8 +716,19 @@ export function settleOrgWeek(org: Org, opts: { carryover?: boolean } = {}): Set
   if (stuck) {
     throw new Error(`can't settle: ${stuck.name} still has ${stuck.account.pending} pending`)
   }
-  const statement = settlementStatement(org)
-  if (opts.carryover) return statement // record the standings; figures carry forward
+  // Grade commission off this week's standings (before any roll-up), then stamp it on the
+  // statement so the record shows who the book owes for the action they brought.
+  const distribution = agentDistribution(org)
+  const statement = withCommission(settlementStatement(org), distribution)
+  if (opts.carryover) return statement // soft close: record standings; advance/collect nothing
+
+  // The week is collected: advance each redline agent's make-up carryover for next week.
+  for (const line of distribution) {
+    const member = org.members[line.agentId]
+    if (member?.commission?.model === 'redline') {
+      member.commission.carryoverCents = line.carryoverAfterCents
+    }
+  }
 
   // Roll balances up, deepest tier first, so each parent accumulates everything
   // beneath it before it settles upward in turn.

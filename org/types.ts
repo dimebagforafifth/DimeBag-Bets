@@ -26,6 +26,7 @@
  */
 
 import type { Account } from '../core/index.js'
+import type { CommissionConfig } from './commission.js'
 
 export type Role = 'manager' | 'subagent' | 'agent' | 'player'
 
@@ -59,8 +60,18 @@ export interface Member {
    * downline's net LOSSES they keep when the book squares up weekly. The manager owes
    * the agent `commissionPct%` of what the agent's players lost; it nets against what
    * the agent owes up. Undefined / 0 for players and the manager. See `agentCommission`.
+   *
+   * LEGACY: the original single-knob commission. When `commission` (below) is set it WINS;
+   * otherwise a bare `commissionPct` is read as the equivalent PROFIT-SHARE config, so old
+   * books keep settling exactly as before.
    */
   commissionPct?: number
+  /**
+   * The agent's commission MODEL — split / profit-share / redline — plus its rate and
+   * (for redline) the running make-up carryover. AGENT / MASTER AGENT only. When present it
+   * supersedes `commissionPct`. See `org/commission.ts` and `agentDistribution`.
+   */
+  commission?: CommissionConfig
 }
 
 /**

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
   buildRows,
   Poller,
@@ -10,6 +10,7 @@ import {
 } from './poller.js'
 import { MockProvider, MOCK_EVENTS } from './providers/MockProvider.js'
 import { applyMargin, priceFromAmerican, makeOverride, DEFAULT_MARGIN } from './pricing.js'
+import { setBaseMargin, setMarketMargin, __resetMarginConfig } from './margin-config.js'
 import type {
   ListEventsOptions,
   NormalizedEvent,
@@ -469,5 +470,74 @@ describe('Poller.pollOnce — per-league fault isolation', () => {
       'writeMarkets',
       'writeSelections',
     ])
+  })
+})
+
+describe('Poller — live operator margin config (the console → poller seam)', () => {
+  // The store is process-global; isolate every case.
+  beforeEach(() => __resetMarginConfig())
+  afterEach(() => __resetMarginConfig())
+
+  const mlDisplay = (cache: FakeCache) =>
+    cache.selections.find((s) => s.selection_id === 'ev-1-ml-home')!.price_display_decimal
+  const spDisplay = (cache: FakeCache) =>
+    cache.selections.find((s) => s.selection_id === 'ev-1-sp-home')!.price_display_decimal
+
+  it('an unconfigured poller prices off the LIVE margin store (a console change reprices)', async () => {
+    setBaseMargin(0.1) // operator dialed the hold up to 10%
+    const cache = new FakeCache()
+    const poller = new Poller({
+      provider: new MockProvider(tinySlate()),
+      cache,
+      leagues: ['NBA'],
+      now: () => NOW,
+    })
+    await poller.pollOnce()
+    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), 0.1).decimal)
+    // …and that is NOT the legacy default — the store is genuinely driving the price
+    expect(mlDisplay(cache)).not.toBe(applyMargin(priceFromAmerican(-120), DEFAULT_MARGIN).decimal)
+  })
+
+  it('picks up a store change on the NEXT cycle (read per-poll, not frozen at construction)', async () => {
+    const cache = new FakeCache()
+    const poller = new Poller({
+      provider: new MockProvider(tinySlate()),
+      cache,
+      leagues: ['NBA'],
+      now: () => NOW,
+    })
+    await poller.pollOnce()
+    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), DEFAULT_MARGIN).decimal)
+    setBaseMargin(0.2) // operator changes posture between cycles
+    await poller.pollOnce()
+    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), 0.2).decimal)
+  })
+
+  it('applies a per-market override from the store — only that market reprices', async () => {
+    setMarketMargin('spread', 0.12) // fatter spreads, moneyline left at the base
+    const cache = new FakeCache()
+    const poller = new Poller({
+      provider: new MockProvider(tinySlate()),
+      cache,
+      leagues: ['NBA'],
+      now: () => NOW,
+    })
+    await poller.pollOnce()
+    expect(spDisplay(cache)).toBe(applyMargin(priceFromAmerican(-110), 0.12).decimal)
+    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), DEFAULT_MARGIN).decimal)
+  })
+
+  it('an explicit flat margin still works and overrides the live store (back-compat)', async () => {
+    setBaseMargin(0.3) // store says 30%…
+    const cache = new FakeCache()
+    const poller = new Poller({
+      provider: new MockProvider(tinySlate()),
+      cache,
+      leagues: ['NBA'],
+      margin: 0.07, // …but an explicitly injected flat 7% wins
+      now: () => NOW,
+    })
+    await poller.pollOnce()
+    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), 0.07).decimal)
   })
 })
