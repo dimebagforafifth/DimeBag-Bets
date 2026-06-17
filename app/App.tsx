@@ -45,6 +45,14 @@ import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
 import { Leaderboard, VipBadge } from '../vip/ui/index.js'
+// Round-2 player sections. The registry (app/player-sections) drives the nav tabs + role-gating;
+// the shell renders each section below with its documented props. register-player-sections wires
+// community + pickem into the registry and pulls in records (which self-registers 'profile').
+import './register-player-sections.js'
+import { playerSectionsFor } from './player-sections.js'
+import { CommunitySection } from '../social/index.js'
+import { PickemSection } from '../pickem/index.js'
+import { ProfileSection } from '../records/index.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
 import { houseConfigFor, nativeRtp } from './edge-config.js'
@@ -193,6 +201,20 @@ export function App() {
                 {t.label}
               </button>
             ))}
+            {/* Registry-driven player sections (round 2: Profile / Community / Pick'em). The
+                registry role-gates them; we also intersect with allowedSections so nav + render
+                guard stay one source of truth. */}
+            {playerSectionsFor(role)
+              .filter((m) => visibleSections.includes(m.key as Section))
+              .map((m) => (
+                <button
+                  key={m.key}
+                  className={`nav-tab ${activeSection === m.key ? 'is-on' : ''}`}
+                  onClick={() => setSection(m.key as Section)}
+                >
+                  {m.label}
+                </button>
+              ))}
           </nav>
         </div>
         <div className="header-right">
@@ -308,6 +330,40 @@ export function App() {
               canManage={canManage(role)}
             />
           )
+        ) : activeSection === 'community' ? (
+          account && player ? (
+            <CommunitySection
+              viewerId={authMember?.id ?? player.id}
+              viewerName={player.name}
+              account={account}
+              onBalanceChange={refresh}
+            />
+          ) : (
+            <NoPlayer
+              onManage={() => setSection('management')}
+              allSuspended={allSuspended}
+              canManage={canManage(role)}
+            />
+          )
+        ) : activeSection === 'pickem' ? (
+          account && player ? (
+            <PickemSection
+              account={account}
+              playerName={player.name}
+              isDemo={isDemo}
+              onBalanceChange={refresh}
+            />
+          ) : (
+            <NoPlayer
+              onManage={() => setSection('management')}
+              allSuspended={allSuspended}
+              canManage={canManage(role)}
+            />
+          )
+        ) : activeSection === 'profile' ? (
+          // Profile is prop-less + self-contained (reads the durable record store, with its
+          // own "no player" fallback), so it renders the same for player and operator.
+          <ProfileSection />
         ) : (
           <div className="casino-view">
             {!account ? (

@@ -2,18 +2,43 @@
  * The social graph — friends/follows. A directed edge: a player FOLLOWS another player in
  * their community, so their shared slips appear in the follower's feed (feed-store.ts).
  *
- * An in-memory external store (subscribe / version), like app/book/bets-store — the demo
- * seeds it (social/seed.ts) so the Community surface renders populated. No money, no keys.
- *  // SEAM (persistence): swap the in-memory map for a persistedDoc over createStore to
- *  survive reloads + sync per-tenant — the API here is unchanged.
+ * An external store (subscribe / version) like app/book/bets-store — now PERSISTED through the
+ * shared KVStore seam so the graph survives a refresh. With no Supabase keys this is
+ * localStorage only (off-by-default, byte-for-byte the prior behaviour in the browser; a
+ * memory fallback in node/SSR/tests); with keys it rides the same Supabase cache as rewards/
+ * book. `Map<string,Set>` isn't JSON-serialisable, so we persist a plain snapshot.
  */
 
+import { createStore } from '../persistence/index.js'
+import { persistedDoc, type Doc } from '../persistence/doc.js'
+
+/** Serialisable snapshot of the graph: followerId → the ids they follow. */
+type FollowsSnapshot = Record<string, string[]>
+
+const store = createStore({ namespace: 'dimebag' })
+const DOC: Doc<FollowsSnapshot> = persistedDoc<FollowsSnapshot>(store, 'social.follows', {
+  version: 1,
+  initial: {},
+})
+
+function toSnapshot(m: Map<string, Set<string>>): FollowsSnapshot {
+  const out: FollowsSnapshot = {}
+  for (const [k, set] of m) if (set.size) out[k] = [...set]
+  return out
+}
+function fromSnapshot(s: FollowsSnapshot): Map<string, Set<string>> {
+  const m = new Map<string, Set<string>>()
+  for (const [k, ids] of Object.entries(s)) m.set(k, new Set(ids))
+  return m
+}
+
 /** followerId → set of the ids they follow. */
-let following = new Map<string, Set<string>>()
+let following = fromSnapshot(DOC.load())
 let version = 0
 const listeners = new Set<() => void>()
 
 function notify(): void {
+  DOC.save(toSnapshot(following)) // persist before bumping version (mirrors rewards/economy)
   version += 1
   listeners.forEach((l) => l())
 }

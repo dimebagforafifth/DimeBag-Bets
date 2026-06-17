@@ -6,7 +6,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   POWER_TABLE,
-  FLEX_TABLE,
   PICK_PROBABILITY,
   MIN_PICKS,
   MAX_PICKS,

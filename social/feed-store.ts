@@ -3,22 +3,43 @@
  * flag. The surface that makes the platform feel alive (Rebet/Stake-social): a player
  * shares a slip (or keeps it private), friends react and comment, and one-tap tail it.
  *
- * An in-memory external store (subscribe / version), like app/book/bets-store. A feed card
- * is a SharedSlip snapshot — no money moves here (tail/fade do, through core; see tail.ts).
- *  // SEAM (persistence): swap the in-memory array for a persistedDoc over createStore later.
+ * An external store (subscribe / version) like app/book/bets-store — now PERSISTED through the
+ * shared KVStore seam so the feed survives a refresh. A feed card is a SharedSlip snapshot
+ * (no money moves here — tail/fade do, through core; see tail.ts), which is plain JSON, so the
+ * whole feed + its id counters persist directly. With no Supabase keys this is localStorage
+ * only (off-by-default; memory fallback in node/tests); with keys it rides the same cache as
+ * rewards/book.
  */
 
+import { createStore } from '../persistence/index.js'
+import { persistedDoc, type Doc } from '../persistence/doc.js'
 import type { SlipLeg, SlipMode } from '../app/book/slip.js'
 import type { BookBetStatus } from '../app/book/bets-store.js'
 import type { Comment, Reaction, SharedSlip, SlipOrigin } from './types.js'
 
-let slips: SharedSlip[] = [] // newest first
-let seq = 0
-let cseq = 0
+/** The persisted feed: the cards (newest first) plus the slip/comment id counters so ids
+ *  don't collide after a reload. */
+interface FeedSnapshot {
+  slips: SharedSlip[]
+  seq: number
+  cseq: number
+}
+
+const store = createStore({ namespace: 'dimebag' })
+const DOC: Doc<FeedSnapshot> = persistedDoc<FeedSnapshot>(store, 'social.feed', {
+  version: 1,
+  initial: { slips: [], seq: 0, cseq: 0 },
+})
+
+const loaded = DOC.load()
+let slips: SharedSlip[] = loaded.slips // newest first
+let seq = loaded.seq
+let cseq = loaded.cseq
 let version = 0
 const listeners = new Set<() => void>()
 
 function notify(): void {
+  DOC.save({ slips, seq, cseq }) // persist before bumping version (mirrors rewards/economy)
   version += 1
   listeners.forEach((l) => l())
 }

@@ -10,7 +10,7 @@ import { mockSlate } from '../app/book/mockBook.js'
 import { combinedDecimal, legFromSelection, type SlipLeg } from '../app/book/slip.js'
 import type { NormalizedEvent } from '../lib/odds/contract.js'
 import { seedFollows, __resetFollows } from './follows-store.js'
-import { shareSlip, __resetFeed } from './feed-store.js'
+import { shareSlip, allSlips, __resetFeed } from './feed-store.js'
 
 const MIN = 60_000
 const HOUR = 60 * MIN
@@ -69,7 +69,7 @@ export function seedSocial(now: number): void {
   seedFollows(FOLLOW_EDGES)
 
   const slate = mockSlate()
-  const single = (eventId: string, spec: Parameters<typeof findLeg>[1]) => {
+  const single = (eventId: string, spec: Parameters<typeof findLeg>[2]) => {
     const leg = findLeg(slate, eventId, spec)
     return { leg, decimal: leg.price.decimal }
   }
@@ -169,8 +169,12 @@ let seeded = false
 /** Seed once (idempotent) — the section calls this on mount so the demo is populated. */
 export function ensureSeeded(now: number): void {
   if (seeded) return
-  seedSocial(now)
   seeded = true
+  // The feed + follows now persist (KVStore seam), so on a reload they're already populated
+  // (the demo seed and/or the player's own shares/follows). Only seed a genuinely empty feed,
+  // so a refresh never clobbers persisted state.
+  if (allSlips().length > 0) return
+  seedSocial(now)
 }
 
 /** Reset everything social (tests). */
