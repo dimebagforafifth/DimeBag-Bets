@@ -6,7 +6,6 @@ import {
   useState,
   useSyncExternalStore,
   type ComponentType,
-  type CSSProperties,
 } from 'react'
 import { availableToWager, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
@@ -40,6 +39,7 @@ import {
 } from './book-store.js'
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
+import { ActivityTicker } from './ActivityTicker.js'
 import { setActiveGame } from './ledger-store.js'
 import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
@@ -495,16 +495,19 @@ function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
   return (
     <div className="lobby">
       <div className="lobby-head">
-        <h1 className="lobby-title">Casino</h1>
+        <span className="lobby-eyebrow">Provably fair</span>
+        <h1 className="lobby-title">Originals</h1>
       </div>
+      {/* the live wins strip — a quiet, read-only feed of recent bets across the
+          book; renders nothing until there's activity, so a fresh book stays clean */}
+      <ActivityTicker />
       <div className="lobby-grid">
         {GAMES.filter((g) => isGameEnabled(g.key)).map((g) => (
-          <button
-            key={g.key}
-            className="game-card"
-            style={{ '--accent': g.accent } as CSSProperties}
-            onClick={() => onPlay(g.key)}
-          >
+          // One graphite-and-gold system: every card inherits the gold --accent
+          // (theme.css), so the hub reads as one brand, not a per-game rainbow.
+          // Cards differ by their distinct line-art glyph + name. Each game keeps
+          // its own accent for INSIDE its page (g.accent), just not on the lobby.
+          <button key={g.key} className="game-card" onClick={() => onPlay(g.key)}>
             <span className="card-art">
               <GameIcon kind={g.key} />
             </span>
