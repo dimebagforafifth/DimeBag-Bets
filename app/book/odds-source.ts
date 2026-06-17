@@ -25,6 +25,7 @@ import type {
 } from '../../lib/odds/contract.js'
 import {
   getSupabaseEnv,
+  realtimeSchedule,
   type EnvSource,
   type SupabaseEnv,
   type FetchLike,
@@ -244,14 +245,15 @@ export function connectSnapshot(
  * Connect the Supabase odds cache as the LIVE source for `useBookOdds()`.
  *
  * With the env keys present (or an injected reader) it hydrates the slate from the
- * cache tables the poller fills, then refreshes on an interval. With NO keys it is a
- * no-op and the built-in mock stays in force, so the book always renders populated —
- * the mock is the offline fallback, the flip to live is just this connect call.
+ * cache tables the poller fills, then keeps it fresh. With NO keys it is a no-op and
+ * the built-in mock stays in force, so the book always renders populated — the mock is
+ * the offline fallback, the flip to live is just this connect call.
  *
- *  // SEAM (realtime): the migration already adds the three tables to the
- *  `supabase_realtime` publication, so this can move from interval polling to
- *  `postgres_changes` pushes the moment a supabase-js client is added as a dep —
- *  swap the scheduler for a channel subscription; `hydrateFromCache` stays the same.
+ *  REALTIME (wired): with keys present the refresh is driven by Supabase `postgres_changes`
+ *  pushes (`realtimeSchedule()` from the persistence layer — the migration already adds the
+ *  three cache tables to the `supabase_realtime` publication). A push just re-runs the same
+ *  `tick`/`hydrateFromCache`, so it's a drop-in for the interval. If realtime is unavailable
+ *  (no supabase-js / no keys) it falls back to interval polling; tests inject `schedule`.
  *
  * Returns a disposer.
  */
@@ -275,8 +277,11 @@ export function connectOddsCache(opts: ConnectOddsCacheOptions = {}): () => void
     void hydrateFromCache(reader).catch(() => {})
   }
   tick() // initial hydrate
+  // Prefer realtime push (Supabase postgres_changes) when keys are present; fall back to
+  // interval polling otherwise. Tests inject `schedule` to stay deterministic + offline.
   const schedule =
     opts.schedule ??
+    realtimeSchedule({ envSource: opts.envSource }) ??
     ((fn, ms) => {
       const t = setInterval(fn, ms)
       return () => clearInterval(t)

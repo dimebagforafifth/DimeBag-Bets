@@ -3,5 +3,8 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "crons": [{ "path": "/api/poll-odds", "schedule": "0 12 * * *" }]
+  "crons": [
+    { "path": "/api/poll-odds", "schedule": "0 12 * * *" },
+    { "path": "/api/run-promos", "schedule": "0 13 * * *" }
+  ]
 }

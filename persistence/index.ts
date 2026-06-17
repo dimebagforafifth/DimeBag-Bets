@@ -43,6 +43,25 @@ export {
   type FetchLike,
 } from './supabase/kv-transport.js'
 
+// Realtime push (off until env keys are present; falls back to interval polling / mock).
+export {
+  subscribeToChanges,
+  realtimeSchedule,
+  ODDS_CACHE_TABLES,
+  type RealtimeOptions,
+  type RealtimeChannelLike,
+  type RealtimeClientLike,
+  type CreateClientLike,
+} from './realtime.js'
+
+// Scheduled-promos cron worker (mock-safe; the backend backstop for the in-app runner).
+export {
+  runScheduledPromosCron,
+  type PromoCronResult,
+  type PromoCronOptions,
+  type ScheduleSource,
+} from './promo-cron.js'
+
 // Server-authoritative money path (RPC + RLS; off until env keys are present).
 export {
   createMoneyService,
