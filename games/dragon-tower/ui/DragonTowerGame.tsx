@@ -19,6 +19,7 @@ import {
   type TowerGame as TowerGameState,
   type TowerHouseConfig,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -41,16 +42,16 @@ const TOWER_RULES: ReactNode[] = [
     harder modes are riskier but pay much more each row.
   </>,
   <>
-    The tower is 9 rows tall. In each row, <u>tap one tile</u>: find an egg 🥚 to move up, but
-    avoid the skull 💀.
+    The tower is 9 rows tall. In each row, <u>tap one tile</u>: find an egg 🥚 to move up, but avoid
+    the skull 💀.
   </>,
   <>
     <u>Every egg climbs you one row and raises your multiplier.</u> Each row up is worth more than
     the last.
   </>,
   <>
-    <u>Hit a skull and the climb ends — you lose your bet.</u> So the higher you go, the more
-    you’re risking.
+    <u>Hit a skull and the climb ends — you lose your bet.</u> So the higher you go, the more you’re
+    risking.
   </>,
   <>
     <u>Press Cash Out after any row to bank your winnings.</u> Reach the top row and it auto-pays
@@ -82,6 +83,7 @@ export function DragonTowerGame({
   const [difficulty, setDifficulty] = useState<TowerDifficulty>('medium')
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<TowerGameState | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -100,15 +102,21 @@ export function DragonTowerGame({
     }
   })
 
-  function start() {
+  // The tower layout's server seed now comes from the platform fairness AUTHORITY (commit hash
+  // before play → reveal after), not a browser randomServerSeed(). The tower math is unchanged.
+  async function start() {
+    if (inFlightRef.current || game?.status === 'active') return
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const next = createTowerGame(account, {
         stake: bet,
         difficulty,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       setGame(next)
@@ -116,6 +124,8 @@ export function DragonTowerGame({
       play('bet')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -146,7 +156,12 @@ export function DragonTowerGame({
     <div className="tower">
       <section className="tower-panel">
         <BetField value={bet} disabled={!idle} max={available} onChange={setBet} />
-        {canCash && <ProfitReadout total={Math.round(bet * currentMultiplier(game!))} multiplier={currentMultiplier(game!)} />}
+        {canCash && (
+          <ProfitReadout
+            total={Math.round(bet * currentMultiplier(game!))}
+            multiplier={currentMultiplier(game!)}
+          />
+        )}
 
         <label className="field">
           <span className="field-label">Difficulty</span>
@@ -176,7 +191,9 @@ export function DragonTowerGame({
 
         {error && <p className="tower-error">{error}</p>}
         {stakeTooHigh && idle && !error && (
-          <p className="tower-error">Stake exceeds what you can wager ({formatMoney(available)}).</p>
+          <p className="tower-error">
+            Stake exceeds what you can wager ({formatMoney(available)}).
+          </p>
         )}
 
         <Readout game={game} bet={bet} difficulty={difficulty} houseConfig={houseConfig} />
@@ -257,7 +274,10 @@ function Readout({
   if (!game) {
     return (
       <dl className="readout">
-        <Stat label="First row" value={`${towerMultiplier(difficulty, 1, houseConfig).toFixed(2)}×`} />
+        <Stat
+          label="First row"
+          value={`${towerMultiplier(difficulty, 1, houseConfig).toFixed(2)}×`}
+        />
         <Stat
           label="Top row"
           value={`${towerMultiplier(difficulty, ROWS, houseConfig).toLocaleString('en-US', {
@@ -324,7 +344,8 @@ function Tower({
     if (picked) return 'egg-up'
     if (active && row === lvl) return 'hidden'
     if (row < lvl || ended) {
-      if (skull) return ended && game.bustRow === row && game.bustTile === tile ? 'skull-hit' : 'skull'
+      if (skull)
+        return ended && game.bustRow === row && game.bustTile === tile ? 'skull-hit' : 'skull'
       return 'egg-dim'
     }
     return 'locked'
@@ -339,7 +360,10 @@ function Tower({
         const target = active && row === lvl
         const mult = towerMultiplier(diff, row + 1, houseConfig)
         return (
-          <div key={row} className={`tower-row ${target ? 'is-target' : ''} ${row < lvl ? 'is-done' : ''}`}>
+          <div
+            key={row}
+            className={`tower-row ${target ? 'is-target' : ''} ${row < lvl ? 'is-done' : ''}`}
+          >
             <span className="tower-mult">{mult.toFixed(2)}×</span>
             <div className="tower-tiles">
               {Array.from({ length: tiles }, (_, tile) => {
@@ -354,7 +378,9 @@ function Tower({
                     aria-label={`row ${row + 1} tile ${tile + 1}`}
                   >
                     {(kind === 'egg-up' || kind === 'egg-dim') && <Egg />}
-                    {(kind === 'skull' || kind === 'skull-hit') && <Skull hit={kind === 'skull-hit'} />}
+                    {(kind === 'skull' || kind === 'skull-hit') && (
+                      <Skull hit={kind === 'skull-hit'} />
+                    )}
                   </button>
                 )
               })}
@@ -385,7 +411,13 @@ function Fairness({
   const verified = useMemo(
     () =>
       proof
-        ? verifyTower(proof.serverSeed, proof.clientSeed, proof.nonce, proof.difficulty, proof.layout)
+        ? verifyTower(
+            proof.serverSeed,
+            proof.clientSeed,
+            proof.nonce,
+            proof.difficulty,
+            proof.layout,
+          )
         : null,
     [proof],
   )
@@ -480,7 +512,10 @@ function Skull({ hit = false }: { hit?: boolean }) {
       </defs>
       {/* curved horns */}
       <path d="M7 5.4 C 5.2 3.9, 4.5 2.4, 5 1.3 C 6.4 2.2, 7.5 3.6, 7.9 5.3 Z" fill="#cdd6df" />
-      <path d="M17 5.4 C 18.8 3.9, 19.5 2.4, 19 1.3 C 17.6 2.2, 16.5 3.6, 16.1 5.3 Z" fill="#cdd6df" />
+      <path
+        d="M17 5.4 C 18.8 3.9, 19.5 2.4, 19 1.3 C 17.6 2.2, 16.5 3.6, 16.1 5.3 Z"
+        fill="#cdd6df"
+      />
       {/* cranium + jaw */}
       <path
         d="M12 3 C 7.3 3, 4 6.3, 4 10.6 C 4 13.2, 5.2 15, 6.8 16 L 6.8 18.4 C 6.8 19.3, 7.5 20, 8.4 20 L 15.6 20 C 16.5 20, 17.2 19.3, 17.2 18.4 L 17.2 16 C 18.8 15, 20 13.2, 20 10.6 C 20 6.3, 16.7 3, 12 3 Z"

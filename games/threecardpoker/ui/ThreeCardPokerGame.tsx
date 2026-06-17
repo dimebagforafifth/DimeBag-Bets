@@ -17,6 +17,7 @@ import {
   type Card,
   type ThreeCardGame as ThreeCardState,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -33,8 +34,7 @@ const TCP_RULES: ReactNode[] = [
   'The Ante Bonus pays on a Straight (1:1), Three of a Kind (4:1) or Straight Flush (5:1) — regardless of the dealer, when you Play. Pair Plus pays on your three cards alone (Pair 1:1 up to Straight Flush 40:1), win or fold.',
   <>
     <strong>Payouts use the standard Three Card Poker odds</strong> (Ante bonus 1-4-5, Pair Plus
-    1-3-6-30-40). The deal is provably
-    fair; your Play/Fold choice never changes the cards.
+    1-3-6-30-40). The deal is provably fair; your Play/Fold choice never changes the cards.
   </>,
 ]
 
@@ -72,6 +72,7 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
   const [pairPlus, setPairPlus] = useState(0)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<ThreeCardState | null>(null)
   const [history, setHistory] = useState<{ multiplier: number; won: boolean }[]>([])
@@ -103,8 +104,7 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
   })
 
   const totalBet = ante + pairPlus
-  const betInvalid =
-    !Number.isInteger(ante) || ante < 1 || totalBet > available || locked
+  const betInvalid = !Number.isInteger(ante) || ante < 1 || totalBet > available || locked
   // Playing needs the play wager (= ante) to also fit after the deal already held the bets.
   const cannotAffordPlay = deciding && game != null && availableToWager(account) < game.ante
 
@@ -123,15 +123,21 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
     return staked > 0 ? totalReturned(game) / staked : 0
   }, [done, game])
 
-  function deal() {
+  // The deck's server seed now comes from the platform fairness AUTHORITY (commit hash
+  // before play → reveal after), not a browser randomServerSeed(). The deal math is unchanged.
+  async function deal() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const g = createGame(account, {
         ante,
         pairPlus: pairPlus > 0 ? pairPlus : undefined,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
       })
       setGame(g)
       setRevealed(false)
@@ -144,6 +150,8 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
       window.setTimeout(() => playSound('deal'), 4 * DEAL_STEP_MS)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -261,17 +269,15 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
               disabled={locked}
               onCommit={(d) => setPairPlus(Math.max(0, toCents(d ?? 0)))}
             />
-            <button
-              className="chip"
-              disabled={locked}
-              onClick={() => setPairPlus(0)}
-            >
+            <button className="chip" disabled={locked} onClick={() => setPairPlus(0)}>
               0
             </button>
             <button
               className="chip"
               disabled={locked}
-              onClick={() => setPairPlus((b) => Math.min(Math.max(0, available - ante), b * 2 || ante))}
+              onClick={() =>
+                setPairPlus((b) => Math.min(Math.max(0, available - ante), b * 2 || ante))
+              }
             >
               2×
             </button>
@@ -329,7 +335,11 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
                   <div
                     key={row.rank}
                     className={`threecardpoker-feltpay-row ${
-                      done && revealed && game && game.decision === 'play' && game.playerValue.rank === row.rank
+                      done &&
+                      revealed &&
+                      game &&
+                      game.decision === 'play' &&
+                      game.playerValue.rank === row.rank
                         ? 'is-hit'
                         : ''
                     }`}
@@ -347,7 +357,11 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
                   <div
                     key={row.rank}
                     className={`threecardpoker-feltpay-row ${
-                      done && revealed && game && game.pairPlusWager && game.playerValue.rank === row.rank
+                      done &&
+                      revealed &&
+                      game &&
+                      game.pairPlusWager &&
+                      game.playerValue.rank === row.rank
                         ? 'is-hit'
                         : ''
                     }`}
@@ -469,10 +483,18 @@ export function ThreeCardPokerGame({ account, onBalanceChange }: ThreeCardPokerG
           {done && game && revealed && (
             <>
               {game.ante_result && (
-                <ResultLine label="Ante" detail={game.ante_result.detail} profit={game.ante_result.profit} />
+                <ResultLine
+                  label="Ante"
+                  detail={game.ante_result.detail}
+                  profit={game.ante_result.profit}
+                />
               )}
               {game.play_result && (
-                <ResultLine label="Play" detail={game.play_result.detail} profit={game.play_result.profit} />
+                <ResultLine
+                  label="Play"
+                  detail={game.play_result.detail}
+                  profit={game.play_result.profit}
+                />
               )}
               {game.pairPlus_result && (
                 <ResultLine

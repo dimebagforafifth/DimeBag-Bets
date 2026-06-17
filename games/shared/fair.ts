@@ -38,6 +38,15 @@ export interface FairnessClient {
   commit(): Promise<Commitment>
   /** Post-play disclosure of the seed, for verification. */
   reveal(commitId: string): Promise<Revelation>
+  /**
+   * Mint a round's server seed from the authority: commit (the hash) then reveal (the seed),
+   * back to back. This is the interim flow EVERY client-computed game uses (the one Crash
+   * already uses) — the platform mints and commits the seed, then discloses it for the
+   * client to derive the outcome and verify. The seed is the PLATFORM's, not a browser
+   * `randomServerSeed()`. (The genuine withhold-until-after-play flow is the server-resolve
+   * path — e.g. resolveCrash — and the realtime SEAM from round 1.)
+   */
+  mintRound(): Promise<Revelation>
   /** Ask the authority to reveal AND derive the crash point server-side. */
   resolveCrash(
     commitId: string,
@@ -99,6 +108,12 @@ export function createFairnessClient(options: FairnessClientOptions = {}): Fairn
     },
     reveal(commitId) {
       return call<Revelation>({ action: 'reveal', commitId }, () => localVault.reveal(commitId))
+    },
+    async mintRound() {
+      const committed = await call<Commitment>({ action: 'commit' }, () => localVault.commit())
+      return call<Revelation>({ action: 'reveal', commitId: committed.commitId }, () =>
+        localVault.reveal(committed.commitId),
+      )
     },
     resolveCrash(commitId, clientSeed, nonce, config = DEFAULT_CRASH_CONFIG) {
       return call<CrashResolution>(

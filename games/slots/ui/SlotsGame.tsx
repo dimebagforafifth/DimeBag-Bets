@@ -13,6 +13,7 @@ import {
   type SlotsHouseConfig,
   type SlotsRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -29,10 +30,7 @@ const SLOTS_RULES: ReactNode[] = [
     Two cherries also pay a small consolation. <strong>Payout = bet × the multiplier</strong>; any
     other combination loses the bet.
   </>,
-  <>
-    The reels are weighted, and every spin
-    is provably fair.
-  </>,
+  <>The reels are weighted, and every spin is provably fair.</>,
 ]
 
 interface SlotsGameProps {
@@ -53,6 +51,7 @@ export function SlotsGame({
   const [bet, setBet] = useState(1000) // cents ($10.00)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<SlotsRound | null>(null)
   const [spinning, setSpinning] = useState(false)
@@ -76,14 +75,20 @@ export function SlotsGame({
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
-  function spin() {
+  // The server seed now comes from the platform fairness AUTHORITY (commit hash before play →
+  // reveal), not a browser randomServerSeed(). The reel math is unchanged.
+  async function spin() {
+    if (inFlightRef.current || spinning) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const r = playSlots(account, {
         stake: bet,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       play('roll')
@@ -96,21 +101,26 @@ export function SlotsGame({
       // stagger the three reel stops left → right
       for (let i = 0; i < REELS; i++) {
         timers.current.push(
-          window.setTimeout(() => {
-            setStopped((s) => {
-              const next = [...s]
-              next[i] = true
-              return next
-            })
-            play('tick')
-          }, STOP_BASE_MS + STOP_STAGGER_MS * i),
+          window.setTimeout(
+            () => {
+              setStopped((s) => {
+                const next = [...s]
+                next[i] = true
+                return next
+              })
+              play('tick')
+            },
+            STOP_BASE_MS + STOP_STAGGER_MS * i,
+          ),
         )
       }
       // settle the round once every reel has locked
       timers.current.push(
         window.setTimeout(() => {
           setSpinning(false)
-          setHistory((h) => [{ multiplier: r.multiplier, won: r.multiplier > 1 }, ...h].slice(0, 16))
+          setHistory((h) =>
+            [{ multiplier: r.multiplier, won: r.multiplier > 1 }, ...h].slice(0, 16),
+          )
           signalReveal(account.id) // the reels have stopped — release the held ledger entry now
           onBalanceChange() // move the figure in sync with the result landing on screen
           play(r.multiplier > 1 ? 'win' : 'lose')
@@ -118,6 +128,8 @@ export function SlotsGame({
       )
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -161,7 +173,9 @@ export function SlotsGame({
 
         {error && <p className="slots-error">{error}</p>}
         {bet > available && !error && (
-          <p className="slots-error">Stake exceeds what you can wager ({formatMoney(available)}).</p>
+          <p className="slots-error">
+            Stake exceeds what you can wager ({formatMoney(available)}).
+          </p>
         )}
 
         <div className="slots-paytable">
@@ -222,7 +236,9 @@ export function SlotsGame({
           onClientSeed={setClientSeed}
         />
 
-        {won && <WinPopup key={round!.nonce} multiplier={round!.multiplier} stake={bet} delayMs={200} />}
+        {won && (
+          <WinPopup key={round!.nonce} multiplier={round!.multiplier} stake={bet} delayMs={200} />
+        )}
       </section>
     </div>
   )

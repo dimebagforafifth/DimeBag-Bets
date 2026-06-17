@@ -13,6 +13,7 @@ import {
   type DiamondsHouseConfig,
   type DiamondsRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -63,6 +64,7 @@ export function DiamondsGame({
   const [bet, setBet] = useState(1000) // cents ($10.00)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<DiamondsRound | null>(null)
   const [shown, setShown] = useState(0) // how many gems have popped in
@@ -81,14 +83,20 @@ export function DiamondsGame({
 
   useEffect(() => () => clearTimeout(timerRef.current), [])
 
-  function deal() {
+  // The deal's server seed now comes from the platform fairness AUTHORITY (commit hash before
+  // play → reveal after), not a browser randomServerSeed(). The gem math is unchanged.
+  async function deal() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const r = playDiamonds(account, {
         stake: bet,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       clearTimeout(timerRef.current)
@@ -113,6 +121,8 @@ export function DiamondsGame({
       timerRef.current = window.setTimeout(() => step(1), REVEAL_MS)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -185,7 +195,11 @@ export function DiamondsGame({
                       : undefined
                   }
                 >
-                  {revealed && colour != null ? <Gem color={GEM_COLORS[colour]} /> : <span className="diamonds-slot-empty" />}
+                  {revealed && colour != null ? (
+                    <Gem color={GEM_COLORS[colour]} />
+                  ) : (
+                    <span className="diamonds-slot-empty" />
+                  )}
                 </div>
               )
             })}
@@ -202,9 +216,7 @@ export function DiamondsGame({
         </div>
 
         <div className="diamonds-result">
-          {result
-            ? `${PATTERN_LABELS[result.pattern]} — ${result.multiplier.toFixed(2)}×`
-            : ' '}
+          {result ? `${PATTERN_LABELS[result.pattern]} — ${result.multiplier.toFixed(2)}×` : ' '}
         </div>
 
         <div className="diamonds-paytable">
@@ -280,8 +292,7 @@ function Fairness({
   onClientSeed: (s: string) => void
 }) {
   const verified = useMemo(
-    () =>
-      round ? verifyGems(round.serverSeed, round.clientSeed, round.nonce, round.gems) : null,
+    () => (round ? verifyGems(round.serverSeed, round.clientSeed, round.nonce, round.gems) : null),
     [round],
   )
   return (

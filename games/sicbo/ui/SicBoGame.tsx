@@ -13,6 +13,7 @@ import {
   type SicBoBet,
   type SicBoRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { signalReveal } from '../../shared/reveal-bus.js'
@@ -27,12 +28,13 @@ const SICBO_RULES: ReactNode[] = [
     <strong>Even</strong> all pay 1:1 — but every one of them LOSES on a triple.
   </>,
   <>
-    <strong>Single 1–6</strong> pays 1:1 / 2:1 / 3:1 when your face shows on one / two / three dice. A{' '}
-    <strong>Combination</strong> of two faces pays 5:1 if both appear.
+    <strong>Single 1–6</strong> pays 1:1 / 2:1 / 3:1 when your face shows on one / two / three dice.
+    A <strong>Combination</strong> of two faces pays 5:1 if both appear.
   </>,
   <>
     <strong>Double</strong> 10:1, <strong>Any Triple</strong> 30:1, <strong>Specific Triple</strong>{' '}
-    180:1, and an exact <strong>Total</strong> pays the standard schedule (4/17 → 60:1, down to 6:1).
+    180:1, and an exact <strong>Total</strong> pays the standard schedule (4/17 → 60:1, down to
+    6:1).
   </>,
   'Every roll is drawn from a provably-fair seed you can verify after the fact.',
 ]
@@ -112,6 +114,7 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
   const [placements, setPlacements] = useState<{ id: string; amount: number }[]>([])
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<SicBoRound | null>(null)
   // idle → rolling (dice tumbling) → settled (dice at rest, suspense) → revealed (win/loss shown)
@@ -149,7 +152,8 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
   const resultByKey = useMemo(() => {
     const m = new Map<string, { won: boolean; multiplier: number }>()
     if (round && phase === 'revealed') {
-      for (const r of round.results) m.set(keyOf(r.type, r.param, r.param2), { won: r.won, multiplier: r.multiplier })
+      for (const r of round.results)
+        m.set(keyOf(r.type, r.param, r.param2), { won: r.won, multiplier: r.multiplier })
     }
     return m
   }, [round, phase])
@@ -213,10 +217,16 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
     setPlacements([])
   }
 
-  function roll() {
+  // The server seed now comes from the platform fairness AUTHORITY (commit hash before play →
+  // reveal after), not a browser randomServerSeed(). The dice math and the cosmetic tumble are
+  // unchanged. A re-entrancy guard skips a roll while a mint is already in flight.
+  async function roll() {
     if (!canRoll) return
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const bets: SicBoBet[] = Object.entries(stakes).map(([id, stake]) => {
         const spec = SPEC_BY_ID.get(id)!
@@ -226,7 +236,7 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
         bets,
         clientSeed,
         nonce: nonceRef.current,
-        serverSeed: randomServerSeed(),
+        serverSeed: minted.serverSeed,
       })
       // NB: core has already settled every bet (account.balance is updated), but we
       // deliberately reveal NOTHING yet — not the figure, not the highlights, not
@@ -285,6 +295,8 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
       )
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -318,7 +330,11 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
 
           <div className={`sicbo-dice ${busy ? 'is-rolling' : ''}`}>
             {shownDice.map((d, i) => (
-              <Die key={i} value={d} state={busy ? (i < landed ? 'landing' : 'tumbling') : 'rest'} />
+              <Die
+                key={i}
+                value={d}
+                state={busy ? (i < landed ? 'landing' : 'tumbling') : 'rest'}
+              />
             ))}
           </div>
 
@@ -367,7 +383,9 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
 
           <div className="sicbo-staked">
             <span className="field-label">Total staked</span>
-            <span className={`sicbo-staked-value ${overLimit && phase === 'idle' ? 'is-over' : ''}`}>
+            <span
+              className={`sicbo-staked-value ${overLimit && phase === 'idle' ? 'is-over' : ''}`}
+            >
               {formatMoney(totalStaked)}
             </span>
           </div>
@@ -393,7 +411,8 @@ export function SicBoGame({ account, onBalanceChange }: SicBoGameProps) {
               Once rolled, those chips were already accepted — don't alarm them. */}
           {overLimit && !error && phase === 'idle' && (
             <p className="sicbo-error">
-              Stakes ({formatMoney(totalStaked)}) exceed what you can wager ({formatMoney(available)}
+              Stakes ({formatMoney(totalStaked)}) exceed what you can wager (
+              {formatMoney(available)}
               ).
             </p>
           )}
@@ -520,12 +539,7 @@ function Board({
       <Group title="Single die" odds="1 · 2 · 3 : 1">
         <div className="sicbo-cells sicbo-singles">
           {FACES.map((f) =>
-            cell(
-              keyOf('single', f),
-              `Single ${f}`,
-              'sicbo-single',
-              <FaceDie value={f} />,
-            ),
+            cell(keyOf('single', f), `Single ${f}`, 'sicbo-single', <FaceDie value={f} />),
           )}
         </div>
       </Group>
