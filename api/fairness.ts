@@ -24,8 +24,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import {
   createDerivedVault,
+  createStoredVault,
   resolveCommit,
   resolveMasterSecret,
+  type SeedStore,
   type SeedVault,
 } from '../core/fairness-authority.js'
 import {
@@ -33,6 +35,15 @@ import {
   DEFAULT_CRASH_CONFIG,
   type CrashHouseConfig,
 } from '../games/crash/fair.js'
+// A↔B interlock (CLAUDE.md §6): the durable seed seam is fulfilled by A's Supabase-backed
+// KVStore. Imported here at the composition root only; OFF until Supabase keys are present.
+import {
+  createStore,
+  isSupabaseConfigured,
+  type EnvSource,
+  type KVStore,
+  type SupabaseStore,
+} from '../persistence/index.js'
 
 export interface FairnessRequest {
   action: 'commit' | 'reveal' | 'resolveCrash'
@@ -50,6 +61,47 @@ export interface FairnessResult {
 /** Build the default (stateless, derived) authority from an env bag. */
 export function defaultVault(env: Record<string, string | undefined> = {}): SeedVault {
   return createDerivedVault(resolveMasterSecret(env).secret)
+}
+
+/**
+ * A↔B INTERLOCK — adapt A's Supabase-backed `KVStore` to B's `SeedStore` (the durable seed
+ * seam `core/fairness-authority.ts` declares: "fulfilled by a Supabase-backed table once
+ * provisioned"). A drop-in: same interface, no game/money coupling — seeds are opaque blobs.
+ *
+ * A's store is a write-through cache (sync `get`/`set` over an in-memory snapshot; server I/O
+ * in the background), so for durability ACROSS serverless invocations we await its lifecycle
+ * hooks when present: `flush` after a write (push the seed to the server before `commit()`
+ * returns) and `ready` before a read (pull the server snapshot into a fresh process's cache
+ * before `reveal()`). With a plain non-Supabase store these are absent and it's a sync map.
+ */
+export function seedStoreFromKv(store: KVStore): SeedStore {
+  const lifecycle = store as Partial<SupabaseStore>
+  return {
+    async put(commitId, serverSeed) {
+      store.set(commitId, serverSeed)
+      if (lifecycle.flush) await lifecycle.flush()
+    },
+    async get(commitId) {
+      if (lifecycle.ready) await lifecycle.ready
+      return store.get<string>(commitId) ?? undefined // KVStore returns null for absent → undefined
+    },
+  }
+}
+
+/** The Supabase-backed seed store, namespaced to its own keyspace (audit trail of issued seeds). */
+export function createKvSeedStore(envSource?: EnvSource): SeedStore {
+  return seedStoreFromKv(createStore({ namespace: 'fairness-seeds', envSource }))
+}
+
+/**
+ * Build the authority from an env bag. With Supabase keys present → the DURABLE vault (a fresh
+ * CSPRNG seed per commit, stored via A's backend — per-round randomness + an audit trail).
+ * With NO keys → the stateless DERIVED vault (== `defaultVault`), so this is OFF by default and
+ * byte-for-byte the no-backend behaviour. This is the seam production flips by dropping in keys.
+ */
+export function vaultFromEnv(env: EnvSource = {}): SeedVault {
+  if (isSupabaseConfigured(env)) return createStoredVault(createKvSeedStore(env))
+  return defaultVault(env)
 }
 
 /**
@@ -120,7 +172,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
   try {
     const body = (await readJson(req)) as FairnessRequest
-    const result = await handleFairness(body, defaultVault(process.env))
+    // Durable Supabase-backed vault when keys are present, else the stateless derived default.
+    const result = await handleFairness(body, vaultFromEnv(process.env))
     send(res, result.status, result.body)
   } catch {
     // Never leak internals (e.g. the secret); keep it generic.
