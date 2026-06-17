@@ -9,10 +9,13 @@
   --bk-gold-press: #e7b03a;
   --bk-text: #f4f5f7;
   --bk-muted: #9fb0bd;
-  --bk-surface: #15212b;
-  --bk-surface-2: #1b2a36;
-  --bk-line: #283a48;
-  --bk-graphite: #0f1822;
+  /* Surfaces/line repoint to the global graphite ramp (app/theme.css :root) so
+     theme.css is the single source of truth; the --bk-* aliases stay so the rest
+     of this sheet is untouched (presentation-only — no logic depends on these). */
+  --bk-surface: var(--surface);
+  --bk-surface-2: var(--surface-2);
+  --bk-line: var(--line);
+  --bk-graphite: var(--bg);
   --bk-win: #3ddc97;
   --bk-loss: #ff6b6b;
   --bk-font: 'Saira Condensed', 'Oswald', system-ui, sans-serif;
