@@ -5,13 +5,14 @@
  * Reporting. All tiles are MANAGER-ONLY except 'rewards-comp', whose key matches the
  * agent-grantable permission so a manager can let an agent comp their own players.
  */
-import { Sparkles, Crown, Gift, SlidersHorizontal, BarChart3 } from 'lucide-react'
+import { Sparkles, Crown, Gift, SlidersHorizontal, BarChart3, Wand2 } from 'lucide-react'
 import type { FeatureManifest } from '../../console/registry/types.js'
 import { RewardsControlPanel } from './RewardsControlPanel.js'
 import { TierConfigPanel } from './TierConfigPanel.js'
 import { CompPanel } from './CompPanel.js'
 import { EconomyPanel } from './EconomyPanel.js'
 import { ReportingPanel } from './ReportingPanel.js'
+import { BonusEnginePanel } from './BonusEnginePanel.js'
 
 export const rewardsAdminManifests: FeatureManifest[] = [
   {
@@ -21,6 +22,16 @@ export const rewardsAdminManifests: FeatureManifest[] = [
     section: 'rewards',
     icon: Sparkles,
     Panel: RewardsControlPanel,
+  },
+  {
+    // The no-code bonus rules engine (trigger → reward → playthrough → expiry), built on
+    // the rewards-program admin. Manager-only. Money moves only through core (bonus/engine).
+    key: 'bonus-engine',
+    name: 'Bonus Engine',
+    hint: 'Compose bonuses & track playthrough',
+    section: 'rewards',
+    icon: Wand2,
+    Panel: BonusEnginePanel,
   },
   {
     key: 'tier-config',
