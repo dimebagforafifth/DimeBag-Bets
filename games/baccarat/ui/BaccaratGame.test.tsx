@@ -12,8 +12,22 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Account } from '../../../core/index.js'
 import { BaccaratGame } from './BaccaratGame.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+// The game now mints its server seed from the fairness authority. Force the in-process (local)
+// authority so the test never opens a real socket (happy-dom's fetch would hit ECONNREFUSED as a
+// macrotask that fake timers can't flush) — the mint becomes deterministic pure-microtask work.
+vi.mock('../../shared/fair.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../shared/fair.js')>()
+  return {
+    ...actual,
+    fairnessClient: actual.createFairnessClient({
+      fetchImpl: (() => {
+        throw new Error('offline')
+      }) as unknown as typeof fetch,
+    }),
+  }
+})
 
 function account(): Account {
   return { id: 'p1', creditLimit: 1_000_000, balance: 0, pending: 0 }
@@ -25,17 +39,25 @@ function clickSel(host: HTMLElement, selector: string): boolean {
   return true
 }
 function clickText(host: HTMLElement, selector: string, text: RegExp): boolean {
-  const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) => text.test(n.textContent ?? ''))
+  const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) =>
+    text.test(n.textContent ?? ''),
+  )
   if (!el) return false
   act(() => el.click())
   return true
+}
+/** Flush pending microtasks so the async deal (authority mint) settles before asserting. */
+async function flush(): Promise<void> {
+  await act(async () => {
+    for (let i = 0; i < 6; i++) await Promise.resolve()
+  })
 }
 
 describe('BaccaratGame (full table)', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
-  it('stakes a spot, deals real cards card-by-card, and reveals a winner + scoreboard', () => {
+  it('stakes a spot, deals real cards card-by-card, and reveals a winner + scoreboard', async () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
     const root = createRoot(host)
@@ -52,10 +74,16 @@ describe('BaccaratGame (full table)', () => {
       'Banker Pair',
     ])
     // Banker shows its 1:1 payout AND the 5% commission, never buried.
-    expect(host.querySelector('.baccarat-spot.is-banker .baccarat-spot-odds')?.textContent).toBe('1:1 −5%')
-    expect(host.querySelector('.baccarat-spot.is-player .baccarat-spot-odds')?.textContent).toBe('1:1')
+    expect(host.querySelector('.baccarat-spot.is-banker .baccarat-spot-odds')?.textContent).toBe(
+      '1:1 −5%',
+    )
+    expect(host.querySelector('.baccarat-spot.is-player .baccarat-spot-odds')?.textContent).toBe(
+      '1:1',
+    )
     expect(host.querySelector('.baccarat-spot.is-tie .baccarat-spot-odds')?.textContent).toBe('8:1')
-    expect(host.querySelector('.baccarat-spot.is-playerPair .baccarat-spot-odds')?.textContent).toBe('11:1')
+    expect(
+      host.querySelector('.baccarat-spot.is-playerPair .baccarat-spot-odds')?.textContent,
+    ).toBe('11:1')
 
     // Pre-deal: only face-down backs, no face cards, no chips on the felt.
     expect(host.querySelectorAll('.baccarat-card.is-back').length).toBe(4)
@@ -67,8 +95,10 @@ describe('BaccaratGame (full table)', () => {
     expect(host.querySelector('.baccarat-spot.is-banker .baccarat-chiptoken')).not.toBeNull()
     expect(host.querySelector('.baccarat-staked-value')?.textContent).not.toBe('$0.00')
 
-    // Deal.
+    // Deal — the server seed is minted from the fairness authority (async), so flush the
+    // pending mint microtasks before asserting the round has started.
     expect(clickText(host, 'button.action', /^Deal$/)).toBe(true)
+    await flush()
     expect(acct.pending).toBe(0) // the round settled at deal; nothing stranded
     expect(host.querySelector('.baccarat-result')?.textContent).toBe('Dealing…')
 

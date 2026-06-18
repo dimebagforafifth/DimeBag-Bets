@@ -9,6 +9,12 @@ describe('role → route access', () => {
       'rewards',
       'mybets',
       'leaderboard',
+      'community',
+      'profile',
+      'pickem',
+      'challenges',
+      'competitions',
+      'gamification',
     ])
     expect(canReach('player', 'management')).toBe(false)
     expect(canManage('player')).toBe(false)

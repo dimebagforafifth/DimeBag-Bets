@@ -20,6 +20,7 @@ import {
   type HiloGuess,
   type HiloHouseConfig,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { useSettleOnExit } from '../../shared/useSettleOnExit.js'
 import { Rules } from '../../shared/Rules.js'
@@ -37,7 +38,8 @@ const HILO_RULES: ReactNode[] = [
   'Guess wrong and the round ends — you lose your bet. Not sure? Skip to draw a fresh card without risking anything.',
   'Cash Out any time to bank your running multiplier.',
   <>
-    <strong>Payout = bet × your running multiplier</strong> — riskier guesses grow it faster. The deck order is provably fair.
+    <strong>Payout = bet × your running multiplier</strong> — riskier guesses grow it faster. The
+    deck order is provably fair.
   </>,
 ]
 
@@ -52,7 +54,11 @@ interface HiloGameProps {
 // noticeable lag after the win sound.
 const POPUP_DELAY_MS = 150
 
-export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalanceChange }: HiloGameProps) {
+export function HiloGame({
+  account,
+  houseConfig = DEFAULT_HILO_CONFIG,
+  onBalanceChange,
+}: HiloGameProps) {
   const [bet, setBet] = useState(1000) // cents ($10.00)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   // The server seed for the UPCOMING round, committed (hashed) before the bet and
@@ -60,6 +66,7 @@ export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalance
   // Rotated to a fresh seed after each bet (a new commitment per round).
   const [serverSeed, setServerSeed] = useState(() => randomServerSeed())
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<HiloGameState | null>(null)
   const [history, setHistory] = useState<{ multiplier: number; won: boolean }[]>([])
@@ -100,15 +107,20 @@ export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalance
   // e.g. on an Ace, "Higher or same as A" makes clear only another A wins.
   const curLabel = cur ? RANK_LABELS[cur.rank] : ''
 
-  function start() {
+  // The server seed now comes from the platform fairness AUTHORITY (commit hash before play →
+  // reveal after), not a browser randomServerSeed(). The card math is unchanged.
+  async function start() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const g = createHiloGame(account, {
         stake: bet,
         clientSeed,
         nonce: nonceRef.current,
-        serverSeed, // deal from the seed already shown on the table → same first card
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       setReveal(null)
@@ -118,6 +130,8 @@ export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalance
       play('bet')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -154,7 +168,6 @@ export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalance
     onBalanceChange()
   }
 
-
   return (
     <div className="hilo">
       <section className="hilo-panel">
@@ -169,15 +182,25 @@ export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalance
               disabled={!idle}
               onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
             />
-            <button className="chip" disabled={!idle} onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
+            <button
+              className="chip"
+              disabled={!idle}
+              onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}
+            >
               ½
             </button>
-            <button className="chip" disabled={!idle} onClick={() => setBet((b) => Math.min(available, b * 2))}>
+            <button
+              className="chip"
+              disabled={!idle}
+              onClick={() => setBet((b) => Math.min(available, b * 2))}
+            >
               2×
             </button>
           </div>
         </label>
-        {active && game!.multiplier > 1 && <ProfitReadout total={Math.round(bet * game!.multiplier)} multiplier={game!.multiplier} />}
+        {active && game!.multiplier > 1 && (
+          <ProfitReadout total={Math.round(bet * game!.multiplier)} multiplier={game!.multiplier} />
+        )}
 
         {active ? (
           <>
@@ -235,11 +258,7 @@ export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalance
             card={cur ?? preview}
             flash={cur ? reveal?.correct : undefined}
           />
-          {active && (
-            <div className="hilo-multiplier">
-              {game!.multiplier.toFixed(2)}×
-            </div>
-          )}
+          {active && <div className="hilo-multiplier">{game!.multiplier.toFixed(2)}×</div>}
         </div>
 
         <Rules points={HILO_RULES} />
@@ -254,7 +273,12 @@ export function HiloGame({ account, houseConfig = DEFAULT_HILO_CONFIG, onBalance
         />
 
         {game && game.status === 'cashed' && (
-          <WinPopup key={game.wager.id} multiplier={game.multiplier} stake={game.wager.stake} delayMs={POPUP_DELAY_MS} />
+          <WinPopup
+            key={game.wager.id}
+            multiplier={game.multiplier}
+            stake={game.wager.stake}
+            delayMs={POPUP_DELAY_MS}
+          />
         )}
       </section>
     </div>
@@ -301,7 +325,8 @@ function Fairness({
 }) {
   const ended = game != null && game.status !== 'active'
   const verified = useMemo(
-    () => (ended && game ? verifyHilo(game.serverSeed, game.clientSeed, game.nonce, game.cards) : null),
+    () =>
+      ended && game ? verifyHilo(game.serverSeed, game.clientSeed, game.nonce, game.cards) : null,
     [ended, game],
   )
   return (

@@ -15,6 +15,37 @@ keys and the same code switches over (see `persistence/README.md`).
 | `0002_rls.sql` | Row Level Security. Players **read only their own rows**; **no client write grant** on the money tables; `kv_documents` is owner-scoped CRUD. |
 | `0003_money_rpcs.sql` | The SECURITY DEFINER functions — `place_wager`, `resolve_wager`, `resolve_at_multiplier`, `grant_bonus`, `adjust_balance`, `settle_week` — the only path that moves a figure. Same arithmetic as `core/core.ts`. |
 | `0004_tenancy.sql` | Per-book (tenant) scoping: an additive `tenant_id` on the book-owned tables + an `active_tenant()` claim helper. Documents how isolation holds (owner-scoping already isolates one-operator-per-book; `tenant_id` is the explicit book key + the multi-user-book future). Backward-compatible (nullable). |
+| `0005_odds_cache.sql` | The SGO odds cache: `odds_events` / `odds_markets` / `odds_selections` (snake-case mirrors of `lib/odds/contract.ts`). **Odds are public** — RLS grants SELECT to everyone and withholds all client writes; only the server-side poller (service role) writes. The three tables are added to the `supabase_realtime` publication so `useBookOdds()` can move from interval polling to live pushes. |
+
+## Migration reconciliation (2026-06-16)
+
+The repo briefly carried **two** schemas for the same tables:
+
+- the **sequential `0001`–`0005`** set above (canonical), and
+- a single consolidated `20260616120000_init_core_and_sportsbook.sql` (an earlier
+  exploratory schema from the first Supabase handoff).
+
+They were **incompatible**, not complementary — both did `create table accounts` /
+`wagers` / `markets` / `selections` with **different column types** (e.g. `accounts.id`
+as `uuid` + a `user_id` FK in the consolidated file vs `text` + an `owner` column in
+`0001`, a `transactions` ledger vs `ledger`, `weekly_settlements` vs `settlements`).
+Applied together to a fresh DB they fail on the duplicate `create table`.
+
+The sequential set is the one the **TypeScript code actually targets** — the
+`kv_documents` blob store (`persistence/supabase/kv-transport.ts`), the six SECURITY
+DEFINER money RPCs the test double mirrors (`persistence/money/rpc.ts` ↔
+`fake-server.ts`), the `odds_*` cache the poller writes and the book reads
+(`app/book/odds-source.ts`), and the `tenant_id` columns (`persistence/tenant.ts`). The
+consolidated file had **no consumer** in the codebase (verified by grep: nothing
+references `transactions`, `weekly_settlements`, `bet_slips`, `bet_legs`, `odds_history`
+or `game_rounds`).
+
+**Resolution:** the consolidated `20260616…` migration was **retired** (removed); the
+canonical, ordered `0001`–`0005` set is the single source of truth and applies cleanly
+to a fresh DB in lexical order. The RLS policies (`0002`) and money RPCs (`0003`) are
+preserved exactly. Ideas worth salvaging later from the retired file (a provably-fair
+`game_rounds` disclosure table for Agent B's commit-reveal work; an `odds_history`
+line-movement audit) are recoverable from git history and noted here so they aren't lost.
 
 ## The guarantee
 
@@ -31,8 +62,8 @@ pending) before writing, exactly as core does. This is asserted offline by
 
 ```bash
 supabase start                 # local stack, or use a hosted project
-supabase db push               # apply migrations/
-# or: psql "$DATABASE_URL" -f migrations/0001_schema.sql  (then 0002, 0003, 0004)
+supabase db push               # apply migrations/ in order (0001 → 0005)
+# or: psql "$DATABASE_URL" -f migrations/0001_schema.sql  (then 0002 … 0005)
 ```
 
 ## Tenant isolation

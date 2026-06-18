@@ -12,6 +12,7 @@ import {
   type RouletteBet,
   type RouletteRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -29,8 +30,8 @@ const ROULETTE_RULES: ReactNode[] = [
   'The tighter the bet, the bigger it pays: a single number pays 35:1, a dozen or column 2:1, red/black or even/odd 1:1.',
   'The green 0 belongs to no colour, dozen, or column — bets on those don’t cover it.',
   <>
-    <strong>Payout = your chips on the winning pocket × their odds.</strong> The pocket is drawn from
-    a provably-fair seed you can verify after the spin.
+    <strong>Payout = your chips on the winning pocket × their odds.</strong> The pocket is drawn
+    from a provably-fair seed you can verify after the spin.
   </>,
 ]
 
@@ -102,6 +103,7 @@ export function RouletteGame({ account, onBalanceChange }: RouletteGameProps) {
   const [hoverNumbers, setHoverNumbers] = useState<Set<number> | null>(null)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<RouletteRound | null>(null)
   const [spinning, setSpinning] = useState(false)
@@ -184,13 +186,16 @@ export function RouletteGame({ account, onBalanceChange }: RouletteGameProps) {
   /** Run one spin against an explicit set of placements — the live felt, or a
    *  repeated bet. Stakes are computed from `pls` here, so a one-click repeat can
    *  spin immediately without waiting for a state round-trip. */
-  function runSpin(pls: { id: string; amount: number }[]) {
-    if (spinning || pls.length === 0) return
+  // The pocket's server seed now comes from the platform fairness AUTHORITY (commit hash
+  // before play → reveal after), not a browser randomServerSeed(). The spin math is unchanged.
+  async function runSpin(pls: { id: string; amount: number }[]) {
+    if (inFlightRef.current || spinning || pls.length === 0) return // a mint is already in flight
     const total = pls.reduce((a, p) => a + p.amount, 0)
     if (total > available) {
       setError(`Not enough to place that bet (you can wager ${formatMoney(available)}).`)
       return
     }
+    inFlightRef.current = true
     setError(null)
     setHoverNumbers(null) // don't leave a coverage highlight glowing through the spin
     setLastPlacements(pls) // remember this layout so Repeat can replay it
@@ -198,12 +203,18 @@ export function RouletteGame({ account, onBalanceChange }: RouletteGameProps) {
     const st: Record<string, number> = {}
     for (const p of pls) st[p.id] = (st[p.id] ?? 0) + p.amount
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const bets: RouletteBet[] = Object.entries(st).map(([id, stake]) => {
         const spot = spotFor(id)
         return { label: spot.label, numbers: spot.numbers, stake }
       })
-      const r = playRoulette(account, { bets, clientSeed, nonce: nonceRef.current })
+      const r = playRoulette(account, {
+        bets,
+        clientSeed,
+        nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
+      })
       onBalanceChange()
       setRound(r)
       setSpinning(true)
@@ -234,16 +245,18 @@ export function RouletteGame({ account, onBalanceChange }: RouletteGameProps) {
       }, SPIN_MS)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
   /** Spin the chips currently on the felt. */
   function spin() {
-    runSpin(placements)
+    void runSpin(placements)
   }
   /** One click: re-place the last spin's exact chips and spin them again. */
   function repeatAndSpin() {
-    runSpin(lastPlacements)
+    void runSpin(lastPlacements)
   }
 
   const winPocket = showResult ? round!.pocket : null
@@ -283,7 +296,9 @@ export function RouletteGame({ account, onBalanceChange }: RouletteGameProps) {
             {spinning ? (
               <span className="rl-readout-spin">No more bets — ball’s rolling…</span>
             ) : showResult ? (
-              <span className={`rl-readout-pill rl-${colorOf(round!.pocket)}`}>{round!.pocket}</span>
+              <span className={`rl-readout-pill rl-${colorOf(round!.pocket)}`}>
+                {round!.pocket}
+              </span>
             ) : (
               <span className="rl-readout-idle">Place your chips, then spin</span>
             )}
@@ -331,7 +346,11 @@ export function RouletteGame({ account, onBalanceChange }: RouletteGameProps) {
           </div>
 
           {hasBets ? (
-            <button className="action action-bet rl-spin" onClick={spin} disabled={spinning || resolving}>
+            <button
+              className="action action-bet rl-spin"
+              onClick={spin}
+              disabled={spinning || resolving}
+            >
               Play
             </button>
           ) : canRebet ? (
@@ -683,7 +702,8 @@ function Fairness({
   onClientSeed: (s: string) => void
 }) {
   const verified = useMemo(
-    () => (round ? verifySpin(round.serverSeed, round.clientSeed, round.nonce, round.pocket) : null),
+    () =>
+      round ? verifySpin(round.serverSeed, round.clientSeed, round.nonce, round.pocket) : null,
     [round],
   )
   return (

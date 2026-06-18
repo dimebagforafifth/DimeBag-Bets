@@ -7,21 +7,37 @@
  * also that the change was persisted to storage (so a reload wouldn't revert it).
  */
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { availableToWager } from '../core/index.js'
 import { App } from './App.js'
 import { getCurrentPlayer } from './book-store.js'
 import { formatMoney } from '../games/shared/money.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+// Plinko now mints its server seed from the fairness authority. Force the in-process (local)
+// authority so the drop never opens a real socket (happy-dom's fetch would ECONNREFUSED) — the
+// mint stays deterministic, and the drop settles on a microtask flush.
+vi.mock('../games/shared/fair.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../games/shared/fair.js')>()
+  return {
+    ...actual,
+    fairnessClient: actual.createFairnessClient({
+      fetchImpl: (() => {
+        throw new Error('offline')
+      }) as unknown as typeof fetch,
+    }),
+  }
+})
 
 function figure(host: HTMLElement): string {
   return host.querySelector('.figure-value')?.textContent ?? ''
 }
 function click(host: HTMLElement, selector: string, text: RegExp): boolean {
-  const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) => text.test(n.textContent ?? ''))
+  const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) =>
+    text.test(n.textContent ?? ''),
+  )
   if (!el) return false
   act(() => el.click())
   return true
@@ -36,6 +52,11 @@ async function openPlinkoAndDrop(host: HTMLElement): Promise<void> {
     await import('../games/plinko/ui/PlinkoGame.js')
   })
   if (!click(host, 'button.action', /^play$/i)) throw new Error('no Play button')
+  // The drop's server seed is minted from the authority (async) — flush microtasks so the
+  // wager settles (pending → 0, balance moved) before the caller reads the figure.
+  await act(async () => {
+    for (let i = 0; i < 6; i++) await Promise.resolve()
+  })
 }
 
 describe('leaving Plinko by any route keeps the balance change', () => {

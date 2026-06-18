@@ -12,6 +12,7 @@ import {
   type HandRank,
   type VideoPokerGame as VideoPokerState,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -94,6 +95,7 @@ export function VideoPokerGame({ account, onBalanceChange }: VideoPokerGameProps
   const [bet, setBet] = useState(1000) // cents ($10.00)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<VideoPokerState | null>(null)
   const [holds, setHolds] = useState<boolean[]>([false, false, false, false, false])
@@ -134,14 +136,20 @@ export function VideoPokerGame({ account, onBalanceChange }: VideoPokerGameProps
     [result, game],
   )
 
-  function deal() {
+  // The deck's server seed now comes from the platform fairness AUTHORITY (commit hash before
+  // the deal → reveal after), not a browser randomServerSeed(). The deck math is unchanged.
+  async function deal() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const g = createVideoPoker(account, {
         stake: bet,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
       })
       setGame(g)
       setHolds([false, false, false, false, false])
@@ -151,6 +159,8 @@ export function VideoPokerGame({ account, onBalanceChange }: VideoPokerGameProps
       play('deal')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 

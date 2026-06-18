@@ -22,6 +22,7 @@ import {
   type PlinkoRisk,
   type PlinkoRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
 import { play } from '../../../sound/index.js'
@@ -35,8 +36,8 @@ const PLINKO_RULES: ReactNode[] = [
   'The ball bounces down the pegs and lands in one of the multiplier slots along the bottom.',
   'Edge slots pay the most but are hardest to reach; centre slots pay the least. Higher risk and more rows stretch the extremes.',
   <>
-    <strong>Payout = bet × the slot the ball lands in</strong> (slots below 1× lose part of the bet).
-    The ball’s path is provably fair.
+    <strong>Payout = bet × the slot the ball lands in</strong> (slots below 1× lose part of the
+    bet). The ball’s path is provably fair.
   </>,
 ]
 
@@ -100,6 +101,7 @@ export function PlinkoGame({ account, houseConfig, onBalanceChange }: PlinkoGame
   const [autoOn, setAutoOn] = useState(false)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a drop is awaiting its authority-minted seed
 
   const [history, setHistory] = useState<{ multiplier: number; profit: number }[]>([])
   const [flashes, setFlashes] = useState<{ slot: number; key: number }[]>([])
@@ -114,7 +116,7 @@ export function PlinkoGame({ account, houseConfig, onBalanceChange }: PlinkoGame
   const ballIdRef = useRef(0)
   const flashKeyRef = useRef(0)
   const autoTimerRef = useRef(0)
-  const autoTickRef = useRef<() => void>(() => {})
+  const autoTickRef = useRef<() => Promise<void>>(async () => {})
 
   const available = maxBet(account)
   // The displayed table = the canonical Stake table, or — once a manager changes
@@ -165,10 +167,9 @@ export function PlinkoGame({ account, houseConfig, onBalanceChange }: PlinkoGame
       for (const b of newFlashes) {
         window.setTimeout(() => setFlashes((f) => f.filter((x) => x.key !== b.key)), 280)
       }
-      setHistory((h) => [
-        ...landed.map((b) => ({ multiplier: b.multiplier, profit: b.profit })),
-        ...h,
-      ].slice(0, 18))
+      setHistory((h) =>
+        [...landed.map((b) => ({ multiplier: b.multiplier, profit: b.profit })), ...h].slice(0, 18),
+      )
       for (const b of landed) {
         play(b.profit > 0 ? 'win' : b.profit < 0 ? 'lose' : 'draw')
         signalReveal(account.id) // this ball landed → release its ledger entry now
@@ -207,27 +208,38 @@ export function PlinkoGame({ account, houseConfig, onBalanceChange }: PlinkoGame
     ballsRef.current.push(ball)
   }
 
-  function dropOne(): boolean {
+  // The server seed now comes from the platform fairness AUTHORITY (commit hash before play →
+  // reveal), not a browser randomServerSeed(). A drop in flight skips re-entrant calls so a
+  // mint can't overlap; the drop math and payouts are unchanged.
+  async function dropOne(): Promise<boolean> {
+    if (inFlightRef.current) return true // a mint is already in flight — skip, don't stop auto
     if (bet > available || ballsRef.current.length >= MAX_BALLS) return false
-    nonceRef.current += 1
-    const r = playPlinko(account, {
-      stake: bet,
-      rows,
-      risk,
-      clientSeed,
-      nonce: nonceRef.current,
-      config: houseConfig,
-    })
-    onBalanceChange() // figure already moved; keep availableToWager honest for rapid drops
-    setLastRound(r)
-    spawnBall(r, (ballsRef.current.length % 5) * 0.004 - 0.008)
-    return true
+    inFlightRef.current = true
+    try {
+      const minted = await fairnessClient.mintRound()
+      nonceRef.current += 1
+      const r = playPlinko(account, {
+        stake: bet,
+        rows,
+        risk,
+        clientSeed,
+        nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
+        config: houseConfig,
+      })
+      onBalanceChange() // figure already moved; keep availableToWager honest for rapid drops
+      setLastRound(r)
+      spawnBall(r, (ballsRef.current.length % 5) * 0.004 - 0.008)
+      return true
+    } finally {
+      inFlightRef.current = false
+    }
   }
 
-  function drop(): boolean {
+  async function drop(): Promise<boolean> {
     setError(null)
     try {
-      const placed = dropOne()
+      const placed = await dropOne()
       if (placed) {
         play('bet')
         ensureLoop()
@@ -241,19 +253,19 @@ export function PlinkoGame({ account, houseConfig, onBalanceChange }: PlinkoGame
   // Auto streams ONE ball every tick (a constant rain, not batches). It keeps
   // running while balls clear the screen and only stops when you can't afford
   // the next drop.
-  function autoTick() {
+  async function autoTick(): Promise<void> {
     if (bet > available) {
       stopAuto()
       return
     }
-    if (ballsRef.current.length < MAX_BALLS && dropOne()) ensureLoop()
+    if (ballsRef.current.length < MAX_BALLS && (await dropOne())) ensureLoop()
   }
   autoTickRef.current = autoTick
 
   function startAuto() {
     setAutoOn(true)
     clearInterval(autoTimerRef.current)
-    autoTimerRef.current = window.setInterval(() => autoTickRef.current(), AUTO_INTERVAL)
+    autoTimerRef.current = window.setInterval(() => void autoTickRef.current(), AUTO_INTERVAL)
   }
   function stopAuto() {
     setAutoOn(false)
@@ -261,7 +273,6 @@ export function PlinkoGame({ account, houseConfig, onBalanceChange }: PlinkoGame
   }
   useEffect(() => {
     if (mode === 'manual') stopAuto()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
   return (
@@ -356,21 +367,30 @@ export function PlinkoGame({ account, houseConfig, onBalanceChange }: PlinkoGame
             Stop Auto
           </button>
         ) : (
-          <button className="action action-bet" onClick={startAuto} disabled={betInvalid || resolving}>
+          <button
+            className="action action-bet"
+            onClick={startAuto}
+            disabled={betInvalid || resolving}
+          >
             Start Auto
           </button>
         )}
 
         {error && <p className="plinko-error">{error}</p>}
         {bet > available && !error && (
-          <p className="plinko-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
+          <p className="plinko-error">
+            Stake exceeds what you can wager ({formatPoints(available)}).
+          </p>
         )}
       </section>
 
       <section className="plinko-stage">
         <div className="plinko-historybar">
           {history.map((h, i) => (
-            <span key={i} className={`pill ${h.profit > 0 ? 'pill-win' : h.profit < 0 ? 'pill-loss' : ''}`}>
+            <span
+              key={i}
+              className={`pill ${h.profit > 0 ? 'pill-win' : h.profit < 0 ? 'pill-loss' : ''}`}
+            >
               {fmtMult(h.multiplier)}
             </span>
           ))}
@@ -444,13 +464,7 @@ function step(ball: Ball, dt: number, onBounce: () => void): void {
 }
 
 /** The peg triangle + falling balls. */
-function Board({
-  rows,
-  balls,
-}: {
-  rows: number
-  balls: Ball[]
-}) {
+function Board({ rows, balls }: { rows: number; balls: Ball[] }) {
   const sp = 1 / (rows + 1)
   const pegs: { x: number; y: number }[] = []
   for (let r = 0; r < rows; r++) {

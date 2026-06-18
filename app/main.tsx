@@ -1,8 +1,10 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App.js'
 import { ErrorBoundary } from './ErrorBoundary.js'
 import { AuthProvider, Login, useAuth } from '../auth/index.js'
+import { installAlertTransport } from './alert-transport.js'
+import { armBonusEngine } from '../bonus/index.js'
 import './theme.css'
 
 /**
@@ -12,6 +14,24 @@ import './theme.css'
  */
 function Root() {
   const { status } = useAuth()
+  // Wire risk alerts (app/risk-controls onAlert) to the SMS/email transport. OFF BY DEFAULT:
+  // with no relay endpoints provisioned it registers nothing and is byte-for-byte the no-
+  // transport build; once provisioning supplies the endpoints it pages on a breach.
+  useEffect(() => installAlertTransport(), [])
+  // Arm the bonus engine: every real wager (core `onWagerPlaced`) feeds `recordTurnover`, so
+  // bonus playthrough clears from ACTUAL betting. Safe + off-by-default — arming only records
+  // turnover, never grants; money grants happen solely via fireTrigger/expireDue → core.grant.
+  useEffect(() => armBonusEngine(), [])
+  // fireTrigger HOOKS (documented seam — the engine never auto-grants on import). The points-only
+  // demo has no safe real source for these lifecycle events, so each stays an explicit hook to
+  // connect when its source is provisioned (every fire grants a rule's reward through core.grant):
+  //   fireTrigger('signup',        { playerId })  // real new-player signup (demo bootstraps an operator)
+  //   fireTrigger('deposit',       { playerId })  // n/a — points only, no real deposits
+  //   fireTrigger('daily',         { targetId })  // a daily check-in / login-streak source
+  //   fireTrigger('first-bet',     { playerId })  // a player's first ever wager (needs lifecycle state)
+  //   fireTrigger('losing-streak', { playerId })  // N losses in a row — a retention nudge
+  // 'first-bet'/'losing-streak' are derivable from core wager events, but auto-firing would grant
+  // credit mid-play, which is an operator rule-config decision — hence explicit hooks, not a wire.
   if (status === 'loading') return null
   return status === 'authenticated' ? <App /> : <Login />
 }

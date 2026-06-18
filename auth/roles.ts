@@ -11,13 +11,21 @@
 
 import type { Role } from '../org/index.js'
 
-/** The app's top-level sections. */
+/** The app's top-level sections. (community/profile/pickem are the round-2 player
+ *  sections registered via app/player-sections — added here so the Section state +
+ *  render guard accept them and they're reachable by players.) */
 export type Section =
   | 'casino'
   | 'sportsbook'
   | 'rewards'
   | 'mybets'
   | 'leaderboard'
+  | 'community'
+  | 'profile'
+  | 'pickem'
+  | 'challenges'
+  | 'competitions'
+  | 'gamification'
   | 'management'
 
 export const ALL_SECTIONS: Section[] = [
@@ -26,9 +34,27 @@ export const ALL_SECTIONS: Section[] = [
   'rewards',
   'mybets',
   'leaderboard',
+  'community',
+  'profile',
+  'pickem',
+  'challenges',
+  'competitions',
+  'gamification',
   'management',
 ]
-const PLAYER_SECTIONS: Section[] = ['casino', 'sportsbook', 'rewards', 'mybets', 'leaderboard']
+const PLAYER_SECTIONS: Section[] = [
+  'casino',
+  'sportsbook',
+  'rewards',
+  'mybets',
+  'leaderboard',
+  'community',
+  'profile',
+  'pickem',
+  'challenges',
+  'competitions',
+  'gamification',
+]
 const STAFF_SECTIONS: Section[] = ['management', 'leaderboard']
 
 /** The sections a role may reach. */

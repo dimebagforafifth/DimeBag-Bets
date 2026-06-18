@@ -15,5 +15,34 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["core", "games", "sportsbook", "app", "persistence", "ledger", "sportsdata", "manager", "org", "vip", "sound", "auth", "console", "features", "lib", "api", "scripts"]
+  "include": [
+    "core",
+    "games",
+    "sportsbook",
+    "app",
+    "persistence",
+    "ledger",
+    "sportsdata",
+    "manager",
+    "org",
+    "vip",
+    "sound",
+    "auth",
+    "console",
+    "features",
+    "lib",
+    "api",
+    "scripts",
+    "records",
+    "social",
+    "pickem",
+    "crm",
+    "analytics",
+    "bonus",
+    "p2p",
+    "creator",
+    "events",
+    "gamification",
+    "rewards"
+  ]
 }

@@ -13,8 +13,22 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { Account } from '../../../core/index.js'
 import { SicBoGame } from './SicBoGame.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+// The roll now mints its server seed from the fairness authority. Force the in-process (local)
+// authority so the test never opens a real socket (happy-dom's fetch would ECONNREFUSED as a
+// macrotask fake timers can't flush) — the mint becomes deterministic pure-microtask work.
+vi.mock('../../shared/fair.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../shared/fair.js')>()
+  return {
+    ...actual,
+    fairnessClient: actual.createFairnessClient({
+      fetchImpl: (() => {
+        throw new Error('offline')
+      }) as unknown as typeof fetch,
+    }),
+  }
+})
 
 function account(over: Partial<Account> = {}): Account {
   return { id: 'p1', creditLimit: 1_000_000, balance: 0, pending: 0, ...over }
@@ -50,11 +64,18 @@ const staked = (host: HTMLElement) => host.querySelector('.sicbo-staked-value')?
 const tokens = (host: HTMLElement) => host.querySelectorAll('.sicbo-chip-token').length
 const tokenIn = (c: HTMLElement) => c.querySelector('.sicbo-chip-token')
 
+/** Flush pending microtasks so the async roll (authority mint) settles before asserting. */
+async function flush(): Promise<void> {
+  await act(async () => {
+    for (let i = 0; i < 6; i++) await Promise.resolve()
+  })
+}
+
 describe('SicBoGame (Stake-style table)', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
-  it('lays out the full board, stakes a spot, and settles a roll without throttling', () => {
+  it('lays out the full board, stakes a spot, and settles a roll without throttling', async () => {
     const acct = account()
     const { host, root } = mount(acct)
 
@@ -81,8 +102,11 @@ describe('SicBoGame (Stake-style table)', () => {
     expect(staked(host)).toBe('$10.00')
     expect(btn(host, /^Roll$/).disabled).toBe(false)
 
-    // Roll: core settles the wager immediately (the tumble is cosmetic).
+    // Roll: the server seed is minted from the fairness authority (async), then core
+    // settles the wager immediately (the tumble is cosmetic). Flush the mint microtasks
+    // before asserting the round has started.
     act(() => btn(host, /^Roll$/).click())
+    await flush()
     expect(acct.pending).toBe(0)
     expect(host.querySelector('.sicbo-readout-idle')?.textContent).toBe('Rolling…')
 
@@ -117,7 +141,7 @@ describe('SicBoGame (Stake-style table)', () => {
     teardown(host, root)
   })
 
-  it('stacks chips on one spot into a single combined wager', () => {
+  it('stacks chips on one spot into a single combined wager', async () => {
     const acct = account()
     const { host, root } = mount(acct)
 
@@ -131,6 +155,7 @@ describe('SicBoGame (Stake-style table)', () => {
     expect(small.querySelector('.sicbo-chip-token-val')?.textContent).toBe('$30')
 
     act(() => btn(host, /^Roll$/).click())
+    await flush() // await the authority-minted seed
     act(() => vi.advanceTimersByTime(1600)) // past the tumble, the cascade, and the suspense beat
     // The combined $30 settled as one even-money wager: figure moved by exactly ±$30.
     expect(Math.abs(acct.balance)).toBe(3000)

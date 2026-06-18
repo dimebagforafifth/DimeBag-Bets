@@ -22,6 +22,13 @@ import { agentsManifests } from '../../features/agents/manifest.js'
 import { cashierDeskManifests } from '../../features/cashier/manifest.js'
 import { operatorManualManifests } from '../../features/help/manifest.js'
 import { rewardsAdminManifests } from '../../features/rewards/manifest.js'
+// Round-3 lanes ship ready-to-mount manifests; the registry owner spreads them in (the lanes
+// don't edit this shared file). C → Margin & Pricing (Control); D → CRM/analytics (3 Players
+// tiles + 1 Control tile). groupBySection routes each tile to its section regardless of order.
+import { pricingManifests } from '../../features/pricing/manifest.js'
+import { crmManifests } from '../../features/crm/manifest.js'
+// Round-4: C's creator/competitions console tile (author & run branded contests → Rewards).
+import { competitionsManifests } from '../../creator/manifest.js'
 
 /** Every console feature, grouped into sections at render time by `groupBySection`.
  *  Listed in section order so each section's tiles read top-to-bottom as written. */
@@ -40,9 +47,14 @@ export const REGISTRY: FeatureManifest[] = [
   ...catalogManifests,
   // Control
   ...controlManifests,
+  ...pricingManifests, // Margin & Pricing (C — operator economics)
   ...operatorManualManifests,
   // Rewards (the loyalty program admin)
   ...rewardsAdminManifests,
+  ...competitionsManifests, // Competitions creator (C — author & run contests)
+  // CRM + analytics (D — read-only back-office: Player CRM / Integrity / Abuse Watch in
+  // Players, Analytics in Control; grouped to their sections at render)
+  ...crmManifests,
 ]
 
 /** The console sections, in display order. */

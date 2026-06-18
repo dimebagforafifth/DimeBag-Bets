@@ -123,14 +123,21 @@
   /* a real chip: a spotted edge ring (conic) around a domed inner face */
   background: repeating-conic-gradient(from -12deg, var(--body) 0 42deg, var(--edge) 42deg 60deg);
   box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5);
-  transition: transform 0.1s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease;
 }
 .rl-chipbtn::before {
   content: '';
   position: absolute;
   inset: 21%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--body) 78%, #fff), var(--body) 78%);
+  background: radial-gradient(
+    circle at 50% 34%,
+    color-mix(in srgb, var(--body) 78%, #fff),
+    var(--body) 78%
+  );
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--body) 55%, #000);
 }
 .rl-chipbtn-val {
@@ -149,7 +156,9 @@
 .rl-chipbtn.is-on {
   /* the chip you're holding lifts off the rack with a gold ring */
   transform: translateY(-3px) scale(1.08);
-  box-shadow: 0 0 0 3px var(--gem), 0 7px 12px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 3px var(--gem),
+    0 7px 12px rgba(0, 0, 0, 0.5);
 }
 .rl-chip-custom {
   margin-top: 8px;
@@ -215,7 +224,9 @@
   z-index: 0;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 36%, #4d3b23 0%, #34271680 58%, #1b130a 100%);
-  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.7), inset 0 6px 14px rgba(255, 225, 170, 0.12),
+  box-shadow:
+    inset 0 0 26px rgba(0, 0, 0, 0.7),
+    inset 0 6px 14px rgba(255, 225, 170, 0.12),
     0 14px 32px rgba(0, 0, 0, 0.55);
 }
 /* a gold rim that breathes while the ball is in play — the "no more bets" tell */
@@ -235,11 +246,15 @@
   0%,
   100% {
     opacity: 0.3;
-    box-shadow: 0 0 0 2px rgba(246, 195, 80, 0.35), 0 0 14px rgba(246, 195, 80, 0.2);
+    box-shadow:
+      0 0 0 2px rgba(var(--gold-glow), 0.35),
+      0 0 14px rgba(var(--gold-glow), 0.2);
   }
   50% {
     opacity: 0.95;
-    box-shadow: 0 0 0 3px rgba(246, 195, 80, 0.85), 0 0 28px rgba(246, 195, 80, 0.5);
+    box-shadow:
+      0 0 0 3px rgba(var(--gold-glow), 0.85),
+      0 0 28px rgba(var(--gold-glow), 0.5);
   }
 }
 
@@ -250,8 +265,8 @@
   border-radius: 50%;
   border: 4px solid #caa24a;
   box-shadow:
-    inset 0 0 0 8px #463017, /* dark wooden ball track */
-    inset 0 0 0 9px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 8px #463017,
+    /* dark wooden ball track */ inset 0 0 0 9px rgba(0, 0, 0, 0.55),
     inset 0 0 22px rgba(0, 0, 0, 0.65);
   will-change: transform;
 }
@@ -266,11 +281,11 @@
   background: repeating-conic-gradient(
     from 0deg,
     transparent 0 8.2deg,
-    rgba(0, 0, 0, 0.5) 8.2deg 8.85deg, /* pocket edge sinks into shadow (the well) */
-    rgba(36, 24, 9, 0.95) 8.85deg 9.04deg, /* dark base of the wall */
-    rgba(255, 246, 210, 0.98) 9.04deg 9.52deg, /* bright raised brass wall */
-    rgba(36, 24, 9, 0.95) 9.52deg 9.72deg, /* dark base */
-    rgba(0, 0, 0, 0.5) 9.72deg 9.7297deg
+    rgba(0, 0, 0, 0.5) 8.2deg 8.85deg,
+    /* pocket edge sinks into shadow (the well) */ rgba(36, 24, 9, 0.95) 8.85deg 9.04deg,
+    /* dark base of the wall */ rgba(255, 246, 210, 0.98) 9.04deg 9.52deg,
+    /* bright raised brass wall */ rgba(36, 24, 9, 0.95) 9.52deg 9.72deg,
+    /* dark base */ rgba(0, 0, 0, 0.5) 9.72deg 9.7297deg
   );
   /* run the slots the full depth of the pocket band, right in to the hub area */
   -webkit-mask: radial-gradient(circle, transparent 0 27%, #000 30%);
@@ -350,13 +365,17 @@
    to it the moment the ball settles */
 .rl-num.is-win b {
   color: #fff7d6;
-  text-shadow: 0 0 7px #fff, 0 0 12px var(--gem);
+  text-shadow:
+    0 0 7px #fff,
+    0 0 12px var(--gem);
   animation: rl-winpop 0.6s ease;
 }
 @keyframes rl-winpop {
   0% {
     transform: scale(2.4);
-    text-shadow: 0 0 16px #fff, 0 0 26px var(--gem);
+    text-shadow:
+      0 0 16px #fff,
+      0 0 26px var(--gem);
   }
   60% {
     transform: scale(0.92);
@@ -430,7 +449,9 @@
   margin-left: -7.5px;
   border-radius: 50%;
   background: radial-gradient(circle at 34% 28%, #ffffff 0%, #eef1f4 45%, #b4bcc4 100%);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.75),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
     inset 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 /* a soft shadow under the ball that squashes when it lands — reads as weight */
@@ -451,8 +472,11 @@
 }
 /* a hot motion glow while the ball is racing — drops back to a plain ball at rest */
 .rl-wheel-wrap.is-spinning .rl-ball {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.75), 0 0 16px 3px rgba(255, 255, 255, 0.7),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.75),
+    0 0 16px 3px rgba(255, 255, 255, 0.7),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 /* a comet motion-trail streaming off the racing ball: it points along the rim
    behind the ball (the ball moves left at the top of its counter-clockwise orbit,
@@ -495,9 +519,18 @@
   inset: 34%;
   border-radius: 50%;
   z-index: 2;
-  background: radial-gradient(circle at 38% 30%, #f3d896 0%, #cba74f 32%, #8c6c30 70%, #5a431d 100%);
-  box-shadow: 0 0 0 3px #3a2a18, inset 0 2px 4px rgba(255, 255, 255, 0.55),
-    inset 0 -4px 7px rgba(0, 0, 0, 0.45), 0 5px 12px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(
+    circle at 38% 30%,
+    #f3d896 0%,
+    #cba74f 32%,
+    #8c6c30 70%,
+    #5a431d 100%
+  );
+  box-shadow:
+    0 0 0 3px #3a2a18,
+    inset 0 2px 4px rgba(255, 255, 255, 0.55),
+    inset 0 -4px 7px rgba(0, 0, 0, 0.45),
+    0 5px 12px rgba(0, 0, 0, 0.5);
 }
 .rl-hub::before {
   content: '';
@@ -505,7 +538,9 @@
   inset: 26%;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #fbe9bd, #b8923f);
-  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(255, 255, 255, 0.4);
+  box-shadow:
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(255, 255, 255, 0.4);
 }
 /* a small brass pointer at 12 o'clock — a fixed reference, purely decorative */
 .rl-pointer {
@@ -624,47 +659,121 @@
    and never changes where the ball lands or the house odds. (rl-ball-drop /
    rl-ball-wobble above are variant 0.) */
 @keyframes rl-ball-drop-1 {
-  0%, 44% { transform: translateY(0) scaleY(1); }
-  58% { transform: translateY(5px) scaleY(1); }    /* spirals down the bowl */
-  68% { transform: translateY(10px) scaleY(0.98); }
-  73% { transform: translateY(25px) scaleY(0.72); } /* one big hop off a diamond */
-  80% { transform: translateY(6px) scaleY(1.12); }
-  87% { transform: translateY(17px) scaleY(0.92); }
-  93% { transform: translateY(12px) scaleY(1.03); }
-  100% { transform: translateY(var(--rl-pocket-drop)) scaleY(1); }
+  0%,
+  44% {
+    transform: translateY(0) scaleY(1);
+  }
+  58% {
+    transform: translateY(5px) scaleY(1);
+  } /* spirals down the bowl */
+  68% {
+    transform: translateY(10px) scaleY(0.98);
+  }
+  73% {
+    transform: translateY(25px) scaleY(0.72);
+  } /* one big hop off a diamond */
+  80% {
+    transform: translateY(6px) scaleY(1.12);
+  }
+  87% {
+    transform: translateY(17px) scaleY(0.92);
+  }
+  93% {
+    transform: translateY(12px) scaleY(1.03);
+  }
+  100% {
+    transform: translateY(var(--rl-pocket-drop)) scaleY(1);
+  }
 }
 @keyframes rl-ball-drop-2 {
-  0%, 48% { transform: translateY(0) scaleY(1); }
-  62% { transform: translateY(4px) scaleY(1); }    /* spirals in */
-  71% { transform: translateY(9px) scaleY(0.99); }
-  75% { transform: translateY(18px) scaleY(0.85); } /* chattery — many small bounces */
-  79% { transform: translateY(11px) scaleY(1.05); }
-  83% { transform: translateY(17px) scaleY(0.9); }
-  87% { transform: translateY(12px) scaleY(1.03); }
-  90% { transform: translateY(16px) scaleY(0.95); }
-  93% { transform: translateY(13px) scaleY(1.02); }
-  96% { transform: translateY(15.5px) scaleY(0.99); }
-  100% { transform: translateY(var(--rl-pocket-drop)) scaleY(1); }
+  0%,
+  48% {
+    transform: translateY(0) scaleY(1);
+  }
+  62% {
+    transform: translateY(4px) scaleY(1);
+  } /* spirals in */
+  71% {
+    transform: translateY(9px) scaleY(0.99);
+  }
+  75% {
+    transform: translateY(18px) scaleY(0.85);
+  } /* chattery — many small bounces */
+  79% {
+    transform: translateY(11px) scaleY(1.05);
+  }
+  83% {
+    transform: translateY(17px) scaleY(0.9);
+  }
+  87% {
+    transform: translateY(12px) scaleY(1.03);
+  }
+  90% {
+    transform: translateY(16px) scaleY(0.95);
+  }
+  93% {
+    transform: translateY(13px) scaleY(1.02);
+  }
+  96% {
+    transform: translateY(15.5px) scaleY(0.99);
+  }
+  100% {
+    transform: translateY(var(--rl-pocket-drop)) scaleY(1);
+  }
 }
 @keyframes rl-ball-wobble-1 {
-  0%, 56% { transform: rotate(0deg); }
-  64% { transform: rotate(-3deg); }   /* shimmy as it slows */
-  73% { transform: rotate(-11deg); }  /* big clip off a diamond */
-  81% { transform: rotate(7deg); }
-  89% { transform: rotate(-3deg); }
-  95% { transform: rotate(1.4deg); }
-  100% { transform: rotate(0deg); }
+  0%,
+  56% {
+    transform: rotate(0deg);
+  }
+  64% {
+    transform: rotate(-3deg);
+  } /* shimmy as it slows */
+  73% {
+    transform: rotate(-11deg);
+  } /* big clip off a diamond */
+  81% {
+    transform: rotate(7deg);
+  }
+  89% {
+    transform: rotate(-3deg);
+  }
+  95% {
+    transform: rotate(1.4deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 @keyframes rl-ball-wobble-2 {
-  0%, 60% { transform: rotate(0deg); }
-  68% { transform: rotate(-3deg); }
-  75% { transform: rotate(-6deg); }
-  80% { transform: rotate(5deg); }
-  85% { transform: rotate(-4deg); }
-  89% { transform: rotate(3deg); }
-  93% { transform: rotate(-2deg); }
-  97% { transform: rotate(1deg); }
-  100% { transform: rotate(0deg); }
+  0%,
+  60% {
+    transform: rotate(0deg);
+  }
+  68% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(-6deg);
+  }
+  80% {
+    transform: rotate(5deg);
+  }
+  85% {
+    transform: rotate(-4deg);
+  }
+  89% {
+    transform: rotate(3deg);
+  }
+  93% {
+    transform: rotate(-2deg);
+  }
+  97% {
+    transform: rotate(1deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 /* ----------------------------- readout / history ----------------------------- */
@@ -776,8 +885,8 @@
   border-radius: 12px;
   padding: 14px;
   box-shadow:
-    inset 0 0 0 2px rgba(214, 178, 90, 0.55), /* brass trim line */
-    inset 0 0 36px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 2px rgba(214, 178, 90, 0.55),
+    /* brass trim line */ inset 0 0 36px rgba(0, 0, 0, 0.5),
     0 10px 26px rgba(0, 0, 0, 0.45);
 }
 
@@ -852,7 +961,10 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     inset 0 -3px 6px rgba(0, 0, 0, 0.28),
     0 1px 2px rgba(0, 0, 0, 0.35);
-  transition: transform 0.05s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.05s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .rl-cell-label {
   position: relative;
@@ -881,13 +993,25 @@
   cursor: default;
 }
 .rl-red {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--rl-red) 86%, #fff) 0%, var(--rl-red) 60%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rl-red) 86%, #fff) 0%,
+    var(--rl-red) 60%
+  );
 }
 .rl-black {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--rl-black) 80%, #fff) 0%, var(--rl-black) 60%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rl-black) 80%, #fff) 0%,
+    var(--rl-black) 60%
+  );
 }
 .rl-green {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--rl-green) 84%, #fff) 0%, var(--rl-green) 60%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rl-green) 84%, #fff) 0%,
+    var(--rl-green) 60%
+  );
 }
 .rl-zero {
   font-size: 20px;
@@ -912,40 +1036,50 @@
 }
 @keyframes rl-hit-flash {
   0% {
-    box-shadow: 0 0 0 3px #fff, 0 0 26px rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 0 0 3px #fff,
+      0 0 26px rgba(255, 255, 255, 0.9);
     filter: brightness(1.5);
   }
   35% {
-    box-shadow: 0 0 0 2px var(--text), 0 0 16px rgba(255, 255, 255, 0.5);
+    box-shadow:
+      0 0 0 2px var(--text),
+      0 0 16px rgba(255, 255, 255, 0.5);
     filter: brightness(1.2);
   }
   70% {
-    box-shadow: 0 0 0 3px #fff, 0 0 22px rgba(255, 255, 255, 0.8);
+    box-shadow:
+      0 0 0 3px #fff,
+      0 0 22px rgba(255, 255, 255, 0.8);
     filter: brightness(1.45);
   }
   100% {
-    box-shadow: 0 0 0 2px var(--text), 0 0 16px rgba(255, 255, 255, 0.45);
+    box-shadow:
+      0 0 0 2px var(--text),
+      0 0 16px rgba(255, 255, 255, 0.45);
     filter: brightness(1.2);
   }
 }
 /* hold the winning cells lit after the flash so the correlation stays readable */
 .rl-cell.is-hit {
-  box-shadow: 0 0 0 2px var(--text), 0 0 16px rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 0 0 2px var(--text),
+    0 0 16px rgba(255, 255, 255, 0.45);
 }
 /* every number a hovered bet covers lights up, so coverage is obvious.
    :not(:disabled) keeps it off the board while a spin is in flight. */
 .rl-cell.is-cover:not(:disabled) {
   filter: brightness(1.3);
   box-shadow:
-    inset 0 0 0 2px rgba(246, 195, 80, 0.95),
-    0 0 12px rgba(246, 195, 80, 0.4);
+    inset 0 0 0 2px rgba(var(--gem-glow), 0.95),
+    0 0 12px rgba(var(--gem-glow), 0.4);
   z-index: 1;
 }
 /* when the just-won cell is also hovered, show BOTH rings (win wins) */
 .rl-cell.is-hit.is-cover:not(:disabled) {
   box-shadow:
     0 0 0 2px var(--text),
-    inset 0 0 0 2px rgba(246, 195, 80, 0.9),
+    inset 0 0 0 2px rgba(var(--gem-glow), 0.9),
     0 0 16px rgba(255, 255, 255, 0.45);
 }
 /* red/black even-money cells: colored like the felt, with a white diamond */
@@ -1000,7 +1134,11 @@
   position: absolute;
   inset: 15%; /* the inner disc — leaves the spotted rim showing */
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--body) 80%, #fff), var(--body) 76%);
+  background: radial-gradient(
+    circle at 50% 32%,
+    color-mix(in srgb, var(--body) 80%, #fff),
+    var(--body) 76%
+  );
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--body) 58%, #000),
     inset 0 0 0 2.5px color-mix(in srgb, var(--edge) 55%, transparent);

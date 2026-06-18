@@ -1,26 +1,79 @@
-/* App shell theme — restrained palette, whitespace-first (CLAUDE.md §2). */
-:root {
-  --bg: #0f1a24;
-  --surface: #15242f;
-  --surface-2: #1b2d3a;
-  --line: #213743;
-  --text: #e9eef2;
-  --muted: #8aa0b0;
-  --green: #00e701;
-  --green-press: #00c700;
-  --red: #ed4163;
-  /* The one standard "treasure green" every game's gem + win state derives from.
-     Deep, precious emerald. --gem-glow holds its RGB channels for translucent
-     glows (rgba(var(--gem-glow), a)). Change these two and the whole app shifts. */
-  --gem: #0a9d5a;
-  --gem-glow: 10, 157, 90;
+/* DimeBag-Bets — player-facing design tokens (the single source of truth every
+   game + the sportsbook consume). Saira is loaded here so the shell + lobby get
+   it on first paint, not after a flash. */
+@import url('https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700;800&display=swap');
 
-  --radius: 10px;
+/* ============================================================================
+   GLOBAL DESIGN TOKENS — graphite & gold.
+   DimeBag's own identity, unified with the operator console (console/theme):
+   a deep neutral GRAPHITE canvas + ONE confident GOLD accent. Green/red are kept
+   narrow — only "your figure is up/down" and "live" status. Retune a value here
+   and the whole app (every game's gems, every CTA, the book) shifts with it; the
+   games are styled to be re-polished against these tokens next round.
+   (CLAUDE.md §2 — clean, restrained, fast. Not Stake's navy-and-neon-green.)
+   ========================================================================== */
+:root {
+  /* ---- graphite surfaces (one ramp, shared with the console) ---- */
+  --bg: #0f1217; /* the canvas — deep, warm-neutral graphite (was navy) */
+  --surface: #161a21; /* cards, panels, inputs sit on this */
+  --surface-2: #1d222b; /* raised / hovered surfaces, chips */
+  --line: #2a2f3a; /* hairline borders */
+
+  /* ---- text ---- */
+  --text: #eaedf2;
+  --muted: #97a2b2; /* secondary text — readable on graphite */
+  --faint: #7c89a3; /* tertiary labels, footer, disabled — kept above 4.5:1 on every surface */
+
+  /* ---- THE accent: DimeBag gold (one confident accent) ---- */
+  --gold: #d6b14a; /* brand, primary actions, focus, treasure */
+  --gold-bright: #ecca6e; /* glints, hover, the lit edge of a gradient */
+  --gold-press: #c39c34; /* pressed / active CTA */
+  --gold-glow: 214, 177, 74; /* RGB channels for translucent gold glows */
+
+  /* ---- account direction + live status (kept narrow + conventional) ---- */
+  --green: #34d399; /* figure UP / a win / "live" — refined, not neon */
+  --green-press: #25b87f;
+  --red: #e0556e; /* figure DOWN / a loss / stop */
+  --red-press: #cf4661;
+
+  /* The treasure the games are chasing: gems, multipliers + win popups derive
+     from --gem (now gold, so a win reads as treasure). --gem-glow holds its RGB
+     for soft glows. A game may re-point --gem locally — Mines keeps its emerald. */
+  --gem: #e0b44a;
+  --gem-glow: 224, 180, 74;
+
+  /* ---- shape ---- */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 18px;
   --gap: 16px;
+
+  /* ---- spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ---- type: Saira (unified with the console), with robust system fallbacks ---- */
+  --font-head: 'Saira Condensed', 'Saira', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Saira', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* a soft, ROUNDED numeric font so every figure reads gamey, not statistical
      (SF Pro Rounded on Apple via ui-rounded; falls back to the normal stack). */
-  --font-num: ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', 'Nunito',
-    system-ui, sans-serif;
+  --font-num:
+    ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', 'Nunito', system-ui, sans-serif;
+
+  /* ---- type scale ---- */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-md: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
 }
@@ -28,23 +81,79 @@
 /* Every number across the casino uses the rounded font — chunkier and softer,
    never spreadsheet-like. Each class keeps its own tabular-nums so widths stay
    stable as figures change; this only swaps the typeface + tightens it a touch. */
-.action-cashout strong, .axis-label, .baccarat-betchip-odds, .baccarat-hand-total,
-.baccarat-hint, .baccarat-result, .balloon-mult, .bj-betspot-total, .bj-chip-label,
-.bj-total, .cases-cell-mult, .cases-hint, .cases-pay-mult, .cases-pay-odds,
-.chick-spot-mult, .chip-count, .coinflip-call-mult, .coinflip-coin-mult,
-.coinflip-odds b, .coinflip-round, .coinflip-total, .crash-multiplier,
-.crash-speed-chip, .diamonds-hint, .diamonds-result, .diamonds-tier-mult,
-.dice-field-value, .dice-ticks, .fair-value, .field-input, .field-static,
-.figure-value, .hilo-guess-odds, .hilo-multiplier, .keno-tile, .limbo-multiplier,
-.pay-mult, .pill, .plinko-bucket, .plinko-hint, .rl-cell, .rl-chip-token-val,
-.rl-chipbtn, .rl-num b, .rl-readout-pill, .rl-staked-value, .sicbo .pill,
-.sicbo-chip-token-val, .sicbo-staked-value, .sicbo-total-n, .sicbo-total-odds,
-.sicbo-chipbtn-val, .sicbo-readout-total, .sicbo-readout-res, .sicbo-anytriple-odds,
-.slots-hint, .slots-pay-mult, .stat-value, .threecardpoker-card-rank,
-.threecardpoker-hint, .threecardpoker-paymult, .threecardpoker-resultamt,
-.tower-mult, .videopoker-card-rank, .videopoker-hint, .videopoker-paymult,
-.wheel-hint, .wheel-hub-value, .wheel-legend-item, .win-popup-amount,
-.win-popup-mult, .total-win-value, .roll-flag-value {
+.action-cashout strong,
+.axis-label,
+.baccarat-betchip-odds,
+.baccarat-hand-total,
+.baccarat-hint,
+.baccarat-result,
+.balloon-mult,
+.bj-betspot-total,
+.bj-chip-label,
+.bj-total,
+.cases-cell-mult,
+.cases-hint,
+.cases-pay-mult,
+.cases-pay-odds,
+.chick-spot-mult,
+.chip-count,
+.coinflip-call-mult,
+.coinflip-coin-mult,
+.coinflip-odds b,
+.coinflip-round,
+.coinflip-total,
+.crash-multiplier,
+.crash-speed-chip,
+.diamonds-hint,
+.diamonds-result,
+.diamonds-tier-mult,
+.dice-field-value,
+.dice-ticks,
+.fair-value,
+.field-input,
+.field-static,
+.figure-value,
+.hilo-guess-odds,
+.hilo-multiplier,
+.keno-tile,
+.limbo-multiplier,
+.pay-mult,
+.pill,
+.plinko-bucket,
+.plinko-hint,
+.rl-cell,
+.rl-chip-token-val,
+.rl-chipbtn,
+.rl-num b,
+.rl-readout-pill,
+.rl-staked-value,
+.sicbo .pill,
+.sicbo-chip-token-val,
+.sicbo-staked-value,
+.sicbo-total-n,
+.sicbo-total-odds,
+.sicbo-chipbtn-val,
+.sicbo-readout-total,
+.sicbo-readout-res,
+.sicbo-anytriple-odds,
+.slots-hint,
+.slots-pay-mult,
+.stat-value,
+.threecardpoker-card-rank,
+.threecardpoker-hint,
+.threecardpoker-paymult,
+.threecardpoker-resultamt,
+.tower-mult,
+.videopoker-card-rank,
+.videopoker-hint,
+.videopoker-paymult,
+.wheel-hint,
+.wheel-hub-value,
+.wheel-legend-item,
+.win-popup-amount,
+.win-popup-mult,
+.total-win-value,
+.roll-flag-value {
   font-family: var(--font-num);
   letter-spacing: -0.01em;
   /* a whisker of same-colour stroke fattens every glyph a touch (a little more
@@ -64,7 +173,7 @@
    keyboard users with nothing to track. The outline follows each element's own
    border-radius, so it sits cleanly around buttons, cards, chips and selects. */
 :focus-visible {
-  outline: 2px solid var(--green);
+  outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
 
@@ -85,10 +194,10 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+  font-family: var(--font-body);
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
+  letter-spacing: 0.005em;
 }
 
 .app {
@@ -101,23 +210,34 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 28px;
+  padding: 14px 28px;
   border-bottom: 1px solid var(--line);
+  /* a quiet sticky glass header — content blurs softly under it on scroll */
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
 }
 
 .brand {
+  font-family: var(--font-head);
   font-weight: 700;
-  letter-spacing: 0.2px;
-  font-size: 18px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-size: 20px;
   color: var(--text);
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
+  display: inline-flex;
+  align-items: baseline;
 }
 .brand-dot {
-  color: var(--green);
-  margin: 0 2px;
+  color: var(--gold);
+  margin: 0 1px;
 }
 .header-left {
   display: flex;
@@ -130,37 +250,65 @@ body {
   gap: 4px;
 }
 .nav-tab {
+  position: relative;
   background: none;
   border: none;
-  border-radius: 8px;
-  padding: 7px 14px;
+  border-radius: 9px;
+  padding: 8px 14px;
   font-size: 14px;
   font-weight: 600;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 .nav-tab:hover {
   color: var(--text);
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
 }
 .nav-tab.is-on {
   color: var(--text);
   background: var(--surface-2);
 }
+/* a slim gold underline marks the live section */
+.nav-tab.is-on::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--gold);
+}
 
 /* ---- Casino lobby ---- */
 .lobby {
   width: 100%;
-  max-width: 820px;
+  max-width: 1060px;
 }
 .lobby-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   margin-bottom: 22px;
+}
+.lobby-eyebrow {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 .lobby-title {
   margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
+  font-family: var(--font-head);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 .lobby-sub {
   margin: 4px 0 0;
@@ -169,12 +317,12 @@ body {
 }
 .lobby-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
   grid-auto-rows: 1fr; /* even card heights per row despite varying descriptions */
   gap: 16px;
 }
 .game-card {
-  --accent: var(--green);
+  --accent: var(--gold);
   position: relative;
   height: 100%;
   display: flex;
@@ -186,12 +334,17 @@ body {
   border: 1px solid var(--line);
   cursor: pointer;
   overflow: hidden;
-  transition: transform 0.14s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.16s cubic-bezier(0.2, 0.7, 0.3, 1),
+    border-color 0.18s ease,
+    box-shadow 0.2s ease;
 }
+/* one quiet, gold response on hover — a small lift + a soft single glow, not a
+   loud multicolor pop (CLAUDE.md §2: minimal purposeful motion). --accent is gold. */
 .game-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
-  box-shadow: 0 12px 30px -14px color-mix(in srgb, var(--accent) 75%, transparent);
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+  box-shadow: 0 10px 26px -16px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 /* the art tile: the game's icon over an accent-tinted gradient */
 .card-art {
@@ -229,7 +382,7 @@ body {
   transition: transform 0.2s ease;
 }
 .game-card:hover .card-art svg {
-  transform: scale(1.09) translateY(-1px);
+  transform: scale(1.05);
 }
 .card-body {
   flex: 1;
@@ -239,9 +392,10 @@ body {
   padding: 13px 14px 14px;
 }
 .card-name {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.2px;
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   color: #ffffff;
 }
 .card-tag {
@@ -257,7 +411,9 @@ body {
   color: var(--accent);
   opacity: 0;
   transform: translateX(-4px);
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 }
 .game-card:hover .card-play {
   opacity: 1;
@@ -309,8 +465,8 @@ body {
 .figure-label {
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted);
+  letter-spacing: 0.7px;
+  color: var(--faint);
 }
 .figure-value {
   font-variant-numeric: tabular-nums;
@@ -327,9 +483,10 @@ body {
   color: var(--muted);
   font-weight: 600;
 }
-/* The headline number — what you can bet right now — leads the pair. */
+/* The headline number — the gold a player has to bet right now — leads the pair. */
 .figure-block.is-primary .figure-value {
-  font-size: 15px;
+  font-size: 16px;
+  color: var(--gold-bright);
 }
 
 .app-main {
@@ -364,8 +521,10 @@ body {
 }
 .no-player-title {
   margin: 0 0 8px;
-  font-size: 20px;
-  font-weight: 800;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 .no-player-sub {
   margin: 0 0 18px;
@@ -380,9 +539,9 @@ body {
 
 .app-footer {
   text-align: center;
-  color: var(--muted);
+  color: var(--faint);
   font-size: 12px;
-  padding: 18px;
+  padding: 20px;
   border-top: 1px solid var(--line);
 }
 
@@ -413,7 +572,7 @@ body {
 }
 .field-input:focus {
   outline: none;
-  border-color: var(--green);
+  border-color: var(--gold);
 }
 .field-bet {
   display: flex;
@@ -482,32 +641,40 @@ body {
 .action {
   margin-top: 4px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 14px 16px;
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
-  color: #04210a;
+  letter-spacing: 0.2px;
+  color: #14171c; /* graphite text reads crisp on gold */
   cursor: pointer;
-  transition: transform 0.05s ease, background 0.15s ease;
+  transition:
+    transform 0.05s ease,
+    background 0.15s ease,
+    box-shadow 0.18s ease;
 }
 .action:active:not(:disabled) {
   transform: translateY(1px);
 }
 .action:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: default;
 }
+/* the one confident gold CTA — place a bet, take your winnings */
 .action-bet {
-  background: var(--green);
+  background: var(--gold);
 }
 .action-bet:hover:not(:disabled) {
-  background: var(--green-press);
+  background: var(--gold-bright);
+  box-shadow: 0 8px 24px -10px rgba(var(--gold-glow), 0.85);
 }
 .action-cashout {
-  background: var(--green);
+  background: var(--gold);
 }
 .action-cashout:hover:not(:disabled) {
-  background: var(--green-press);
+  background: var(--gold-bright);
+  box-shadow: 0 8px 24px -10px rgba(var(--gold-glow), 0.85);
 }
 .action-cashout strong {
   font-variant-numeric: tabular-nums;
@@ -517,7 +684,7 @@ body {
   color: #fff;
 }
 .action-stop:hover:not(:disabled) {
-  background: #d6324f;
+  background: var(--red-press);
 }
 
 .mines-error,
@@ -557,7 +724,9 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .stat-value.is-hot {
-  color: var(--green);
+  /* a "hot" stat is the live multiplier (the treasure) — gold, matching the
+     win popup + profit readout, not the directional green. */
+  color: var(--gem);
 }
 .stat-button {
   text-align: left;
@@ -586,7 +755,7 @@ body {
   transition: background 0.12s ease;
 }
 .stepper-btn:hover:not(:disabled) {
-  background: #294056;
+  background: var(--line); /* graphite hover, lifted from the surface-2 button (was a stray navy) */
 }
 .stepper-btn:disabled {
   opacity: 0.5;
@@ -648,7 +817,7 @@ input[type='number']::-webkit-inner-spin-button {
   max-width: 640px;
 }
 .rules-body li::marker {
-  color: color-mix(in srgb, var(--accent, var(--green)) 60%, var(--muted));
+  color: color-mix(in srgb, var(--accent, var(--gold)) 60%, var(--muted));
 }
 .rules-body strong {
   color: var(--text);
@@ -658,7 +827,7 @@ input[type='number']::-webkit-inner-spin-button {
 .rules-body u {
   color: var(--text);
   text-decoration: underline;
-  text-decoration-color: var(--accent, var(--green));
+  text-decoration-color: var(--accent, var(--gold));
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
 }
@@ -717,7 +886,7 @@ input[type='number']::-webkit-inner-spin-button {
   opacity: 0.6;
 }
 .verify-ok {
-  color: var(--gem);
+  color: var(--green); /* a verified seed reads success-green, paired with verify-bad red */
 }
 .verify-bad {
   color: var(--red);
@@ -752,7 +921,7 @@ input[type='number']::-webkit-inner-spin-button {
   fill: #ffffff;
 }
 .gem-girdle {
-  stroke: #063d29;
+  stroke: #4a3508;
 }
 .gem-spark {
   fill: #ffffff;
@@ -775,8 +944,10 @@ input[type='number']::-webkit-inner-spin-button {
   padding: 16px 30px;
   border-radius: 14px;
   background: rgba(8, 18, 24, 0.86);
-  border: 2px solid color-mix(in srgb, var(--gem) 68%, #6dff9d);
-  box-shadow: 0 0 30px rgba(var(--gem-glow), 0.5), inset 0 0 18px rgba(var(--gem-glow), 0.16),
+  border: 2px solid color-mix(in srgb, var(--gem) 62%, var(--gold-bright));
+  box-shadow:
+    0 0 30px rgba(var(--gem-glow), 0.5),
+    inset 0 0 18px rgba(var(--gem-glow), 0.16),
     0 12px 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(3px);
 }
@@ -786,7 +957,7 @@ input[type='number']::-webkit-inner-spin-button {
   letter-spacing: -1px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: color-mix(in srgb, var(--gem) 45%, #8effbe);
+  color: color-mix(in srgb, var(--gem) 40%, #ffe6a6);
   text-shadow: 0 0 16px rgba(var(--gem-glow), 0.7);
 }
 .win-popup-divider {
@@ -800,7 +971,7 @@ input[type='number']::-webkit-inner-spin-button {
   font-size: 16.5px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: color-mix(in srgb, var(--gem) 45%, #8effbe);
+  color: color-mix(in srgb, var(--gem) 40%, #ffe6a6);
   text-shadow: 0 0 12px rgba(var(--gem-glow), 0.6);
 }
 @keyframes win-pop {

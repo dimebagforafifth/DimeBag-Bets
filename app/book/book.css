@@ -5,17 +5,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;500;600;700&display=swap');
 
 .bk {
-  --bk-gold: #f6c350;
-  --bk-gold-press: #e7b03a;
-  --bk-text: #f4f5f7;
-  --bk-muted: #9fb0bd;
-  --bk-surface: #15212b;
-  --bk-surface-2: #1b2a36;
-  --bk-line: #283a48;
-  --bk-graphite: #0f1822;
-  --bk-win: #3ddc97;
-  --bk-loss: #ff6b6b;
-  --bk-font: 'Saira Condensed', 'Oswald', system-ui, sans-serif;
+  /* Every --bk-* alias now repoints to the global graphite-and-gold tokens
+     (app/theme.css :root) so theme.css is the single source of truth and the book
+     reads as one product with the shell/lobby/games — no per-feature palette. The
+     alias names stay, so the rest of this sheet is untouched (presentation only). */
+  --bk-gold: var(--gold);
+  --bk-gold-press: var(--gold-press);
+  --bk-text: var(--text);
+  --bk-muted: var(--muted);
+  --bk-surface: var(--surface);
+  --bk-surface-2: var(--surface-2);
+  --bk-line: var(--line);
+  --bk-graphite: var(--bg);
+  --bk-win: var(--green);
+  --bk-loss: var(--red);
+  --bk-font: var(--font-head);
 
   width: 100%;
   max-width: 1080px;
@@ -28,6 +32,30 @@
 }
 .bk * {
   box-sizing: border-box;
+}
+/* smooth micro-interactions across every interactive surface (was: instant snaps) */
+.bk-chip,
+.bk-league-chip,
+.bk-mode,
+.bk-quick,
+.bk-sim-btn,
+.bk-place,
+.bk-cashout,
+.bk-cashout-half,
+.bk-more,
+.bk-back,
+.bk-slip-clear,
+.bk-leg-x,
+.bk-chip-price {
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.18s ease,
+    transform 0.05s ease;
+}
+.bk-chip:active:not(:disabled) {
+  transform: translateY(1px);
 }
 .bk-main {
   display: flex;
@@ -158,7 +186,7 @@
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--bk-gold);
+  color: var(--bk-muted);
 }
 .bk-time {
   font-size: 11px;
@@ -213,6 +241,9 @@
 }
 .bk-chip.is-on {
   border-color: var(--bk-gold);
+  /* an inset gold ring makes a slip-selected chip clearly distinct from a mere
+     hover (which only tints the border) so a 4-leg parlay is scannable */
+  box-shadow: inset 0 0 0 1px var(--bk-gold);
   background: color-mix(in srgb, var(--bk-gold) 16%, var(--bk-surface-2));
 }
 .bk-chip:disabled {
@@ -234,7 +265,7 @@
   white-space: nowrap;
 }
 .bk-chip.is-on .bk-chip-price {
-  color: var(--bk-gold);
+  color: var(--gold-bright); /* the active price stays the brightest, not dimmest */
 }
 
 .bk-more {
@@ -327,8 +358,8 @@
 .bk-slip-count {
   font-size: 11px;
   font-weight: 700;
-  color: var(--bk-graphite);
-  background: var(--bk-gold);
+  color: var(--bk-text);
+  background: var(--bk-surface-2);
   border-radius: 999px;
   padding: 1px 8px;
 }
@@ -416,8 +447,8 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--bk-gold);
-  border: 1px solid var(--bk-gold);
+  color: var(--bk-muted);
+  border: 1px solid var(--bk-line);
   border-radius: 999px;
   padding: 1px 7px;
   margin-bottom: 8px;
@@ -484,7 +515,7 @@
   font-variant-numeric: tabular-nums;
 }
 .bk-summary.is-return .bk-summary-v {
-  color: var(--bk-gold);
+  color: var(--bk-text);
 }
 
 .bk-place {
@@ -503,7 +534,11 @@
   cursor: pointer;
 }
 .bk-place:hover:not(:disabled) {
-  background: var(--bk-gold-press);
+  background: var(--gold-bright);
+  box-shadow: 0 8px 24px -10px rgba(var(--gold-glow), 0.85);
+}
+.bk-place:active:not(:disabled) {
+  transform: translateY(1px);
 }
 .bk-place:disabled {
   opacity: 0.45;
@@ -546,7 +581,7 @@
   color: var(--bk-muted);
 }
 .bk-panel-risk b {
-  color: var(--bk-gold);
+  color: var(--bk-text);
   font-variant-numeric: tabular-nums;
 }
 .bk-betrow {
@@ -585,15 +620,15 @@
   padding: 2px 8px;
 }
 .bk-status.is-open {
-  color: var(--bk-gold);
-  border: 1px solid var(--bk-gold);
+  color: var(--bk-muted);
+  border: 1px solid var(--bk-line);
 }
 .bk-status.is-won {
   color: var(--bk-graphite);
   background: var(--bk-win);
 }
 .bk-status.is-lost {
-  color: var(--bk-text);
+  color: var(--bk-graphite); /* graphite on red clears AA at 10px (was near-white, ~3.7:1) */
   background: var(--bk-loss);
 }
 .bk-status.is-push,
@@ -622,7 +657,7 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--bk-gold);
+  color: var(--bk-muted);
 }
 .bk-sim-sub {
   margin: 0 0 10px;
@@ -653,6 +688,51 @@
   background: var(--bk-gold);
   color: var(--bk-graphite);
   border-color: var(--bk-gold);
+}
+
+/* ------------------------------- cash-out -------------------------------- */
+.bk-cashout-grp {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.bk-cashout {
+  background: var(--bk-gold);
+  color: var(--bk-graphite);
+  border: 1px solid var(--bk-gold);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-family: var(--bk-font);
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bk-cashout:hover {
+  background: var(--gold-bright);
+  border-color: var(--gold-bright);
+  box-shadow: 0 6px 18px -8px rgba(var(--gold-glow), 0.85);
+}
+.bk-cashout-half {
+  background: transparent;
+  color: var(--bk-text);
+  border: 1px solid var(--bk-line);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-family: var(--bk-font);
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+}
+.bk-cashout-half:hover {
+  border-color: var(--bk-gold);
+  color: var(--bk-gold);
+}
+.bk-betrow-cashed {
+  color: var(--bk-gold); /* realized cash-out winnings read as gold treasure, like "To return" */
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
 }
 
 /* ------------------------------ responsive ------------------------------- */

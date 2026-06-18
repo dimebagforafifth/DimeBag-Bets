@@ -6,7 +6,6 @@ import {
   useState,
   useSyncExternalStore,
   type ComponentType,
-  type CSSProperties,
 } from 'react'
 import { availableToWager, type Account } from '../core/index.js'
 import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
@@ -40,11 +39,24 @@ import {
 } from './book-store.js'
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
+import { ActivityTicker } from './ActivityTicker.js'
 import { setActiveGame } from './ledger-store.js'
 import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
 import { Leaderboard, VipBadge } from '../vip/ui/index.js'
+// Player sections. The registry (app/player-sections) is the SINGLE render path: it drives the
+// nav tabs, role-gating, AND the active body — `renderPlayerSection` injects the shell context
+// (active player + account / viewer identity / demo flag / balance-refresh) into each section's
+// typed `render`, so the shell no longer special-cases Community / Pick'em / Profile here.
+// register-player-sections wires community + pickem and pulls in records (self-registers 'profile').
+import './register-player-sections.js'
+import {
+  playerSectionFor,
+  playerSectionsFor,
+  renderPlayerSection,
+  type PlayerSectionContext,
+} from './player-sections.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
 import { houseConfigFor, nativeRtp } from './edge-config.js'
@@ -108,6 +120,12 @@ export function App() {
   // If the selected section isn't allowed for this role, fall back to the role's
   // default — so a stale/forced section can never render forbidden content.
   const activeSection = visibleSections.includes(section) ? section : defaultSection(role)
+  // A registry-driven player section (Profile / Community / Pick'em / …) for the active key,
+  // role-gated and intersected with allowedSections so nav + render share one source of truth.
+  // The hardcoded sections above (sportsbook, rewards, …) take precedence by key.
+  const registrySection = playerSectionFor(role, activeSection)
+  const activeRegistrySection =
+    registrySection && visibleSections.includes(activeSection) ? registrySection : undefined
   // Audit/adjust entries carry the REAL signed-in identity, not a hardcoded 'operator'.
   const actor = user?.displayName ?? 'operator'
 
@@ -125,6 +143,19 @@ export function App() {
 
   const player = getCurrentPlayer() // an ACTIVE player, or null
   const account = player?.account ?? null
+  // The shell state injected into a registry player section's `render` — null when there's no
+  // active player to build it from (the section then shows the NoPlayer fallback).
+  const sectionCtx: PlayerSectionContext | null =
+    account && player
+      ? {
+          account,
+          player: { id: player.id, name: player.name },
+          viewerId: authMember?.id ?? player.id,
+          role,
+          isDemo,
+          onBalanceChange: refresh,
+        }
+      : null
   const game = activeSection === 'casino' ? findGame(route) : null
   // A disabled game can't be played: it drops back to the lobby (which also hides it),
   // so it can't be reached even via a stale route. The enable/disable model lives in
@@ -193,6 +224,20 @@ export function App() {
                 {t.label}
               </button>
             ))}
+            {/* Registry-driven player sections (round 2: Profile / Community / Pick'em). The
+                registry role-gates them; we also intersect with allowedSections so nav + render
+                guard stay one source of truth. */}
+            {playerSectionsFor(role)
+              .filter((m) => visibleSections.includes(m.key as Section))
+              .map((m) => (
+                <button
+                  key={m.key}
+                  className={`nav-tab ${activeSection === m.key ? 'is-on' : ''}`}
+                  onClick={() => setSection(m.key as Section)}
+                >
+                  {m.label}
+                </button>
+              ))}
           </nav>
         </div>
         <div className="header-right">
@@ -307,6 +352,20 @@ export function App() {
               allSuspended={allSuspended}
               canManage={canManage(role)}
             />
+          )
+        ) : activeRegistrySection ? (
+          // ONE render path for every registry section. Prop-taking sections (Community,
+          // Pick'em, …) get the shell context injected; a section that needs an active player
+          // falls back to NoPlayer when there is none. Prop-less self-contained sections
+          // (Profile) ignore the context and render regardless (their own empty state).
+          renderPlayerSection(
+            activeRegistrySection,
+            sectionCtx,
+            <NoPlayer
+              onManage={() => setSection('management')}
+              allSuspended={allSuspended}
+              canManage={canManage(role)}
+            />,
           )
         ) : (
           <div className="casino-view">
@@ -495,16 +554,19 @@ function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
   return (
     <div className="lobby">
       <div className="lobby-head">
-        <h1 className="lobby-title">Casino</h1>
+        <span className="lobby-eyebrow">Provably fair</span>
+        <h1 className="lobby-title">Originals</h1>
       </div>
+      {/* the live wins strip — a quiet, read-only feed of recent bets across the
+          book; renders nothing until there's activity, so a fresh book stays clean */}
+      <ActivityTicker />
       <div className="lobby-grid">
         {GAMES.filter((g) => isGameEnabled(g.key)).map((g) => (
-          <button
-            key={g.key}
-            className="game-card"
-            style={{ '--accent': g.accent } as CSSProperties}
-            onClick={() => onPlay(g.key)}
-          >
+          // One graphite-and-gold system: every card inherits the gold --accent
+          // (theme.css), so the hub reads as one brand, not a per-game rainbow.
+          // Cards differ by their distinct line-art glyph + name. Each game keeps
+          // its own accent for INSIDE its page (g.accent), just not on the lobby.
+          <button key={g.key} className="game-card" onClick={() => onPlay(g.key)}>
             <span className="card-art">
               <GameIcon kind={g.key} />
             </span>

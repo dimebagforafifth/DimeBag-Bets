@@ -119,6 +119,7 @@ describe('runPollCycle — cost discipline', () => {
       env: { SGO_LIVE: '1' },
       provider,
       cache,
+      leagues: ['NFL'], // one league → one isolated call (the poller polls per-league)
       now: () => '2026-06-16T00:00:00Z',
     })
     expect(r).toMatchObject({ mode: 'live', ran: true, provider: 'sgo' })

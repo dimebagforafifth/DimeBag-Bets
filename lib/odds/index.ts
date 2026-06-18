@@ -20,6 +20,7 @@ export type {
 
 export {
   DEFAULT_MARGIN,
+  MAX_MARGIN,
   decimalFromAmerican,
   americanFromDecimal,
   priceFromAmerican,
@@ -27,8 +28,40 @@ export {
   makeOverride,
   applyMargin,
   applyPricing,
+  // configurable margin (operator hold posture, per-market)
+  MARGIN_POSTURES,
+  DEFAULT_MARGIN_CONFIG,
+  resolveMargin,
+  // correlated same-game parlay (SGP) pricing
+  SGP_MAX_LEGS,
+  MAX_SGP_DECIMAL,
+  DEFAULT_SGP_CORRELATION,
+  SPORT_CORRELATION,
+  correlationForSport,
+  impliedProbability,
+  devig,
+  correlatedJoint,
+  priceSgp,
 } from './pricing.js'
-export type { PricingOptions, PricedSelection } from './pricing.js'
+export type {
+  PricingOptions,
+  PricedSelection,
+  SgpQuote,
+  MarginConfig,
+  MarginPosture,
+} from './pricing.js'
+
+// The live operator margin config — the console setting writes it, the poller reads it.
+export {
+  getMarginConfig,
+  getMarginVersion,
+  subscribeMargin,
+  setMarginConfig,
+  setBaseMargin,
+  setMarketMargin,
+  applyPosture,
+  __resetMarginConfig,
+} from './margin-config.js'
 
 export {
   SGOProvider,
@@ -48,7 +81,10 @@ export {
   selectProvider,
   createSupabaseOddsCache,
   ACTIVE_LEAGUES,
+  CORE_LEAGUES,
+  EXTENDED_LEAGUES,
   SCAFFOLDED_LEAGUES,
+  SGO_LEAGUE_REFERENCE,
 } from './poller.js'
 export type { OddsCache, PollerConfig, PollResult, SupabaseLike } from './poller.js'
 

@@ -12,8 +12,10 @@
  *  shared-file edit needed. Real score-driven grading is the FEED lane's job; here
  *  settlement is operator/simulated (forced outcomes), which is what the demo drives.
  *
- *  // SEAM (correlated SGP): a same-game parlay is priced here as a straight parlay.
- *  The correlated-pricing engine layers on top of this placement seam later.
+ *  Correlated SGP: a same-game parlay is priced with correlation via `combinedDecimal`
+ *  (slip.ts → lib/odds/pricing.priceSgp); contradictory legs are refused and the leg
+ *  count is capped. Cash-out (`cashOutBookBet`) values the live position and settles it
+ *  through core's `resolveAtMultiplier` — full, or partial (re-staking the remainder).
  *
  * Credit/balance only — integer cents through `core`. No cash, no cash value.
  */
@@ -21,15 +23,35 @@
 import {
   availableToWager,
   placeWager,
+  resolveAtMultiplier,
   resolveWager,
   type Account,
   type Outcome,
   type Wager,
 } from '../../core/index.js'
+import type { NormalizedEvent } from '../../lib/odds/contract.js'
 import { getBook } from '../book-store.js'
-import { parlayPrice, relatedConflicts, type SlipLeg, type SlipMode } from './slip.js'
+import {
+  combinedDecimal,
+  contradictoryLegs,
+  isSameGame,
+  relatedConflicts,
+  type SlipLeg,
+  type SlipMode,
+} from './slip.js'
+import { SGP_MAX_LEGS } from '../../lib/odds/pricing.js'
+import { isMarketSuspended } from '../risk-controls.js'
+import { cashOutMath, cashOutQuote } from './cashout.js'
 import { toReturnCents } from './odds-format.js'
-import { recordBet, settleBetRecord, type BookBet, type BookBetStatus } from './bets-store.js'
+import {
+  cashOutBetRecord,
+  getBets,
+  partialCashOutRecord,
+  recordBet,
+  settleBetRecord,
+  type BookBet,
+  type BookBetStatus,
+} from './bets-store.js'
 
 /** A placed bet's live core wager(s) + the account, kept in memory for settlement
  *  (pending is a live-session concept — a reload clears it, by book-store design). */
@@ -66,9 +88,22 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
   if (legs.length === 0) throw new Error('add a selection first')
   if (!Number.isInteger(stakeCents) || stakeCents <= 0) throw new Error('enter a stake')
 
+  // Risk interlock (A): refuse any leg on a market the risk desk has suspended (keyed by
+  // market type or sport). The toggle + state live in app/risk-controls; placement enforces.
+  for (const leg of legs) {
+    if (isMarketSuspended(leg.marketType) || (leg.sport != null && isMarketSuspended(leg.sport))) {
+      throw new Error('this market is suspended')
+    }
+  }
+
   const isParlay = mode === 'parlay' && legs.length >= 2
-  if (isParlay && relatedConflicts(legs).length > 0) {
-    throw new Error('related selections can’t be combined in a parlay')
+  if (isParlay) {
+    if (relatedConflicts(legs).length > 0 || contradictoryLegs(legs).length > 0) {
+      throw new Error('related or contradictory selections can’t be combined in a parlay')
+    }
+    if (isSameGame(legs) && legs.length > SGP_MAX_LEGS) {
+      throw new Error(`a same-game parlay is limited to ${SGP_MAX_LEGS} legs`)
+    }
   }
 
   const totalOutlay = isParlay ? stakeCents : stakeCents * legs.length
@@ -77,7 +112,7 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
   }
 
   if (isParlay) {
-    const decimal = parlayPrice(legs)
+    const { decimal } = combinedDecimal(legs)
     const wager = placeWager(account, stakeCents)
     const bet: BookBet = {
       id: wager.id,
@@ -155,12 +190,14 @@ export function settleBookBet(
     if (results.includes('loss')) {
       outcome = 'loss'
     } else {
-      // drop void/push legs, re-price on the winners
+      // drop void/push legs, re-price on the winners (an SGP re-prices its survivors
+      // with correlation too; a lone survivor is just its own decimal)
       const survivors = legs.filter((l) => outcomeOf(l) === 'win')
       if (survivors.length === 0) {
         outcome = 'void'
       } else {
-        decimal = parlayPrice(survivors)
+        decimal =
+          survivors.length >= 2 ? combinedDecimal(survivors).decimal : survivors[0].price.decimal
         outcome = decimal > 1 ? 'win' : 'push'
       }
     }
@@ -181,6 +218,59 @@ export function settleBookBet(
   settleBetRecord(betId, status, returnCents, now)
   live.delete(betId)
   return status
+}
+
+export interface CashOutResult {
+  /** Cash realized to the figure on this cash-out (cents). */
+  cashedValueCents: number
+  /** Stake still live after the cash-out (0 when fully closed). */
+  keptStakeCents: number
+  /** True for a full cash-out; false when a remainder is left riding (partial). */
+  fullyClosed: boolean
+}
+
+/**
+ * Cash out an open book bet at its current live value, through the shared `core`.
+ *
+ * Full (`fraction` 1/omitted): the whole wager resolves at the offer via
+ * `resolveAtMultiplier` (m = offer/stake), so the figure moves by offer − stake; status
+ * → 'cashed'. Partial (0 < fraction < 1): the original wager resolves at a multiplier that
+ * moves the figure by exactly the cashed portion's P/L, and the kept stake is RE-PLACED as
+ * a fresh wager at the same price, so it keeps riding and settles normally later.
+ *
+ * Returns null when the bet is unknown, already settled, or not currently cashable (a leg
+ * dropped off the live board). Credit/balance only — integer cents through `core`.
+ */
+export function cashOutBookBet(
+  betId: string,
+  events: NormalizedEvent[],
+  opts: { fraction?: number; margin?: number; now: number },
+): CashOutResult | null {
+  const lb = live.get(betId)
+  const rec = getBets().find((b) => b.id === betId)
+  if (!lb || !rec || lb.wager.status === 'resolved' || rec.status !== 'open') return null
+
+  const quote = cashOutQuote(rec, events, opts.margin)
+  if (!quote.cashable) return null
+
+  const { cashedValueCents, keptStakeCents, multiplier } = cashOutMath(
+    quote.offerCents,
+    lb.wager.stake,
+    opts.fraction ?? 1,
+  )
+  resolveAtMultiplier(lb.account, lb.wager, multiplier)
+
+  if (keptStakeCents > 0) {
+    // partial: re-stake the remainder so it keeps riding; the bet stays open.
+    const kept = placeWager(lb.account, keptStakeCents)
+    live.set(betId, { ...lb, wager: kept })
+    partialCashOutRecord(betId, keptStakeCents, cashedValueCents, opts.now)
+    return { cashedValueCents, keptStakeCents, fullyClosed: false }
+  }
+
+  live.delete(betId)
+  cashOutBetRecord(betId, cashedValueCents, opts.now)
+  return { cashedValueCents, keptStakeCents: 0, fullyClosed: true }
 }
 
 /** The account a player's bets move (the live `core` Account in the book). */

@@ -20,15 +20,40 @@ import type {
   OddsFeedProvider,
   Price,
 } from './contract.js'
-import { applyPricing, DEFAULT_MARGIN } from './pricing.js'
+import { applyPricing, resolveMargin, type MarginConfig } from './pricing.js'
+import { getMarginConfig } from './margin-config.js'
 import { MockProvider } from './providers/MockProvider.js'
 import { SGOProvider } from './providers/SGOProvider.js'
 
-/** Active leagues we poll — the Big 6 + UFC. Boxing & futures are SGO gaps: scaffolded,
- *  NOT polled (no fake data) — see the report + TheOddsAPIProvider for the MMA/boxing path. */
-export const ACTIVE_LEAGUES = ['NFL', 'NBA', 'MLB', 'NHL', 'EPL', 'NCAAF', 'NCAAB', 'UFC'] as const
+/*
+ * SGO league codes we poll. These are SGO's exact, case-sensitive `leagueID` values,
+ * verified against the SportsGameOdds league reference
+ * (https://sportsgameodds.com/docs/data-types/leagues): EPL = English Premier League
+ * (sportID SOCCER), UFC = UFC (sportID MMA). The codes are CORRECT — when EPL/UFC 400 it
+ * is the free tier NOT including that sport (an out-of-plan league returns 4xx, not an
+ * empty list), not a bad code. The poll is ISOLATED PER LEAGUE (see Poller.pollOnce), so
+ * a 4xx on one league is skipped — never fatal — and the rest of the slate still caches.
+ */
+
+/** Leagues empirically confirmed to return live odds (NBA / MLB / NFL / NHL). */
+export const CORE_LEAGUES = ['NFL', 'NBA', 'MLB', 'NHL'] as const
+/** Correct codes, but plan-gated on the free tier (soccer/MMA/college can 4xx). Attempted
+ *  every cycle and skipped if they fail; verify with one SGO_LIVE=1 poll once a paid key
+ *  is provisioned, then promote any that resolve into CORE_LEAGUES. */
+export const EXTENDED_LEAGUES = ['NCAAF', 'NCAAB', 'EPL', 'UFC'] as const
+/** Everything we attempt to poll — core first, then the plan-gated extras. */
+export const ACTIVE_LEAGUES = [...CORE_LEAGUES, ...EXTENDED_LEAGUES] as const
 /** Documented SGO gaps — present so the wiring lane sees the intended scope, not polled. */
 export const SCAFFOLDED_LEAGUES = ['BOXING'] as const
+
+/** Reference: more SGO leagueIDs (by sport) to promote into EXTENDED_LEAGUES once the plan
+ *  supports them. Codes verified against the SGO league docs. */
+export const SGO_LEAGUE_REFERENCE = {
+  /** sportID SOCCER */
+  soccer: ['EPL', 'UEFA_CHAMPIONS_LEAGUE', 'LA_LIGA', 'BUNDESLIGA'],
+  /** sportID MMA */
+  mma: ['UFC'],
+} as const
 
 /** The cache seam the poller writes through — abstracted so it unit-tests with a fake. */
 export interface OddsCache {
@@ -44,9 +69,18 @@ export interface PollerConfig {
   provider?: OddsFeedProvider
   cache: OddsCache
   leagues?: readonly string[]
+  /** Flat house margin (legacy). Wrapped as `{ base: margin }` when no `marginConfig` is given. */
   margin?: number
+  /** Operator hold posture (base + per-market overrides). Wins over `margin`. When BOTH are
+   *  absent the poller reads the live `getMarginConfig()` each cycle, so a console posture
+   *  change reprices the next poll. */
+  marginConfig?: MarginConfig
   /** ISO timestamp source (injectable for deterministic tests). */
   now?: () => string
+  /** Called when ONE league's fetch fails (e.g. a plan-gated league 4xx's). The cycle
+   *  isolates the failure, skips that league, and keeps polling the rest — this is just a
+   *  hook for logging/telemetry so a deploy can SEE which leagues didn't resolve. */
+  onLeagueError?: (league: string, error: unknown) => void
 }
 
 export interface PollResult {
@@ -56,17 +90,27 @@ export interface PollResult {
   overridesPreserved: number
 }
 
-/** Flatten a slate into cache rows, preserving overrides. Pure (given `overrides` + `now`). */
+/** Flatten a slate into cache rows, preserving overrides. Pure (given `overrides` + `now`).
+ *  `margin` is either a flat rate (applied to every market) or an operator `MarginConfig`
+ *  whose per-market override decides each market's juice. */
 export function buildRows(
   events: NormalizedEvent[],
   overrides: Map<string, Price>,
-  margin: number,
+  margin: number | MarginConfig,
   now: string,
-): { events: OddsEventRow[]; markets: OddsMarketRow[]; selections: OddsSelectionRow[]; overridesPreserved: number } {
+): {
+  events: OddsEventRow[]
+  markets: OddsMarketRow[]
+  selections: OddsSelectionRow[]
+  overridesPreserved: number
+} {
   const eventRows: OddsEventRow[] = []
   const marketRows: OddsMarketRow[] = []
   const selectionRows: OddsSelectionRow[] = []
   let overridesPreserved = 0
+
+  // Normalize a flat rate to a config so per-market resolution is uniform.
+  const marginConfig: MarginConfig = typeof margin === 'number' ? { base: margin } : margin
 
   for (const e of events) {
     eventRows.push({
@@ -80,6 +124,8 @@ export function buildRows(
       updated_at: now,
     })
     for (const m of e.markets) {
+      // The juice for THIS market type — its per-market override, or the operator's base.
+      const marketMargin = resolveMargin(marginConfig, m.type)
       marketRows.push({
         market_id: m.marketId,
         event_id: e.eventId,
@@ -93,7 +139,7 @@ export function buildRows(
         const override = overrides.get(s.selectionId) ?? null
         // applyPricing ALWAYS recomputes display from the fresh raw price (margin), unless an
         // override is supplied — then the override wins and the manual line is preserved.
-        const priced = applyPricing(s.priceRaw, { margin, override })
+        const priced = applyPricing(s.priceRaw, { margin: marketMargin, override })
         if (priced.override) overridesPreserved++
         selectionRows.push({
           selection_id: s.selectionId,
@@ -120,8 +166,10 @@ export class Poller {
   private readonly provider: OddsFeedProvider
   private readonly cache: OddsCache
   private readonly leagues: readonly string[]
-  private readonly margin: number
+  /** An explicit margin override (flat rate or config). null = read the live store per cycle. */
+  private readonly marginOverride: MarginConfig | null
   private readonly now: () => string
+  private readonly onLeagueError: (league: string, error: unknown) => void
   private timer: ReturnType<typeof setInterval> | null = null
   private running = false
 
@@ -129,15 +177,35 @@ export class Poller {
     this.provider = cfg.provider ?? selectProvider()
     this.cache = cfg.cache
     this.leagues = cfg.leagues ?? ACTIVE_LEAGUES
-    this.margin = cfg.margin ?? DEFAULT_MARGIN
+    this.marginOverride = cfg.marginConfig ?? (cfg.margin != null ? { base: cfg.margin } : null)
     this.now = cfg.now ?? (() => new Date().toISOString())
+    this.onLeagueError = cfg.onLeagueError ?? (() => {})
   }
 
-  /** One poll cycle: fetch → preserve overrides → write the cache. Returns counts. */
+  /**
+   * One poll cycle: fetch EACH league independently → preserve overrides → write the cache.
+   * Polling per-league ISOLATES failures — a plan-gated league that 4xx's (EPL/UFC on the
+   * free tier) is skipped via `onLeagueError`, and every other league still caches. SGO
+   * bills per EVENT returned, so splitting one multi-league request into per-league requests
+   * costs the same. Returns counts across the leagues that resolved.
+   */
   async pollOnce(): Promise<PollResult> {
-    const events = await this.provider.listEvents([...this.leagues], { includeAltLines: true })
+    // One group per league (or a single no-filter group when no leagues are configured).
+    const groups = this.leagues.length ? this.leagues.map((l) => [l]) : [[] as string[]]
+    const events: NormalizedEvent[] = []
+    for (const group of groups) {
+      try {
+        const slate = await this.provider.listEvents(group, { includeAltLines: true })
+        events.push(...slate)
+      } catch (err) {
+        // Isolate: this league failed (likely plan-gated). Skip it, keep the cycle alive.
+        this.onLeagueError(group.join(',') || 'all', err)
+      }
+    }
     const overrides = await this.cache.getOverrides(events.map((e) => e.eventId))
-    const rows = buildRows(events, overrides, this.margin, this.now())
+    // Explicit config wins; otherwise the live operator posture, read fresh each cycle.
+    const marginConfig = this.marginOverride ?? getMarginConfig()
+    const rows = buildRows(events, overrides, marginConfig, this.now())
     // Events + markets first (FK parents), then selections.
     await this.cache.writeEvents(rows.events)
     await this.cache.writeMarkets(rows.markets)
@@ -180,7 +248,8 @@ export class Poller {
  * touches the free tier by accident.
  */
 export function selectProvider(): OddsFeedProvider {
-  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {}
+  const env =
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {}
   const live = env.SGO_LIVE === '1' || env.SGO_LIVE === 'true'
   if (live) {
     const sgo = new SGOProvider()
@@ -205,7 +274,10 @@ export function createSupabaseOddsCache(client: SupabaseLike): OddsCache {
         .in('event_id', eventIds)
       if (error) throw new Error(`odds cache override read failed: ${error.message}`)
       for (const r of (data ?? []) as OverrideRow[]) {
-        map.set(r.selection_id, { american: r.price_display_american, decimal: r.price_display_decimal })
+        map.set(r.selection_id, {
+          american: r.price_display_american,
+          decimal: r.price_display_decimal,
+        })
       }
       return map
     },
@@ -231,13 +303,29 @@ interface OverrideRow {
 export interface SupabaseLike {
   from(table: string): {
     select(cols: string): {
-      eq(col: string, val: unknown): { in(col: string, vals: unknown[]): Promise<{ data: unknown[] | null; error: { message: string } | null }> }
+      eq(
+        col: string,
+        val: unknown,
+      ): {
+        in(
+          col: string,
+          vals: unknown[],
+        ): Promise<{ data: unknown[] | null; error: { message: string } | null }>
+      }
     }
-    upsert(rows: unknown[], opts: { onConflict: string }): Promise<{ error: { message: string } | null }>
+    upsert(
+      rows: unknown[],
+      opts: { onConflict: string },
+    ): Promise<{ error: { message: string } | null }>
   }
 }
 
-async function upsert(client: SupabaseLike, table: string, rows: unknown[], onConflict: string): Promise<void> {
+async function upsert(
+  client: SupabaseLike,
+  table: string,
+  rows: unknown[],
+  onConflict: string,
+): Promise<void> {
   const { error } = await client.from(table).upsert(rows, { onConflict })
   if (error) throw new Error(`odds cache write to ${table} failed: ${error.message}`)
 }

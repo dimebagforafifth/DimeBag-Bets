@@ -16,6 +16,7 @@ import {
   type ChickenHouseConfig,
   type Difficulty,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -64,6 +65,7 @@ export function ChickenRoadGame({
   const [difficulty, setDifficulty] = useState<Difficulty>('medium')
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<ChickenGameState | null>(null)
   const [history, setHistory] = useState<{ multiplier: number; won: boolean }[]>([])
@@ -119,15 +121,22 @@ export function ChickenRoadGame({
     }
   }, [game?.position])
 
-  function start() {
+  // The (hidden) crash lane's server seed now comes from the platform fairness AUTHORITY
+  // (commit hash before play → reveal after), not a browser randomServerSeed(). The road math
+  // is unchanged.
+  async function start() {
+    if (inFlightRef.current || game?.status === 'active') return
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const g = createChickenGame(account, {
         stake: bet,
         difficulty,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       setGame(g)
@@ -135,6 +144,8 @@ export function ChickenRoadGame({
       play('bet')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -190,15 +201,25 @@ export function ChickenRoadGame({
               disabled={!idle}
               onCommit={(d) => setBet(Math.max(1, toCents(d ?? 0)))}
             />
-            <button className="chip" disabled={!idle} onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}>
+            <button
+              className="chip"
+              disabled={!idle}
+              onClick={() => setBet((b) => Math.max(1, Math.round(b / 2)))}
+            >
               ½
             </button>
-            <button className="chip" disabled={!idle} onClick={() => setBet((b) => Math.min(available, b * 2))}>
+            <button
+              className="chip"
+              disabled={!idle}
+              onClick={() => setBet((b) => Math.min(available, b * 2))}
+            >
               2×
             </button>
           </div>
         </label>
-        {active && game!.position >= 1 && <ProfitReadout total={Math.round(bet * game!.multiplier)} multiplier={game!.multiplier} />}
+        {active && game!.position >= 1 && (
+          <ProfitReadout total={Math.round(bet * game!.multiplier)} multiplier={game!.multiplier} />
+        )}
 
         <div className="field">
           <span className="field-label">Difficulty</span>
@@ -221,7 +242,11 @@ export function ChickenRoadGame({
             <button className="action action-bet" onClick={doStep}>
               {nextMult ? `Step → ${nextMult}×` : 'Step'}
             </button>
-            <button className="action action-cashout" onClick={doCash} disabled={game!.position < 1}>
+            <button
+              className="action action-cashout"
+              onClick={doCash}
+              disabled={game!.position < 1}
+            >
               {game!.position < 1 ? 'Take a step first' : 'Cash Out'}
             </button>
           </>
@@ -233,7 +258,9 @@ export function ChickenRoadGame({
 
         {error && <p className="chick-error">{error}</p>}
         {bet > available && !error && (
-          <p className="chick-error">Stake exceeds what you can wager ({formatMoney(available)}).</p>
+          <p className="chick-error">
+            Stake exceeds what you can wager ({formatMoney(available)}).
+          </p>
         )}
       </section>
 
@@ -299,11 +326,7 @@ export function ChickenRoadGame({
             </div>
 
             {/* the chicken, sliding across the road */}
-            <div
-              ref={runnerRef}
-              className="chick-runner"
-              style={{ left: chickLeft }}
-            >
+            <div ref={runnerRef} className="chick-runner" style={{ left: chickLeft }}>
               <Chicken key={hop} state={chickState} />
             </div>
           </div>
@@ -320,7 +343,12 @@ export function ChickenRoadGame({
         />
 
         {game && (game.status === 'cashed' || game.status === 'cleared') && (
-          <WinPopup key={game.wager.id} multiplier={game.multiplier} stake={game.wager.stake} delayMs={POPUP_DELAY_MS} />
+          <WinPopup
+            key={game.wager.id}
+            multiplier={game.multiplier}
+            stake={game.wager.stake}
+            delayMs={POPUP_DELAY_MS}
+          />
         )}
       </section>
     </div>
@@ -408,7 +436,13 @@ function RoadDefs() {
           <stop offset="1" stopColor="#909aa1" />
         </linearGradient>
         {/* yellow/black hazard stripes for the blockade band */}
-        <pattern id="cr-hazard" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <pattern
+          id="cr-hazard"
+          width="14"
+          height="14"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
           <rect width="14" height="14" fill="#f6c81f" />
           <rect width="7" height="14" fill="#1a1d22" />
         </pattern>
@@ -432,7 +466,16 @@ function TrafficLight() {
         <rect x="10" y="40" width="4" height="38" rx="1.5" fill="#363c44" />
         <rect x="6" y="77" width="12" height="3" rx="1.5" fill="#2a2f36" />
         {/* signal housing */}
-        <rect x="3" y="2" width="18" height="40" rx="5" fill="#1b1f25" stroke="rgba(0,0,0,0.5)" strokeWidth="1" />
+        <rect
+          x="3"
+          y="2"
+          width="18"
+          height="40"
+          rx="5"
+          fill="#1b1f25"
+          stroke="rgba(0,0,0,0.5)"
+          strokeWidth="1"
+        />
         {/* red lamp — lit, with a halo */}
         <circle cx="12" cy="11" r="9" fill="url(#cr-redglow)" />
         <circle cx="12" cy="11" r="5" fill="#ff4d4d" stroke="#7a1414" strokeWidth="0.8" />
@@ -451,26 +494,62 @@ function WalkBody() {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true">
       {/* legs + 3-toed feet (the group rotates a touch each step) */}
-      <g className="chick-legs" stroke="#e8902a" strokeWidth="2.2" strokeLinecap="round" fill="none">
+      <g
+        className="chick-legs"
+        stroke="#e8902a"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        fill="none"
+      >
         <path d="M21 37 v7" />
         <path d="M28 37 v7" />
         <path d="M21 44 l-3 2.4 M21 44 l3 2.4" />
         <path d="M28 44 l-3 2.4 M28 44 l3 2.4" />
       </g>
       {/* tail feathers (back-left), layered */}
-      <path d="M9 27 q-6 -4 -3 -12 q4 4 7 7 Z" fill="#dbe2e9" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6" />
+      <path
+        d="M9 27 q-6 -4 -3 -12 q4 4 7 7 Z"
+        fill="#dbe2e9"
+        stroke="rgba(0,0,0,0.08)"
+        strokeWidth="0.6"
+      />
       <path d="M8 28 q-4 -3 -3 -9 q3 3 6 6 Z" fill="#eef2f6" />
       {/* body */}
-      <ellipse cx="22" cy="29" rx="14.5" ry="12.5" fill="url(#cr-hen)" stroke="rgba(0,0,0,0.10)" strokeWidth="0.7" />
+      <ellipse
+        cx="22"
+        cy="29"
+        rx="14.5"
+        ry="12.5"
+        fill="url(#cr-hen)"
+        stroke="rgba(0,0,0,0.10)"
+        strokeWidth="0.7"
+      />
       {/* breast highlight */}
       <ellipse cx="27" cy="32" rx="8" ry="7" fill="#ffffff" opacity="0.5" />
       {/* folded wing with feather lines */}
-      <path d="M16 24 q11 1 13 10 q-8 4 -14 -1 Z" fill="#e6ecf2" stroke="rgba(0,0,0,0.10)" strokeWidth="0.7" />
-      <path d="M19 28 q6 1 8 6 M18 31 q6 0 9 4" stroke="rgba(0,0,0,0.12)" strokeWidth="0.8" fill="none" />
+      <path
+        d="M16 24 q11 1 13 10 q-8 4 -14 -1 Z"
+        fill="#e6ecf2"
+        stroke="rgba(0,0,0,0.10)"
+        strokeWidth="0.7"
+      />
+      <path
+        d="M19 28 q6 1 8 6 M18 31 q6 0 9 4"
+        stroke="rgba(0,0,0,0.12)"
+        strokeWidth="0.8"
+        fill="none"
+      />
       {/* neck into head */}
       <path d="M28 20 q4 6 1 12 q-5 -1 -6 -7 Z" fill="url(#cr-hen)" />
       {/* head */}
-      <circle cx="33" cy="16" r="8" fill="url(#cr-hen-head)" stroke="rgba(0,0,0,0.10)" strokeWidth="0.7" />
+      <circle
+        cx="33"
+        cy="16"
+        r="8"
+        fill="url(#cr-hen-head)"
+        stroke="rgba(0,0,0,0.10)"
+        strokeWidth="0.7"
+      />
       {/* comb — three lobes with a darker base crease */}
       <g fill="#e0354c">
         <ellipse cx="29.5" cy="8.5" rx="2.6" ry="3" />
@@ -497,7 +576,12 @@ function SplatBody() {
       {/* tyre-smear shadow under the squash */}
       <ellipse cx="24" cy="40" rx="19" ry="6.5" fill="#1d2733" opacity="0.18" />
       {/* flattened body */}
-      <path d="M9 40 q5 -9 15 -9 q10 0 15 9 q-15 3 -30 0 Z" fill="url(#cr-hen)" stroke="rgba(0,0,0,0.12)" strokeWidth="0.7" />
+      <path
+        d="M9 40 q5 -9 15 -9 q10 0 15 9 q-15 3 -30 0 Z"
+        fill="url(#cr-hen)"
+        stroke="rgba(0,0,0,0.12)"
+        strokeWidth="0.7"
+      />
       {/* loose feathers knocked free */}
       <path d="M8 31 q-3 -2 -2 -6 q3 2 4 5 Z" fill="#eef2f6" opacity="0.9" />
       <path d="M41 30 q3 -2 2 -6 q-3 2 -4 5 Z" fill="#eef2f6" opacity="0.9" />
@@ -508,8 +592,18 @@ function SplatBody() {
         <circle cx="28" cy="33" r="1.8" />
       </g>
       {/* X-eyes */}
-      <path d="M18 35 l3.4 3.4 M21.4 35 l-3.4 3.4" stroke="#20262e" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M27 35 l3.4 3.4 M30.4 35 l-3.4 3.4" stroke="#20262e" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M18 35 l3.4 3.4 M21.4 35 l-3.4 3.4"
+        stroke="#20262e"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M27 35 l3.4 3.4 M30.4 35 l-3.4 3.4"
+        stroke="#20262e"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       {/* beak */}
       <path d="M24 38 l4 1 l-4 1.4 Z" fill="#f4a523" />
     </svg>
@@ -540,7 +634,16 @@ function CarBody({ color }: { color: string }) {
         <rect x="37.9" y="47" width="3.6" height="2.6" rx="1.2" />
       </g>
       {/* body shell + metallic sheen overlay */}
-      <rect x="5" y="2" width="34" height="68" rx="13" fill={color} stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
+      <rect
+        x="5"
+        y="2"
+        width="34"
+        height="68"
+        rx="13"
+        fill={color}
+        stroke="rgba(0,0,0,0.4)"
+        strokeWidth="1"
+      />
       <rect x="5" y="2" width="34" height="68" rx="13" fill="url(#cr-gloss)" />
       {/* hood + trunk shut-lines */}
       <line x1="10" y1="16" x2="34" y2="16" stroke="rgba(0,0,0,0.18)" strokeWidth="0.9" />
@@ -556,8 +659,18 @@ function CarBody({ color }: { color: string }) {
       <rect x="10.5" y="33" width="3" height="9" rx="1.4" fill="url(#cr-glass)" />
       <rect x="30.5" y="33" width="3" height="9" rx="1.4" fill="url(#cr-glass)" />
       {/* side mirrors near the front */}
-      <path d="M5 41 l-3 1.4 l0 3 l3 -0.6 Z" fill={color} stroke="rgba(0,0,0,0.3)" strokeWidth="0.6" />
-      <path d="M39 41 l3 1.4 l0 3 l-3 -0.6 Z" fill={color} stroke="rgba(0,0,0,0.3)" strokeWidth="0.6" />
+      <path
+        d="M5 41 l-3 1.4 l0 3 l3 -0.6 Z"
+        fill={color}
+        stroke="rgba(0,0,0,0.3)"
+        strokeWidth="0.6"
+      />
+      <path
+        d="M39 41 l3 1.4 l0 3 l-3 -0.6 Z"
+        fill={color}
+        stroke="rgba(0,0,0,0.3)"
+        strokeWidth="0.6"
+      />
       {/* headlight glow + lamps at the front (bottom) */}
       <ellipse cx="13" cy="63" rx="5" ry="4" fill="url(#cr-head)" />
       <ellipse cx="31" cy="63" rx="5" ry="4" fill="url(#cr-head)" />
@@ -597,7 +710,16 @@ function TruckBody({ color }: { color: string }) {
         <rect x="36.5" y="64" width="6.5" height="13" rx="2.4" />
       </g>
       {/* box trailer (back, top) + sheen + corrugation lines */}
-      <rect x="4" y="2" width="36" height="60" rx="3" fill="#eef1f4" stroke="rgba(0,0,0,0.32)" strokeWidth="1" />
+      <rect
+        x="4"
+        y="2"
+        width="36"
+        height="60"
+        rx="3"
+        fill="#eef1f4"
+        stroke="rgba(0,0,0,0.32)"
+        strokeWidth="1"
+      />
       <rect x="4" y="2" width="36" height="60" rx="3" fill="url(#cr-gloss)" opacity="0.5" />
       <g stroke="rgba(0,0,0,0.10)" strokeWidth="1">
         <line x1="4" y1="18" x2="40" y2="18" />
@@ -605,7 +727,16 @@ function TruckBody({ color }: { color: string }) {
         <line x1="4" y1="46" x2="40" y2="46" />
       </g>
       {/* cab (front, bottom) in the truck's colour */}
-      <rect x="5" y="63" width="34" height="38" rx="8" fill={color} stroke="rgba(0,0,0,0.34)" strokeWidth="1" />
+      <rect
+        x="5"
+        y="63"
+        width="34"
+        height="38"
+        rx="8"
+        fill={color}
+        stroke="rgba(0,0,0,0.34)"
+        strokeWidth="1"
+      />
       <rect x="5" y="63" width="34" height="38" rx="8" fill="url(#cr-gloss)" />
       {/* windshield */}
       <path d="M10 70 q12 -3 24 0 l-2.5 7.5 q-9.5 -2.6 -19 0 Z" fill="url(#cr-glass)" />
@@ -631,14 +762,31 @@ function PoliceBody() {
         <rect x="36.5" y="45" width="6.5" height="14" rx="2.6" />
       </g>
       {/* white shell + sheen */}
-      <rect x="5" y="2" width="34" height="68" rx="13" fill="#f2f5f8" stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
+      <rect
+        x="5"
+        y="2"
+        width="34"
+        height="68"
+        rx="13"
+        fill="#f2f5f8"
+        stroke="rgba(0,0,0,0.4)"
+        strokeWidth="1"
+      />
       <rect x="5" y="2" width="34" height="68" rx="13" fill="url(#cr-gloss)" opacity="0.55" />
       {/* black door band with thin gold trim (classic cruiser livery) */}
       <rect x="5" y="40" width="34" height="16" fill="#10151c" opacity="0.92" />
       <rect x="5" y="40" width="34" height="2.2" fill="#cfa53a" opacity="0.8" />
       <rect x="5" y="53.8" width="34" height="2.2" fill="#cfa53a" opacity="0.8" />
       {/* front push (bull) bar */}
-      <line x1="11" y1="68.5" x2="33" y2="68.5" stroke="#2b3038" strokeWidth="2.2" strokeLinecap="round" />
+      <line
+        x1="11"
+        y1="68.5"
+        x2="33"
+        y2="68.5"
+        stroke="#2b3038"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
       {/* roof panel */}
       <rect x="9" y="24" width="26" height="24" rx="8" fill="rgba(255,255,255,0.08)" />
       {/* rear window + windshield */}
@@ -648,8 +796,24 @@ function PoliceBody() {
       <rect x="11.5" y="33.5" width="21" height="6" rx="2" fill="#0b0f14" />
       <circle className="chick-glow-a" cx="16" cy="36.5" r="6" fill="#ff2e2e" opacity="0.4" />
       <circle className="chick-glow-b" cx="28" cy="36.5" r="6" fill="#2e6bff" opacity="0.4" />
-      <rect className="chick-flash-a" x="12.5" y="34.4" width="9" height="4.2" rx="1.2" fill="#ff3b3b" />
-      <rect className="chick-flash-b" x="22.5" y="34.4" width="9" height="4.2" rx="1.2" fill="#3b6bff" />
+      <rect
+        className="chick-flash-a"
+        x="12.5"
+        y="34.4"
+        width="9"
+        height="4.2"
+        rx="1.2"
+        fill="#ff3b3b"
+      />
+      <rect
+        className="chick-flash-b"
+        x="22.5"
+        y="34.4"
+        width="9"
+        height="4.2"
+        rx="1.2"
+        fill="#3b6bff"
+      />
       {/* headlight glow + lamps */}
       <ellipse cx="13" cy="63" rx="5" ry="4" fill="url(#cr-head)" />
       <ellipse cx="31" cy="63" rx="5" ry="4" fill="url(#cr-head)" />
@@ -672,18 +836,67 @@ function IceCreamBody() {
         <rect x="36.5" y="56" width="6.5" height="13" rx="2.4" />
       </g>
       {/* white body + sheen */}
-      <rect x="5" y="2" width="34" height="84" rx="9" fill="#fbf8f2" stroke="rgba(0,0,0,0.32)" strokeWidth="1" />
+      <rect
+        x="5"
+        y="2"
+        width="34"
+        height="84"
+        rx="9"
+        fill="#fbf8f2"
+        stroke="rgba(0,0,0,0.32)"
+        strokeWidth="1"
+      />
       <rect x="5" y="2" width="34" height="84" rx="9" fill="url(#cr-gloss)" opacity="0.5" />
       {/* pastel livery bands */}
       <rect x="5" y="30" width="34" height="7" fill="#ff9fc2" opacity="0.92" />
       <rect x="5" y="41" width="34" height="5" fill="#79d3cf" opacity="0.92" />
       {/* sprinkles scattered on the side */}
       <g>
-        <rect x="11" y="50" width="2.6" height="1.4" rx="0.7" fill="#ff7eb0" transform="rotate(20 11 50)" />
-        <rect x="20" y="53" width="2.6" height="1.4" rx="0.7" fill="#79d3cf" transform="rotate(-25 20 53)" />
-        <rect x="28" y="51" width="2.6" height="1.4" rx="0.7" fill="#ffd34e" transform="rotate(40 28 51)" />
-        <rect x="16" y="56" width="2.6" height="1.4" rx="0.7" fill="#9b8cff" transform="rotate(-10 16 56)" />
-        <rect x="31" y="56" width="2.6" height="1.4" rx="0.7" fill="#ff7eb0" transform="rotate(15 31 56)" />
+        <rect
+          x="11"
+          y="50"
+          width="2.6"
+          height="1.4"
+          rx="0.7"
+          fill="#ff7eb0"
+          transform="rotate(20 11 50)"
+        />
+        <rect
+          x="20"
+          y="53"
+          width="2.6"
+          height="1.4"
+          rx="0.7"
+          fill="#79d3cf"
+          transform="rotate(-25 20 53)"
+        />
+        <rect
+          x="28"
+          y="51"
+          width="2.6"
+          height="1.4"
+          rx="0.7"
+          fill="#ffd34e"
+          transform="rotate(40 28 51)"
+        />
+        <rect
+          x="16"
+          y="56"
+          width="2.6"
+          height="1.4"
+          rx="0.7"
+          fill="#9b8cff"
+          transform="rotate(-10 16 56)"
+        />
+        <rect
+          x="31"
+          y="56"
+          width="2.6"
+          height="1.4"
+          rx="0.7"
+          fill="#ff7eb0"
+          transform="rotate(15 31 56)"
+        />
       </g>
       {/* roof soft-serve emblem — cone + scoop + cherry */}
       <path d="M19 16 L25 16 L22 25 Z" fill="#e0b074" stroke="rgba(0,0,0,0.2)" strokeWidth="0.5" />
@@ -751,15 +964,47 @@ function RoadBlock() {
         <rect x="12" y="29" width="5" height="9" rx="1.4" fill="#343a42" />
         <rect x="41" y="29" width="5" height="9" rx="1.4" fill="#343a42" />
         {/* beveled concrete top face */}
-        <path d="M8 15 L14 8 L44 8 L50 15 Z" fill="url(#cr-stone-top)" stroke="rgba(0,0,0,0.32)" strokeWidth="1" strokeLinejoin="round" />
+        <path
+          d="M8 15 L14 8 L44 8 L50 15 Z"
+          fill="url(#cr-stone-top)"
+          stroke="rgba(0,0,0,0.32)"
+          strokeWidth="1"
+          strokeLinejoin="round"
+        />
         {/* concrete front face */}
-        <rect x="8" y="15" width="42" height="17" rx="1.5" fill="url(#cr-stone)" stroke="rgba(0,0,0,0.42)" strokeWidth="1.2" />
+        <rect
+          x="8"
+          y="15"
+          width="42"
+          height="17"
+          rx="1.5"
+          fill="url(#cr-stone)"
+          stroke="rgba(0,0,0,0.42)"
+          strokeWidth="1.2"
+        />
         {/* yellow/black hazard band across the front */}
         <rect x="8" y="19.5" width="42" height="8" fill="url(#cr-hazard)" />
-        <rect x="8" y="19.5" width="42" height="8" fill="none" stroke="rgba(0,0,0,0.32)" strokeWidth="0.8" />
+        <rect
+          x="8"
+          y="19.5"
+          width="42"
+          height="8"
+          fill="none"
+          stroke="rgba(0,0,0,0.32)"
+          strokeWidth="0.8"
+        />
         {/* top-edge sheen + front outline */}
         <rect x="9.5" y="15.6" width="39" height="2.2" rx="1" fill="rgba(255,255,255,0.2)" />
-        <rect x="8" y="15" width="42" height="17" rx="1.5" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" />
+        <rect
+          x="8"
+          y="15"
+          width="42"
+          height="17"
+          rx="1.5"
+          fill="none"
+          stroke="rgba(0,0,0,0.4)"
+          strokeWidth="1.2"
+        />
       </svg>
       {/* the slam cracks the asphalt under the stone and kicks up a little dust
           (both timed to the stone's landing in CSS) */}
@@ -843,7 +1088,9 @@ function Fairness({
             <Row label="Server seed (revealed)">
               <code className="seed">{game.serverSeed}</code>
             </Row>
-            <Row label="Crash lane">{game.crashLane > game.lanes ? 'crossed safely' : game.crashLane}</Row>
+            <Row label="Crash lane">
+              {game.crashLane > game.lanes ? 'crossed safely' : game.crashLane}
+            </Row>
             <Row label="Verification">
               <span className={verified ? 'verify-ok' : 'verify-bad'}>
                 {verified ? '✓ crash lane matches the committed seed' : '✗ mismatch'}

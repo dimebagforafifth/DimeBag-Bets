@@ -52,7 +52,7 @@
   padding: 3px 9px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(8, 18, 26, 0.7);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
   color: var(--muted);
 }
 .pill-win {
@@ -157,7 +157,10 @@
   border-radius: 8px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 .diamonds-tier-name {
   font-size: 12px;
@@ -175,11 +178,15 @@
 .diamonds-tier.is-current {
   transform: translateY(-2px);
   background: color-mix(in srgb, var(--gem) 22%, var(--surface-2));
-  box-shadow: 0 0 0 1px var(--gem), 0 0 14px rgba(var(--gem-glow), 0.45);
+  box-shadow:
+    0 0 0 1px var(--gem),
+    0 0 14px rgba(var(--gem-glow), 0.45);
 }
 .diamonds-tier.is-current.is-zero {
   background: color-mix(in srgb, var(--red) 18%, var(--surface-2));
-  box-shadow: 0 0 0 1px var(--red), 0 0 14px rgba(237, 65, 99, 0.35);
+  box-shadow:
+    0 0 0 1px var(--red),
+    0 0 14px rgba(237, 65, 99, 0.35);
 }
 
 @media (max-width: 640px) {

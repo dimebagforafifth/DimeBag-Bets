@@ -11,6 +11,7 @@ import { resetBookOdds, getBookOddsSnapshot } from './odds-source.js'
 import { legFromSelection, parlayPrice, type SlipLeg } from './slip.js'
 import { placeBookBet, settleBookBet, __resetPlacement } from './placement.js'
 import { getBets, __resetBets } from './bets-store.js'
+import { suspendMarket, __resetRiskControls } from '../risk-controls.js'
 
 const NOW = 1_750_000_000_000
 
@@ -79,6 +80,17 @@ describe('single bet — place holds pending, settle moves the figure', () => {
     expect(getBets().find((b) => b.id === bet.id)!.status).toBe('lost')
   })
 
+  it('refuses a leg on a market the risk desk has suspended (placing nothing)', () => {
+    const l = leg(0, 'moneyline', 0)
+    suspendMarket(l.marketType) // risk desk suspends this market type (A's interlock)
+    try {
+      expect(() => place('p-lena', [l], 'single', 5_000)).toThrow(/suspended/)
+      expect(getBets()).toHaveLength(0) // nothing held in core
+    } finally {
+      __resetRiskControls() // don't leak the suspension into other tests
+    }
+  })
+
   it('a push returns the stake, figure unchanged', () => {
     const a = acct('p-lena')
     const l = leg(0, 'moneyline', 0)
@@ -122,6 +134,25 @@ describe('parlay — combined price, re-price on void, any-loss loses', () => {
     settleBookBet(bet.id, { [legs[0].key]: 'loss' }, NOW)
     expect(a.balance).toBe(before - 5_000)
     expect(getBets().find((b) => b.id === bet.id)!.status).toBe('lost')
+  })
+})
+
+describe('same-game parlay (SGP)', () => {
+  it('prices a same-game parlay below the independent product (correlation)', () => {
+    const legs = [leg(0, 'moneyline', 0), leg(0, 'total', 0)] // same event ev0, two markets
+    const [bet] = place('p-priya', legs, 'parlay', 5_000)
+    const indep = parlayPrice(legs)
+    expect(bet.decimal).toBeLessThanOrEqual(indep + 1e-3)
+    expect(bet.decimal).toBeGreaterThan(1)
+  })
+
+  it('refuses contradictory legs (over + under on the same total), placing nothing', () => {
+    const a = acct('p-lena')
+    const before = { balance: a.balance, pending: a.pending }
+    const legs = [leg(0, 'total', 0), leg(0, 'total', 1)] // over + under, same market
+    expect(() => place('p-lena', legs, 'parlay', 5_000)).toThrow(/related or contradictory/i)
+    expect(a.pending).toBe(before.pending)
+    expect(getBets()).toHaveLength(0)
   })
 })
 

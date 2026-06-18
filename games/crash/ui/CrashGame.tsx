@@ -1,4 +1,12 @@
-import { memo, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet } from '../../../core/index.js'
 import {
@@ -14,6 +22,7 @@ import {
   type CrashGame as CrashGameState,
   type CrashHouseConfig,
 } from '../index.js'
+import { fairnessClient, verifyServerSeed } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -78,7 +87,13 @@ export function CrashGame({
   const [cashoutAt, setCashoutAt] = useState<number | null>(null) // no auto-cashout preset — starts at 0/off
   const [speed, setSpeed] = useState<Speed>(1)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
+  // The round's platform commitment (server-seed hash published before play). The seed now
+  // comes from the fairness AUTHORITY, not a client-side randomServerSeed(). See fair.ts.
+  const [commitment, setCommitment] = useState<{ commitId: string; serverSeedHash: string } | null>(
+    null,
+  )
   const nonceRef = useRef(0)
+  const startingRef = useRef(false) // guards the async bet against a double-start
   const speedRef = useRef<Speed>(1) // read inside the rAF loop without a stale closure
 
   const [game, setGame] = useState<CrashGameState | null>(null)
@@ -144,16 +159,28 @@ export function CrashGame({
     rafRef.current = requestAnimationFrame(tick)
   }
 
-  function start() {
+  async function start() {
+    if (startingRef.current || gameRef.current?.status === 'active') return
+    startingRef.current = true
     setError(null)
     try {
+      // The server seed is minted and committed by the platform fairness authority
+      // (games/shared/fair.ts → /api/fairness), not by randomServerSeed() in this browser, so
+      // the client/operator can't pick a favourable one. The hash is committed first; the seed
+      // is revealed next. INTERIM: the live client-timed clock needs the crash point now, so we
+      // take the reveal immediately — the genuine withhold-until-after-play flow is the
+      // server-timed-clock SEAM (resolveCrash + realtime; see docs/provably-fair-server.md).
+      const commit = await fairnessClient.commit()
+      const revealed = await fairnessClient.reveal(commit.commitId)
       nonceRef.current += 1
       const g = createCrashGame(account, {
         stake: bet,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: revealed.serverSeed,
         config: houseConfig,
       })
+      setCommitment(commit)
       gameRef.current = g
       setGame(g)
       setLive(1)
@@ -165,6 +192,8 @@ export function CrashGame({
       rafRef.current = requestAnimationFrame(tick)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      startingRef.current = false
     }
   }
 
@@ -217,7 +246,9 @@ export function CrashGame({
 
         {error && <p className="crash-error">{error}</p>}
         {stakeTooHigh && idle && !error && (
-          <p className="crash-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
+          <p className="crash-error">
+            Stake exceeds what you can wager ({formatPoints(available)}).
+          </p>
         )}
       </section>
 
@@ -245,6 +276,7 @@ export function CrashGame({
         clientSeed={clientSeed}
         editable={idle}
         nextNonce={nonceRef.current + (idle ? 1 : 0)}
+        committedHash={commitment?.serverSeedHash ?? null}
         onClientSeed={setClientSeed}
       />
     </div>
@@ -341,9 +373,7 @@ function Stage({
 
       <div className="crash-overlay">
         <div className="crash-multiplier">{live.toFixed(2)}×</div>
-        <div className="crash-caption">
-          {status === 'active' ? 'Current payout' : caption}
-        </div>
+        <div className="crash-caption">{status === 'active' ? 'Current payout' : caption}</div>
       </div>
       {win && (
         <WinPopup
@@ -435,10 +465,7 @@ function Rocket() {
       <path className="rocket-flame" d="M-7,-2.4 L-15,0 L-7,2.4 Z" />
       <path className="rocket-fin" d="M-7,-3.6 L-10.5,-7.5 L-5,-3.6 Z" />
       <path className="rocket-fin" d="M-7,3.6 L-10.5,7.5 L-5,3.6 Z" />
-      <path
-        className="rocket-body"
-        d="M11,0 C7,-5 -3,-5.4 -7,-4.2 L-7,4.2 C-3,5.4 7,5 11,0 Z"
-      />
+      <path className="rocket-body" d="M11,0 C7,-5 -3,-5.4 -7,-4.2 L-7,4.2 C-3,5.4 7,5 11,0 Z" />
       <circle className="rocket-port" cx="3" cy="0" r="2.1" />
       <circle className="rocket-port-glow" cx="3" cy="0" r="1" />
     </svg>
@@ -647,6 +674,7 @@ function Fairness({
   clientSeed,
   editable,
   nextNonce,
+  committedHash,
   onClientSeed,
 }: {
   game: CrashGameState | null
@@ -654,6 +682,8 @@ function Fairness({
   clientSeed: string
   editable: boolean
   nextNonce: number
+  /** The server-seed hash the platform authority committed before play (null until a bet). */
+  committedHash: string | null
   onClientSeed: (s: string) => void
 }) {
   const proof = ended && game ? revealProof(game) : null
@@ -663,6 +693,12 @@ function Fairness({
         ? verifyCrashPoint(proof.serverSeed, proof.clientSeed, proof.nonce, proof.crashPoint)
         : null,
     [proof],
+  )
+  // The revealed seed must hash to the commitment the platform published BEFORE the round —
+  // proof the seed wasn't swapped after the bet.
+  const commitmentHonored = useMemo(
+    () => (proof && committedHash ? verifyServerSeed(proof.serverSeed, committedHash) : null),
+    [proof, committedHash],
   )
 
   return (
@@ -692,6 +728,15 @@ function Fairness({
                 {verified ? '✓ crash point matches the committed seed' : '✗ mismatch'}
               </span>
             </Row>
+            {commitmentHonored != null && (
+              <Row label="Platform commitment">
+                <span className={commitmentHonored ? 'verify-ok' : 'verify-bad'}>
+                  {commitmentHonored
+                    ? '✓ revealed seed matches the hash the platform committed before play'
+                    : '✗ seed does not match the platform commitment'}
+                </span>
+              </Row>
+            )}
           </>
         )}
       </div>

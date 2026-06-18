@@ -17,6 +17,7 @@ import {
   type MinesGame as MinesGameState,
   type MinesHouseConfig,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { useSettleOnExit } from '../../shared/useSettleOnExit.js'
 import { Rules } from '../../shared/Rules.js'
@@ -33,8 +34,8 @@ const MINES_RULES: ReactNode[] = [
   'Hit a mine and the round ends — you lose your bet.',
   'Cash Out any time to bank bet × your current multiplier. Uncover every gem and it auto-pays the top.',
   <>
-    <strong>Payout = bet × the multiplier you cash out at.</strong> The mine layout is provably fair,
-    fixed before you play.
+    <strong>Payout = bet × the multiplier you cash out at.</strong> The mine layout is provably
+    fair, fixed before you play.
   </>,
 ]
 
@@ -65,6 +66,7 @@ export function MinesGame({
   const [mineCount, setMineCount] = useState(3)
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [game, setGame] = useState<MinesGameState | null>(null)
   const [bustTile, setBustTile] = useState<number | null>(null)
@@ -85,15 +87,21 @@ export function MinesGame({
     }
   })
 
-  function start() {
+  // The mine layout's server seed now comes from the platform fairness AUTHORITY (commit hash
+  // before play → reveal after), not a browser randomServerSeed(). The mine math is unchanged.
+  async function start() {
+    if (inFlightRef.current || game?.status === 'active') return
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const next = createMinesGame(account, {
         stake: bet,
         mineCount,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       setBustTile(null)
@@ -102,6 +110,8 @@ export function MinesGame({
       play('bet')
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -137,7 +147,10 @@ export function MinesGame({
       <section className="mines-panel">
         <BetField value={bet} disabled={!idle} max={available} onChange={setBet} />
         {active && game!.revealed.length >= 1 && (
-          <ProfitReadout total={Math.round(bet * currentMultiplier(game!))} multiplier={currentMultiplier(game!)} />
+          <ProfitReadout
+            total={Math.round(bet * currentMultiplier(game!))}
+            multiplier={currentMultiplier(game!)}
+          />
         )}
 
         <label className="field">
@@ -172,7 +185,9 @@ export function MinesGame({
 
         {error && <p className="mines-error">{error}</p>}
         {stakeTooHigh && idle && !error && (
-          <p className="mines-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
+          <p className="mines-error">
+            Stake exceeds what you can wager ({formatPoints(available)}).
+          </p>
         )}
 
         <Readout game={game} bet={bet} mineCount={mineCount} houseConfig={houseConfig} />
@@ -417,7 +432,10 @@ function Gem() {
       {/* girdle line */}
       <line className="gem-girdle" x1="3" y1="9" x2="21" y2="9" strokeWidth="0.6" opacity="0.4" />
       {/* sparkles */}
-      <path className="gem-sparkle gem-spark" d="M10 5.2 L10.7 6.6 L12.1 7.3 L10.7 8 L10 9.4 L9.3 8 L7.9 7.3 L9.3 6.6 Z" />
+      <path
+        className="gem-sparkle gem-spark"
+        d="M10 5.2 L10.7 6.6 L12.1 7.3 L10.7 8 L10 9.4 L9.3 8 L7.9 7.3 L9.3 6.6 Z"
+      />
       <circle className="gem-spark" cx="15.5" cy="6" r="0.7" opacity="0.9" />
     </svg>
   )

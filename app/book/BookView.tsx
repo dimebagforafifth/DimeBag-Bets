@@ -9,13 +9,14 @@
  * VANTAGE: graphite-and-gold, Saira Condensed, near-white values. Credit/balance only.
  */
 
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import { availableToWager, type Account } from '../../core/index.js'
 import type { Role } from '../../org/index.js'
 import { useBookOdds } from './odds-source.js'
-import { getBetsVersion, subscribeBets, betsForViewer } from './bets-store.js'
+import { getBetsVersion, subscribeBets, betsForViewer, type BookBet } from './bets-store.js'
 import { legFromSelection, movedLegKeys, type SlipLeg, type SlipMode } from './slip.js'
-import { placeBookBet } from './placement.js'
+import { placeBookBet, cashOutBookBet } from './placement.js'
+import { cashOutQuote } from './cashout.js'
 import { BookLobby } from './BookLobby.js'
 import { EventView } from './EventView.js'
 import { BetSlip } from './BetSlip.js'
@@ -104,6 +105,24 @@ export function BookView({
     }
   }
 
+  // The current full cash-out offer for an open bet, valued off the LIVE slate (null when
+  // not cashable). Recomputed as the slate moves, so the offer ticks with the odds.
+  const cashOutValueFor = useCallback(
+    (bet: BookBet): number | null => {
+      const q = cashOutQuote(bet, events)
+      return q.cashable ? q.offerCents : null
+    },
+    [events],
+  )
+
+  const onCashOut = useCallback(
+    (betId: string, fraction: number) => {
+      cashOutBookBet(betId, events, { fraction, now: Date.now() })
+      onBalanceChange?.()
+    },
+    [events, onBalanceChange],
+  )
+
   const board = openEvent ? (
     <EventView
       event={openEvent}
@@ -155,6 +174,8 @@ export function BookView({
           bets={bets}
           title={role === 'player' ? 'My bets' : 'Live activity'}
           showWho={role !== 'player'}
+          cashOutValueFor={cashOutValueFor}
+          onCashOut={onCashOut}
         />
 
         {isDemo && <SimulateControl now={() => Date.now()} onChange={() => onBalanceChange?.()} />}

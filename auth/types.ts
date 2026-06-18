@@ -1,3 +1,5 @@
+import type { Role } from '../org/index.js'
+
 /**
  * Auth module types (CLAUDE.md §6 — Supabase is the one backend service).
  *
@@ -19,6 +21,14 @@ export interface AuthUser {
    *  and players all log in with a username + password). */
   username: string
   displayName: string
+  /**
+   * The role carried by the authenticated session, when the backend asserts one.
+   * Optional + backward-compatible: undefined means "resolve the role from the book
+   * member" (today's demo path). The Supabase adapter populates it from the JWT's
+   * `app_metadata.role` claim so the gate can trust the SERVER's role, not a client
+   * guess. Consumers may prefer this when present. // TODO(api): set the claim at login.
+   */
+  role?: Role
   /**
    * Which BOOK (tenant) this identity belongs to. Optional + backward-compatible:
    * undefined means the default book (today's single-tenant demo). The app sets the

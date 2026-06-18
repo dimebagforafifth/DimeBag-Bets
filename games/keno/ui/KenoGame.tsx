@@ -14,6 +14,7 @@ import {
   type KenoRisk,
   type KenoRound,
 } from '../index.js'
+import { fairnessClient } from '../../shared/fair.js'
 import { play as playSound } from '../../../sound/index.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { signalReveal } from '../../shared/reveal-bus.js'
@@ -55,6 +56,7 @@ export function KenoGame({
   const [picks, setPicks] = useState<number[]>([])
   const [clientSeed, setClientSeed] = useState(() => randomServerSeed().slice(0, 16))
   const nonceRef = useRef(0)
+  const inFlightRef = useRef(false) // a round is awaiting its authority-minted seed
 
   const [round, setRound] = useState<KenoRound | null>(null)
   const [shown, setShown] = useState(0) // how many drawn numbers have popped in
@@ -93,14 +95,20 @@ export function KenoGame({
     reset()
     const pool = [...ALL_TILES]
     const out: number[] = []
-    while (out.length < MAX_PICKS) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
+    while (out.length < MAX_PICKS)
+      out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
     setPicks(out.sort((a, b) => a - b))
     playSound('select')
   }
 
-  function play() {
+  // The draw's server seed now comes from the platform fairness AUTHORITY (commit hash before
+  // play → reveal after), not a browser randomServerSeed(). The draw math is unchanged.
+  async function play() {
+    if (inFlightRef.current) return // a mint is already in flight
+    inFlightRef.current = true
     setError(null)
     try {
+      const minted = await fairnessClient.mintRound()
       nonceRef.current += 1
       const r = playKeno(account, {
         stake: bet,
@@ -108,6 +116,7 @@ export function KenoGame({
         risk,
         clientSeed,
         nonce: nonceRef.current,
+        serverSeed: minted.serverSeed,
         config: houseConfig,
       })
       clearTimeout(timerRef.current)
@@ -139,6 +148,8 @@ export function KenoGame({
       timerRef.current = window.setTimeout(() => step(1), REVEAL_MS)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      inFlightRef.current = false
     }
   }
 
@@ -218,7 +229,9 @@ export function KenoGame({
 
         {error && <p className="keno-error">{error}</p>}
         {bet > available && !error && (
-          <p className="keno-error">Stake exceeds what you can wager ({formatPoints(available)}).</p>
+          <p className="keno-error">
+            Stake exceeds what you can wager ({formatPoints(available)}).
+          </p>
         )}
       </section>
 
@@ -254,11 +267,16 @@ export function KenoGame({
 
           {/* the win card centers over the grid — the visual middle of the play area */}
           {done && round?.won && (
-            <WinPopup key={round.nonce} multiplier={round.multiplier} stake={bet} delayMs={POPUP_DELAY_MS} />
+            <WinPopup
+              key={round.nonce}
+              multiplier={round.multiplier}
+              stake={bet}
+              delayMs={POPUP_DELAY_MS}
+            />
           )}
         </div>
 
-        {table && <Paytable table={table} hits={done ? round?.hits ?? null : null} />}
+        {table && <Paytable table={table} hits={done ? (round?.hits ?? null) : null} />}
 
         <Rules points={KENO_RULES} />
 
@@ -285,7 +303,8 @@ function Gem() {
       <polygon className="gem-cl" points="6,1 26,1 20,9 12,9" /> {/* top — light */}
       <polygon className="gem-p1" points="26,1 31,6 23,12 20,9" /> {/* top-right cut */}
       <polygon className="gem-cr" points="31,6 31,26 23,20 23,12" /> {/* right — dark */}
-      <polygon className="gem-p3" points="31,26 26,31 20,23 23,20" /> {/* bottom-right cut — darkest */}
+      <polygon className="gem-p3" points="31,26 26,31 20,23 23,20" />{' '}
+      {/* bottom-right cut — darkest */}
       <polygon className="gem-p3" points="26,31 6,31 12,23 20,23" /> {/* bottom — darkest */}
       <polygon className="gem-p1" points="6,31 1,26 9,20 12,23" /> {/* bottom-left cut */}
       <polygon className="gem-p2" points="1,26 1,6 9,12 9,20" /> {/* left — base */}
@@ -301,7 +320,11 @@ function Gem() {
         opacity="0.38"
       />
       {/* gloss + a bright four-point sparkle on the table */}
-      <polygon className="gem-gloss" points="11.4,10.6 17.8,10.6 15.4,13.2 11.4,13.2" opacity="0.4" />
+      <polygon
+        className="gem-gloss"
+        points="11.4,10.6 17.8,10.6 15.4,13.2 11.4,13.2"
+        opacity="0.4"
+      />
       <path
         className="gem-spark"
         d="M14.2 13 l0.9 2.1 2.1 0.9 -2.1 0.9 -0.9 2.1 -0.9 -2.1 -2.1 -0.9 2.1 -0.9 Z"
@@ -330,7 +353,9 @@ function Paytable({ table, hits }: { table: number[]; hits: number | null }) {
           className={`pay-tier ${hits === h ? 'is-current' : ''} ${m > 0 ? '' : 'is-zero'}`}
         >
           <span className="pay-mult">{fmtMult(m)}</span>
-          <span className="pay-hits">{h} hit{h === 1 ? '' : 's'}</span>
+          <span className="pay-hits">
+            {h} hit{h === 1 ? '' : 's'}
+          </span>
         </div>
       ))}
     </div>
