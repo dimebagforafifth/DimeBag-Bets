@@ -91,6 +91,10 @@ export interface PlayerSectionProps {
   account: Account
   /** Let the shell refresh the figure after a challenge moves it (like BookView's). */
   onBalanceChange?: () => void
+  /** The viewer's role. An operator (non-player) gets the RESULT-settlement control on in-flight
+   *  challenges (settle to a winner / void) — settlement is operator-driven, never a participant
+   *  picking their own winner. Omitted (a plain player) → no settle control. */
+  role?: Role
 }
 
 /** A self-describing player section a module exposes for the shell/wiring to mount. */

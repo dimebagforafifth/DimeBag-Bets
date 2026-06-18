@@ -86,6 +86,32 @@ describe('ChallengesSection', () => {
     expect(totalBalances).toBe(0)
   })
 
+  it('an operator (role) settles an in-flight challenge to a winner — pot pays through core', () => {
+    act(() =>
+      root.render(
+        <ChallengesSection viewerId="p-viewer" viewerName="You" account={account} role="manager" />,
+      ),
+    )
+    // accept an open offer → both stakes escrowed via core (the viewer's stake is now held)
+    click(host.querySelector('.p2p-accept') as HTMLButtonElement)
+    expect(account.pending).toBeGreaterThan(0)
+    // the Active tab now shows the operator settle controls (gated on the operator role)
+    click(buttons().find((b) => b.textContent?.startsWith('Active'))!)
+    const wonBtn = buttons().find((b) => b.textContent?.includes('won'))
+    expect(wonBtn).toBeTruthy()
+    // settling pays the pot to the winner THROUGH CORE → the escrow hold is released
+    click(wonBtn!)
+    expect(account.pending).toBe(0)
+    expect(text()).toMatch(/Settled|takes/)
+  })
+
+  it('a plain player sees no settle/void control on in-flight challenges (operator-only)', () => {
+    render() // no role → plain player
+    click(host.querySelector('.p2p-accept') as HTMLButtonElement)
+    click(buttons().find((b) => b.textContent?.startsWith('Active'))!)
+    expect(buttons().some((b) => b.textContent?.includes('won'))).toBe(false)
+  })
+
   it('opens the propose form and posts an open challenge holding no money', () => {
     render()
     const newBtn = buttons().find((b) => b.textContent === 'New challenge')!

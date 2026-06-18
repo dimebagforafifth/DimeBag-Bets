@@ -23,6 +23,9 @@ export type Section =
   | 'community'
   | 'profile'
   | 'pickem'
+  | 'challenges'
+  | 'competitions'
+  | 'gamification'
   | 'management'
 
 export const ALL_SECTIONS: Section[] = [
@@ -34,6 +37,9 @@ export const ALL_SECTIONS: Section[] = [
   'community',
   'profile',
   'pickem',
+  'challenges',
+  'competitions',
+  'gamification',
   'management',
 ]
 const PLAYER_SECTIONS: Section[] = [
@@ -45,6 +51,9 @@ const PLAYER_SECTIONS: Section[] = [
   'community',
   'profile',
   'pickem',
+  'challenges',
+  'competitions',
+  'gamification',
 ]
 const STAFF_SECTIONS: Section[] = ['management', 'leaderboard']
 

@@ -17,6 +17,10 @@
 import { registerPlayerSection } from './player-sections.js'
 import { CommunitySection, communitySection } from '../social/index.js'
 import { PickemSection, pickemSectionMeta } from '../pickem/index.js'
+import { ChallengesSection, challengesSection } from '../p2p/index.js'
+import { CompetitionsSection, competitionsSectionMeta } from '../events/index.js'
+import { GamificationPanel } from '../gamification/ui/index.js'
+import { listPlayers } from './book-store.js'
 import '../records/index.js' // side-effect: records self-registers the 'profile' section
 
 // A (social) — { id, label, roles, … } → manifest; render injects viewer identity + account.
@@ -44,6 +48,56 @@ registerPlayerSection({
       account={ctx.account}
       playerName={ctx.player.name}
       isDemo={ctx.isDemo}
+      onBalanceChange={ctx.onBalanceChange}
+    />
+  ),
+})
+
+// ── Round-4 sections ──────────────────────────────────────────────────────────
+// B (p2p) — Challenges. PlayerSectionDescriptor { id, … } → manifest; render injects the
+// viewer identity + account (P2P escrow/settle all move money through core).
+registerPlayerSection({
+  key: challengesSection.id,
+  label: challengesSection.label,
+  roles: challengesSection.roles,
+  render: (ctx) => (
+    <ChallengesSection
+      viewerId={ctx.viewerId}
+      viewerName={ctx.player.name}
+      account={ctx.account}
+      onBalanceChange={ctx.onBalanceChange}
+      role={ctx.role}
+    />
+  ),
+})
+
+// C (events) — Competitions. { key, label, player, … } → manifest; player:true → player-only.
+registerPlayerSection({
+  key: competitionsSectionMeta.key,
+  label: competitionsSectionMeta.label,
+  roles: competitionsSectionMeta.player ? ['player'] : [],
+  render: (ctx) => (
+    <CompetitionsSection
+      account={ctx.account}
+      playerName={ctx.player.name}
+      isDemo={ctx.isDemo}
+      onBalanceChange={ctx.onBalanceChange}
+    />
+  ),
+})
+
+// Gamification hub — built but never mounted (D flagged the orphan). No lane descriptor, so it
+// registers directly: level/XP, missions, achievements, daily wheel, tournaments. Labelled
+// "Quests" (its own header says "Rewards", but that nav key is the loyalty section). Rewards
+// pay out as free-play through core.grant. `players` lets tournament rows read as names.
+registerPlayerSection({
+  key: 'gamification',
+  label: 'Quests',
+  roles: ['player', 'manager'],
+  render: (ctx) => (
+    <GamificationPanel
+      account={ctx.account}
+      players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
       onBalanceChange={ctx.onBalanceChange}
     />
   ),

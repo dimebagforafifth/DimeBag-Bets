@@ -13,7 +13,8 @@ import { formatMoney } from '../games/shared/money.js'
 import { challenges } from './store.js'
 import { ensureViewerOffers, SEED_PLAYERS } from './seed.js'
 import { accepterStakeFor, EVEN_ODDS, potCents } from './odds.js'
-import type { Challenge, PlayerSectionProps } from './types.js'
+import { followingOf } from '../social/index.js'
+import type { Challenge, ChallengeWinner, PlayerSectionProps } from './types.js'
 
 type Tab = 'open' | 'active' | 'history'
 
@@ -43,11 +44,16 @@ export function ChallengesSection({
   viewerName,
   account,
   onBalanceChange,
+  role,
 }: PlayerSectionProps) {
   useEffect(() => {
     ensureViewerOffers(viewerId, viewerName, account, Date.now())
   }, [viewerId, viewerName, account])
   useChallengeTick()
+
+  // Result settlement is operator-driven (never a participant picking their own winner). An
+  // operator (non-player) gets settle/void controls on in-flight challenges below.
+  const canSettle = role != null && role !== 'player'
 
   const [tab, setTab] = useState<Tab>('open')
   const [flash, setFlash] = useState<string | null>(null)
@@ -73,6 +79,30 @@ export function ChallengesSection({
   const decline = (c: Challenge): void => {
     challenges.decline(c.id, viewerId)
     setFlash('Declined')
+  }
+
+  // Operator-only: grade an in-flight challenge from the real result. Pays the pot to the winner
+  // (or refunds both on void) THROUGH CORE — clearing the escrow pending so weekly settlement can
+  // run (core.settleWeek requires no pending, so settle/void must precede the weekly square-up).
+  const settle = (c: Challenge, winner: ChallengeWinner): void => {
+    try {
+      challenges.settle(c.id, winner)
+      onBalanceChange?.()
+      const name = winner === 'proposer' ? c.proposer.playerName : (c.accepter?.playerName ?? 'Accepter')
+      setFlash(`Settled — ${name} takes ${formatMoney(potCents(c))}`)
+    } catch (e) {
+      setFlash((e as Error).message)
+    }
+  }
+
+  const voidCh = (c: Challenge): void => {
+    try {
+      challenges.voidChallenge(c.id)
+      onBalanceChange?.()
+      setFlash('Voided — both stakes refunded')
+    } catch (e) {
+      setFlash((e as Error).message)
+    }
   }
 
   return (
@@ -169,6 +199,20 @@ export function ChallengesSection({
                   <span className="p2p-dot" aria-hidden /> Both stakes escrowed · pot{' '}
                   {formatMoney(potCents(c))} · awaiting result
                 </p>
+                {canSettle && (
+                  <div className="p2p-actions">
+                    {/* Operator settles from the real result — settle the week only AFTER this. */}
+                    <button className="p2p-accept" onClick={() => settle(c, 'proposer')}>
+                      {c.proposer.playerName} won
+                    </button>
+                    <button className="p2p-accept" onClick={() => settle(c, 'accepter')}>
+                      {c.accepter?.playerName ?? 'Accepter'} won
+                    </button>
+                    <button className="p2p-ghost" onClick={() => voidCh(c)}>
+                      Void
+                    </button>
+                  </div>
+                )}
               </ChallengeCard>
             ))
           )}
@@ -291,8 +335,14 @@ function NewChallenge({
   const [stake, setStake] = useState(20)
   const [custom, setCustom] = useState(false)
   const [decimal, setDecimal] = useState(2)
-  // // SEAM (wiring): swap this seed roster for the live social graph — followingOf(viewerId).
-  const friends = useMemo(() => SEED_PLAYERS.filter((p) => p.playerId !== viewerId), [viewerId])
+  // The live social graph: a player can directly challenge anyone they FOLLOW (social
+  // followingOf). ids mirror the seed roster, so resolve names from it (falling back to the id).
+  const friends = useMemo(() => {
+    const nameById = new Map(SEED_PLAYERS.map((p) => [p.playerId, p.playerName]))
+    return followingOf(viewerId)
+      .filter((id) => id !== viewerId)
+      .map((id) => ({ playerId: id, playerName: nameById.get(id) ?? id }))
+  }, [viewerId])
   const [audience, setAudience] = useState<'open' | string>('open')
 
   const stakeCents = Math.round(stake * 100)
