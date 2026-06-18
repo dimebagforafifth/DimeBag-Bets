@@ -69,6 +69,49 @@ credit), *sharp* (smart bettor), *lock* (sure thing), *chalk* (the favorite), *s
 
 ---
 
+## 💡 More ideas — Round 2 (30 names: coined, adjacent & unrelated)
+
+A wider net, including fully **coined** names (RooBet-style — don't mean much, but
+brandable and easy to trademark / get the `.com`).
+
+### Coined / invented (don't mean anything — that's the point)
+1. **Velo** — fast, sleek, one breath.
+2. **Zynk** — sharp, techy, memorable spelling.
+3. **Bryx** — short, modern, ownable.
+4. **Nuvo** — "new"-adjacent, premium feel.
+5. **Paxo** — playful, rounded, friendly.
+6. **Qoda** — distinctive Q opener; coda = the finish.
+7. **Vexa** — edgy, energetic.
+8. **Krava** — bold, punchy, Slavic-ish flavor.
+9. **Riko** — short, lucky-sounding ("rich"/"rico" echo).
+10. **Olla** — warm, simple, app-friendly.
+
+### Gambling / sports-betting adjacent
+11. **Rounder** — a pro gambler (from *Rounders*). Cool, insider.
+12. **Press** — to "press" (increase) a bet. Active, confident.
+13. **Natural** — a come-out 7/11 or a blackjack. Clean, positive.
+14. **Boxcars** — double sixes in craps. Punchy, distinctive.
+15. **Snake Eyes** — double ones. Iconic, edgy.
+16. **Pony** — slang for a £25 bet. Light, friendly, brandable.
+17. **Yard** — slang for $100. Short, street, modern.
+18. **Pit** — the casino floor / "pit boss." Sleek, minimal.
+19. **Shooter** — the dice-roller in craps. Energetic.
+20. **Tonk** — a rummy-style gambling card game. Fun, punchy.
+
+### Unrelated / evocative real words
+21. **Comet** — speed + a streak across the sky.
+22. **Vault** — security, your balance, a safe. Premium.
+23. **Ember** — a hot streak glowing. Warm, distinctive.
+24. **Flux** — constant live movement (odds, multipliers).
+25. **Cobalt** — a color + a cool, premium metal feel.
+26. **Halo** — winner's glow; clean, aspirational.
+27. **Vega** — bright star + a Las Vegas wink.
+28. **Nova** — a sudden burst (a big win). Energetic, modern.
+29. **Pivot** — turning the odds; quick, decisive.
+30. **Quartz** — clean, crystalline, premium-minimal.
+
+---
+
 ## ⭐ Top 5 picks (with reasoning)
 
 | Name | Why it works | Watch-outs |
