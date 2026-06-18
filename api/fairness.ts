@@ -112,6 +112,7 @@ export function createFairnessSeedStore(
   env: SupabaseEnv,
   serviceKey: string,
   fetchImpl?: FetchLike,
+  now: () => string = () => new Date().toISOString(),
 ): SeedStore {
   const doFetch = fetchImpl ?? (globalThis.fetch as unknown as FetchLike)
   const base = `${env.url}/rest/v1/fairness_seeds`
@@ -121,6 +122,28 @@ export function createFairnessSeedStore(
     'Content-Type': 'application/json',
     ...extra,
   })
+
+  /**
+   * DISCLOSURE AUDIT (migration 0006's `revealed_at`) — stamp the moment a seed is first
+   * read back. A read here only ever happens on reveal: `createStoredVault` calls `get()`
+   * solely to disclose the seed after play. Filtered on `revealed_at=is.null` so it records
+   * the FIRST disclosure and is idempotent on re-reveal. Best-effort: the seed is already
+   * returned to the caller, so a stamp failure must NEVER break the reveal — it's awaited
+   * (so it completes before a serverless function freezes) but its errors are swallowed.
+   * Still service-role-only + off-by-default: with no keys the derived vault never gets here.
+   */
+  async function stampRevealed(commitId: string): Promise<void> {
+    try {
+      await doFetch(`${base}?commit_id=eq.${encodeURIComponent(commitId)}&revealed_at=is.null`, {
+        method: 'PATCH',
+        headers: headers({ Prefer: 'return=minimal' }),
+        body: JSON.stringify({ revealed_at: now() }),
+      })
+    } catch {
+      /* audit-only side effect: a failed stamp never blocks the fairness disclosure */
+    }
+  }
+
   return {
     async put(commitId, serverSeed) {
       const res = await doFetch(base, {
@@ -135,7 +158,11 @@ export function createFairnessSeedStore(
       const res = await doFetch(url, { headers: headers() })
       if (!res.ok) throw new Error(`fairness_seeds read failed (${res.status})`)
       const rows = (await res.json()) as Array<{ server_seed: string }>
-      return rows[0]?.server_seed
+      const serverSeed = rows[0]?.server_seed
+      // Stamp the disclosure only for a seed that exists (an unknown commitId is rejected
+      // upstream and gets no audit row).
+      if (serverSeed !== undefined) await stampRevealed(commitId)
+      return serverSeed
     },
   }
 }

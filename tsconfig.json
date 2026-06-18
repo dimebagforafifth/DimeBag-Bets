@@ -39,6 +39,10 @@
     "crm",
     "analytics",
     "bonus",
-    "p2p"
+    "p2p",
+    "creator",
+    "events",
+    "gamification",
+    "rewards"
   ]
 }
