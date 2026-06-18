@@ -1,0 +1,217 @@
+/* Competitions player section — scoped to .comp, consuming the global theme tokens only. */
+
+.comp {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-7);
+  font-family: var(--font-body);
+  color: var(--text);
+}
+
+.comp-intro {
+  margin-bottom: var(--space-5);
+}
+.comp-title {
+  font-family: var(--font-head);
+  font-size: var(--text-2xl);
+  margin: 0 0 var(--space-1);
+}
+.comp-sub {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  margin: 0;
+  max-width: 60ch;
+}
+
+.comp-error {
+  background: color-mix(in srgb, var(--red) 16%, var(--surface));
+  border: 1px solid var(--red);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+}
+.comp-empty,
+.comp-board-empty {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.comp-list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.comp-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.comp-card.is-live {
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+}
+
+.comp-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.comp-badges {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.comp-status,
+.comp-theme {
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.comp-status.is-live {
+  color: var(--bg);
+  background: var(--green);
+  border-color: var(--green);
+}
+.comp-status.is-upcoming {
+  color: var(--gold-bright);
+  border-color: color-mix(in srgb, var(--gold) 60%, var(--line));
+}
+.comp-status.is-paid {
+  color: var(--gold);
+}
+
+.comp-name {
+  font-family: var(--font-head);
+  font-size: var(--text-xl);
+  margin: 0;
+}
+.comp-blurb {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  margin: var(--space-1) 0 0;
+  max-width: 56ch;
+}
+
+.comp-pool {
+  text-align: right;
+  white-space: nowrap;
+}
+.comp-pool-label {
+  display: block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+.comp-pool-amount {
+  font-family: var(--font-num);
+  font-size: var(--text-xl);
+  color: var(--gold-bright);
+}
+
+.comp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: var(--space-3) 0;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.comp-meta strong {
+  color: var(--text);
+}
+
+.comp-board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.comp-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+.comp-row.is-money {
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
+}
+.comp-row.is-me {
+  outline: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line));
+}
+.comp-rank {
+  font-family: var(--font-num);
+  color: var(--faint);
+  text-align: center;
+}
+.comp-pname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.comp-val {
+  font-family: var(--font-num);
+  color: var(--text);
+}
+.comp-win {
+  font-family: var(--font-num);
+  color: var(--gold-bright);
+  min-width: 56px;
+  text-align: right;
+}
+
+.comp-foot {
+  margin-top: var(--space-3);
+  display: flex;
+  justify-content: flex-end;
+}
+.comp-join {
+  font-family: var(--font-head);
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
+  color: var(--bg);
+  background: var(--gold);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-5);
+  cursor: pointer;
+}
+.comp-join:hover {
+  background: var(--gold-bright);
+}
+.comp-join:active {
+  background: var(--gold-press);
+}
+.comp-entered {
+  color: var(--green);
+  font-size: var(--text-sm);
+  font-family: var(--font-head);
+}
+.comp-closed-note {
+  color: var(--faint);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 760px) {
+  .comp-card-head {
+    flex-direction: column;
+  }
+  .comp-pool {
+    text-align: left;
+  }
+}
