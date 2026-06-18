@@ -45,14 +45,18 @@ import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
 import { Leaderboard, VipBadge } from '../vip/ui/index.js'
-// Round-2 player sections. The registry (app/player-sections) drives the nav tabs + role-gating;
-// the shell renders each section below with its documented props. register-player-sections wires
-// community + pickem into the registry and pulls in records (which self-registers 'profile').
+// Player sections. The registry (app/player-sections) is the SINGLE render path: it drives the
+// nav tabs, role-gating, AND the active body — `renderPlayerSection` injects the shell context
+// (active player + account / viewer identity / demo flag / balance-refresh) into each section's
+// typed `render`, so the shell no longer special-cases Community / Pick'em / Profile here.
+// register-player-sections wires community + pickem and pulls in records (self-registers 'profile').
 import './register-player-sections.js'
-import { playerSectionsFor } from './player-sections.js'
-import { CommunitySection } from '../social/index.js'
-import { PickemSection } from '../pickem/index.js'
-import { ProfileSection } from '../records/index.js'
+import {
+  playerSectionFor,
+  playerSectionsFor,
+  renderPlayerSection,
+  type PlayerSectionContext,
+} from './player-sections.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
 import { houseConfigFor, nativeRtp } from './edge-config.js'
@@ -116,6 +120,12 @@ export function App() {
   // If the selected section isn't allowed for this role, fall back to the role's
   // default — so a stale/forced section can never render forbidden content.
   const activeSection = visibleSections.includes(section) ? section : defaultSection(role)
+  // A registry-driven player section (Profile / Community / Pick'em / …) for the active key,
+  // role-gated and intersected with allowedSections so nav + render share one source of truth.
+  // The hardcoded sections above (sportsbook, rewards, …) take precedence by key.
+  const registrySection = playerSectionFor(role, activeSection)
+  const activeRegistrySection =
+    registrySection && visibleSections.includes(activeSection) ? registrySection : undefined
   // Audit/adjust entries carry the REAL signed-in identity, not a hardcoded 'operator'.
   const actor = user?.displayName ?? 'operator'
 
@@ -133,6 +143,19 @@ export function App() {
 
   const player = getCurrentPlayer() // an ACTIVE player, or null
   const account = player?.account ?? null
+  // The shell state injected into a registry player section's `render` — null when there's no
+  // active player to build it from (the section then shows the NoPlayer fallback).
+  const sectionCtx: PlayerSectionContext | null =
+    account && player
+      ? {
+          account,
+          player: { id: player.id, name: player.name },
+          viewerId: authMember?.id ?? player.id,
+          role,
+          isDemo,
+          onBalanceChange: refresh,
+        }
+      : null
   const game = activeSection === 'casino' ? findGame(route) : null
   // A disabled game can't be played: it drops back to the lobby (which also hides it),
   // so it can't be reached even via a stale route. The enable/disable model lives in
@@ -330,40 +353,20 @@ export function App() {
               canManage={canManage(role)}
             />
           )
-        ) : activeSection === 'community' ? (
-          account && player ? (
-            <CommunitySection
-              viewerId={authMember?.id ?? player.id}
-              viewerName={player.name}
-              account={account}
-              onBalanceChange={refresh}
-            />
-          ) : (
+        ) : activeRegistrySection ? (
+          // ONE render path for every registry section. Prop-taking sections (Community,
+          // Pick'em, …) get the shell context injected; a section that needs an active player
+          // falls back to NoPlayer when there is none. Prop-less self-contained sections
+          // (Profile) ignore the context and render regardless (their own empty state).
+          renderPlayerSection(
+            activeRegistrySection,
+            sectionCtx,
             <NoPlayer
               onManage={() => setSection('management')}
               allSuspended={allSuspended}
               canManage={canManage(role)}
-            />
+            />,
           )
-        ) : activeSection === 'pickem' ? (
-          account && player ? (
-            <PickemSection
-              account={account}
-              playerName={player.name}
-              isDemo={isDemo}
-              onBalanceChange={refresh}
-            />
-          ) : (
-            <NoPlayer
-              onManage={() => setSection('management')}
-              allSuspended={allSuspended}
-              canManage={canManage(role)}
-            />
-          )
-        ) : activeSection === 'profile' ? (
-          // Profile is prop-less + self-contained (reads the durable record store, with its
-          // own "no player" fallback), so it renders the same for player and operator.
-          <ProfileSection />
         ) : (
           <div className="casino-view">
             {!account ? (

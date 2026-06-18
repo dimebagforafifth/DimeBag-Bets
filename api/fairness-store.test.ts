@@ -108,3 +108,114 @@ describe('durable seed store → fairness_seeds (service-role, not kv_documents)
     await expect(vault.reveal('never-stored')).rejects.toThrow(/unknown commitId/)
   })
 })
+
+/**
+ * Round-4 hardening: the durable store stamps `revealed_at` (migration 0006) the FIRST time a
+ * seed is disclosed, for a disclosure audit trail. A richer fake tracks the column + PATCHes.
+ */
+describe('disclosure audit — revealed_at stamped on first reveal (migration 0006)', () => {
+  function fakeSupabaseWithAudit() {
+    const rows = new Map<string, { server_seed: string; revealed_at: string | null }>()
+    const patches: { url: string; revealed_at?: string }[] = []
+    const fetchImpl: FetchLike = async (url, init) => {
+      const method = init?.method ?? 'GET'
+      if (method === 'POST') {
+        const row = JSON.parse(init?.body as string) as { commit_id: string; server_seed: string }
+        rows.set(row.commit_id, { server_seed: row.server_seed, revealed_at: null })
+        return { ok: true, status: 201, json: async () => [], text: async () => '' }
+      }
+      const id = decodeURIComponent(url.match(/commit_id=eq\.([^&]+)/)?.[1] ?? '')
+      if (method === 'PATCH') {
+        const body = JSON.parse(init?.body as string) as { revealed_at?: string }
+        patches.push({ url, revealed_at: body.revealed_at })
+        const row = rows.get(id)
+        // Honour the `revealed_at=is.null` filter → only the FIRST disclosure stamps.
+        if (row && url.includes('revealed_at=is.null') && row.revealed_at === null) {
+          row.revealed_at = body.revealed_at ?? null
+        }
+        return { ok: true, status: 204, json: async () => [], text: async () => '' }
+      }
+      const row = rows.get(id)
+      return {
+        ok: true,
+        status: 200,
+        json: async () => (row ? [{ server_seed: row.server_seed }] : []),
+        text: async () => '',
+      }
+    }
+    return { fetchImpl, rows, patches }
+  }
+
+  const env = { url: 'https://proj.supabase.co', anonKey: 'ANON' }
+
+  it('stamps revealed_at with the disclosure clock on first reveal, and not before', async () => {
+    const { fetchImpl, rows, patches } = fakeSupabaseWithAudit()
+    let n = 0
+    const now = () => `2026-06-17T00:0${(n += 1)}:00.000Z` // 1st call → :01, 2nd → :02, …
+    const vault = createStoredVault(
+      createFairnessSeedStore(env, 'SERVICE-ROLE-KEY', fetchImpl, now),
+    )
+
+    const commit = await vault.commit()
+    expect(rows.get(commit.commitId)?.revealed_at).toBeNull() // committed, not yet disclosed
+    expect(patches).toHaveLength(0)
+
+    await vault.reveal(commit.commitId)
+    expect(rows.get(commit.commitId)?.revealed_at).toBe('2026-06-17T00:01:00.000Z') // stamped
+    expect(patches).toHaveLength(1)
+    expect(patches[0].url).toContain('/fairness_seeds')
+    expect(patches[0].url).toContain('revealed_at=is.null') // only stamps an unrevealed row
+  })
+
+  it('a re-reveal still discloses but does NOT overwrite the first disclosure time', async () => {
+    const { fetchImpl, rows, patches } = fakeSupabaseWithAudit()
+    let n = 0
+    const now = () => `2026-06-17T00:0${(n += 1)}:00.000Z`
+    const vault = createStoredVault(
+      createFairnessSeedStore(env, 'SERVICE-ROLE-KEY', fetchImpl, now),
+    )
+    const commit = await vault.commit()
+    await vault.reveal(commit.commitId)
+    const first = rows.get(commit.commitId)?.revealed_at
+    await vault.reveal(commit.commitId) // clock advances, but the is.null filter blocks a re-stamp
+    expect(rows.get(commit.commitId)?.revealed_at).toBe(first)
+    // The first-disclosure-wins guarantee is the IMPLEMENTATION's: it sends the
+    // `revealed_at=is.null` idempotency filter on EVERY stamp (the DB then refuses the second
+    // write). Assert the store actually emitted it both times, so this test fails if the
+    // implementation ever drops the filter — not just because the fake happens to honour it.
+    expect(patches).toHaveLength(2)
+    expect(patches.every((p) => p.url.includes('revealed_at=is.null'))).toBe(true)
+  })
+
+  it('does not stamp (no audit row touched) for an unknown commitId', async () => {
+    const { fetchImpl, patches } = fakeSupabaseWithAudit()
+    const vault = createStoredVault(createFairnessSeedStore(env, 'SERVICE-ROLE-KEY', fetchImpl))
+    await expect(vault.reveal('never-stored')).rejects.toThrow(/unknown commitId/)
+    expect(patches).toHaveLength(0) // get found no seed → no disclosure stamp
+  })
+
+  it('a stamp failure never breaks the reveal (best-effort audit)', async () => {
+    const seeds = new Map<string, string>()
+    const fetchImpl: FetchLike = async (url, init) => {
+      const method = init?.method ?? 'GET'
+      if (method === 'POST') {
+        const row = JSON.parse(init?.body as string) as { commit_id: string; server_seed: string }
+        seeds.set(row.commit_id, row.server_seed)
+        return { ok: true, status: 201, json: async () => [], text: async () => '' }
+      }
+      if (method === 'PATCH') throw new Error('stamp network down')
+      const id = decodeURIComponent(url.match(/commit_id=eq\.([^&]+)/)?.[1] ?? '')
+      const seed = seeds.get(id)
+      return {
+        ok: true,
+        status: 200,
+        json: async () => (seed ? [{ server_seed: seed }] : []),
+        text: async () => '',
+      }
+    }
+    const vault = createStoredVault(createFairnessSeedStore(env, 'SERVICE-ROLE-KEY', fetchImpl))
+    const commit = await vault.commit()
+    const reveal = await vault.reveal(commit.commitId) // must NOT throw despite the PATCH failure
+    expect(verifyServerSeed(reveal.serverSeed, commit.serverSeedHash)).toBe(true)
+  })
+})
