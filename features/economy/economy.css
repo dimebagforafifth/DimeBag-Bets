@@ -1,0 +1,78 @@
+/**
+ * Economy Mode panel — consumes the global tokens + the operations `feat-*` theme; adds only
+ * the two-mode comparison cards + the confirm preview. No per-feature palette.
+ */
+
+.eco-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.eco-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  padding: 12px 14px;
+  opacity: 0.7;
+}
+.eco-card.is-active {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--gem) 60%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gem) 30%, transparent);
+}
+.eco-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+.eco-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #14171c;
+  background: var(--gem);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.eco-blurb {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.eco-points {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12.5px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.eco-confirm {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.eco-seed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.eco-flat {
+  width: 110px;
+  margin-left: 8px;
+}
+.eco-preview {
+  margin: 10px 0 4px;
+}
+.eco-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
