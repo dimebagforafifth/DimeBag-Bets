@@ -1,0 +1,12 @@
+/* Competitions console panel — one layout class on top of the .feat-* shell tokens. */
+.comp-admin-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.comp-admin-row:first-child {
+  border-top: none;
+}
