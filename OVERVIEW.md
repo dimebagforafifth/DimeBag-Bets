@@ -101,8 +101,13 @@ Ordered from easiest to biggest.
       value instead of recomputing.
 - [ ] **Make Dice ties a push** — right now an exact tie loses; the house rules say
       the stake should be returned.
-- [ ] **Repo hygiene** — add automated CI checks, a code formatter config, and a
-      fuller README.
+- [x] **Repo hygiene** — CI (typecheck + lint + test + build on every push/PR),
+      ESLint, and Prettier are all in place. Lint was unblocked after the GitHub
+      Pages build output started flooding it with errors (now ignored).
+- [ ] **One-time Prettier sweep** — ~910 source files have never been formatted.
+      Worth a single coordinated `npm run format` commit (then add `format:check`
+      to CI), but do it as its own PR so it doesn't bury real changes — and when
+      no one else has big branches open.
 
 ### Phase 1 — the backend (the big next step)
 - [ ] **Wire up Supabase** — apply the schema, connect the app, make balances and
@@ -125,6 +130,43 @@ Ordered from easiest to biggest.
 - [ ] **Analysis / CLV + IP tracking** — deferred until the live feed + auth land.
 - [ ] **Simulated live dealer** — driven by the provably-fair core, for the points
       MVP.
+
+---
+
+## 🎨 Design & Branding (a parallel track)
+
+The interface *is* the product (CLAUDE.md §2), so the look & feel deserves its own
+push alongside the engineering. This work can happen in parallel with the backend.
+
+### Brand identity (do this first — everything else flows from it)
+- [ ] **Pick a new name.** "DimeBag-Bets" is a working title; decide on the real
+      brand name before committing to logos and assets.
+- [ ] **Brand identity system** — logo (and variations), a color scheme/palette,
+      typography, and the overall visual tone.
+- [ ] **Brand assets** — favicon, app icon, social/share images, marketing imagery,
+      and any in-app illustrations.
+- [ ] **Tooling:** the `theme-factory` / Claude design skills (`ckmbrand`,
+      `ckmdesign-system`, `ckmbanner-design`, `ui-ux-pro-max`) can generate the
+      brand system, palettes, and asset sets.
+
+### Game visuals & polish
+- [ ] **Better game icons** — the lobby tiles could use distinctive, high-quality
+      icons per game (the current ones are simple inline SVGs).
+- [ ] **Animations** — add motion/polish to the games (wins, reveals, transitions),
+      following the "minimal, purposeful motion" principle.
+- [ ] **Asset generation:** use **Higgsfield** (image/video/3D generation) or
+      **GPT Image** to produce game art, icons, and animated assets.
+
+### Main screens & site
+- [ ] **Redesign the core screens** — lobby/home, game view, account, the management
+      console — to a premium, polished standard.
+- [ ] **Tooling:** Claude's `frontend-design`, `design-taste-frontend`, and
+      `redesign-existing-projects` skills are built exactly for upgrading an existing
+      app's UI without breaking functionality.
+
+> Keep the §2 principles in mind throughout: whitespace-first, one primary action
+> per screen, restrained palette, minimal motion. Polish should make it cleaner, not
+> busier.
 
 ---
 

@@ -10,7 +10,10 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import prettier from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'coverage/**', 'node_modules/**'] },
+  // docs/assets is the generated GitHub Pages build (minified bundles) committed
+  // by the PAGES_BUILD step — never lint it (it floods CI with thousands of
+  // no-unused-expressions/no-this-alias errors from minified code).
+  { ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'docs/assets/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
