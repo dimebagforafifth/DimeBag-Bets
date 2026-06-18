@@ -10,9 +10,10 @@
 
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-const GAMES_DIR = new URL('.', import.meta.url).pathname
+const GAMES_DIR = fileURLToPath(new URL('.', import.meta.url))
 
 function gameDirs(): string[] {
   return readdirSync(GAMES_DIR, { withFileTypes: true })
