@@ -32,6 +32,7 @@ import {
   type ImportBatch,
   type ImportRow,
 } from '../../import/index.js'
+import { useEconomyMode, ModeGate } from '../../app/economy-mode.js'
 import './import.css'
 
 const ACTOR = 'operator'
@@ -221,6 +222,10 @@ function BatchWizard({ batch, onClose }: { batch: ImportBatch; onClose: () => vo
   const rows = getRows(batch.id)
   const templates = getTemplates()
   const committed = batch.status === 'committed'
+  // Lane A interlock: the active economy posture decides which opening figures may seed. The data
+  // layer (import/commit) is the real enforcement; we read the live mode so the UI and the commit
+  // agree, and surface a note where the mode changes what gets seeded.
+  const economyMode = useEconomyMode()
 
   const setField = (field: CanonicalField, header: string) => {
     const columnMap = { ...batch.columnMap }
@@ -232,10 +237,9 @@ function BatchWizard({ batch, onClose }: { batch: ImportBatch; onClose: () => vo
   const onValidate = () => validate(batch.id)
 
   const onCommit = () => {
-    // SEAM (interlock with Lane A): wrap opening-figure import in <ModeGate> so figures are only
-    // seeded in an economy mode that allows carrying a starting balance; the wiring pass injects
-    // useEconomyMode()/<ModeGate>. Until then the commit applies figures (off-by-default safe —
-    // it still moves money only through the audited core path).
+    // Lane A interlock (repointed): seed opening figures only in a mode that can hold them.
+    // `economyMode` is passed to the audited core path (import/commit), which seeds any figure in
+    // credit/PPH but skips a NEGATIVE opening figure in the non-negative balance/wallet economy.
     const ok = window.confirm(
       `Create ${batch.createdCount} player(s)` +
         ` from “${batch.sourceLabel}” and seed their opening figures?\n\n` +
@@ -243,7 +247,7 @@ function BatchWizard({ batch, onClose }: { batch: ImportBatch; onClose: () => vo
         `players are skipped, so it is safe to re-run.`,
     )
     if (!ok) return
-    commit(batch.id, { actor: ACTOR, now: Date.now() })
+    commit(batch.id, { actor: ACTOR, now: Date.now(), economyMode })
   }
 
   return (
@@ -306,6 +310,17 @@ function BatchWizard({ batch, onClose }: { batch: ImportBatch; onClose: () => vo
           </button>
         )}
       </div>
+      {/* Lane A interlock: in the balance (wallet) economy a wallet can't carry a debt, so a
+          negative opening figure is skipped on commit; the player is still created. Credit/PPH
+          seeds any figure. The note only shows in balance mode. */}
+      {!committed && (
+        <ModeGate mode="balance">
+          <p className="imp-note">
+            Wallet economy: negative opening figures are skipped (a wallet can’t hold a debt). The
+            player is still created — adjust the figure manually if needed.
+          </p>
+        </ModeGate>
+      )}
     </>
   )
 }

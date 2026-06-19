@@ -15,6 +15,7 @@
  */
 
 import { getMember, type Org } from '../org/index.js'
+import { getEconomyMode, type EconomyMode } from '../core/index.js'
 import { getBook, mutateBook } from '../app/book-store.js'
 import { adjustFigure } from '../app/manager-actions.js'
 import { recordAudit } from '../app/audit-store.js'
@@ -60,9 +61,13 @@ function alreadyCommitted(row: ImportRow, org: Org): boolean {
 export function commitBatch(
   batch: ImportBatch,
   rows: ImportRow[],
-  opts: { actor: string; now: number; deps?: CommitDeps },
+  opts: { actor: string; now: number; deps?: CommitDeps; economyMode?: EconomyMode },
 ): CommitResult {
   const deps = opts.deps ?? defaultCommitDeps
+  // The active economy posture decides which opening figures may seed (Lane A interlock). Default
+  // to the live book mode; a unit test (or the UI) can pass it explicitly. Credit/PPH carries any
+  // figure incl. a carried debt; balance/wallet is non-negative, so it can't hold a debt figure.
+  const economyMode = opts.economyMode ?? getEconomyMode()
   const liveOrg = deps.getBook()
 
   // Re-map every row from raw; keep already-committed rows untouched (idempotency).
@@ -85,9 +90,14 @@ export function commitBatch(
     build = buildTree(org, inputs)
   })
 
-  // Seed opening figures through the audited core path (skip zero — adjustFigure rejects it).
+  // Seed opening figures through the audited core path. Skip zero (adjustFigure rejects it) and,
+  // in the non-negative balance (wallet) economy, skip a NEGATIVE opening figure — a wallet can't
+  // carry a debt, so we only seed a figure the active mode can legally hold. Credit/PPH carries any
+  // figure; balance/wallet only a non-negative one.
+  const seedsFigure = (cents: number) =>
+    cents !== 0 && !(economyMode === 'balance' && cents < 0)
   for (const cp of build.createdPlayers) {
-    if (cp.startingBalanceCents === 0) continue
+    if (!seedsFigure(cp.startingBalanceCents)) continue
     try {
       deps.adjustFigure(
         cp.playerId,
@@ -131,7 +141,7 @@ export function commitBatch(
   const newlyCreated = build.createdPlayers.length
   const status: ImportBatch['status'] = created > 0 ? 'committed' : 'failed'
   if (newlyCreated > 0 || build.createdAgentCount > 0) {
-    const figures = build.createdPlayers.filter((c) => c.startingBalanceCents !== 0).length
+    const figures = build.createdPlayers.filter((c) => seedsFigure(c.startingBalanceCents)).length
     deps.recordSummary(
       `Imported ${newlyCreated} player${newlyCreated === 1 ? '' : 's'}` +
         (build.createdAgentCount ? ` + ${build.createdAgentCount} agent(s)` : '') +

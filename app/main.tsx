@@ -5,6 +5,8 @@ import { ErrorBoundary } from './ErrorBoundary.js'
 import { AuthProvider, Login, useAuth } from '../auth/index.js'
 import { installAlertTransport } from './alert-transport.js'
 import { armBonusEngine } from '../bonus/index.js'
+import { setActiveEconomyTenant } from '../core/index.js'
+import { getActiveTenant } from '../persistence/index.js'
 import './theme.css'
 
 /**
@@ -22,6 +24,11 @@ function Root() {
   // bonus playthrough clears from ACTUAL betting. Safe + off-by-default — arming only records
   // turnover, never grants; money grants happen solely via fireTrigger/expireDue → core.grant.
   useEffect(() => armBonusEngine(), [])
+  // Point core's economy policy at the active tenant at boot (multi-tenant books). app/economy-config
+  // already syncs core on import; this makes the tenant binding explicit so a balance-mode book's
+  // policy is in force before the first wager. Off-by-default: with no config the tenant resolves to
+  // the default credit policy, byte-identical to base.
+  useEffect(() => setActiveEconomyTenant(getActiveTenant()), [])
   // fireTrigger HOOKS (documented seam — the engine never auto-grants on import). The points-only
   // demo has no safe real source for these lifecycle events, so each stays an explicit hook to
   // connect when its source is provisioned (every fire grants a rule's reward through core.grant):

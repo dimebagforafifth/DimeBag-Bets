@@ -273,6 +273,18 @@ export function setEconomyMode(
   if (config.modeLockedUntil > now) {
     throw new Error('the economy mode is locked from changing again right now')
   }
+  // No MID-BET flip (interlock #8). The migration closes figures out (runToBalance zeroes them)
+  // but leaves `pending` untouched, and a later resolve is NOT floor-gated — so a wager placed
+  // before the flip would resolve against a zeroed balance and could push it below the floor.
+  // Refuse the flip while ANY wager is open; grade or void them first. Mirrors core settleWeek,
+  // which likewise refuses to square up with pending still on the book.
+  const openPending = Object.values(getBook().members).filter((m) => m.account.pending !== 0)
+  if (openPending.length > 0) {
+    throw new Error(
+      `cannot change the economy mode while ${openPending.length} wager(s) are still open; ` +
+        `grade or void all pending bets first`,
+    )
+  }
 
   const actor = opts.actor ?? getViewer().memberId
   const report = to === 'balance' ? runToBalance(opts.seed ?? { kind: 'preserve' }, now) : runToCredit(now)

@@ -75,6 +75,14 @@ describe('guards', () => {
     expect(() => setEconomyMode('balance', { now: T })).toThrow(/locked/)
     expect(() => setEconomyMode('balance', { now: T + 2_000 })).not.toThrow() // past the lock
   })
+  it('refuses a mid-bet flip while a wager is still open (interlock #8)', () => {
+    // A flip closes figures to zero but leaves `pending`; a later resolve isn't floor-gated, so a
+    // mid-bet flip could overdraw on settle. The flip must refuse while anything is pending.
+    const someone = Object.values(getBook().members)[0]
+    someone.account.pending = 5_000 // simulate an open wager's hold (afterEach restores it)
+    expect(() => setEconomyMode('balance', { now: T })).toThrow(/still open/)
+    expect(getEconomyMode()).toBe('credit') // unchanged — the flip was refused
+  })
 })
 
 describe('previewMigration is read-only', () => {

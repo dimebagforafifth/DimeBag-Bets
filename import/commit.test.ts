@@ -79,6 +79,27 @@ describe('commitBatch — creates members + agent tree + figures through the aud
     expect(summaries[0]).toMatch(/Imported 3 players/)
   })
 
+  it('in balance (wallet) mode, skips a NEGATIVE opening figure but seeds a positive one (interlock #4)', () => {
+    const { org, deps, figures } = harness()
+    const rows = [
+      row(1, { Player: 'Marco', Agent: '', Credit: '2000', Bal: '-450' }), // a debt — illegal in a wallet
+      row(2, { Player: 'Lena', Agent: '', Credit: '1500', Bal: '320' }), // positive — fine
+    ]
+    const res = commitBatch(batch(rows), rows, { actor: 'op', now: 123, deps, economyMode: 'balance' })
+
+    expect(res.status).toBe('committed')
+    // Both players are still CREATED; only the figure seeding is mode-gated.
+    expect(
+      membersByRole(org, 'player')
+        .map((p) => p.name)
+        .sort(),
+    ).toEqual(['Lena', 'Marco'])
+    // Marco's negative opening figure was skipped (a wallet can't carry a debt); Lena's was seeded.
+    expect(figures).toEqual([{ id: expect.any(String), delta: 32000 }])
+    expect(membersByRole(org, 'player').find((p) => p.name === 'Marco')!.account.balance).toBe(0)
+    expect(membersByRole(org, 'player').find((p) => p.name === 'Lena')!.account.balance).toBe(32000)
+  })
+
   it('is idempotent — re-committing the same batch creates nothing twice', () => {
     const { org, deps, figures } = harness()
     const rows = [row(1, { Player: 'Marco', Agent: 'East', Credit: '2000', Bal: '-450' })]

@@ -29,6 +29,15 @@ import { pricingManifests } from '../../features/pricing/manifest.js'
 import { crmManifests } from '../../features/crm/manifest.js'
 // Round-4: C's creator/competitions console tile (author & run branded contests → Rewards).
 import { competitionsManifests } from '../../creator/manifest.js'
+// Upgrade round — four lanes ship ready-to-mount manifests; the registry owner spreads them here
+// (the lanes don't edit this shared file). A → Economy Mode (Control); B → SGP Rules + Casino Edge
+// (Catalog, both SINGLE manifest objects, added bare not spread); C → Challenges Desk (Operations);
+// D → Player Import (Operations). groupBySection routes each tile to its section regardless of order.
+import { economyManifests } from '../../features/economy/manifest.js'
+import { sgpRulesManifest } from '../../app/book/sgp-rules-tile.js'
+import { casinoEdgeManifest } from '../../app/casino-edge/casino-edge-tile.js'
+import { challengesDeskManifests } from '../../p2p/manifest.js'
+import { importManifests } from '../../features/import/manifest.js'
 
 /** Every console feature, grouped into sections at render time by `groupBySection`.
  *  Listed in section order so each section's tiles read top-to-bottom as written. */
@@ -39,15 +48,20 @@ export const REGISTRY: FeatureManifest[] = [
   ...ledgerManifests,
   ...settlementRunManifests,
   ...collectionsManifests,
+  ...challengesDeskManifests, // Challenges Desk (C — operator settle/void of P2P challenges)
+  ...importManifests, // Player Import (D — migrate a legacy book via CSV)
   // Players
   ...playersManifests,
   ...agentsManifests,
   ...cashierDeskManifests,
   // Catalog
   ...catalogManifests,
+  sgpRulesManifest, // SGP Rules (B — same-game-parlay conflict gate; single manifest)
+  casinoEdgeManifest, // Casino Edge (B — per-game house-edge bands; SUPERSEDES the flat-RTP control)
   // Control
   ...controlManifests,
   ...pricingManifests, // Margin & Pricing (C — operator economics)
+  ...economyManifests, // Economy Mode (A — credit/PPH ↔ balance/wallet, whole book)
   ...operatorManualManifests,
   // Rewards (the loyalty program admin)
   ...rewardsAdminManifests,

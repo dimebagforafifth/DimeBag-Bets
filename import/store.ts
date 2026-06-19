@@ -11,6 +11,7 @@
  */
 
 import { createStore, persistedDoc, getActiveTenant, type Doc } from '../persistence/index.js'
+import type { EconomyMode } from '../core/index.js'
 import { getBook } from '../app/book-store.js'
 import { parseCsv } from './csv.js'
 import { autoDetectMapping, applyMapping } from './mapping.js'
@@ -185,7 +186,7 @@ export function validate(batchId: string): BatchSummary | undefined {
 /** Commit the batch: create the members + agent tree + opening figures through core. */
 export function commit(
   batchId: string,
-  opts: { actor: string; now: number; deps?: CommitDeps },
+  opts: { actor: string; now: number; deps?: CommitDeps; economyMode?: EconomyMode },
 ): BatchSummary | undefined {
   const batch = getBatch(batchId)
   if (!batch) return undefined
