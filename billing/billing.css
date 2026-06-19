@@ -1,0 +1,176 @@
+/* Billing & Invoices panel — fiat operator billing. Consumes the console shell tokens that
+   PanelShell remaps on .feat-panel (charcoal/gold): --gem gold, --green/--up, --red/--down,
+   --surface, --line, --text, --muted. Only billing-specific bits live here (prefixed bil-). */
+
+.bil-week-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.bil-week-range {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.bil-kpis {
+  margin-top: 4px;
+}
+.bil-kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.bil-amount {
+  font-variant-numeric: tabular-nums;
+}
+.bil-amount.bil-neg {
+  color: var(--down);
+}
+
+/* status pill */
+.bil-pill {
+  display: inline-block;
+  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bil-pill.is-draft {
+  color: var(--muted);
+}
+.bil-pill.is-issued {
+  color: var(--gem);
+  border-color: color-mix(in srgb, var(--gem) 50%, var(--line));
+}
+.bil-pill.is-paid {
+  color: var(--up);
+  border-color: color-mix(in srgb, var(--up) 45%, var(--line));
+}
+.bil-pill.is-waived {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+/* invoice table */
+.bil-actions-col {
+  text-align: right;
+}
+.bil-row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.bil-mini {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.bil-link {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-bottom: 1px dotted color-mix(in srgb, var(--gem) 60%, transparent);
+}
+.bil-link:hover {
+  color: var(--gem);
+}
+
+/* config */
+.bil-addons {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bil-addon {
+  margin: 4px 0;
+}
+.bil-addon span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.bil-addon-price {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.bil-tiers {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.bil-save {
+  margin-top: 14px;
+}
+.bil-err {
+  color: var(--down);
+  font-size: 12px;
+}
+.bil-coverage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gem) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gem) 35%, var(--line));
+  border-radius: 8px;
+}
+.bil-coverage svg {
+  flex: none;
+}
+
+/* detail */
+.bil-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 0 0 6px;
+  cursor: pointer;
+}
+.bil-back:hover {
+  color: var(--gem);
+}
+.feat-h1 svg,
+.feat-h1 .feat-flag {
+  vertical-align: middle;
+}
+.bil-defs dd {
+  font-variant-numeric: tabular-nums;
+}
+.bil-total-dt {
+  font-weight: 700;
+  color: var(--text);
+}
+.bil-total-dd {
+  font-weight: 700;
+  font-size: 15px;
+}
+.bil-active {
+  color: var(--up);
+}
+.bil-inactive {
+  color: var(--muted);
+}
