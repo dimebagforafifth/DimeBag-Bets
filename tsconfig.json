@@ -43,6 +43,7 @@
     "creator",
     "events",
     "gamification",
-    "rewards"
+    "rewards",
+    "import"
   ]
 }
