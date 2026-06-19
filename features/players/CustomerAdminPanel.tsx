@@ -18,6 +18,7 @@ import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/bo
 import { toCents } from '../../games/shared/money.js'
 import { PanelShell, Figure } from '../_desk/shared.js'
 import { ScopeBar, scopedPlayers, ALL_SCOPE } from '../_desk/scope.js'
+import { useIsBalanceMode } from '../../app/economy-mode.js'
 import './players.css'
 
 /**
@@ -51,6 +52,9 @@ const ROLE_LABEL: Record<string, string> = {
 export function CustomerAdminPanel({ onBack }: { onBack: () => void }) {
   const bv = useSyncExternalStore(subscribeBook, getBookVersion)
   const cv = useSyncExternalStore(subscribeCredentials, credentialsVersion)
+  // Balance (wallet) mode has no credit line: hide the credit column + bulk-credit lever and
+  // read the standing column as a wallet balance, not a weekly figure (CLAUDE.md §3).
+  const balanceMode = useIsBalanceMode()
   const org = getBook()
 
   const [scope, setScope] = useState(ALL_SCOPE)
@@ -66,7 +70,9 @@ export function CustomerAdminPanel({ onBack }: { onBack: () => void }) {
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase()
     return scopedPlayers(org, scope)
-      .filter((p) => (statusFilter === 'all' ? true : statusFilter === 'active' ? p.active : !p.active))
+      .filter((p) =>
+        statusFilter === 'all' ? true : statusFilter === 'active' ? p.active : !p.active,
+      )
       .filter((p) => (term ? p.name.toLowerCase().includes(term) : true))
       .sort((a, b) => a.name.localeCompare(b.name))
     // bv/cv are the change signals
@@ -162,9 +168,9 @@ export function CustomerAdminPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Every player in one grid. Edit a credit line in place, lock or activate an account, or
-          move a player to another agent — one at a time, or across a whole selection. The login
-          column shows status only; resets go out by email (no password is ever shown).
+          {balanceMode
+            ? 'Every player in one grid. Lock or activate an account, or move a player to another agent — one at a time, or across a whole selection. The login column shows status only; resets go out by email (no password is ever shown).'
+            : 'Every player in one grid. Edit a credit line in place, lock or activate an account, or move a player to another agent — one at a time, or across a whole selection. The login column shows status only; resets go out by email (no password is ever shown).'}
         </p>
       </header>
 
@@ -195,23 +201,31 @@ export function CustomerAdminPanel({ onBack }: { onBack: () => void }) {
       {selectedVisible.length > 0 && (
         <div className="custadm-bulk" role="group" aria-label="Bulk actions">
           <span className="custadm-bulk-n">{selectedVisible.length} selected</span>
-          <span className="custadm-bulk-grp">
-            <input
-              className="feat-input custadm-bulk-input"
-              inputMode="decimal"
-              placeholder="Credit $"
-              value={bulkCredit}
-              onChange={(e) => setBulkCredit(e.target.value)}
-              aria-label="Bulk credit amount"
-            />
-            <button className="feat-btn" onClick={applyBulkCredit}>
-              Set credit
-            </button>
-          </span>
-          <button className="feat-btn" onClick={() => bulkMutate('Activated', (o, id) => setActive(o, id, true))}>
+          {!balanceMode && (
+            <span className="custadm-bulk-grp">
+              <input
+                className="feat-input custadm-bulk-input"
+                inputMode="decimal"
+                placeholder="Credit $"
+                value={bulkCredit}
+                onChange={(e) => setBulkCredit(e.target.value)}
+                aria-label="Bulk credit amount"
+              />
+              <button className="feat-btn" onClick={applyBulkCredit}>
+                Set credit
+              </button>
+            </span>
+          )}
+          <button
+            className="feat-btn"
+            onClick={() => bulkMutate('Activated', (o, id) => setActive(o, id, true))}
+          >
             Activate
           </button>
-          <button className="feat-btn" onClick={() => bulkMutate('Locked', (o, id) => setActive(o, id, false))}>
+          <button
+            className="feat-btn"
+            onClick={() => bulkMutate('Locked', (o, id) => setActive(o, id, false))}
+          >
             Lock
           </button>
           <span className="custadm-bulk-grp">
@@ -261,8 +275,8 @@ export function CustomerAdminPanel({ onBack }: { onBack: () => void }) {
                 </th>
                 <th>Customer</th>
                 <th>Agent</th>
-                <th className="num">Credit</th>
-                <th className="num">Figure</th>
+                {!balanceMode && <th className="num">Credit</th>}
+                <th className="num">{balanceMode ? 'Balance' : 'Figure'}</th>
                 <th>Login</th>
                 <th>Status</th>
               </tr>
@@ -276,6 +290,7 @@ export function CustomerAdminPanel({ onBack }: { onBack: () => void }) {
                   parents={parents}
                   signal={bv}
                   credSignal={cv}
+                  balanceMode={balanceMode}
                   checked={selected.has(m.id)}
                   onToggle={() => toggleOne(m.id)}
                 />
@@ -294,6 +309,7 @@ function CustomerRow({
   parents,
   signal,
   credSignal,
+  balanceMode,
   checked,
   onToggle,
 }: {
@@ -302,6 +318,7 @@ function CustomerRow({
   parents: Member[]
   signal: number
   credSignal: number
+  balanceMode: boolean
   checked: boolean
   onToggle: () => void
 }) {
@@ -337,7 +354,12 @@ function CustomerRow({
     <>
       <tr className={member.active ? '' : 'is-locked'}>
         <td className="custadm-check">
-          <input type="checkbox" checked={checked} onChange={onToggle} aria-label={`Select ${member.name}`} />
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={onToggle}
+            aria-label={`Select ${member.name}`}
+          />
         </td>
         <td className="custadm-name">{member.name}</td>
         <td>
@@ -354,13 +376,15 @@ function CustomerRow({
             ))}
           </select>
         </td>
-        <td className="num">
-          <MoneyCell
-            cents={member.account.creditLimit}
-            signal={signal}
-            onCommit={(c) => run(() => setCreditLimit(org, member.id, c))}
-          />
-        </td>
+        {!balanceMode && (
+          <td className="num">
+            <MoneyCell
+              cents={member.account.creditLimit}
+              signal={signal}
+              onCommit={(c) => run(() => setCreditLimit(org, member.id, c))}
+            />
+          </td>
+        )}
         <td className="num">
           <Figure cents={member.account.balance} />
         </td>
@@ -386,7 +410,7 @@ function CustomerRow({
       </tr>
       {error && (
         <tr>
-          <td colSpan={7} className="custadm-err" role="alert">
+          <td colSpan={balanceMode ? 6 : 7} className="custadm-err" role="alert">
             {error}
           </td>
         </tr>

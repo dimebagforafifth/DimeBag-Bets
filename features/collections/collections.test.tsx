@@ -1,11 +1,23 @@
 // @vitest-environment happy-dom
 /** Collections — per-agent collect/pay worklist over the seeded book. */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
+import { setActiveEconomyTenant, setEconomyPolicy, __resetEconomy } from '../../core/index.js'
+import { __resetEconomyConfig } from '../../app/economy-config.js'
 import { collectionsManifests } from './manifest.js'
 import { CollectionsPanel } from './CollectionsPanel.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+/** Flip the active book to the wallet economy money-neutrally (no migration) for label tests. */
+function setBalanceMode() {
+  setActiveEconomyTenant('default')
+  setEconomyPolicy({ mode: 'balance', balanceFloorCents: 0 }, 'default')
+}
+afterEach(() => {
+  __resetEconomyConfig()
+  __resetEconomy()
+})
 
 function setValue(el: HTMLSelectElement, v: string) {
   Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value')!.set!.call(el, v)
@@ -54,6 +66,40 @@ describe('CollectionsPanel', () => {
     expect(h.textContent).toContain('Marco')
     expect(h.textContent).toContain('Lena')
     expect(h.textContent).not.toContain('Tariq') // West Desk player is out of scope
+    act(() => root.unmount())
+    h.remove()
+  })
+})
+
+describe('CollectionsPanel — economy mode framing', () => {
+  it('credit mode (default) reads as a weekly collect/pay worklist', () => {
+    const { h, root } = mount()
+    const heads = [...h.querySelectorAll('thead th')].map((t) => t.textContent)
+    expect(heads).toContain('To collect')
+    expect(heads).toContain('To pay')
+    expect(heads).toContain('Remit up')
+    expect(h.textContent).toContain('Collect')
+    // The weekly-close framing is present in credit mode (and unchanged).
+    expect(h.querySelector('.feat-sub')?.textContent).toMatch(/weekly collect \/ pay/)
+    act(() => root.unmount())
+    h.remove()
+  })
+
+  it('balance mode drops every weekly-collect framing for a standing P&L roll-up', () => {
+    setBalanceMode()
+    const { h, root } = mount()
+    const heads = [...h.querySelectorAll('thead th')].map((t) => t.textContent)
+    // No weekly-collect framing: the collect/pay/remit columns relabel to up/down/nets-up.
+    expect(heads).not.toContain('To collect')
+    expect(heads).not.toContain('To pay')
+    expect(heads).not.toContain('Remit up')
+    expect(heads).toContain('Down')
+    expect(heads).toContain('Up')
+    expect(heads).toContain('Nets up')
+    // The collect/pay DIRECTION words are gone; balances carry forward.
+    expect(h.textContent).not.toMatch(/Collect/)
+    expect(h.textContent).toMatch(/no weekly collect/)
+    expect(h.querySelector('.feat-sub')?.textContent).not.toMatch(/resets every figure/)
     act(() => root.unmount())
     h.remove()
   })

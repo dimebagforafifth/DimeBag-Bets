@@ -11,15 +11,11 @@
  * net loss (matching org.agentCommission). Pure read — money moves only via Settle.
  */
 import { useMemo, useState } from 'react'
-import {
-  agentOf,
-  membersByRole,
-  type Member,
-  type Org,
-} from '../../org/index.js'
+import { agentOf, membersByRole, type Member, type Org } from '../../org/index.js'
 import { getBookVersion } from '../../app/book-store.js'
 import { PanelShell, useBook, Figure } from '../_desk/shared.js'
 import { ScopeBar, scopedPlayers, ALL_SCOPE } from '../_desk/scope.js'
+import { useIsBalanceMode } from '../../app/economy-mode.js'
 
 const ROLE_LABEL: Record<string, string> = { subagent: 'Master', agent: 'Agent' }
 const DIRECT = '__direct'
@@ -40,7 +36,20 @@ const netBook = (r: CollRow) => r.toCollect - r.toPay
 /** What the agent settles up to the level above, after keeping commission. */
 const remitUp = (r: CollRow) => netBook(r) - r.commission
 
-const direction = (n: number): string => (n > 0 ? 'Collect' : n < 0 ? 'Pay' : 'Even')
+// Credit mode reads as a weekly collect/pay worklist; balance mode is a standing P&L roll-up
+// (balances carry forward — there's no weekly collect), so the same sign reads as up/down.
+const directionLabel = (n: number, balanceMode: boolean): string =>
+  balanceMode
+    ? n > 0
+      ? 'Down'
+      : n < 0
+        ? 'Up'
+        : 'Even'
+    : n > 0
+      ? 'Collect'
+      : n < 0
+        ? 'Pay'
+        : 'Even'
 
 function buckets(org: Org): CollRow[] {
   const byKey = new Map<string, CollRow>()
@@ -78,6 +87,9 @@ function buckets(org: Org): CollRow[] {
 
 export function CollectionsPanel({ onBack }: { onBack: () => void }) {
   const book = useBook()
+  // Balance (wallet) mode has no weekly collect/reset — the same per-agent roll-up reads as a
+  // standing P&L position rather than a collect/pay worklist (CLAUDE.md §3).
+  const balanceMode = useIsBalanceMode()
   const [scope, setScope] = useState(ALL_SCOPE)
 
   const rows = useMemo(() => buckets(book), [book, getBookVersion()])
@@ -102,25 +114,30 @@ export function CollectionsPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Each agent&apos;s weekly collect / pay position: what losing players owe in, what
-          winning players are owed, the agent&apos;s commission on the losses, and what nets up to
-          the level above. Players are bucketed under their nearest agent. Commission is a reported
-          figure — squared between you and the agent; the weekly points close itself resets every
-          figure to zero.
+          {balanceMode
+            ? "Each agent's standing balance roll-up: how much their players are down, how much they're up, the agent's commission on the net, and what nets up to the level above. Players are bucketed under their nearest agent. Balances carry forward — balance mode has no weekly collect or reset."
+            : "Each agent's weekly collect / pay position: what losing players owe in, what winning players are owed, the agent's commission on the losses, and what nets up to the level above. Players are bucketed under their nearest agent. Commission is a reported figure — squared between you and the agent; the weekly points close itself resets every figure to zero."}
         </p>
       </header>
+
+      {balanceMode && (
+        <p className="feat-empty">
+          Balance mode: no weekly collect/pay — this is a standing P&amp;L roll-up; every wallet
+          carries forward into the next period.
+        </p>
+      )}
 
       <ScopeBar org={book} value={scope} onChange={setScope} />
 
       <section className="feat-kpis" aria-label="Collections summary">
         <div className="feat-kpi">
-          <span className="feat-label">To collect</span>
+          <span className="feat-label">{balanceMode ? 'Down' : 'To collect'}</span>
           <strong className="feat-up">
             <Figure cents={totals.toCollect} plus={false} />
           </strong>
         </div>
         <div className="feat-kpi">
-          <span className="feat-label">To pay</span>
+          <span className="feat-label">{balanceMode ? 'Up' : 'To pay'}</span>
           <strong className="feat-down">
             <Figure cents={totals.toPay} plus={false} />
           </strong>
@@ -146,12 +163,12 @@ export function CollectionsPanel({ onBack }: { onBack: () => void }) {
               <tr>
                 <th>Agent</th>
                 <th className="num">Roster</th>
-                <th className="num">To collect</th>
-                <th className="num">To pay</th>
+                <th className="num">{balanceMode ? 'Down' : 'To collect'}</th>
+                <th className="num">{balanceMode ? 'Up' : 'To pay'}</th>
                 <th className="num">Net</th>
                 <th className="num">Commission</th>
-                <th className="num">Remit up</th>
-                <th>Action</th>
+                <th className="num">{balanceMode ? 'Nets up' : 'Remit up'}</th>
+                <th>{balanceMode ? 'Position' : 'Action'}</th>
               </tr>
             </thead>
             <tbody>
@@ -163,7 +180,10 @@ export function CollectionsPanel({ onBack }: { onBack: () => void }) {
                     <td>
                       {r.label}
                       {r.agent && (
-                        <span className="feat-label"> · {ROLE_LABEL[r.agent.role] ?? r.agent.role}</span>
+                        <span className="feat-label">
+                          {' '}
+                          · {ROLE_LABEL[r.agent.role] ?? r.agent.role}
+                        </span>
                       )}
                     </td>
                     <td className="num">{r.roster}</td>
@@ -182,7 +202,7 @@ export function CollectionsPanel({ onBack }: { onBack: () => void }) {
                     <td className={`num ${remit < 0 ? 'feat-down' : remit > 0 ? 'feat-up' : ''}`}>
                       <Figure cents={remit} />
                     </td>
-                    <td className="feat-label">{direction(net)}</td>
+                    <td className="feat-label">{directionLabel(net, balanceMode)}</td>
                   </tr>
                 )
               })}
@@ -195,8 +215,8 @@ export function CollectionsPanel({ onBack }: { onBack: () => void }) {
             <thead>
               <tr>
                 <th>Player</th>
-                <th className="num">Figure</th>
-                <th>Action</th>
+                <th className="num">{balanceMode ? 'Balance' : 'Figure'}</th>
+                <th>{balanceMode ? 'Position' : 'Action'}</th>
               </tr>
             </thead>
             <tbody>
@@ -218,7 +238,9 @@ export function CollectionsPanel({ onBack }: { onBack: () => void }) {
                         <Figure cents={p.account.balance} />
                       </td>
                       {/* A player owes when their figure is negative → collect from them. */}
-                      <td className="feat-label">{direction(-p.account.balance)}</td>
+                      <td className="feat-label">
+                        {directionLabel(-p.account.balance, balanceMode)}
+                      </td>
                     </tr>
                   ))
               )}
