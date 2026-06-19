@@ -31,6 +31,11 @@ import {
   type FetchLike,
 } from '../../persistence/index.js'
 import { mockSlate } from './mockBook.js'
+// Trading Desk gate (Lane B): apply live line overrides at the publish boundary, after the
+// pricing pipeline. // SEAM (Lane A): when A's publish pipeline lands, it calls applyOverrides
+// as its post-margin hook; this wiring keeps published odds override-aware in the meantime.
+import { applyOverrides } from '../../trading/gate.js'
+import { subscribeOverrides } from '../../trading/overrides.js'
 
 export type OddsSourceKind = 'mock' | 'live'
 
@@ -40,7 +45,10 @@ interface Snapshot {
   version: number
 }
 
-let events: NormalizedEvent[] = mockSlate()
+// The RAW slate from the feed/cache, and the PUBLISHED slate after the override gate. Keeping the
+// raw separate means clearing or expiring an override reverts cleanly to the pipeline price.
+let rawEvents: NormalizedEvent[] = mockSlate()
+let events: NormalizedEvent[] = applyOverrides(rawEvents, Date.now())
 let source: OddsSourceKind = 'mock'
 let version = 0
 // Cached snapshot object: useSyncExternalStore requires getSnapshot to return a
@@ -53,22 +61,37 @@ function emit(): void {
   listeners.forEach((l) => l())
 }
 
+/** Re-derive the published slate from the raw slate through the override gate (no version bump). */
+function republish(): void {
+  events = applyOverrides(rawEvents, Date.now())
+}
+
 /** Replace the live slate (the cache connector + tests call this). Bumps the
  *  version so every `useBookOdds()` consumer re-renders. */
 export function setSlate(next: NormalizedEvent[], kind: OddsSourceKind = source): void {
-  events = next
+  rawEvents = next
   source = kind
+  republish()
   version += 1
   emit()
 }
 
 /** Reset back to a fresh mock slate (tests). */
 export function resetBookOdds(): void {
-  events = mockSlate()
+  rawEvents = mockSlate()
   source = 'mock'
+  republish()
   version += 1
   emit()
 }
+
+// Republish when overrides change (set/clear), so an override reflects in published odds + the
+// exposure view immediately. Expiry reverts on the next publish (the cache connector re-emits).
+subscribeOverrides(() => {
+  republish()
+  version += 1
+  emit()
+})
 
 export function subscribeBookOdds(listener: () => void): () => void {
   listeners.add(listener)

@@ -33,7 +33,7 @@ import type { NormalizedEvent } from '../../lib/odds/contract.js'
 import { getBook } from '../book-store.js'
 import { combinedDecimal, type SlipLeg, type SlipMode } from './slip.js'
 import { firstBlockMessage, validateSlip } from './sgp-rules.js'
-import { isMarketSuspended } from '../risk-controls.js'
+import { gateWager } from '../../trading/gate.js'
 import { cashOutMath, cashOutQuote } from './cashout.js'
 import { toReturnCents } from './odds-format.js'
 import {
@@ -81,14 +81,6 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
   if (legs.length === 0) throw new Error('add a selection first')
   if (!Number.isInteger(stakeCents) || stakeCents <= 0) throw new Error('enter a stake')
 
-  // Risk interlock (A): refuse any leg on a market the risk desk has suspended (keyed by
-  // market type or sport). The toggle + state live in app/risk-controls; placement enforces.
-  for (const leg of legs) {
-    if (isMarketSuspended(leg.marketType) || (leg.sport != null && isMarketSuspended(leg.sport))) {
-      throw new Error('this market is suspended')
-    }
-  }
-
   const isParlay = mode === 'parlay' && legs.length >= 2
 
   // SGP conflict gate (PART 1) — validate BEFORE pricing so a slip that can't legally be
@@ -102,6 +94,22 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
       throw new Error(firstBlockMessage(validation) ?? 'these selections can’t be combined')
     }
     parlayLegs = validation.legs
+  }
+
+  // Trading Desk gate (Lane B) — suspensions + per-market stake/payout limits, enforced for the
+  // WHOLE slip BEFORE any `placeWager` (so a blocked/over-limit wager holds nothing). Suspension
+  // shares the risk system's flag, so manual + auto-suspend + exposure are one view.
+  if (isParlay) {
+    const decimal = combinedDecimal(parlayLegs).decimal
+    gateWager({ legs: parlayLegs, stakeCents, payoutCents: Math.round(stakeCents * decimal) })
+  } else {
+    for (const leg of legs) {
+      gateWager({
+        legs: [leg],
+        stakeCents,
+        payoutCents: Math.round(stakeCents * leg.price.decimal),
+      })
+    }
   }
 
   const totalOutlay = isParlay ? stakeCents : stakeCents * legs.length

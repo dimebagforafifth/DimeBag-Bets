@@ -1,0 +1,232 @@
+/* Trading Desk — consumes the GLOBAL design tokens (app/theme.css). No per-feature palette. */
+
+.td {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--text);
+  font-family: var(--font-body);
+  max-width: 820px;
+}
+.td-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.td-tabs {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+.td-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-tab.is-on {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.td-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.td-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+.td-h {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  margin: 0;
+}
+.td-sub {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.td-floor-tag {
+  margin-left: 8px;
+  font-size: var(--text-xs);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.td-row {
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+.td-row input[type='range'] {
+  width: 100%;
+  accent-color: var(--gold);
+}
+.td-k {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.td-v {
+  font-family: var(--font-num);
+  font-weight: 700;
+  min-width: 64px;
+  text-align: right;
+}
+
+.td-addrow {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.td-in {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  padding: 7px 9px;
+}
+.td-odds {
+  width: 96px;
+}
+.td-btn {
+  border: 0;
+  background: var(--gold);
+  color: #1a1408;
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-btn:disabled {
+  background: var(--surface-2);
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.td-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.td-li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: var(--text-sm);
+}
+.td-mono {
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+}
+.td-muted {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.td-pill {
+  color: var(--gold);
+  border: 1px solid rgba(var(--gold-glow), 0.4);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+.td-x {
+  margin-left: auto;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-empty {
+  color: var(--faint);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.td-seg {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+.td-seg-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.td-seg-btn.is-on {
+  background: var(--gold);
+  color: #1a1408;
+}
+.td-row select,
+.td-addrow select {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  padding: 7px 9px;
+}
+
+.td-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.td-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.td-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.td-hold {
+  color: var(--gold);
+  font-weight: 700;
+}
