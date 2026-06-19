@@ -44,6 +44,7 @@
     "events",
     "gamification",
     "rewards",
-    "import"
+    "import",
+    "billing"
   ]
 }
