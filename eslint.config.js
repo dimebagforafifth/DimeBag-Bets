@@ -10,7 +10,9 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import prettier from 'eslint-config-prettier'
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'coverage/**', 'node_modules/**'] },
+  // Never lint build output: `dist/` is the gitignored prod build; `docs/` holds the committed
+  // GitHub Pages build (minified bundles) alongside the project markdown — both are artifacts.
+  { ignores: ['dist/**', 'docs/**', 'coverage/**', 'node_modules/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
