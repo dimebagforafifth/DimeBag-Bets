@@ -126,15 +126,64 @@ export function parlayPrice(legs: SlipLeg[]): number {
   return parlayDecimal(legs.map((l) => l.price.decimal))
 }
 
-/** The correlated SAME-GAME-parlay price: combine the legs' locked true probabilities
- *  with the sport's correlation, re-apply the house margin, and never exceed the naive
- *  independent product (so correlation only ever shortens). See lib/odds/pricing.priceSgp. */
+/** A leg's lean on a comparable AXIS. Two legs only carry a real opposing relationship when they
+ *  share an axis: the SCORING axis (over = +1 high, under = −1 low) or the TEAM axis (home = +1,
+ *  away = −1). A leg sits on at most one axis; `legDirection` returns its scoring lean (the axis
+ *  that drives a negative-correlation total pair) or 0. */
+const SCORING_DIR: Readonly<Record<string, number>> = { over: 1, under: -1 }
+const TEAM_DIR: Readonly<Record<string, number>> = { home: 1, away: -1 }
+export function legDirection(leg: SlipLeg): number {
+  return SCORING_DIR[leg.side] ?? 0
+}
+
+/**
+ * The correlation sign for a pair of same-game legs. A NEGATIVE sign (which prices the parlay
+ * LONGER than independent) is only assigned when the two legs sit on the SAME axis and oppose —
+ * a 1st-half UNDER with a full-game OVER (both scoring), or two opposite team sides. Legs on
+ * DIFFERENT axes (e.g. an away moneyline + an over total) have no reliable opposing relationship,
+ * so they default to +1 (the house-safe, shortening side) rather than a spurious negative that
+ * would overpay the player.
+ */
+function pairCorrelationSign(a: SlipLeg, b: SlipLeg): number {
+  const sa = SCORING_DIR[a.side]
+  const sb = SCORING_DIR[b.side]
+  if (sa !== undefined && sb !== undefined) return sa === sb ? 1 : -1
+  const ta = TEAM_DIR[a.side]
+  const tb = TEAM_DIR[b.side]
+  if (ta !== undefined && tb !== undefined) return ta === tb ? 1 : -1
+  return 1 // cross-axis (or no clean axis): default to positive (shorten), never spuriously long
+}
+
+/** The SIGNED correlation for a same-game leg set: the sport's magnitude, signed by the net
+ *  pairwise axis agreement. All-aligned → +magnitude (price shorter); net-opposing on a shared
+ *  axis → −magnitude (price longer). */
+export function effectiveSgpCorrelation(legs: SlipLeg[]): number {
+  const mag = correlationForSport(legs[0]?.sport)
+  let sum = 0
+  let pairs = 0
+  for (let i = 0; i < legs.length; i++) {
+    for (let j = i + 1; j < legs.length; j++) {
+      sum += pairCorrelationSign(legs[i], legs[j])
+      pairs += 1
+    }
+  }
+  return pairs === 0 ? mag : (sum / pairs) * mag
+}
+
+/** The correlated SAME-GAME-parlay price: combine the legs' locked true probabilities with
+ *  the SIGNED same-game correlation, re-apply the house margin, cap at the 299-to-1 ceiling.
+ *  Same-direction legs (ρ ≥ 0) are also capped at the naive independent product (correlation
+ *  only shortens); opposing-direction legs (ρ < 0) skip that cap so the negatively-correlated
+ *  parlay prices LONGER than independent. See lib/odds/pricing.priceSgp. */
 export function sgpPrice(legs: SlipLeg[]): number {
   if (legs.length < 2) return legs[0]?.price.decimal ?? 1
   const trueProbs = legs.map((l) => l.trueProb ?? impliedProbability(l.price.american))
-  const rho = correlationForSport(legs[0]?.sport)
+  const rho = effectiveSgpCorrelation(legs)
   const independentDisplayDecimal = parlayDecimal(legs.map((l) => l.price.decimal))
-  return priceSgp(trueProbs, { rho, independentDisplayDecimal }).decimal
+  return priceSgp(trueProbs, {
+    rho,
+    ...(rho >= 0 ? { independentDisplayDecimal } : {}),
+  }).decimal
 }
 
 /** The combined price for a parlay slip: a correlated SGP price when every leg is on the

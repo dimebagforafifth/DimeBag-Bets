@@ -8,14 +8,8 @@
 
 import { formatMoney } from '../../games/shared/money.js'
 import { americanFromDecimal, formatAmerican } from './odds-format.js'
-import {
-  contradictoryLegs,
-  isSameGame,
-  relatedConflicts,
-  slipQuote,
-  type SlipLeg,
-  type SlipMode,
-} from './slip.js'
+import { isSameGame, slipQuote, type SlipLeg, type SlipMode } from './slip.js'
+import { validateSlip } from './sgp-rules.js'
 
 const QUICK = [1_000, 2_500, 10_000] // $10 / $25 / $100 in cents
 
@@ -48,15 +42,14 @@ export function BetSlip({
 }) {
   const effMode: SlipMode = legs.length >= 2 ? mode : 'single'
   const quote = slipQuote(legs, effMode, stakeCents)
-  const conflicts =
-    effMode === 'parlay'
-      ? [...new Set([...relatedConflicts(legs), ...contradictoryLegs(legs)])]
-      : []
+  // PART 1: validate the parlay BEFORE pricing/placing — surface blocks + flag offending legs.
+  const validation = effMode === 'parlay' ? validateSlip(legs) : null
+  const blocked = validation != null && !validation.ok
+  const conflictKeys = new Set(validation?.blocks.flatMap((b) => b.keys) ?? [])
   const sameGame = isSameGame(legs)
   const needsAccept = movedKeys.size > 0
   const overAvailable = quote.totalStakeCents > available
-  const canPlace =
-    legs.length > 0 && stakeCents > 0 && !overAvailable && conflicts.length === 0 && !needsAccept
+  const canPlace = legs.length > 0 && stakeCents > 0 && !overAvailable && !blocked && !needsAccept
 
   const maxStake =
     legs.length === 0 ? 0 : effMode === 'parlay' ? available : Math.floor(available / legs.length)
@@ -80,12 +73,15 @@ export function BetSlip({
       ) : (
         <>
           {legs.map((l) => (
-            <div key={l.key} className="bk-leg">
+            <div key={l.key} className={`bk-leg ${conflictKeys.has(l.key) ? 'is-conflict' : ''}`}>
               <div>
                 <div className="bk-leg-pick">{l.pick}</div>
                 <div className="bk-leg-sub">
                   {l.eventLabel}
                   {movedKeys.has(l.key) && <span className="bk-leg-moved"> · price changed</span>}
+                  {conflictKeys.has(l.key) && (
+                    <span className="bk-leg-conflict"> · can’t combine</span>
+                  )}
                 </div>
               </div>
               <span className="bk-leg-price">{formatAmerican(l.price.american)}</span>
@@ -179,9 +175,10 @@ export function BetSlip({
             </button>
           )}
 
-          {conflicts.length > 0 && (
+          {blocked && (
             <p className="bk-err">
-              Related or contradictory selections can’t be parlayed — switch to Singles.
+              {validation?.blocks[0]?.message} These selections can’t be combined — switch to
+              Singles.
             </p>
           )}
           {overAvailable && !error && (

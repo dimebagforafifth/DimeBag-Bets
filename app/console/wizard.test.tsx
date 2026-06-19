@@ -6,6 +6,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { getRtp, resetRtp } from '../edge-store.js'
 import { nativeRtp } from '../edge-config.js'
+import { bpsToRtp, clampEdgeBps, rtpToBps } from '../game-edge-config.js'
 import {
   getSettings,
   setDefaultCreditLimit,
@@ -55,9 +56,12 @@ describe('SetupWizard applies presets', () => {
     act(() => byText(/Apply/).click())
 
     const p = PRESETS.aggressive
-    // House edge applied to every adjustable game (real payout math via the edge store).
+    // House edge applied to every adjustable game (real payout math via the edge store). The
+    // preset RTP is now clamped into each game's PER-GAME edge band (PART 2): most games take
+    // 0.95 as-is, but a high-floor game (e.g. keno, min 15% edge) settles at its band floor.
     for (const key of adjustableGameKeys()) {
-      expect(getRtp(key, nativeRtp(key))).toBe(p.rtp) // 0.95
+      const expected = bpsToRtp(clampEdgeBps(key, rtpToBps(p.rtp)))
+      expect(getRtp(key, nativeRtp(key))).toBe(expected)
     }
     // Risk + operational settings applied.
     const s = getSettings()

@@ -1,0 +1,128 @@
+/* SGP Rules & Strictness panel — consumes the GLOBAL design tokens (app/theme.css). No
+   per-feature palette. */
+
+.sgpr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  color: var(--text);
+  font-family: var(--font-body);
+  max-width: 680px;
+}
+.sgpr-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sgpr-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--text-xl);
+  margin: 0;
+}
+.sgpr-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.sgpr-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sgpr-label {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+.sgpr-lock {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sgpr-hint {
+  margin: 0;
+  color: var(--faint);
+  font-size: var(--text-xs);
+}
+
+.sgpr-seg {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 3px;
+  width: fit-content;
+}
+.sgpr-seg-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.sgpr-seg-btn.is-on {
+  background: var(--gold);
+  color: #1a1408;
+}
+
+.sgpr-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.sgpr-step {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-lg);
+  cursor: pointer;
+}
+.sgpr-step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sgpr-step-val {
+  font-family: var(--font-num);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  min-width: 28px;
+  text-align: center;
+}
+.sgpr-step-cap {
+  color: var(--faint);
+  font-size: var(--text-xs);
+}
+
+.sgpr-matrix {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: var(--text-sm);
+}
+.sgpr-matrix tr + tr {
+  border-top: 1px solid var(--line);
+}
+.sgpr-pair {
+  padding: 10px 12px;
+  color: var(--text);
+}
+.sgpr-outcome {
+  padding: 10px 12px;
+  color: var(--red);
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}

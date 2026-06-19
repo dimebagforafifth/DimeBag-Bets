@@ -215,15 +215,18 @@ export function devig(rawAmericans: number[]): number[] {
 }
 
 /**
- * The JOINT probability of N positively-correlated legs from their TRUE (de-vigged)
- * marginals and a correlation factor ρ. Folds legs pairwise with the exact two-Bernoulli
- * identity  P(A∩B) = pA·pB + ρ·√(pA(1−pA)·pB(1−pB))  and clamps each step to the Fréchet
- * bounds [max(0, pA+pB−1), min(pA,pB)], so the result is always a valid joint probability
- * that is ≥ the independent product for ρ ≥ 0 (and never exceeds any single marginal).
+ * The JOINT probability of N correlated legs from their TRUE (de-vigged) marginals and a
+ * correlation factor ρ. Folds legs pairwise with the exact two-Bernoulli identity
+ * P(A∩B) = pA·pB + ρ·√(pA(1−pA)·pB(1−pB))  and clamps each step to the Fréchet bounds
+ * [max(0, pA+pB−1), min(pA,pB)], so the result is always a valid joint probability. For
+ * ρ ≥ 0 the joint sits ≥ the independent product (legs co-occur → SGP shortens); for ρ < 0
+ * (opposing-direction legs, e.g. a 1st-half UNDER with a full-game OVER) the joint sits
+ * BELOW the product, so the fair SGP price LENGTHENS — the negative-correlation case books
+ * price longer. ρ is clamped to [−0.95, 0.95].
  */
 export function correlatedJoint(probs: number[], rho: number): number {
   if (probs.length === 0) return 1
-  const r = clamp(rho, 0, 0.95)
+  const r = clamp(rho, -0.95, 0.95)
   let joint = clamp(probs[0], 0, 1)
   for (let i = 1; i < probs.length; i++) {
     const p = clamp(probs[i], 0, 1)
@@ -253,15 +256,17 @@ export interface SgpQuote {
 /**
  * Price a same-game parlay from its legs' TRUE (de-vigged) marginal probabilities:
  * joint-with-correlation → re-apply ONE house margin → cap. `independentDisplayDecimal`
- * (the naive product of the legs' already-margined display prices) is an upper safety
- * rail — the SGP price is never MORE generous than pricing the legs independently, so
- * correlation can only ever SHORTEN the price, never lengthen it.
+ * (the naive product of the legs' already-margined display prices) is an OPTIONAL upper
+ * safety rail: when passed (the same-direction case), the SGP price is never MORE generous
+ * than the independent legs, so positive correlation can only SHORTEN. Omit it for the
+ * negative-correlation (opposing-direction) case, where the fair joint legitimately prices
+ * LONGER than independent. ρ may be negative (clamped to [−0.95, 0.95]).
  */
 export function priceSgp(
   trueProbs: number[],
   opts: { rho?: number; margin?: number; independentDisplayDecimal?: number } = {},
 ): SgpQuote {
-  const rho = clamp(opts.rho ?? DEFAULT_SGP_CORRELATION, 0, 0.95)
+  const rho = clamp(opts.rho ?? DEFAULT_SGP_CORRELATION, -0.95, 0.95)
   const independentProb = trueProbs.reduce((acc, p) => acc * clamp(p, 0, 1), 1)
   const joint = correlatedJoint(trueProbs, rho)
   const safeJoint = joint > 0 ? joint : independentProb > 0 ? independentProb : 1
