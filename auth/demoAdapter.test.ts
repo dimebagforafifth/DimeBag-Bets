@@ -19,10 +19,16 @@ describe('demo auth adapter', () => {
 
   it('signs up a new identity and rejects a duplicate username', async () => {
     const a = createDemoAdapter()
-    const s = await a.signUp('NewUser', 'pw', 'New User')
-    expect(s.user.displayName).toBe('New User')
-    expect(s.user.username).toBe('newuser') // normalised (lowercased)
+    const r = await a.signUp('NewUser', 'pw', 'New User')
+    // The demo has no email step, so a sign-up always returns a live session.
+    if (!('session' in r)) throw new Error('expected an immediate session in demo mode')
+    expect(r.session.user.displayName).toBe('New User')
+    expect(r.session.user.username).toBe('newuser') // normalised (lowercased)
     await expect(a.signUp('newuser', 'pw')).rejects.toThrow(/already taken/i)
+  })
+
+  it('rejects Google OAuth (needs the Supabase backend)', async () => {
+    await expect(createDemoAdapter().signInWithOAuth('google')).rejects.toThrow(/Supabase/i)
   })
 
   it('signs out and stays signed out (no auto re-login)', async () => {

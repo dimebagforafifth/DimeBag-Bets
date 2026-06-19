@@ -105,6 +105,7 @@ export function CrashGame({
   const startRef = useRef(0)
   const rafRef = useRef(0)
   const lastTickRef = useRef(0) // highest climb "rung" we've sounded this flight
+  const liveRef = useRef(1) // the exact multiplier last painted this frame (what the player sees)
 
   const running = game?.status === 'active'
   const ended = game != null && game.status !== 'active'
@@ -155,6 +156,7 @@ export function CrashGame({
       lastTickRef.current = rung
       play('tick', { step: rung })
     }
+    liveRef.current = m
     setLive(m)
     rafRef.current = requestAnimationFrame(tick)
   }
@@ -183,6 +185,7 @@ export function CrashGame({
       setCommitment(commit)
       gameRef.current = g
       setGame(g)
+      liveRef.current = 1
       setLive(1)
       lastTickRef.current = 0
       onBalanceChange()
@@ -200,7 +203,12 @@ export function CrashGame({
   function manualCash() {
     const g = gameRef.current
     if (!g || g.status !== 'active') return
-    const m = multiplierAt((performance.now() - startRef.current) * speedRef.current)
+    // Cash out at the multiplier the player is actually looking at — the value the
+    // last animation frame painted (liveRef) — not a fresh recompute at click time.
+    // Recomputing advanced the multiplier a few ms past what was on screen, so the
+    // settled value jittered above the number the player clicked. The painted value
+    // is always a valid climbing frame (< crashPoint, or tick would have crashed it).
+    const m = liveRef.current
     if (m <= 1 || m >= g.crashPoint) return
     cancelAnimationFrame(rafRef.current)
     cashOut(account, g, m)

@@ -85,6 +85,12 @@
   min-height: 22px;
   justify-content: flex-end;
 }
+/* push pill (exact tie — stake returned); pairs with the shared .pill/.pill-win/
+   .pill-loss. Neutral amber: neither a win (green) nor a loss (red). */
+.pill-push {
+  color: var(--accent, #f5a524);
+  border-color: rgba(245, 165, 36, 0.4);
+}
 
 .dice-board {
   padding: 76px 11px 0; /* top room for the dice cube to float above the bar */
@@ -225,6 +231,11 @@
 .roll-flag.is-loss {
   --rollc: var(--red);
   --rollglow: rgba(237, 65, 99, 0.45);
+}
+/* a push (exact tie) returns the stake — neutral amber, neither win nor loss */
+.roll-flag.is-push {
+  --rollc: var(--accent, #f5a524);
+  --rollglow: rgba(245, 165, 36, 0.45);
 }
 @keyframes roll-flag-in {
   0% {

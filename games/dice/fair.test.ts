@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_DICE_CONFIG,
   effectiveTarget,
+  gradeRoll,
   isWin,
   multiplierFor,
   MAX_WIN_CHANCE,
@@ -70,6 +71,30 @@ describe('isWin', () => {
     expect(isWin(40, 50, 'over')).toBe(false)
     expect(isWin(40, 50, 'under')).toBe(true)
     expect(isWin(60, 50, 'under')).toBe(false)
+  })
+})
+
+describe('gradeRoll (win / push / loss)', () => {
+  it('grades strictly past the target a win and short of it a loss', () => {
+    expect(gradeRoll(60, 50, 'over')).toBe('win')
+    expect(gradeRoll(40, 50, 'over')).toBe('loss')
+    expect(gradeRoll(40, 50, 'under')).toBe('win')
+    expect(gradeRoll(60, 50, 'under')).toBe('loss')
+  })
+
+  it('grades an exact tie (roll on the effective target) a push, both directions', () => {
+    // effectiveTarget(50, *) === 50, so a roll of exactly 50 sits on the boundary.
+    expect(gradeRoll(50, 50, 'over')).toBe('push')
+    expect(gradeRoll(50, 50, 'under')).toBe('push')
+    // A tie is never a win (the old behavior graded it a loss instead).
+    expect(isWin(50, 50, 'over')).toBe(false)
+    expect(isWin(50, 50, 'under')).toBe(false)
+  })
+
+  it('grades the tie against the clamped (effective) target, not the raw one', () => {
+    // over 0.5 prices/settles at the clamped target 2 — a roll of exactly 2 ties.
+    expect(effectiveTarget(0.5, 'over')).toBeCloseTo(2, 10)
+    expect(gradeRoll(2, 0.5, 'over')).toBe('push')
   })
 })
 

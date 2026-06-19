@@ -48,6 +48,28 @@
   --radius-lg: 18px;
   --gap: 16px;
 
+  /* ---- elevation: ONE systematic shadow ramp (was ad-hoc per component) ----
+     Layered (ambient + key) shadows tuned for a deep graphite canvas — soft, never
+     harsh. Use --elev-1 for resting cards, -2 for hover/raised, -3 for popovers/modals.
+     A consistent ramp is what reads as "premium" vs. random box-shadows. */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 2px 6px -2px rgba(0, 0, 0, 0.28);
+  --elev-2: 0 2px 4px rgba(0, 0, 0, 0.34), 0 10px 22px -10px rgba(0, 0, 0, 0.5);
+  --elev-3: 0 6px 14px rgba(0, 0, 0, 0.38), 0 22px 48px -16px rgba(0, 0, 0, 0.62);
+  /* a soft gold lift for the hovered primary surface (CTAs, focused tiles) */
+  --elev-gold: 0 8px 24px -10px rgba(var(--gold-glow), 0.55);
+  /* a hairline top-highlight that gives flat dark surfaces a lit edge */
+  --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /* ---- focus ring: ONE accessible ring used everywhere (was missing) ---- */
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px rgba(var(--gold-glow), 0.7);
+
+  /* ---- motion: shared durations + easing so every transition has one rhythm ---- */
+  --dur-fast: 0.13s;
+  --dur: 0.18s;
+  --dur-slow: 0.28s;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1); /* entering / hover */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* exiting */
+
   /* ---- spacing scale ---- */
   --space-1: 4px;
   --space-2: 8px;
@@ -200,6 +222,28 @@ body {
   letter-spacing: 0.005em;
 }
 
+/* ONE accessible keyboard-focus ring across every interactive element (was relying on
+   the browser default, which is invisible on dark surfaces). Mouse clicks don't show it
+   (:focus-visible), keyboard nav does — meeting the contrast + focus-state guidelines. */
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+/* Respect the OS "reduce motion" setting — drop transitions/animations to a blink so the
+   UI is still responsive but never moves for users who asked it not to. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .app {
   min-height: 100%;
   display: flex;
@@ -334,17 +378,23 @@ body {
   border: 1px solid var(--line);
   cursor: pointer;
   overflow: hidden;
+  /* a resting elevation + lit top edge gives the tile real depth at rest (not a flat
+     rectangle); hover adds the gold lift. */
+  box-shadow: var(--elev-1), var(--sheen);
   transition:
-    transform 0.16s cubic-bezier(0.2, 0.7, 0.3, 1),
-    border-color 0.18s ease,
-    box-shadow 0.2s ease;
+    transform var(--dur) var(--ease-out),
+    border-color var(--dur) ease,
+    box-shadow var(--dur-slow) var(--ease-out);
 }
 /* one quiet, gold response on hover — a small lift + a soft single glow, not a
    loud multicolor pop (CLAUDE.md §2: minimal purposeful motion). --accent is gold. */
 .game-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
-  box-shadow: 0 10px 26px -16px color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: var(--elev-2), var(--elev-gold), var(--sheen);
+}
+.game-card:active {
+  transform: translateY(-1px);
 }
 /* the art tile: the game's icon over an accent-tinted gradient */
 .card-art {

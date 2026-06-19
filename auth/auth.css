@@ -1,35 +1,48 @@
 .auth-screen {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: var(--bg);
+  /* a deep graphite canvas with one soft gold glow rising from below — gives the
+     sign-in real atmosphere instead of a flat fill (brand-forward first impression). */
+  background:
+    radial-gradient(90% 60% at 50% 112%, rgba(var(--gold-glow), 0.16), transparent 70%),
+    radial-gradient(70% 50% at 50% -10%, color-mix(in srgb, var(--surface-2) 80%, transparent), transparent 70%),
+    var(--bg);
 }
 .auth-card {
   width: 100%;
-  max-width: 360px;
+  max-width: 372px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 88%, #000) 100%);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 28px 24px;
+  border-radius: var(--radius-lg);
+  padding: 30px 26px;
+  /* lifted off the canvas with the shared modal-class elevation + a lit top edge */
+  box-shadow: var(--elev-3), var(--sheen);
+  /* a hairline gold accent across the very top of the card */
+  border-top: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
 }
 .auth-brand {
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: -0.3px;
+  font-family: var(--font-head);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 .auth-brand-dot {
-  color: var(--accent, #3fb98a);
+  color: var(--gold);
   margin: 0 1px;
 }
 .auth-title {
   margin: 4px 0 0;
-  font-size: 22px;
-  font-weight: 800;
+  font-family: var(--font-head);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 .auth-sub {
   margin: 0 0 6px;
@@ -47,13 +60,17 @@
   border: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--text);
-  border-radius: 8px;
-  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
   font-size: 14px;
+  transition:
+    border-color var(--dur) ease,
+    box-shadow var(--dur) ease;
 }
 .auth-field input:focus {
   outline: none;
-  border-color: var(--muted);
+  border-color: color-mix(in srgb, var(--gold) 60%, var(--line));
+  box-shadow: 0 0 0 3px rgba(var(--gold-glow), 0.16);
 }
 .auth-error {
   margin: 0;
@@ -64,17 +81,70 @@
 .auth-submit {
   margin-top: 4px;
   border: none;
-  border-radius: 9px;
-  padding: 11px;
+  border-radius: var(--radius-sm);
+  padding: 12px;
   font-size: 14px;
   font-weight: 800;
+  letter-spacing: 0.2px;
   cursor: pointer;
-  color: #06150f;
-  background: var(--accent, #3fb98a);
+  color: #14171c; /* graphite text on gold, matching the in-app CTA */
+  background: var(--gold);
+  transition:
+    background var(--dur) ease,
+    box-shadow var(--dur) ease,
+    transform 0.05s ease;
+}
+.auth-submit:hover:not(:disabled) {
+  background: var(--gold-bright);
+  box-shadow: var(--elev-gold);
+}
+.auth-submit:active:not(:disabled) {
+  transform: translateY(1px);
 }
 .auth-submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* "or" divider between password and OAuth */
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 2px 0;
+}
+.auth-or::before,
+.auth-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+/* OAuth (Google) button — neutral surface with the provider mark */
+.auth-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--surface-2);
+}
+.auth-oauth:hover {
+  border-color: var(--muted);
+}
+.auth-oauth:disabled {
   opacity: 0.6;
   cursor: default;
+}
+.auth-oauth-ico {
+  flex: 0 0 auto;
 }
 .auth-switch {
   border: none;

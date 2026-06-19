@@ -69,8 +69,27 @@ export function multiplierFor(chance: number, config: DiceHouseConfig = DEFAULT_
  * Did this roll win? Settles against the effective (clamped) target so the win
  * condition always matches the priced `winChance` — closing the extreme-target
  * mismatch where a clamped chance was paid against the raw, unclamped target.
+ *
+ * Note: an exact tie (roll === effective target) is NOT a win here — see
+ * `gradeRoll`, which classifies that as a push (stake returned).
  */
 export function isWin(roll: number, target: number, direction: DiceDirection): boolean {
   const t = effectiveTarget(target, direction)
   return direction === 'over' ? roll > t : roll < t
+}
+
+/** The three settlement outcomes a round can land on. */
+export type DiceOutcome = 'win' | 'push' | 'loss'
+
+/**
+ * Grade a roll three ways against the effective (clamped) target. An exact tie —
+ * the roll landing on the boundary — is a PUSH: the stake is returned, per the
+ * house rules, rather than lost. Anything strictly past the target wins; anything
+ * short of it loses. Both the roll and the target are 2-decimal values in [0,100),
+ * so an exact equality is a real (if rare) outcome, not a floating-point artifact.
+ */
+export function gradeRoll(roll: number, target: number, direction: DiceDirection): DiceOutcome {
+  const t = effectiveTarget(target, direction)
+  if (roll === t) return 'push'
+  return (direction === 'over' ? roll > t : roll < t) ? 'win' : 'loss'
 }

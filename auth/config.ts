@@ -52,3 +52,18 @@ export function authEmailDomain(source?: EnvSource): string {
     DEFAULT_AUTH_EMAIL_DOMAIN
   )
 }
+
+/**
+ * Where the provider sends the browser back after an OAuth round-trip (Google → us).
+ * Prefers an explicit `SUPABASE_AUTH_REDIRECT_URL` (set this to the deployed origin in
+ * production — and add the exact URL to the Supabase dashboard's allowed redirect list),
+ * else the current page origin at runtime, else undefined (tests / non-browser). The
+ * callback lands back on the app, where `getSession()` reads the session from the URL.
+ */
+export function oauthRedirectUrl(source?: EnvSource): string | undefined {
+  const pick = (name: string) => (source ? source[name] : readAmbient(name))
+  const explicit = pick('SUPABASE_AUTH_REDIRECT_URL') || pick('VITE_SUPABASE_AUTH_REDIRECT_URL')
+  if (explicit) return explicit
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin
+  return undefined
+}

@@ -10,7 +10,7 @@
  */
 
 import { createLocalStore, persistedDoc, type Doc } from '../persistence/index.js'
-import type { AuthAdapter, AuthUser, Session } from './types.js'
+import type { AuthAdapter, AuthUser, Session, SignUpResult } from './types.js'
 
 const store = createLocalStore({ namespace: 'dimebag' })
 
@@ -80,7 +80,7 @@ export function createDemoAdapter(): AuthAdapter {
       return session
     },
 
-    async signUp(username, password, displayName) {
+    async signUp(username, password, displayName): Promise<SignUpResult> {
       const u = normUsername(username)
       if (!u || !password) throw new Error('Username and password are required')
       const creds = CREDS.load()
@@ -93,7 +93,15 @@ export function createDemoAdapter(): AuthAdapter {
       BOOTSTRAPPED.save(true)
       const session = sessionFor(cred)
       SESSION.save(session)
-      return session
+      // The demo has no email step — a sign-up is always immediately in.
+      return { session }
+    },
+
+    async signInWithOAuth() {
+      // OAuth (Google) needs the real Supabase backend; there's no provider in the local
+      // demo. The UI hides the button in demo mode (canUseOAuth=false), so this is only a
+      // safety net if it's ever called directly.
+      throw new Error('Google sign-in needs the Supabase backend (set SUPABASE_URL + keys)')
     },
 
     async signOut() {

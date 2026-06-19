@@ -10,6 +10,7 @@ import {
   winChance,
   type DiceDirection,
   type DiceHouseConfig,
+  type DiceOutcome,
   type DiceRound,
 } from '../index.js'
 import { fairnessClient } from '../../shared/fair.js'
@@ -51,7 +52,7 @@ export function DiceGame({
   const nonceRef = useRef(0)
 
   const [round, setRound] = useState<DiceRound | null>(null)
-  const [history, setHistory] = useState<{ roll: number; won: boolean }[]>([])
+  const [history, setHistory] = useState<{ roll: number; outcome: DiceOutcome }[]>([])
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<'manual' | 'auto'>('manual')
   const [autoOn, setAutoOn] = useState(false)
@@ -88,10 +89,11 @@ export function DiceGame({
         config: houseConfig,
       })
       setRound(r)
-      setHistory((h) => [{ roll: r.roll, won: r.won }, ...h].slice(0, 16))
+      setHistory((h) => [{ roll: r.roll, outcome: r.outcome }, ...h].slice(0, 16))
       onBalanceChange()
       play('dice') // a soft tumble of the dice, not a hard whoosh
-      play(r.won ? 'win' : 'lose')
+      // A push returns the stake — neither a win nor a loss; sound it neutrally.
+      play(r.outcome === 'win' ? 'win' : r.outcome === 'push' ? 'draw' : 'lose')
       return true
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -201,7 +203,7 @@ export function DiceGame({
       <section className="dice-stage">
         <div className="dice-history">
           {history.map((h, i) => (
-            <span key={i} className={`pill ${h.won ? 'pill-win' : 'pill-loss'}`}>
+            <span key={i} className={`pill pill-${h.outcome}`}>
               {h.roll.toFixed(2)}
             </span>
           ))}
@@ -211,7 +213,7 @@ export function DiceGame({
           target={target}
           direction={direction}
           roll={round?.roll ?? null}
-          won={round?.won}
+          outcome={round?.outcome ?? null}
           onTarget={(t) => {
             setTarget(t)
             setRound(null)
@@ -253,13 +255,13 @@ function Board({
   target,
   direction,
   roll,
-  won,
+  outcome,
   onTarget,
 }: {
   target: number
   direction: DiceDirection
   roll: number | null
-  won?: boolean
+  outcome?: DiceOutcome | null
   onTarget: (t: number) => void
 }) {
   const pct = (n: number) => `${Math.max(0, Math.min(100, n))}%`
@@ -274,7 +276,10 @@ function Board({
         <span className="zone zone-lose" style={{ width: pct(target) }} />
         <span className="zone zone-win" style={{ left: pct(target), right: 0 }} />
         {roll != null && (
-          <span className={`roll-flag ${won ? 'is-win' : 'is-loss'}`} style={{ left: pct(roll) }}>
+          <span
+            className={`roll-flag ${outcome === 'win' ? 'is-win' : outcome === 'push' ? 'is-push' : 'is-loss'}`}
+            style={{ left: pct(roll) }}
+          >
             <span className="roll-flag-value">{roll.toFixed(2)}</span>
           </span>
         )}

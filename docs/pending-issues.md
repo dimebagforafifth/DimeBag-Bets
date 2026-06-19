@@ -49,16 +49,16 @@ See `fixed-issues.md` for what has already been resolved.
 
 ---
 
-## Dice — exact tie settles as a loss (no push)
+## Dice — exact tie settles as a loss (no push) — ✅ FIXED (2026-06)
 
 - **Severity:** Low
-- **Where:** `games/dice/fair.ts` (`isWin`)
-- **Problem:** `isWin` uses strict `>` / `<`, so an exact tie (`roll === target`
-  on the 0.01 grid) loses with no push. CLAUDE.md §4 says exact ties should push
-  (stake returned). Probability is ~1/10000 per round and it favors the house
-  slightly beyond the stated edge.
-- **Decision needed:** either document "ties lose" as a deliberate house rule, or
-  add a push path (return the stake, no figure change) to match §4.
+- **Where:** `games/dice/fair.ts`, `games/dice/engine.ts`, `games/dice/ui/DiceGame.tsx`
+- **Was:** `isWin` used strict `>` / `<`, so an exact tie (`roll === target`) lost
+  with no push, against CLAUDE.md §4.
+- **Fix shipped:** added `gradeRoll()` (three-way win/push/loss) + a `DiceOutcome`
+  type; `playDice` now settles a tie as `'push'` through core (stake returned, hold
+  released). The board + history pill + sound reflect the push. Covered by new tests
+  in `fair.test.ts` / `engine.test.ts`.
 
 ---
 
@@ -100,18 +100,16 @@ See `fixed-issues.md` for what has already been resolved.
 
 ---
 
-## Crash `manualCash` recomputes the multiplier independently of the tick
+## Crash `manualCash` recomputes the multiplier independently of the tick — ✅ FIXED (2026-06)
 
 - **Severity:** Low
 - **Where:** `games/crash/ui/CrashGame.tsx` (`manualCash`)
-- **Problem:** `manualCash` reads its own `multiplierAt(performance.now() - …)`
-  rather than the value the last frame computed. A click in the exact frame the
-  curve crosses the crash point resolves based on a sub-millisecond clock read.
-  The guard `m >= crashPoint` makes it safe (no illegal cash-out), but the
-  outcome near the crash point is jitter-dependent.
-- **Intended fix:** drive the displayed `live` value and the manual/auto/crash
-  decisions from a single per-frame `m`, and have `manualCash` act on the latest
-  ticked state (reuse `frameDecision`).
+- **Was:** `manualCash` recomputed `multiplierAt(performance.now() - …)` at click
+  time rather than using the value the last frame painted, so the settled multiplier
+  jittered a few ms past what the player saw.
+- **Fix shipped:** the animation loop writes each frame's multiplier to a `liveRef`;
+  `manualCash` now cashes out at `liveRef.current` — exactly the value on screen.
+  What-you-see-is-what-you-get. (`liveRef` reset to 1 at round start.)
 
 ---
 
@@ -124,6 +122,60 @@ See `fixed-issues.md` for what has already been resolved.
   config, and a CI workflow running `npm test` + `npm run typecheck` +
   `npm run build` on PRs — useful guardrails for the two-person, shared-`core`
   workflow (CLAUDE.md §9).
+
+---
+
+## Full-repo review (2026-06) — security, auth & follow-ups
+
+A line-by-line review of the money paths + a pattern audit of the whole repo. The
+codebase is high quality (0 real `any`, 0 XSS/`eval`, clean timer teardown, integer-cents
+everywhere, all money through `core`). Findings + this session's work below.
+
+### Shipped this session
+
+- **Server-authoritative grading (H1, money path).** `games/grade.ts` (`gradeBet`) derives
+  the outcome + payout multiplier on the SERVER from the revealed seed using each game's
+  published math; `api/resolve-bet.ts` (`handleResolveBet`) reveals + grades, edge-portable
+  like `api/fairness.ts`; migration `0007`'s service-role `service_resolve_wager` settles it.
+  **Covers dice + limbo; crash via `resolveCrash`.** TODO(api): extend `gradeBet` to the
+  remaining games (mines/plinko/keno/etc.) and wire the client place→resolve to post here
+  instead of calling `resolveWager` with a client multiplier.
+- **Multi-user authorization (migration `0007_member_auth.sql`).** Adds `book_members`
+  (auth user → book/role/member) + `_assert_operator`, and re-gates the operator-only money
+  RPCs (`grant_bonus`, `adjust_balance`, `settle_week`, `resolve_wager`). **Backward-compatible:**
+  a single-operator book (no memberships) falls back to ownership, so today's deployment is
+  unchanged. TODO(api): populate `book_members` at login (from the org claim) and set the
+  tenant claim before individual player logins go live.
+- **OAuth + Google sign-in + email verification.** `auth/supabaseAdapter.ts` now does
+  `signInWithOAuth({provider:'google'})`, maps `email`/`email_confirmed_at`, and reports a
+  pending-verification state from `signUp`; `auth/Login.tsx` shows a Google button + a
+  "check your email" screen; client created with `detectSessionInUrl` for the callback.
+  TODO(ops): in the Supabase dashboard — enable the Google provider (client id/secret), add
+  the deployed origin to the allowed redirect URLs (`SUPABASE_AUTH_REDIRECT_URL`), turn on
+  email confirmation, and customize the confirmation email template.
+
+### ⚠️ Pre-player-auth security checklist (before any individual player logins)
+
+1. **Populate `book_members`** so `_assert_operator` enforces roles (else a self-hosted book
+   with memberships could still mis-scope). Until then the single-operator fallback holds.
+2. **Route player resolves through the server grader** (`api/resolve-bet.ts` →
+   `service_resolve_wager`), never `resolve_wager` with a client multiplier.
+3. **Set the tenant JWT claim at login** (`active_tenant()` in 0004) and add the multi-user
+   read policies' membership rows.
+4. **Rotate leaked secrets** (SGO API key, any dev GitHub token seen in transcripts).
+5. **Confirm The Odds API terms** allow a non-real-money app before enabling live odds.
+
+### Open code findings (not yet fixed)
+
+- **External feed not schema-validated** — `sportsdata/vendors/theOddsApi.ts` casts vendor
+  JSON `as ApiEvent[]` / `as OddsApiScoreEvent[]` with no runtime validation (`Number(score)`
+  is the only guard). Add a validation layer (e.g. zod) at the network boundary before live
+  odds — malformed/hostile feed data could propagate `NaN`/`undefined` into pricing.
+- **`org.ts:738` weekly roll-up bypasses core + ledger** — `parent.balance += child.balance`
+  directly (zero-sum but unaudited). Route through `adjustBalance` / the ledger.
+- **`regradeTicket` cap recomputation** (`sportsbook/engine.ts`) — uses the CURRENT
+  `account.maxPayout` for both the prior and corrected effect; a cap changed between grade and
+  re-grade computes the back-out against the wrong cap.
 
 ---
 
