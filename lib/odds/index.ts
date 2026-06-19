@@ -100,3 +100,43 @@ export {
 } from './schedule.js'
 export type { PollCycleResult, RunPollCycleOptions, Scheduler } from './schedule.js'
 export { createRestOddsCache } from './rest-cache.js'
+
+/* ----------------------- pricing pipeline (math half) --------------------- */
+// The configurable de-vig + margin engine + its config (pricing_config). NOTE: the engine's
+// `devig` and `applyMargin` are NOT re-exported here — they would shadow the legacy
+// `devig(americans)` / `applyMargin(Price, margin)` above. Lane B + callers import those two
+// from './devig.js' and './pricing-engine.js' directly:
+//   import { devig } from '../lib/odds/devig.js'
+//   import { applyMargin, priceMarket } from '../lib/odds/pricing-engine.js'  // post-margin hook = Lane B's gate
+export { DEVIG_METHODS, DEFAULT_DEVIG_METHOD } from './devig.js'
+export type { DevigMethod } from './devig.js'
+export {
+  PRICING_POSTURE_PRESETS,
+  effectiveSettings,
+  bookHold,
+  priceMarket,
+} from './pricing-engine.js'
+export type {
+  PricePosture,
+  MarginSettings,
+  PricedOdd,
+  PipelineContext,
+  PostMarginHook,
+  PriceMarketOptions,
+} from './pricing-engine.js'
+export {
+  DEFAULT_PRICING_ROW,
+  toMarginSettings,
+  applyPosturePreset,
+  resolvePricingRow,
+  resolvePricingConfig,
+  resolveMarginSettings,
+  getPricingRows,
+  getPricingConfigVersion,
+  subscribePricingConfig,
+  upsertPricingRow,
+  removePricingRow,
+  setPosture,
+  __resetPricingConfig,
+} from './pricing-config.js'
+export type { PricingConfigRow } from './pricing-config.js'
