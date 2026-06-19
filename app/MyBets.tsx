@@ -4,6 +4,7 @@ import type { Member } from '../org/index.js'
 import { subscribeBookLedger, getBookLedger } from './book-ledger.js'
 import { summarize, byGame, isSportsbook, toBetRows, SIDE_LABEL, type BetRow, type Side } from './ledger-stats.js'
 import { formatMoney } from '../games/shared/money.js'
+import { useIsBalanceMode } from './economy-mode.js'
 import './ledger.css'
 import './mybets.css'
 
@@ -34,6 +35,10 @@ export function MyBets({ account, player }: { account: Account; player: Member }
 
   const stats = summarize(shown)
   const games = byGame(shown)
+  // In balance (wallet) mode there's no credit line and no weekly reset, so the wallet reads
+  // differently: "Available balance" instead of credit-backed "Balance", a standing that carries
+  // forward instead of a weekly figure, and no credit row.
+  const balanceMode = useIsBalanceMode()
 
   return (
     <div className="mybets">
@@ -44,22 +49,33 @@ export function MyBets({ account, player }: { account: Account; player: Member }
         </p>
       </div>
 
-      {/* Lead with Balance (what you can bet now); the week's standing, what's at
-          risk, and the credit line back it up (CLAUDE.md §3). */}
+      {/* Lead with what you can bet now; the standing, and what's at risk back it up. In credit
+          mode the weekly figure + the credit line also show (CLAUDE.md §3); in balance mode the
+          wallet carries forward and there's no credit line. */}
       <div className="mybets-figure">
         <Figure
-          label="Balance"
+          label={balanceMode ? 'Available balance' : 'Balance'}
           value={formatMoney(availableToWager(account))}
-          hint="What you can bet right now"
+          hint={balanceMode ? 'Credits you can wager' : 'What you can bet right now'}
         />
         <Figure
-          label="This week"
+          label={balanceMode ? 'Wallet' : 'This week'}
           value={formatMoney(account.balance)}
           tone={account.balance > 0 ? 'win' : account.balance < 0 ? 'loss' : undefined}
-          hint={account.balance < 0 ? 'Down — you owe the book' : account.balance > 0 ? 'Up — the book owes you' : 'Even this week'}
+          hint={
+            balanceMode
+              ? 'Your standing — carries forward'
+              : account.balance < 0
+                ? 'Down — you owe the book'
+                : account.balance > 0
+                  ? 'Up — the book owes you'
+                  : 'Even this week'
+          }
         />
         <Figure label="At risk" value={formatMoney(account.pending)} hint="Stakes on open bets" />
-        <Figure label="Credit" value={formatMoney(account.creditLimit)} hint="How far you can run down" />
+        {!balanceMode && (
+          <Figure label="Credit" value={formatMoney(account.creditLimit)} hint="How far you can run down" />
+        )}
       </div>
 
       {/* by side of the house — at a glance, is the casino or the sportsbook up? */}

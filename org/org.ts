@@ -9,7 +9,7 @@
  */
 
 import type { Account } from '../core/index.js'
-import { settleWeek } from '../core/index.js'
+import { settleWeek, getEconomyMode } from '../core/index.js'
 import type { Member, MemberProfile, Org, Role } from './types.js'
 import {
   computeCommission,
@@ -721,6 +721,12 @@ export function settleOrgWeek(org: Org, opts: { carryover?: boolean } = {}): Set
   const distribution = agentDistribution(org)
   const statement = withCommission(settlementStatement(org), distribution)
   if (opts.carryover) return statement // soft close: record standings; advance/collect nothing
+
+  // BALANCE MODE (§3): there's no credit line and no weekly collect — a "settlement" is a P&L
+  // SNAPSHOT plus commission/rev-share accrual ONLY. It produces no collect/pay figure and
+  // resets nothing; balances persist continuously into the next period. So return the same
+  // reporting statement without rolling up, advancing redline carryover, or zeroing the book.
+  if (getEconomyMode() === 'balance') return statement
 
   // The week is collected: advance each redline agent's make-up carryover for next week.
   for (const line of distribution) {

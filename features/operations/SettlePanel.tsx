@@ -17,11 +17,15 @@ import {
   subscribeSettings,
 } from '../../app/settings-store.js'
 import { PanelShell } from './shared.js'
+import { useIsBalanceMode } from '../../app/economy-mode.js'
 
 const fmtDate = (ms: number): string => (ms === 0 ? '—' : new Date(ms).toLocaleDateString())
 
 export function SettlePanel({ onBack }: { onBack: () => void }) {
   useSyncExternalStore(subscribeSettings, getSettingsVersion)
+  // In balance mode a "settle" collects nothing and resets nothing — it's a P&L snapshot +
+  // commission accrual, and balances carry forward (CLAUDE.md §3).
+  const balanceMode = useIsBalanceMode()
   const [carryover, setCarryover] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [done, setDone] = useState<{ count: number; net: number; carried: boolean } | null>(null)
@@ -48,12 +52,19 @@ export function SettlePanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Square up the book for the period — records the sheet, then resets figures (or carries
-          them forward).
+          {balanceMode
+            ? 'Snapshot the period — records the P&L sheet + commission. Balance mode collects nothing and resets nothing; balances carry forward.'
+            : 'Square up the book for the period — records the sheet, then resets figures (or carries them forward).'}
         </p>
       </header>
 
       <section className="feat-card" aria-label="Settle period">
+        {balanceMode && (
+          <p className="feat-empty">
+            Balance mode: no weekly collect/pay. This records a P&amp;L snapshot and the commission
+            accrual; every wallet persists into the next period.
+          </p>
+        )}
         <dl className="feat-defs">
           <dt>Status</dt>
           <dd className={due ? 'feat-down' : ''}>
@@ -82,7 +93,12 @@ export function SettlePanel({ onBack }: { onBack: () => void }) {
           <div className="feat-actions">
             <span className="feat-sub">
               This records the sheet and{' '}
-              {carryover ? 'carries figures forward' : 'resets every figure to zero'}. Confirm?
+              {balanceMode
+                ? 'leaves every wallet in place (balance mode collects nothing)'
+                : carryover
+                  ? 'carries figures forward'
+                  : 'resets every figure to zero'}
+              . Confirm?
             </span>
             <button className="feat-btn feat-btn-primary" onClick={run}>
               Yes, settle now
@@ -95,9 +111,9 @@ export function SettlePanel({ onBack }: { onBack: () => void }) {
 
         {done && (
           <p className="feat-saved">
-            Settled {done.count} account{done.count === 1 ? '' : 's'} · book net{' '}
+            {balanceMode ? 'Snapshot recorded' : 'Settled'} {done.count} account{done.count === 1 ? '' : 's'} · book net{' '}
             {formatMoney(done.net)} ·{' '}
-            {done.carried ? 'figures carried forward' : 'figures reset to zero'}.
+            {balanceMode ? 'wallets persist' : done.carried ? 'figures carried forward' : 'figures reset to zero'}.
           </p>
         )}
         {error && <p className="feat-empty feat-down">{error}</p>}

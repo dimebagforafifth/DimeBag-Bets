@@ -39,6 +39,7 @@ import {
 } from './book-store.js'
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
+import { useEconomyMode } from './economy-mode.js'
 import { ActivityTicker } from './ActivityTicker.js'
 import { setActiveGame } from './ledger-store.js'
 import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
@@ -100,6 +101,8 @@ export function App() {
   // Re-render when a manager enables/disables a game, so the lobby + the active game
   // view reflect it immediately.
   useSyncExternalStore(subscribeSettings, getSettingsVersion)
+  // The economy mode relabels the header wallet (balance mode has no weekly figure/credit).
+  const economyMode = useEconomyMode()
   // A second, immediate re-render channel for mid-play moves that DON'T resolve a
   // wager (placing a bet holds `pending`) — games call this so the header updates.
   const [, refresh] = useReducer((n: number) => n + 1, 0)
@@ -247,13 +250,13 @@ export function App() {
                 at-risk). The week's win/loss standing rides alongside as a plain
                 up/down, not signed jargon. */}
             <div className="figure-block is-primary">
-              <span className="figure-label">Balance</span>
+              <span className="figure-label">{economyMode === 'balance' ? 'Available' : 'Balance'}</span>
               <span className="figure-value">
                 {account ? formatMoney(availableToWager(account)) : '—'}
               </span>
             </div>
             <div className="figure-block">
-              <span className="figure-label">This week</span>
+              <span className="figure-label">{economyMode === 'balance' ? 'Wallet' : 'This week'}</span>
               {account ? (
                 <WeekFigure cents={account.balance} />
               ) : (

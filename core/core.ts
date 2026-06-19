@@ -9,6 +9,7 @@
  */
 
 import type { Account, Outcome, Wager } from './types.js'
+import { getEconomyMode, getBalanceFloorCents } from './economy.js'
 
 let wagerSeq = 0
 
@@ -132,11 +133,18 @@ function emitGrant(e: GrantEvent): void {
 }
 
 /**
- * How much the player may put at risk right now:
- *   creditLimit + balance − pending
- * A wager is only accepted if it fits inside this.
+ * How much the player may put at risk right now. Branches on the economy mode (§3):
+ *   - credit  (default): creditLimit + balance − pending — the figure may run down to −limit.
+ *   - balance:           balance − pending − balanceFloor — no credit line, so you can only
+ *                        risk credits you actually hold, and a wager can never drive the
+ *                        balance below the floor (default 0 = a non-negative wallet).
+ * A wager is only accepted if it fits inside this. In the default credit mode the formula is
+ * unchanged, so existing behaviour is byte-for-byte identical.
  */
 export function availableToWager(account: Account): number {
+  if (getEconomyMode() === 'balance') {
+    return account.balance - account.pending - getBalanceFloorCents()
+  }
   return account.creditLimit + account.balance - account.pending
 }
 

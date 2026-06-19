@@ -10,6 +10,7 @@
  */
 
 import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
+import { getEconomyMode, type EconomyMode } from '../core/index.js'
 
 export interface AuditEntry {
   id: number
@@ -18,13 +19,16 @@ export interface AuditEntry {
   /** Who made it — a staff/operator id ('operator' until real auth lands). */
   actor: string
   /** Machine action key: credit | lock | active | maxbet | rename | move | add |
-   *  remove | adjust | settle | bulk. */
+   *  remove | adjust | settle | bulk | economy-mode. */
   action: string
   /** The member affected ('' for book-wide actions like a settlement). */
   memberId: string
   memberName: string
   /** Human summary, including old→new where applicable (e.g. "Credit limit $20 → $30"). */
   detail: string
+  /** The economy mode in force when this happened — stamped on the envelope so the trail
+   *  stays interpretable across a mid-season credit↔balance flip (§3). */
+  economyMode?: EconomyMode
 }
 
 /** A draft entry — id + timestamp are stamped on record. */
@@ -53,9 +57,15 @@ function notify(): void {
   listeners.forEach((l) => l())
 }
 
-/** Append an audited change. id + timestamp are stamped here; persisted + notified. */
+/** Append an audited change. id + timestamp are stamped here; persisted + notified. The
+ *  economy mode is stamped from core (unless the draft already carries one). */
 export function recordAudit(draft: AuditDraft): AuditEntry {
-  const entry: AuditEntry = { ...draft, id: ++seq, at: draft.at ?? Date.now() }
+  const entry: AuditEntry = {
+    economyMode: getEconomyMode(),
+    ...draft,
+    id: ++seq,
+    at: draft.at ?? Date.now(),
+  }
   log.push(entry)
   if (log.length > MAX) log.splice(0, log.length - MAX)
   DOC.save(log)
