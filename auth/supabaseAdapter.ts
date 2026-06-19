@@ -17,14 +17,16 @@
  */
 
 import { getSupabaseEnv, type SupabaseEnv } from '../persistence/index.js'
-import { authEmailDomain } from './config.js'
+import { authEmailDomain, oauthRedirectUrl } from './config.js'
 import type { Role } from '../org/index.js'
-import type { AuthAdapter, AuthUser, Session } from './types.js'
+import type { AuthAdapter, AuthUser, OAuthProvider, Session, SignUpResult } from './types.js'
 
 /* ── the slice of supabase-js we depend on (so a fake can stand in) ─────────────── */
 interface SbUser {
   id: string
   email?: string | null
+  /** Set by Supabase once the email is confirmed; null/absent until then. */
+  email_confirmed_at?: string | null
   user_metadata?: Record<string, unknown> | null
   app_metadata?: Record<string, unknown> | null
 }
@@ -45,8 +47,14 @@ export interface SbAuthClient {
     signUp(c: {
       email: string
       password: string
-      options?: { data?: Record<string, unknown> }
+      options?: { data?: Record<string, unknown>; emailRedirectTo?: string }
     }): Promise<SbAuthResult>
+    /** Redirect-based social login. In a browser supabase-js navigates to `data.url`;
+     *  the session is established on the callback and read back via getSession(). */
+    signInWithOAuth(c: {
+      provider: OAuthProvider
+      options?: { redirectTo?: string }
+    }): Promise<{ data: { provider: string; url: string | null }; error: { message: string } | null }>
     signOut(): Promise<{ error: { message: string } | null }>
   }
 }
@@ -81,6 +89,13 @@ export function mapSupabaseSession(s: SbSession | null): Session | null {
     username,
     displayName: str(meta.display_name) ?? username,
   }
+  const email = str(s.user.email)
+  if (email) {
+    user.email = email
+    // A real (routable) email carries a confirmation state; the synthetic username domain
+    // never gets a confirmation, so treat its absence as "n/a", not "unverified".
+    user.emailVerified = Boolean(s.user.email_confirmed_at)
+  }
   const tenantId = str(app.tenant_id)
   if (tenantId) user.tenantId = tenantId
   const role = asRole(app.role)
@@ -110,7 +125,9 @@ export function createSupabaseAdapter(deps: SupabaseAdapterDeps = {}): AuthAdapt
     if (!clientPromise) {
       clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
         (createClient as unknown as SbCreateClient)(env.url, env.anonKey, {
-          auth: { persistSession: true, autoRefreshToken: true },
+          // detectSessionInUrl lets getSession() establish the session from the OAuth /
+          // email-confirmation callback hash when the browser returns to the app.
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
         }),
       )
     }
@@ -137,21 +154,37 @@ export function createSupabaseAdapter(deps: SupabaseAdapterDeps = {}): AuthAdapt
       return session
     },
 
-    async signUp(username, password, displayName) {
+    async signUp(username, password, displayName): Promise<SignUpResult> {
       const u = normUsername(username)
       if (!u || !password) throw new Error('Username and password are required')
       const sb = await getClient()
+      const email = toEmail(u)
       const { data, error } = await sb.auth.signUp({
-        email: toEmail(u),
+        email,
         password,
-        options: { data: { username: u, display_name: displayName?.trim() || u } },
+        options: {
+          data: { username: u, display_name: displayName?.trim() || u },
+          // Where the confirmation link returns the user after they click it.
+          emailRedirectTo: oauthRedirectUrl(),
+        },
       })
       if (error) throw new Error(error.message)
       const session = mapSupabaseSession(data.session)
-      // With email confirmation OFF (the points-app default), signUp returns a session. If a
-      // project turns confirmation ON there's no session yet — surface that, don't pretend.
-      if (!session) throw new Error('Account created — confirm the email before signing in')
-      return session
+      // Confirmation OFF (default) → a session is returned and the user is in. Confirmation
+      // ON → no session yet; report the pending-verification state so the UI can say
+      // "check your email" rather than treating it as a failure.
+      return session ? { session } : { pendingVerification: true, email }
+    },
+
+    async signInWithOAuth(provider) {
+      const sb = await getClient()
+      const { error } = await sb.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: oauthRedirectUrl() },
+      })
+      // In a browser supabase-js redirects to the provider; this only returns on a config
+      // error. The session is picked up on the callback by getSession() (detectSessionInUrl).
+      if (error) throw new Error(error.message)
     },
 
     async signOut() {

@@ -12,7 +12,12 @@ const DOMAIN = 'users.test.local'
 
 /** A fake Supabase auth client that records calls and returns a configurable session. */
 function fakeClient(session: unknown = null) {
-  const calls: { signIn?: { email: string; password: string }; signUp?: unknown; signOut?: boolean } = {}
+  const calls: {
+    signIn?: { email: string; password: string }
+    signUp?: unknown
+    oauth?: { provider: string; options?: { redirectTo?: string } }
+    signOut?: boolean
+  } = {}
   const sb: SbAuthClient = {
     auth: {
       async getSession() {
@@ -25,6 +30,10 @@ function fakeClient(session: unknown = null) {
       async signUp(c) {
         calls.signUp = c
         return { data: { session: session as never }, error: null }
+      },
+      async signInWithOAuth(c) {
+        calls.oauth = c
+        return { data: { provider: c.provider, url: 'https://accounts.google.com/o/oauth2/auth' }, error: null }
       },
       async signOut() {
         calls.signOut = true
@@ -122,6 +131,9 @@ describe('createSupabaseAdapter', () => {
         async signUp() {
           return { data: { session: null }, error: null }
         },
+        async signInWithOAuth(c) {
+          return { data: { provider: c.provider, url: null }, error: null }
+        },
         async signOut() {
           return { error: null }
         },
@@ -129,6 +141,34 @@ describe('createSupabaseAdapter', () => {
     }
     const adapter = createSupabaseAdapter({ env: ENV, emailDomain: DOMAIN, createClient: () => sb })
     await expect(adapter.signIn('marco', 'wrong')).rejects.toThrow('Invalid login credentials')
+  })
+
+  it('signUp with no session returned reports pending email verification', async () => {
+    const { sb } = fakeClient(null) // confirmation ON → signUp returns no session
+    const adapter = createSupabaseAdapter({ env: ENV, emailDomain: DOMAIN, createClient: () => sb })
+    const r = await adapter.signUp('Marco', 'pw', 'Marco P.')
+    if ('session' in r) throw new Error('expected pending verification, got a session')
+    expect(r.pendingVerification).toBe(true)
+    expect(r.email).toBe('marco@users.test.local')
+  })
+
+  it('signInWithOAuth starts a Google redirect through the client', async () => {
+    const { sb, calls } = fakeClient(null)
+    const adapter = createSupabaseAdapter({ env: ENV, emailDomain: DOMAIN, createClient: () => sb })
+    await adapter.signInWithOAuth('google')
+    expect(calls.oauth?.provider).toBe('google')
+  })
+
+  it('maps email + verified state from the session', async () => {
+    const confirmed = {
+      ...SESSION,
+      user: { ...SESSION.user, email_confirmed_at: '2026-01-01T00:00:00Z' },
+    }
+    const s = mapSupabaseSession(confirmed as never)!
+    expect(s.user.email).toBe('marco@users.test.local')
+    expect(s.user.emailVerified).toBe(true)
+    // An unconfirmed user reads back as not-verified.
+    expect(mapSupabaseSession(SESSION as never)!.user.emailVerified).toBe(false)
   })
 
   it('rejects signup with no username/password before calling the client', async () => {

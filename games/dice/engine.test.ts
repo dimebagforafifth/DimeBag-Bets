@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { Account } from '../../core/index.js'
 import { availableToWager } from '../../core/index.js'
 import { playDice } from './engine.js'
-import { multiplierFor, rollFromSeeds, winChance } from './fair.js'
+import { effectiveTarget, multiplierFor, rollFromSeeds, winChance } from './fair.js'
 
 function account(overrides: Partial<Account> = {}): Account {
   return { id: 'acct_1', creditLimit: 1000, balance: 0, pending: 0, ...overrides }
@@ -30,6 +30,19 @@ describe('playDice', () => {
     expect(r.won).toBe(false)
     expect(a.pending).toBe(0)
     expect(a.balance).toBe(-100)
+  })
+
+  it('returns the stake on an exact tie (push, not a loss)', () => {
+    const a = account()
+    // Place the target exactly on the roll so the round lands on the boundary.
+    // (For these seeds the roll is mid-range, so the effective "over" target is
+    // the roll itself — precondition asserted below.)
+    expect(effectiveTarget(ROLL, 'over')).toBeCloseTo(ROLL, 10)
+    const r = playDice(a, { stake: 100, target: ROLL, direction: 'over', ...BASE })
+    expect(r.outcome).toBe('push')
+    expect(r.won).toBe(false)
+    expect(a.pending).toBe(0) // hold released
+    expect(a.balance).toBe(0) // stake returned — neither won nor lost
   })
 
   it('holds and releases the stake via core (rejects over-limit)', () => {

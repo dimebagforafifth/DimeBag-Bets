@@ -8,13 +8,14 @@ import type { Account } from '../../core/index.js'
 import { placeWager, resolveWager } from '../../core/index.js'
 import {
   DEFAULT_DICE_CONFIG,
+  gradeRoll,
   hashServerSeed,
-  isWin,
   multiplierFor,
   rollFromSeeds,
   winChance,
   type DiceDirection,
   type DiceHouseConfig,
+  type DiceOutcome,
 } from './fair.js'
 
 export interface DiceRound {
@@ -24,6 +25,9 @@ export interface DiceRound {
   /** The stake the round was actually played at (so display can't drift from the
    *  bet input being edited afterward). */
   stake: number
+  /** How the round settled: win pays, push returns the stake, loss takes it. */
+  outcome: DiceOutcome
+  /** Convenience alias for `outcome === 'win'` (a push is not a win). */
   won: boolean
   /** The payout multiplier the round was settled at (only meaningful on a win). */
   multiplier: number
@@ -67,14 +71,18 @@ export function playDice(account: Account, opts: PlayDiceOptions): DiceRound {
 
   const wager = placeWager(account, opts.stake)
   const roll = rollFromSeeds(serverSeed, opts.clientSeed, opts.nonce)
-  const won = isWin(roll, opts.target, opts.direction)
-  resolveWager(account, wager, won ? 'win' : 'loss', won ? multiplier : undefined)
+  const outcome = gradeRoll(roll, opts.target, opts.direction)
+  const won = outcome === 'win'
+  // A push releases the hold and returns the stake (no multiplier); core ignores
+  // the payout multiplier for non-win outcomes.
+  resolveWager(account, wager, outcome, won ? multiplier : undefined)
 
   return {
     roll,
     target: opts.target,
     direction: opts.direction,
     stake: opts.stake,
+    outcome,
     won,
     multiplier,
     winChance: chance,
