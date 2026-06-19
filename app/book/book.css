@@ -400,6 +400,14 @@
   color: var(--bk-loss);
   font-weight: 700;
 }
+/* A leg flagged by the SGP conflict gate (can't be combined in this parlay). */
+.bk-leg.is-conflict {
+  box-shadow: inset 2px 0 0 var(--bk-loss);
+}
+.bk-leg-conflict {
+  color: var(--bk-loss);
+  font-weight: 700;
+}
 .bk-leg-price {
   font-weight: 700;
   color: var(--bk-gold);

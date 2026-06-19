@@ -1,22 +1,25 @@
 /* Challenges surface — peer-to-peer, no-vig head-to-head. Consumes the GLOBAL design tokens
    (app/theme.css): the graphite canvas + the one gold accent, green/red kept narrow to
-   win/loss + the figure. No per-feature palette (Stake-style polish is D's standing directive).
-   // SEAM (D): final spacing/polish pass against the tokens if desired. */
+   win/loss + the figure. No per-feature palette. Scoped under .p2p. */
 
 .p2p {
-  max-width: 640px;
+  max-width: 680px;
   margin: 0 auto;
   padding: var(--space-5) var(--space-4) var(--space-7);
   color: var(--text);
   font-family: var(--font-body);
 }
 
+/* ── header ─────────────────────────────────────────────────────────────── */
 .p2p-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
   margin-bottom: var(--space-4);
+}
+.p2p-head {
+  min-width: 0;
 }
 .p2p-h1 {
   font-family: var(--font-head);
@@ -29,6 +32,29 @@
   margin: 2px 0 0;
   color: var(--muted);
   font-size: var(--text-sm);
+}
+.p2p-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.p2p-chip {
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.p2p-chip.is-num {
+  font-family: var(--font-num);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
 }
 .p2p-cta {
   flex: none;
@@ -44,10 +70,19 @@
 .p2p-cta:hover {
   background: rgba(var(--gold-glow), 0.08);
 }
+.p2p-paused {
+  flex: none;
+  align-self: center;
+  color: var(--faint);
+  font-size: var(--text-xs);
+  max-width: 18ch;
+  text-align: right;
+}
 
 .p2p-flash {
   background: var(--surface-2);
   border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   margin-bottom: var(--space-3);
@@ -64,6 +99,7 @@
   }
 }
 
+/* ── tabs ───────────────────────────────────────────────────────────────── */
 .p2p-tabs {
   display: inline-flex;
   background: var(--surface);
@@ -87,6 +123,7 @@
   color: var(--text);
 }
 
+/* ── list + cards ───────────────────────────────────────────────────────── */
 .p2p-list {
   display: flex;
   flex-direction: column;
@@ -96,19 +133,27 @@
 .p2p-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: var(--space-4);
 }
 .p2p-card-top {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-3);
 }
 .p2p-title {
-  font-weight: 600;
+  font-family: var(--font-head);
+  font-weight: 700;
   font-size: var(--text-md);
+  letter-spacing: 0.01em;
+}
+.p2p-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
 }
 .p2p-when {
   color: var(--faint);
@@ -116,6 +161,41 @@
   white-space: nowrap;
 }
 
+/* status pill */
+.p2p-pill {
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.p2p-pill.is-open {
+  color: var(--gold-bright);
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+}
+.p2p-pill.is-toyou {
+  color: var(--bg);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.p2p-pill.is-live {
+  color: var(--bg);
+  background: var(--green);
+  border-color: var(--green);
+}
+.p2p-pill.is-settled {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 45%, var(--line));
+}
+.p2p-pill.is-void {
+  color: var(--faint);
+}
+
+/* the two opposing sides + the pot in the middle */
 .p2p-sides {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -125,7 +205,7 @@
 .p2p-side {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -135,9 +215,19 @@
   border-color: var(--gold);
   box-shadow: inset 0 0 0 1px rgba(var(--gold-glow), 0.25);
 }
+.p2p-side.is-win {
+  border-color: color-mix(in srgb, var(--green) 55%, var(--line));
+  background: color-mix(in srgb, var(--green) 9%, var(--surface-2));
+}
+.p2p-side.is-loss {
+  opacity: 0.62;
+}
 .p2p-side-name {
   font-size: var(--text-xs);
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .p2p-side-pick {
   font-weight: 600;
@@ -145,14 +235,40 @@
 }
 .p2p-side-stake {
   font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   color: var(--text);
 }
-.p2p-vs {
-  align-self: center;
+
+.p2p-pot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0 var(--space-2);
+}
+.p2p-pot-label {
+  font-family: var(--font-head);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--faint);
-  font-size: var(--text-xs);
+}
+.p2p-pot-amt {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--gold-bright);
+}
+.p2p-vs {
+  margin-top: 2px;
+  color: var(--faint);
+  font-size: 10px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .p2p-meta {
@@ -163,10 +279,8 @@
   font-size: var(--text-xs);
   color: var(--muted);
 }
-.p2p-pot {
+.p2p-odds {
   font-family: var(--font-num);
-  color: var(--text);
-  font-weight: 600;
 }
 .p2p-novig {
   margin-left: auto;
@@ -179,13 +293,16 @@
   font-size: 10px;
 }
 
+/* ── actions ────────────────────────────────────────────────────────────── */
 .p2p-actions {
   display: flex;
   gap: var(--space-2);
   margin-top: var(--space-3);
+  flex-wrap: wrap;
 }
 .p2p-accept {
   flex: 1;
+  min-width: 0;
   border: 0;
   background: var(--gold);
   color: #1a1408;
@@ -197,6 +314,9 @@
 }
 .p2p-accept:hover {
   background: var(--gold-bright);
+}
+.p2p-accept:active {
+  background: var(--gold-press);
 }
 .p2p-accept:disabled {
   background: var(--surface-2);
@@ -213,12 +333,17 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
+.p2p-ghost:hover {
+  color: var(--text);
+  border-color: var(--faint);
+}
 .p2p-warn {
   margin: var(--space-2) 0 0;
   color: var(--red);
   font-size: var(--text-xs);
 }
 
+/* in-flight status + operator settle block */
 .p2p-status {
   display: flex;
   align-items: center;
@@ -239,7 +364,22 @@
   height: 8px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent);
+}
+.p2p-settle {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--line);
+}
+.p2p-settle-label {
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+.p2p-settle .p2p-actions {
+  margin-top: var(--space-2);
 }
 
 .p2p-empty {
@@ -252,11 +392,11 @@
   font-size: var(--text-sm);
 }
 
-/* New-challenge form */
+/* ── new-challenge form ─────────────────────────────────────────────────── */
 .p2p-new {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: var(--space-4);
   margin-bottom: var(--space-4);
   display: flex;
@@ -314,9 +454,20 @@
 .p2p-derived {
   color: var(--muted);
   font-size: var(--text-xs);
+  font-family: var(--font-num);
 }
 .p2p-note {
   margin: 0;
   color: var(--faint);
   font-size: var(--text-xs);
+}
+
+@media (max-width: 560px) {
+  .p2p-top {
+    flex-direction: column;
+  }
+  .p2p-paused {
+    text-align: left;
+    max-width: none;
+  }
 }

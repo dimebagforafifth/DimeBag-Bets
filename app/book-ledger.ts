@@ -15,7 +15,7 @@
  * app/ledger-no-throttle.test.ts).
  */
 
-import { onWagerPlaced, onWagerResolved, type PlaceEvent, type ResolveEvent } from '../core/index.js'
+import { onWagerPlaced, onWagerResolved, getEconomyMode, type PlaceEvent, type ResolveEvent } from '../core/index.js'
 import { createLedger, type Ledger, type LedgerEntry } from '../ledger/index.js'
 import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { getBook } from './book-store.js'
@@ -101,7 +101,8 @@ onWagerResolved((e: ResolveEvent) => {
   const account = getBook().members[e.accountId]?.account
   const game = placeGame.get(e.wagerId) ?? getActiveGame()
   placeGame.delete(e.wagerId)
-  ledger.record(resolveEntry(e, account, game))
+  // Stamp the economy mode on every durable money event so the record self-describes.
+  ledger.record({ ...resolveEntry(e, account, game), economyMode: getEconomyMode() })
 })
 
 /* -------------------------------- the API ------------------------------- */
@@ -131,5 +132,5 @@ export function getBookLedgerVersion(): number {
  * settlement and manual-adjustment flows (Phase 1).
  */
 export function recordBookEntry(entry: NewEntry): LedgerEntry {
-  return ledger.record(entry)
+  return ledger.record({ economyMode: getEconomyMode(), ...entry })
 }

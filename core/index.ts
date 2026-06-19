@@ -19,3 +19,14 @@ export {
   onGrant,
 } from './core.js'
 export type { ResolveEvent, PlaceEvent, GrantEvent } from './core.js'
+export type { EconomyMode, EconomyPolicy } from './economy.js'
+export {
+  DEFAULT_ECONOMY_POLICY,
+  getEconomyMode,
+  getEconomyPolicy,
+  getBalanceFloorCents,
+  setEconomyPolicy,
+  setActiveEconomyTenant,
+  getActiveEconomyTenant,
+  __resetEconomy,
+} from './economy.js'

@@ -1,20 +1,34 @@
 /**
  * The Challenges section — peer-to-peer, no-vig head-to-head betting (CLAUDE.md §1: the moat a
  * real-money book can't build). A player proposes a matchup (a pick, agreed odds, a stake) to a
- * friend or open to the community; another accepts; the winner takes the pot and the HOUSE TAKES
- * NOTHING. Accepting escrows BOTH stakes through core; settlement (result-driven, not a player
- * action) pays the pot to the winner through core. Consumes the global tokens — no per-feature
- * palette.
+ * friend they follow or open to the community; another accepts; the winner takes the pot and the
+ * HOUSE TAKES NOTHING. Accepting escrows BOTH stakes through core; settlement (result-driven, an
+ * operator action — never a participant) pays the pot to the winner through core.
+ *
+ * Surfaces, on the global graphite-and-gold tokens (no per-feature palette):
+ *  - the stake surface is MODE-AWARE — it reads the economy mode and gates real-stake actions
+ *    (propose / accept) through <ModeGate> (Lane A interlock, // SEAM in economy-mode).
+ *  - the "challenge a friend" picker is the real social graph — `followingOf(viewerId)`, names
+ *    resolved from the org book (read-only).
+ *  - an operator (role) gets result-settlement controls on in-flight challenges (also available
+ *    on the console "Challenges Desk" tile); a plain player only proposes / accepts / declines.
  */
 
 import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { availableToWager } from '../core/index.js'
 import { formatMoney } from '../games/shared/money.js'
+import { getBook } from '../app/book-store.js'
+import {
+  followingOf,
+  subscribeFollows,
+  followsVersion,
+  ensureSeeded as ensureSocialSeeded,
+} from '../social/index.js'
 import { challenges } from './store.js'
-import { ensureViewerOffers, SEED_PLAYERS } from './seed.js'
+import { ensureViewerOffers } from './seed.js'
 import { accepterStakeFor, EVEN_ODDS, potCents } from './odds.js'
-import { followingOf } from '../social/index.js'
-import type { Challenge, ChallengeWinner, PlayerSectionProps } from './types.js'
+import { useEconomyMode, ModeGate } from './economy-mode.js'
+import type { Challenge, ChallengeStatus, ChallengeWinner, PlayerSectionProps } from './types.js'
 
 type Tab = 'open' | 'active' | 'history'
 
@@ -39,6 +53,8 @@ function untilExpiry(now: number, expiresAt: number): string {
   return `${Math.round(m / 60)}h left`
 }
 
+const isEvenOdds = (d: number): boolean => Math.abs(d - EVEN_ODDS) < 1e-9
+
 export function ChallengesSection({
   viewerId,
   viewerName,
@@ -47,9 +63,14 @@ export function ChallengesSection({
   role,
 }: PlayerSectionProps) {
   useEffect(() => {
+    // Populate the demo's social graph (idempotent) so "challenge a friend" has people, then
+    // make sure the viewer has open + directed offers to act on. No money is held by either.
+    ensureSocialSeeded(Date.now())
     ensureViewerOffers(viewerId, viewerName, account, Date.now())
+    challenges.sweepExpired(Date.now()) // drop past-expiry open offers to 'expired'
   }, [viewerId, viewerName, account])
   useChallengeTick()
+  const mode = useEconomyMode()
 
   // Result settlement is operator-driven (never a participant picking their own winner). An
   // operator (non-player) gets settle/void controls on in-flight challenges below.
@@ -60,7 +81,9 @@ export function ChallengesSection({
   const [showNew, setShowNew] = useState(false)
 
   const now = Date.now()
-  const open = challenges.openFor(viewerId)
+  // Drop any past-expiry offers from the Open tab even if a sweep hasn't flipped them yet, so a
+  // dead offer never shows a live Accept button.
+  const open = challenges.openFor(viewerId).filter((c) => c.expiresAt > now)
   const active = challenges.all().filter((c) => c.status === 'accepted')
   const history = challenges.all().filter((c) => c.status === 'settled' || c.status === 'voided')
 
@@ -86,9 +109,10 @@ export function ChallengesSection({
   // run (core.settleWeek requires no pending, so settle/void must precede the weekly square-up).
   const settle = (c: Challenge, winner: ChallengeWinner): void => {
     try {
-      challenges.settle(c.id, winner)
+      challenges.settle(c.id, winner, viewerId) // actor guard: refuse if the operator is a party
       onBalanceChange?.()
-      const name = winner === 'proposer' ? c.proposer.playerName : (c.accepter?.playerName ?? 'Accepter')
+      const name =
+        winner === 'proposer' ? c.proposer.playerName : (c.accepter?.playerName ?? 'Accepter')
       setFlash(`Settled — ${name} takes ${formatMoney(potCents(c))}`)
     } catch (e) {
       setFlash((e as Error).message)
@@ -97,7 +121,7 @@ export function ChallengesSection({
 
   const voidCh = (c: Challenge): void => {
     try {
-      challenges.voidChallenge(c.id)
+      challenges.voidChallenge(c.id, viewerId) // actor guard: refuse if the operator is a party
       onBalanceChange?.()
       setFlash('Voided — both stakes refunded')
     } catch (e) {
@@ -108,13 +132,27 @@ export function ChallengesSection({
   return (
     <div className="p2p">
       <header className="p2p-top">
-        <div>
+        <div className="p2p-head">
           <h1 className="p2p-h1">Challenges</h1>
           <p className="p2p-sub">Stake head-to-head. Winner takes the pot — no house cut.</p>
+          <div className="p2p-chips">
+            <span className="p2p-chip">{mode.label}</span>
+            <span className="p2p-chip is-num">
+              {formatMoney(availableToWager(account))} to stake
+            </span>
+          </div>
         </div>
-        <button className="p2p-cta" onClick={() => setShowNew((s) => !s)} aria-expanded={showNew}>
-          {showNew ? 'Close' : 'New challenge'}
-        </button>
+        <ModeGate
+          fallback={
+            <span className="p2p-paused">
+              {mode.note ?? `Staking is paused in ${mode.label} mode.`}
+            </span>
+          }
+        >
+          <button className="p2p-cta" onClick={() => setShowNew((s) => !s)} aria-expanded={showNew}>
+            {showNew ? 'Close' : 'New challenge'}
+          </button>
+        </ModeGate>
       </header>
 
       {flash && (
@@ -159,31 +197,48 @@ export function ChallengesSection({
           {open.length === 0 ? (
             <Empty>No open challenges right now. Start one with “New challenge”.</Empty>
           ) : (
-            open.map((c) => (
-              <ChallengeCard key={c.id} c={c} now={now} viewerId={viewerId} perspective="accepter">
-                <div className="p2p-actions">
-                  <button
-                    className="p2p-accept"
-                    onClick={() => accept(c)}
-                    disabled={availableToWager(account) < c.accepterStakeCents}
+            open.map((c) => {
+              const shortByFunds = availableToWager(account) < c.accepterStakeCents
+              return (
+                <ChallengeCard
+                  key={c.id}
+                  c={c}
+                  now={now}
+                  viewerId={viewerId}
+                  perspective="accepter"
+                >
+                  <ModeGate
+                    fallback={
+                      <p className="p2p-note">
+                        {mode.note ?? `Accepting is paused in ${mode.label} mode.`}
+                      </p>
+                    }
                   >
-                    Accept · risk {formatMoney(c.accepterStakeCents)} to win{' '}
-                    {formatMoney(c.proposerStakeCents)}
-                  </button>
-                  {c.audience === 'friend' && c.targetPlayerId === viewerId && (
-                    <button className="p2p-ghost" onClick={() => decline(c)}>
-                      Decline
-                    </button>
-                  )}
-                </div>
-                {availableToWager(account) < c.accepterStakeCents && (
-                  <p className="p2p-warn">
-                    Not enough available — you can stake up to{' '}
-                    {formatMoney(availableToWager(account))}.
-                  </p>
-                )}
-              </ChallengeCard>
-            ))
+                    <div className="p2p-actions">
+                      <button
+                        className="p2p-accept"
+                        onClick={() => accept(c)}
+                        disabled={shortByFunds}
+                      >
+                        Accept · risk {formatMoney(c.accepterStakeCents)} to win{' '}
+                        {formatMoney(c.proposerStakeCents)}
+                      </button>
+                      {c.audience === 'friend' && c.targetPlayerId === viewerId && (
+                        <button className="p2p-ghost" onClick={() => decline(c)}>
+                          Decline
+                        </button>
+                      )}
+                    </div>
+                    {shortByFunds && (
+                      <p className="p2p-warn">
+                        Not enough available — you can stake up to{' '}
+                        {formatMoney(availableToWager(account))}.
+                      </p>
+                    )}
+                  </ModeGate>
+                </ChallengeCard>
+              )
+            })
           )}
         </div>
       )}
@@ -193,28 +248,36 @@ export function ChallengesSection({
           {active.length === 0 ? (
             <Empty>Nothing in flight. Accept an open challenge to escrow a head-to-head.</Empty>
           ) : (
-            active.map((c) => (
-              <ChallengeCard key={c.id} c={c} now={now} viewerId={viewerId} perspective="auto">
-                <p className="p2p-status">
-                  <span className="p2p-dot" aria-hidden /> Both stakes escrowed · pot{' '}
-                  {formatMoney(potCents(c))} · awaiting result
-                </p>
-                {canSettle && (
-                  <div className="p2p-actions">
-                    {/* Operator settles from the real result — settle the week only AFTER this. */}
-                    <button className="p2p-accept" onClick={() => settle(c, 'proposer')}>
-                      {c.proposer.playerName} won
-                    </button>
-                    <button className="p2p-accept" onClick={() => settle(c, 'accepter')}>
-                      {c.accepter?.playerName ?? 'Accepter'} won
-                    </button>
-                    <button className="p2p-ghost" onClick={() => voidCh(c)}>
-                      Void
-                    </button>
-                  </div>
-                )}
-              </ChallengeCard>
-            ))
+            active.map((c) => {
+              // Settlement is operator-driven AND never by a participant — an operator who is a
+              // party to this challenge cannot grade it here (the console desk grades others').
+              const isParticipant =
+                c.proposer.playerId === viewerId || c.accepter?.playerId === viewerId
+              return (
+                <ChallengeCard key={c.id} c={c} now={now} viewerId={viewerId} perspective="auto">
+                  <p className="p2p-status">
+                    <span className="p2p-dot" aria-hidden /> Both stakes escrowed · pot{' '}
+                    {formatMoney(potCents(c))} · awaiting result
+                  </p>
+                  {canSettle && !isParticipant && (
+                    <div className="p2p-settle">
+                      <span className="p2p-settle-label">Operator · grade from the result</span>
+                      <div className="p2p-actions">
+                        <button className="p2p-accept" onClick={() => settle(c, 'proposer')}>
+                          {c.proposer.playerName} won
+                        </button>
+                        <button className="p2p-accept" onClick={() => settle(c, 'accepter')}>
+                          {c.accepter?.playerName ?? 'Accepter'} won
+                        </button>
+                        <button className="p2p-ghost" onClick={() => voidCh(c)}>
+                          Void
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </ChallengeCard>
+              )
+            })
           )}
         </div>
       )}
@@ -225,7 +288,14 @@ export function ChallengesSection({
             <Empty>No settled challenges yet.</Empty>
           ) : (
             history.map((c) => (
-              <ChallengeCard key={c.id} c={c} now={now} viewerId={viewerId} perspective="auto">
+              <ChallengeCard
+                key={c.id}
+                c={c}
+                now={now}
+                viewerId={viewerId}
+                perspective="auto"
+                winner={c.status === 'settled' ? c.winner : undefined}
+              >
                 {c.status === 'voided' ? (
                   <p className="p2p-status is-void">Voided · both stakes refunded</p>
                 ) : (
@@ -247,28 +317,50 @@ function Empty({ children }: { children: ReactNode }) {
   return <p className="p2p-empty">{children}</p>
 }
 
+/** The status pill shown on a card — open / to-you / in-flight / won / void / expired / declined. */
+function StatusPill({ c, viewerId }: { c: Challenge; viewerId: string }) {
+  const directedToViewer =
+    c.status === 'open' && c.audience === 'friend' && c.targetPlayerId === viewerId
+  const map: Record<ChallengeStatus, { label: string; cls: string }> = {
+    open: directedToViewer
+      ? { label: 'To you', cls: 'is-toyou' }
+      : { label: 'Open', cls: 'is-open' },
+    accepted: { label: 'In flight', cls: 'is-live' },
+    settled: { label: 'Settled', cls: 'is-settled' },
+    voided: { label: 'Void', cls: 'is-void' },
+    expired: { label: 'Expired', cls: 'is-void' },
+    declined: { label: 'Declined', cls: 'is-void' },
+  }
+  const { label, cls } = map[c.status]
+  return <span className={`p2p-pill ${cls}`}>{label}</span>
+}
+
 interface CardProps {
   c: Challenge
   now: number
   viewerId: string
   /** Whose side to foreground: the accepter's offer, or auto (the viewer's side if a party). */
   perspective: 'accepter' | 'auto'
+  /** When settled, which side won (colours the sides green/grey). */
+  winner?: ChallengeWinner
   children?: ReactNode
 }
 
-function ChallengeCard({ c, now, viewerId, perspective, children }: CardProps) {
+function ChallengeCard({ c, now, viewerId, perspective, winner, children }: CardProps) {
   const viewerIsProposer = c.proposer.playerId === viewerId
   const viewerIsAccepter = c.accepter?.playerId === viewerId
-  const isEven = Math.abs(c.decimalOdds - EVEN_ODDS) < 1e-9
   return (
     <article className="p2p-card" aria-label={c.title}>
       <div className="p2p-card-top">
         <span className="p2p-title">{c.title}</span>
-        {c.status === 'open' ? (
-          <span className="p2p-when">{untilExpiry(now, c.expiresAt)}</span>
-        ) : (
-          <span className="p2p-when">{ago(now, c.settledAt ?? c.createdAt)}</span>
-        )}
+        <div className="p2p-card-meta">
+          <StatusPill c={c} viewerId={viewerId} />
+          <span className="p2p-when">
+            {c.status === 'open'
+              ? untilExpiry(now, c.expiresAt)
+              : ago(now, c.settledAt ?? c.createdAt)}
+          </span>
+        </div>
       </div>
       <div className="p2p-sides">
         <Side
@@ -276,19 +368,24 @@ function ChallengeCard({ c, now, viewerId, perspective, children }: CardProps) {
           pick={c.proposerPick}
           stake={c.proposerStakeCents}
           highlight={perspective === 'auto' && viewerIsProposer}
+          outcome={winner ? (winner === 'proposer' ? 'win' : 'loss') : undefined}
         />
-        <span className="p2p-vs">vs</span>
+        <div className="p2p-pot-col">
+          <span className="p2p-pot-label">Pot</span>
+          <span className="p2p-pot-amt">{formatMoney(potCents(c))}</span>
+          <span className="p2p-vs">vs</span>
+        </div>
         <Side
           name={(c.accepter?.playerName ?? 'Open seat') + (viewerIsAccepter ? ' (you)' : '')}
           pick={c.accepterPick}
           stake={c.accepterStakeCents}
           highlight={perspective === 'accepter' || (perspective === 'auto' && viewerIsAccepter)}
+          outcome={winner ? (winner === 'accepter' ? 'win' : 'loss') : undefined}
         />
       </div>
       <div className="p2p-meta">
-        <span className="p2p-pot">Pot {formatMoney(potCents(c))}</span>
         <span className="p2p-odds">
-          {isEven ? 'Even money' : `${c.decimalOdds.toFixed(2)} (custom)`}
+          {isEvenOdds(c.decimalOdds) ? 'Even money' : `${c.decimalOdds.toFixed(2)} odds`}
         </span>
         <span className="p2p-novig">no vig</span>
       </div>
@@ -302,14 +399,16 @@ function Side({
   pick,
   stake,
   highlight,
+  outcome,
 }: {
   name: string
   pick: string
   stake: number
   highlight: boolean
+  outcome?: 'win' | 'loss'
 }) {
   return (
-    <div className={`p2p-side ${highlight ? 'is-you' : ''}`}>
+    <div className={`p2p-side ${highlight ? 'is-you' : ''} ${outcome ? `is-${outcome}` : ''}`}>
       <span className="p2p-side-name">{name}</span>
       <span className="p2p-side-pick">{pick}</span>
       <span className="p2p-side-stake">{formatMoney(stake)}</span>
@@ -335,15 +434,18 @@ function NewChallenge({
   const [stake, setStake] = useState(20)
   const [custom, setCustom] = useState(false)
   const [decimal, setDecimal] = useState(2)
-  // The live social graph: a player can directly challenge anyone they FOLLOW (social
-  // followingOf). ids mirror the seed roster, so resolve names from it (falling back to the id).
+  const [audience, setAudience] = useState<'open' | string>('open')
+  const mode = useEconomyMode()
+
+  // The real social graph: a player can directly challenge anyone they FOLLOW (social
+  // followingOf), names resolved from the org book (read-only).
+  useSyncExternalStore(subscribeFollows, followsVersion, followsVersion)
   const friends = useMemo(() => {
-    const nameById = new Map(SEED_PLAYERS.map((p) => [p.playerId, p.playerName]))
+    const members = getBook().members
     return followingOf(viewerId)
       .filter((id) => id !== viewerId)
-      .map((id) => ({ playerId: id, playerName: nameById.get(id) ?? id }))
+      .map((id) => ({ playerId: id, playerName: members[id]?.name ?? id }))
   }, [viewerId])
-  const [audience, setAudience] = useState<'open' | string>('open')
 
   const stakeCents = Math.round(stake * 100)
   const odds = custom ? decimal : EVEN_ODDS
@@ -414,6 +516,9 @@ function NewChallenge({
           <span>Offer to</span>
           <select value={audience} onChange={(e) => setAudience(e.target.value)}>
             <option value="open">Open to community</option>
+            {friends.length === 0 && (
+              <option disabled>Follow players to challenge them directly</option>
+            )}
             {friends.map((f) => (
               <option key={f.playerId} value={f.playerId}>
                 {f.playerName}
@@ -446,9 +551,15 @@ function NewChallenge({
         You can stake up to {formatMoney(availableToWager(account))}. Nothing is held until someone
         accepts.
       </p>
-      <button className="p2p-accept" onClick={submit}>
-        Post challenge
-      </button>
+      <ModeGate
+        fallback={
+          <p className="p2p-warn">{mode.note ?? `Proposing is paused in ${mode.label} mode.`}</p>
+        }
+      >
+        <button className="p2p-accept" onClick={submit}>
+          Post challenge
+        </button>
+      </ModeGate>
     </section>
   )
 }

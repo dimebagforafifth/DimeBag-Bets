@@ -11,16 +11,30 @@
  * (and C's Competitions) through D's new registry and extends auth `allowedSections` with
  * `'challenges'`. Until then the section is fully built + tested but not yet shown in nav.
  *
- * ── FRIEND-LIST SEAM ──────────────────────────────────────────────────────────
- * The propose form's "challenge a friend" picker uses this module's own seed roster (ids mirror
- * social/ so they line up). The wiring pass can swap it for the live social graph by feeding
- * `followingOf(viewerId)` (social/) as the friend source — left as a // SEAM in ChallengesSection.
+ * ── FRIEND-LIST (live social graph) ───────────────────────────────────────────
+ * The propose form's "challenge a friend" picker reads the REAL social graph —
+ * `followingOf(viewerId)` (social/, read-only) — with names resolved from the org book. The
+ * section seeds the demo social graph (social `ensureSeeded`, idempotent) so it's populated.
+ *
+ * ── OPERATOR SETTLE/VOID ───────────────────────────────────────────────────────
+ * Settlement is operator/result-driven (never a participant). Two operator surfaces drive the
+ * store's settle/void: an in-section control gated on an operator `role`, and the console
+ * "Challenges Desk" tile (`challengesDeskManifests` — see manifest.ts // SEAM for the wiring
+ * pass). The economy-mode-aware stake surface consumes `useEconomyMode` / `ModeGate` (Lane A
+ * interlock; default lives in economy-mode.tsx with a // SEAM).
  */
 
 import { ChallengesSection } from './ChallengesSection.js'
 import type { PlayerSectionDescriptor } from './types.js'
 
 export { ChallengesSection } from './ChallengesSection.js'
+
+// Operator console tile (settle/void) — registered by the wiring pass (see manifest.ts // SEAM).
+export { ChallengesDeskPanel } from './ChallengesDeskPanel.js'
+export { challengesDeskManifests } from './manifest.js'
+
+// Economy-mode seam (Lane A interlock) — the mode-aware stake surface consumes these.
+export { useEconomyMode, ModeGate, __setEconomyMode, type EconomyMode } from './economy-mode.js'
 
 export type {
   Challenge,

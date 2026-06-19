@@ -221,6 +221,13 @@ export async function handleFairness(
           clientSeed: req.clientSeed,
           nonce: req.nonce,
           crashPoint: resolved.outcome,
+          // EDGE_MODEL (B, interlock #7): Crash is a DISTRIBUTION-model game — the edge is baked
+          // into the OUTCOME, so the crash point is a function of (seed, clientSeed, nonce, EDGE).
+          // Echo the LOCKED edge used for this round so it travels with the proof: the consumer
+          // persists it on the round record and re-feeds it to verifyCrashPoint(...). A later band
+          // change in app/game-edge-config affects only FUTURE rounds; past rounds verify against
+          // the edge returned here, never the current band.
+          config,
         },
       }
     }

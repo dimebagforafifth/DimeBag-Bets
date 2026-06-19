@@ -150,7 +150,8 @@ describe('same-game parlay (SGP)', () => {
     const a = acct('p-lena')
     const before = { balance: a.balance, pending: a.pending }
     const legs = [leg(0, 'total', 0), leg(0, 'total', 1)] // over + under, same market
-    expect(() => place('p-lena', legs, 'parlay', 5_000)).toThrow(/related or contradictory/i)
+    // validateSlip (PART 1) blocks this BEFORE pricing with a specific message
+    expect(() => place('p-lena', legs, 'parlay', 5_000)).toThrow(/can’t be combined/i)
     expect(a.pending).toBe(before.pending)
     expect(getBets()).toHaveLength(0)
   })

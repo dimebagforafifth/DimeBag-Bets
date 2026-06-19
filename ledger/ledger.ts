@@ -40,6 +40,9 @@ export interface LedgerEntry {
   reason?: string
   /** Caller context (e.g. { game: 'mines' } or { ticketId }). */
   meta?: Record<string, unknown>
+  /** The economy mode in force when the movement happened ('credit' | 'balance'), stamped on
+   *  the envelope so the durable money record stays interpretable across a mid-season flip. */
+  economyMode?: string
 }
 
 type Meta = Record<string, unknown> | undefined

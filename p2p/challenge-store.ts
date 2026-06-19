@@ -76,10 +76,12 @@ export interface ChallengeStore {
   decline(id: string, byPlayerId: string): Challenge
   sweepExpired(now: number): number
   /** RESULT/operator-driven settlement — NOT a player action (a participant must never pick
-   *  their own winner). Pays the pot to the winner via core. */
-  settle(id: string, winner: ChallengeWinner): Challenge
-  /** Refund both stakes via core (event abandoned/cancelled). */
-  voidChallenge(id: string): Challenge
+   *  their own winner). Pays the pot to the winner via core. Pass `actorId` to enforce that the
+   *  caller is not a participant (the in-section operator control does; the console desk, a pure
+   *  operator surface, omits it). */
+  settle(id: string, winner: ChallengeWinner, actorId?: string): Challenge
+  /** Refund both stakes via core (event abandoned/cancelled). `actorId` is checked like settle. */
+  voidChallenge(id: string, actorId?: string): Challenge
   get(id: string): Challenge | undefined
   all(): Challenge[]
   /** Open offers the given player may accept (open audience, or directed at them; not their own). */
@@ -113,6 +115,17 @@ export function createChallengeStore(accounts: AccountBook): ChallengeStore {
       throw new Error(
         `challenge ${l.challenge.id} is ${l.challenge.status}, expected ${allowed.join('/')}`,
       )
+    }
+  }
+
+  const isParticipant = (c: Challenge, playerId: string): boolean =>
+    c.proposer.playerId === playerId || c.accepter?.playerId === playerId
+
+  // Defense-in-depth for "a participant must never pick their own winner": if a caller identifies
+  // itself (actorId) and is a party to the challenge, refuse — settlement is operator/result-driven.
+  const refuseParticipant = (c: Challenge, actorId?: string): void => {
+    if (actorId != null && isParticipant(c, actorId)) {
+      throw new Error('a participant cannot settle or void their own challenge')
     }
   }
 
@@ -228,9 +241,10 @@ export function createChallengeStore(accounts: AccountBook): ChallengeStore {
     //    challenge keeps both stakes in core `pending` (correct — same as any open book bet),
     //    which means weekly settleWeek must run only after challenges are settled/voided, exactly
     //    like the book. Enforce an operator-role guard at that call site.
-    settle(id, winner) {
+    settle(id, winner, actorId) {
       const l = live(id)
       requireStatus(l, 'accepted')
+      refuseParticipant(l.challenge, actorId)
       if (!l.escrow || !l.proposerAccount || !l.accepterAccount) {
         throw new Error(`challenge ${id} is accepted but has no escrow`)
       }
@@ -242,9 +256,10 @@ export function createChallengeStore(accounts: AccountBook): ChallengeStore {
       return l.challenge
     },
 
-    voidChallenge(id) {
+    voidChallenge(id, actorId) {
       const l = live(id)
       requireStatus(l, 'accepted')
+      refuseParticipant(l.challenge, actorId)
       if (!l.escrow || !l.proposerAccount || !l.accepterAccount) {
         throw new Error(`challenge ${id} is accepted but has no escrow`)
       }

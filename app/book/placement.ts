@@ -31,15 +31,8 @@ import {
 } from '../../core/index.js'
 import type { NormalizedEvent } from '../../lib/odds/contract.js'
 import { getBook } from '../book-store.js'
-import {
-  combinedDecimal,
-  contradictoryLegs,
-  isSameGame,
-  relatedConflicts,
-  type SlipLeg,
-  type SlipMode,
-} from './slip.js'
-import { SGP_MAX_LEGS } from '../../lib/odds/pricing.js'
+import { combinedDecimal, type SlipLeg, type SlipMode } from './slip.js'
+import { firstBlockMessage, validateSlip } from './sgp-rules.js'
 import { isMarketSuspended } from '../risk-controls.js'
 import { cashOutMath, cashOutQuote } from './cashout.js'
 import { toReturnCents } from './odds-format.js'
@@ -97,13 +90,18 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
   }
 
   const isParlay = mode === 'parlay' && legs.length >= 2
+
+  // SGP conflict gate (PART 1) — validate BEFORE pricing so a slip that can't legally be
+  // combined never gets a price and the stake never reaches `placeWager`. validateSlip dedupes,
+  // hard-blocks contradictions/nested outcomes, and enforces the tenant leg cap; the deduped
+  // survivors are what we price.
+  let parlayLegs = legs
   if (isParlay) {
-    if (relatedConflicts(legs).length > 0 || contradictoryLegs(legs).length > 0) {
-      throw new Error('related or contradictory selections can’t be combined in a parlay')
+    const validation = validateSlip(legs)
+    if (!validation.ok) {
+      throw new Error(firstBlockMessage(validation) ?? 'these selections can’t be combined')
     }
-    if (isSameGame(legs) && legs.length > SGP_MAX_LEGS) {
-      throw new Error(`a same-game parlay is limited to ${SGP_MAX_LEGS} legs`)
-    }
+    parlayLegs = validation.legs
   }
 
   const totalOutlay = isParlay ? stakeCents : stakeCents * legs.length
@@ -112,7 +110,7 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
   }
 
   if (isParlay) {
-    const { decimal } = combinedDecimal(legs)
+    const { decimal } = combinedDecimal(parlayLegs)
     const wager = placeWager(account, stakeCents)
     const bet: BookBet = {
       id: wager.id,
@@ -120,13 +118,13 @@ export function placeBookBet(input: PlaceBookBetInput): BookBet[] {
       playerName,
       placedBy,
       mode: 'parlay',
-      legs,
+      legs: parlayLegs,
       stakeCents,
       decimal,
       status: 'open',
       placedAt: now,
     }
-    live.set(bet.id, { account, wager, legs, mode: 'parlay', decimal })
+    live.set(bet.id, { account, wager, legs: parlayLegs, mode: 'parlay', decimal })
     recordBet(bet)
     return [bet]
   }
