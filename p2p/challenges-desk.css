@@ -1,0 +1,49 @@
+/* Challenges Desk (operator console) — layout on top of the .feat-* shell tokens. */
+.cdsk-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.cdsk-row:first-child {
+  border-top: none;
+}
+.cdsk-info {
+  min-width: 0;
+}
+.cdsk-vs {
+  color: var(--faint);
+  font-weight: 600;
+  padding: 0 2px;
+}
+.cdsk-pot {
+  margin-top: 2px;
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+  color: var(--gold-bright);
+}
+.cdsk-actions {
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.cdsk-tag {
+  flex: none;
+  align-self: center;
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.cdsk-tag.is-settled {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 45%, var(--line));
+}
+.cdsk-tag.is-void {
+  color: var(--faint);
+}
