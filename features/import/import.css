@@ -1,0 +1,194 @@
+/* Player Import — consumes the shared console panel styles + the global tokens only. */
+@import '../operations/shared.css';
+
+/* ---- batch list ---- */
+.imp-table {
+  margin-top: 4px;
+}
+.imp-row {
+  cursor: pointer;
+}
+.imp-row:hover {
+  background: var(--surface-2);
+}
+.imp-source {
+  font-weight: 600;
+  color: var(--text);
+}
+.imp-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+}
+.imp-icon-btn:hover {
+  border-color: var(--line);
+  color: var(--red);
+}
+
+/* ---- status + result badges ---- */
+.imp-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.imp-validated {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.imp-committed {
+  border-color: var(--green);
+  color: var(--green);
+}
+.imp-failed {
+  border-color: var(--red);
+  color: var(--red);
+}
+.imp-res-created {
+  border-color: var(--green);
+  color: var(--green);
+}
+.imp-res-error {
+  border-color: var(--red);
+  color: var(--red);
+}
+.imp-res-skipped,
+.imp-res-pending {
+  color: var(--faint);
+}
+
+/* ---- new import form ---- */
+.imp-new {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.imp-new-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.imp-new-row .feat-input {
+  flex: 1 1 220px;
+}
+.imp-file {
+  display: none;
+}
+.imp-paste {
+  width: 100%;
+  font-family: var(--font-num);
+  font-size: 12px;
+  resize: vertical;
+}
+
+/* ---- wizard ---- */
+.imp-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 0 6px;
+}
+.imp-crumb:hover {
+  color: var(--gold);
+}
+.imp-kpis {
+  margin: 2px 0;
+}
+.imp-num-create {
+  color: var(--green);
+}
+.imp-num-error {
+  color: var(--red);
+}
+.imp-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+/* ---- mapping editor ---- */
+.imp-map {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.imp-map-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.imp-map-tools {
+  display: flex;
+  gap: 8px;
+}
+.imp-select {
+  min-width: 150px;
+}
+.imp-map-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.imp-map-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.imp-req {
+  color: var(--gold);
+}
+.imp-options {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.imp-delim {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.imp-delim .feat-input {
+  width: 64px;
+}
+
+/* ---- preview ---- */
+.imp-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.imp-path {
+  color: var(--muted);
+}
+.imp-muted {
+  color: var(--faint);
+  font-style: italic;
+}
+.imp-reason {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--faint);
+}
