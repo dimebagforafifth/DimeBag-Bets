@@ -1,16 +1,14 @@
 // @vitest-environment happy-dom
 /** Customer Admin — the player grid: inline + bulk credit edit, move-between-agents,
  *  status, and login STATUS + reset (never a plaintext password). */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { getBook } from '../../app/book-store.js'
 import { toCents } from '../../games/shared/money.js'
-import {
-  credentialStatus,
-  __resetDemoAuth,
-  __resetCredentialRequests,
-} from '../../auth/index.js'
+import { setActiveEconomyTenant, setEconomyPolicy, __resetEconomy } from '../../core/index.js'
+import { __resetEconomyConfig } from '../../app/economy-config.js'
+import { credentialStatus, __resetDemoAuth, __resetCredentialRequests } from '../../auth/index.js'
 import { CustomerAdminPanel } from './CustomerAdminPanel.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -39,9 +37,20 @@ function mount(): { h: HTMLDivElement; root: Root } {
   return { h, root }
 }
 
+/** Flip the active book to the wallet economy money-neutrally (no migration, no money moved) —
+ *  enough for the UI to relabel. Reset in afterEach so credit-mode tests stay on the default. */
+function setBalanceMode() {
+  setActiveEconomyTenant('default')
+  setEconomyPolicy({ mode: 'balance', balanceFloorCents: 0 }, 'default')
+}
+
 beforeEach(() => {
   __resetDemoAuth()
   __resetCredentialRequests()
+})
+afterEach(() => {
+  __resetEconomyConfig()
+  __resetEconomy()
 })
 
 describe('Customer Admin grid', () => {
@@ -104,6 +113,34 @@ describe('Customer Admin grid', () => {
     })
     expect(credentialStatus('p-marco').resetPendingAt).not.toBeNull()
     expect(h.textContent).toContain('Reset sent')
+    act(() => root.unmount())
+    h.remove()
+  })
+})
+
+describe('Customer Admin — economy mode framing', () => {
+  it('credit mode (default) shows the credit-line column + figure framing', () => {
+    const { h, root } = mount()
+    const heads = [...h.querySelectorAll('thead th')].map((t) => t.textContent)
+    expect(heads).toContain('Credit')
+    expect(heads).toContain('Figure')
+    expect(h.querySelector('.feat-sub')?.textContent).toMatch(/Edit a credit line/)
+    act(() => root.unmount())
+    h.remove()
+  })
+
+  it('balance mode hides the credit line + bulk-credit lever and reads the standing as a balance', () => {
+    setBalanceMode()
+    const { h, root } = mount()
+    const heads = [...h.querySelectorAll('thead th')].map((t) => t.textContent)
+    // No credit-only field: the credit-limit column is gone; the figure reads as a wallet balance.
+    expect(heads).not.toContain('Credit')
+    expect(heads).not.toContain('Figure')
+    expect(heads).toContain('Balance')
+    // The bulk-credit lever is a credit-only control — select a row, it must not appear.
+    act(() => h.querySelector<HTMLInputElement>('input[aria-label="Select Marco"]')!.click())
+    expect(h.querySelector('input[aria-label="Bulk credit amount"]')).toBeNull()
+    expect(h.querySelector('.feat-sub')?.textContent).not.toMatch(/credit line/)
     act(() => root.unmount())
     h.remove()
   })

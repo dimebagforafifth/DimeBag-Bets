@@ -5,6 +5,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { getBook } from '../../app/book-store.js'
+import { setActiveEconomyTenant, setEconomyPolicy, __resetEconomy } from '../../core/index.js'
+import { __resetEconomyConfig } from '../../app/economy-config.js'
 import { AgentsPanel, buildForest, flatten } from './AgentsPanel.js'
 import { AgentAdminPanel } from './AgentAdminPanel.js'
 import { AgentPerformancePanel } from './AgentPerformancePanel.js'
@@ -21,7 +23,15 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount())
   host.remove()
+  __resetEconomyConfig()
+  __resetEconomy()
 })
+
+/** Flip the active book to the wallet economy money-neutrally (no migration) for label tests. */
+function setBalanceMode() {
+  setActiveEconomyTenant('default')
+  setEconomyPolicy({ mode: 'balance', balanceFloorCents: 0 }, 'default')
+}
 
 const rows = () => [...host.querySelectorAll<HTMLButtonElement>('.agt-rowbtn')]
 const rowByRole = (label: string) =>
@@ -82,7 +92,11 @@ describe('Agents — hierarchy', () => {
 
 describe('Agent Admin + Performance', () => {
   it('manifest registers agent-admin + agent-performance under Players', () => {
-    expect(agentsManifests.map((m) => m.key)).toEqual(['agents', 'agent-admin', 'agent-performance'])
+    expect(agentsManifests.map((m) => m.key)).toEqual([
+      'agents',
+      'agent-admin',
+      'agent-performance',
+    ])
     expect(agentsManifests.every((m) => m.section === 'players')).toBe(true)
   })
 
@@ -93,6 +107,20 @@ describe('Agent Admin + Performance', () => {
     expect(host.textContent).toMatch(/Commission/)
     expect(host.querySelectorAll('.agtbl-input').length).toBeGreaterThan(0) // inline editors
     expect(host.querySelector('.agtbl-btn')?.textContent).toMatch(/Active|Suspended/)
+  })
+
+  it('Agent Admin in balance mode drops the credit-waterfall columns, keeps commission', () => {
+    setBalanceMode()
+    act(() => root.render(<AgentAdminPanel onBack={() => {}} />))
+    const heads = [...host.querySelectorAll('thead th')].map((t) => t.textContent)
+    // No credit-only field: the allowance (credit budget) + to-grant columns are gone.
+    expect(heads).not.toContain('Allowance')
+    expect(heads).not.toContain('To grant')
+    // Commission, roster + the status toggle remain — they aren't credit-line concepts.
+    expect(heads).toContain('Commission')
+    expect(host.querySelector('.agtbl-btn')?.textContent).toMatch(/Active|Suspended/)
+    // The header copy no longer pitches a "credit budget".
+    expect(host.querySelector('.feat-sub')?.textContent).not.toMatch(/credit budget/)
   })
 
   it('Agent Performance ranks agents with Book W/L and a commission total', () => {

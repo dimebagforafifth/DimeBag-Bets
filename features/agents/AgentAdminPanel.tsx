@@ -11,6 +11,7 @@ import {
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
 import { PanelShell } from '../_desk/shared.js'
+import { useIsBalanceMode } from '../../app/economy-mode.js'
 import './agents.css'
 
 const ROLE_LABEL: Record<string, string> = { subagent: 'Master', agent: 'Agent' }
@@ -24,6 +25,9 @@ const ROLE_LABEL: Record<string, string> = { subagent: 'Master', agent: 'Agent' 
  */
 export function AgentAdminPanel({ onBack }: { onBack: () => void }) {
   const bv = useSyncExternalStore(subscribeBook, getBookVersion)
+  // Balance (wallet) mode has no credit waterfall: an agent hands down no credit budget, so the
+  // allowance + to-grant columns drop and the copy speaks only to commission (CLAUDE.md §3).
+  const balanceMode = useIsBalanceMode()
   const [q, setQ] = useState('')
 
   const agents = useMemo(() => {
@@ -37,9 +41,18 @@ export function AgentAdminPanel({ onBack }: { onBack: () => void }) {
     <PanelShell onBack={onBack}>
       <header className="feat-head">
         <p className="feat-sub">
-          Your agents and master agents. Set each one&rsquo;s <strong>allowance</strong> (the
-          credit budget they distribute to their roster) and <strong>commission</strong> split, or
-          suspend them. Onboard a new agent from <strong>Add Customer</strong>.
+          {balanceMode ? (
+            <>
+              Your agents and master agents. Set each one&rsquo;s <strong>commission</strong> split,
+              or suspend them. Onboard a new agent from <strong>Add Customer</strong>.
+            </>
+          ) : (
+            <>
+              Your agents and master agents. Set each one&rsquo;s <strong>allowance</strong> (the
+              credit budget they distribute to their roster) and <strong>commission</strong> split,
+              or suspend them. Onboard a new agent from <strong>Add Customer</strong>.
+            </>
+          )}
         </p>
       </header>
 
@@ -60,15 +73,15 @@ export function AgentAdminPanel({ onBack }: { onBack: () => void }) {
                 <th>Agent</th>
                 <th>Type</th>
                 <th className="num">Roster</th>
-                <th className="num">Allowance</th>
-                <th className="num">To grant</th>
+                {!balanceMode && <th className="num">Allowance</th>}
+                {!balanceMode && <th className="num">To grant</th>}
                 <th className="num">Commission</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {agents.map((a) => (
-                <AgentRow key={a.id} member={a} signal={bv} />
+                <AgentRow key={a.id} member={a} signal={bv} balanceMode={balanceMode} />
               ))}
             </tbody>
           </table>
@@ -78,7 +91,15 @@ export function AgentAdminPanel({ onBack }: { onBack: () => void }) {
   )
 }
 
-function AgentRow({ member, signal }: { member: Member; signal: number }) {
+function AgentRow({
+  member,
+  signal,
+  balanceMode,
+}: {
+  member: Member
+  signal: number
+  balanceMode: boolean
+}) {
   const org = getBook()
   const perf = agentPerformance(org, member.id)
   const toGrant = availableCredit(org, member.id)
@@ -101,14 +122,18 @@ function AgentRow({ member, signal }: { member: Member; signal: number }) {
           <span className={`agt-badge is-${member.role}`}>{ROLE_LABEL[member.role]}</span>
         </td>
         <td className="num">{perf.roster}</td>
-        <td className="num">
-          <CoinCell
-            cents={member.account.creditLimit}
-            signal={signal}
-            onCommit={(c) => run(() => setCreditLimit(org, member.id, c))}
-          />
-        </td>
-        <td className={`num ${toGrant < 0 ? 'is-down' : ''}`}>{formatMoney(toGrant)}</td>
+        {!balanceMode && (
+          <td className="num">
+            <CoinCell
+              cents={member.account.creditLimit}
+              signal={signal}
+              onCommit={(c) => run(() => setCreditLimit(org, member.id, c))}
+            />
+          </td>
+        )}
+        {!balanceMode && (
+          <td className={`num ${toGrant < 0 ? 'is-down' : ''}`}>{formatMoney(toGrant)}</td>
+        )}
         <td className="num">
           <PctCell
             pct={member.commissionPct ?? 0}
@@ -127,7 +152,7 @@ function AgentRow({ member, signal }: { member: Member; signal: number }) {
       </tr>
       {error && (
         <tr>
-          <td colSpan={7} className="agtbl-err" role="alert">
+          <td colSpan={balanceMode ? 5 : 7} className="agtbl-err" role="alert">
             {error}
           </td>
         </tr>
