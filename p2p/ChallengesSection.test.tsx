@@ -8,6 +8,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { ChallengesSection } from './index.js'
 import { __resetChallenges } from './seed.js'
 import { accountBook } from './store.js'
+import { __setEconomyMode } from './economy-mode.js'
 import type { Account } from '../core/index.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -25,6 +26,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount())
   host.remove()
+  __setEconomyMode(null) // restore the default credits mode
 })
 
 const render = (onBalanceChange?: () => void) =>
@@ -86,23 +88,44 @@ describe('ChallengesSection', () => {
     expect(totalBalances).toBe(0)
   })
 
-  it('an operator (role) settles an in-flight challenge to a winner — pot pays through core', () => {
+  it('an operator settles an in-flight challenge they are NOT party to — pot pays through core', () => {
+    // a non-participant operator; the seed has a Lena (proposer) vs Priya in-flight match
+    act(() =>
+      root.render(
+        <ChallengesSection viewerId="p-op" viewerName="Op" account={account} role="manager" />,
+      ),
+    )
+    click(buttons().find((b) => b.textContent?.startsWith('Active'))!)
+    const lena = accountBook.get('p-lena')!
+    const priya = accountBook.get('p-priya')!
+    const lb = lena.balance
+    const pb = priya.balance
+    const wonBtn = buttons().find((b) => b.textContent === 'Lena won')
+    expect(wonBtn).toBeTruthy()
+    click(wonBtn!)
+    // pot pays the winner through core and nets zero
+    expect(lena.balance).toBe(lb + 2_500)
+    expect(priya.balance).toBe(pb - 2_500)
+    expect(text()).toMatch(/Settled|takes/)
+  })
+
+  it('an operator who is a PARTICIPANT cannot grade their own challenge (no settle control)', () => {
     act(() =>
       root.render(
         <ChallengesSection viewerId="p-viewer" viewerName="You" account={account} role="manager" />,
       ),
     )
-    // accept an open offer → both stakes escrowed via core (the viewer's stake is now held)
+    // accept an open offer → the operator is now a participant in that in-flight challenge
     click(host.querySelector('.p2p-accept') as HTMLButtonElement)
     expect(account.pending).toBeGreaterThan(0)
-    // the Active tab now shows the operator settle controls (gated on the operator role)
     click(buttons().find((b) => b.textContent?.startsWith('Active'))!)
-    const wonBtn = buttons().find((b) => b.textContent?.includes('won'))
-    expect(wonBtn).toBeTruthy()
-    // settling pays the pot to the winner THROUGH CORE → the escrow hold is released
-    click(wonBtn!)
-    expect(account.pending).toBe(0)
-    expect(text()).toMatch(/Settled|takes/)
+    // the card the operator is a party to ('(you)') shows NO settle control
+    const ownCard = [...host.querySelectorAll('.p2p-card')].find((c) =>
+      c.textContent?.includes('(you)'),
+    )!
+    expect(
+      [...ownCard.querySelectorAll('button')].some((b) => b.textContent?.includes('won')),
+    ).toBe(false)
   })
 
   it('a plain player sees no settle/void control on in-flight challenges (operator-only)', () => {
@@ -110,6 +133,42 @@ describe('ChallengesSection', () => {
     click(host.querySelector('.p2p-accept') as HTMLButtonElement)
     click(buttons().find((b) => b.textContent?.startsWith('Active'))!)
     expect(buttons().some((b) => b.textContent?.includes('won'))).toBe(false)
+  })
+
+  it('the stake surface is mode-aware — staking actions gate off when the mode disables them', () => {
+    __setEconomyMode({
+      id: 'spectator',
+      label: 'Spectator',
+      stakingEnabled: false,
+      note: 'Staking is paused.',
+    })
+    render()
+    // the "New challenge" CTA and every Accept are gated behind ModeGate, replaced by the note
+    expect(buttons().some((b) => b.textContent === 'New challenge')).toBe(false)
+    expect(host.querySelectorAll('.p2p-accept').length).toBe(0)
+    expect(text()).toContain('Staking is paused')
+  })
+
+  it('staking actions are present in the default credits mode', () => {
+    render()
+    expect(buttons().some((b) => b.textContent === 'New challenge')).toBe(true)
+    expect(host.querySelectorAll('.p2p-accept').length).toBeGreaterThan(0)
+    expect(text()).toContain('Credits') // the mode chip
+  })
+
+  it('the friend picker lists players the viewer FOLLOWS (real social graph, org names)', () => {
+    // render as a seeded social player (Marco follows Lena, Priya, Dana)
+    const marco: Account = { id: 'p-marco', creditLimit: 200_000, balance: 0, pending: 0 }
+    act(() =>
+      root.render(<ChallengesSection viewerId="p-marco" viewerName="Marco" account={marco} />),
+    )
+    click(buttons().find((b) => b.textContent === 'New challenge')!)
+    const select = host.querySelector('select')!
+    const opts = [...select.querySelectorAll('option')].map((o) => o.textContent)
+    expect(opts).toContain('Open to community')
+    // names resolve from the ORG BOOK, not the p2p seed roster — p-dana is 'Dana (VIP)' in the
+    // org (the seed roster says plain 'Dana'), which proves the picker reads the real source.
+    expect(opts).toEqual(expect.arrayContaining(['Lena', 'Priya', 'Dana (VIP)']))
   })
 
   it('opens the propose form and posts an open challenge holding no money', () => {

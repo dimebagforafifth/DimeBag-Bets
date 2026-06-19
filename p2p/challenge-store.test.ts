@@ -235,3 +235,19 @@ describe('queries', () => {
     expect(store.version()).toBeGreaterThan(v0)
   })
 })
+
+describe('settle/void actor guard — a participant can never grade their own challenge', () => {
+  it('refuses settle/void when the actor is a party, but allows a pure operator (no actor)', () => {
+    const c = propose()
+    store.accept(c.id, bobChallenger, NOW)
+    // a participant identifying itself is refused either way
+    expect(() => store.settle(c.id, 'proposer', 'alice')).toThrow(/participant/)
+    expect(() => store.settle(c.id, 'accepter', 'bob')).toThrow(/participant/)
+    expect(() => store.voidChallenge(c.id, 'bob')).toThrow(/participant/)
+    expect(store.get(c.id)?.status).toBe('accepted') // nothing settled by the failed attempts
+    // a pure operator (no actor id) settles fine; the pot pays the winner and nets zero
+    store.settle(c.id, 'proposer')
+    expect(store.get(c.id)?.status).toBe('settled')
+    expect(alice.balance + bob.balance).toBe(0)
+  })
+})
