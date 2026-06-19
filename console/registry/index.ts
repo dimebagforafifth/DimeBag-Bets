@@ -38,6 +38,10 @@ import { sgpRulesManifest } from '../../app/book/sgp-rules-tile.js'
 import { casinoEdgeManifest } from '../../app/casino-edge/casino-edge-tile.js'
 import { challengesDeskManifests } from '../../p2p/manifest.js'
 import { importManifests } from '../../features/import/manifest.js'
+// Round 2 (Trading & Monetization): B → Trading Desk (Control, single manifest object added bare);
+// C → Billing & Invoices (Operations, spread). Neither lane edits this shared file.
+import { tradingDeskManifest } from '../../trading/trading-desk-tile.js'
+import { billingManifests } from '../../billing/manifest.js'
 
 /** Every console feature, grouped into sections at render time by `groupBySection`.
  *  Listed in section order so each section's tiles read top-to-bottom as written. */
@@ -50,6 +54,7 @@ export const REGISTRY: FeatureManifest[] = [
   ...collectionsManifests,
   ...challengesDeskManifests, // Challenges Desk (C — operator settle/void of P2P challenges)
   ...importManifests, // Player Import (D — migrate a legacy book via CSV)
+  ...billingManifests, // Billing & Invoices (r2 C — operator fiat per-head billing)
   // Players
   ...playersManifests,
   ...agentsManifests,
@@ -62,6 +67,7 @@ export const REGISTRY: FeatureManifest[] = [
   ...controlManifests,
   ...pricingManifests, // Margin & Pricing (C — operator economics)
   ...economyManifests, // Economy Mode (A — credit/PPH ↔ balance/wallet, whole book)
+  tradingDeskManifest, // Trading Desk (r2 B — margins, overrides, limits, suspensions; single manifest)
   ...operatorManualManifests,
   // Rewards (the loyalty program admin)
   ...rewardsAdminManifests,
