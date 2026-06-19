@@ -14,8 +14,10 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { formatMoney, toCents } from '../games/shared/money.js'
 import { formatAmerican } from '../app/book/odds-format.js'
 import { useBookOdds } from '../app/book/odds-source.js'
+// Pricing config is Lane A's authoritative store (the B stand-in was collapsed onto it). The desk
+// reads/writes it in basis points (bps). A's de-vig method + posture types come from A too.
 import {
-  allRows,
+  getPricingRows,
   globalRow,
   marginFloor,
   setDevigMethod,
@@ -23,8 +25,10 @@ import {
   setMarginFloor,
   setPosture,
   subscribePricingConfig,
-  pricingConfigVersion,
-} from './pricing-config.js'
+  getPricingConfigVersion,
+} from '../lib/odds/pricing-config.js'
+import type { DevigMethod } from '../lib/odds/devig.js'
+import type { PricePosture } from '../lib/odds/pricing-engine.js'
 import {
   getOverrides,
   setOverride,
@@ -36,12 +40,14 @@ import { getLimits, setLimit, removeLimit, subscribeLimits, limitsVersion } from
 import { listSuspensions, suspend, unsuspend, subscribeSuspensions } from './suspensions.js'
 import { marketHold } from './hold.js'
 import { isTradingSeeded, seedTradingDesk } from './seed.js'
-import type { DevigMethod, MarginPosture, TradingScope } from './types.js'
+import type { TradingScope } from './types.js'
 import './trading.css'
 
-const POSTURES: MarginPosture[] = ['recreational', 'balanced', 'sharp']
+// The desk offers the three presets (a manual margin edit makes a row 'custom').
+const POSTURES: PricePosture[] = ['recreational', 'balanced', 'sharp']
 const DEVIG: DevigMethod[] = ['multiplicative', 'additive', 'power', 'shin']
-const pct = (f: number) => `${(f * 100).toFixed(2)}%`
+/** bps → percent label (450 bps = 4.50%). */
+const pct = (bps: number) => `${(bps / 100).toFixed(2)}%`
 
 type Tab = 'pricing' | 'overrides' | 'limits' | 'suspensions' | 'hold'
 
@@ -87,10 +93,10 @@ export function TradingDeskPanel() {
 }
 
 function PricingSection({ agent }: { agent: boolean }) {
-  useSyncExternalStore(subscribePricingConfig, pricingConfigVersion, pricingConfigVersion)
+  useSyncExternalStore(subscribePricingConfig, getPricingConfigVersion, getPricingConfigVersion)
   const g = globalRow()
-  const floor = marginFloor()
-  const rows = allRows().filter((r) => r.scope !== 'global')
+  const floor = marginFloor() // bps
+  const rows = getPricingRows().filter((r) => r.scope !== 'global')
   const [sport, setSport] = useState('')
 
   return (
@@ -102,15 +108,13 @@ function PricingSection({ agent }: { agent: boolean }) {
         <span className="td-k">Global margin</span>
         <input
           type="range"
-          min={Math.round(floor * 1000)}
-          max={120}
-          value={Math.round(g.margin * 1000)}
+          min={floor}
+          max={1200}
+          value={g.marginBps}
           aria-label="global margin"
-          onChange={(e) =>
-            setMargin('global', '', Number(e.target.value) / 1000, { asAgent: agent })
-          }
+          onChange={(e) => setMargin(Number(e.target.value), 'global', undefined, undefined, { asAgent: agent })}
         />
-        <span className="td-v">{pct(g.margin)}</span>
+        <span className="td-v">{pct(g.marginBps)}</span>
       </div>
       {!agent && (
         <div className="td-row">
@@ -118,10 +122,10 @@ function PricingSection({ agent }: { agent: boolean }) {
           <input
             type="range"
             min={0}
-            max={80}
-            value={Math.round(floor * 1000)}
+            max={800}
+            value={floor}
             aria-label="margin floor"
-            onChange={(e) => setMarginFloor(Number(e.target.value) / 1000)}
+            onChange={(e) => setMarginFloor(Number(e.target.value))}
           />
           <span className="td-v">{pct(floor)}</span>
         </div>
@@ -130,15 +134,15 @@ function PricingSection({ agent }: { agent: boolean }) {
         <span className="td-k">Posture</span>
         <Segmented
           options={POSTURES}
-          value={g.posture}
-          onChange={(p) => setPosture('global', '', p as MarginPosture)}
+          value={g.posture as PricePosture}
+          onChange={(p) => setPosture(p as PricePosture, 'global')}
         />
       </div>
       <div className="td-row">
         <span className="td-k">De-vig method</span>
         <select
-          value={g.devig_method}
-          onChange={(e) => setDevigMethod('global', '', e.target.value as DevigMethod)}
+          value={g.devigMethod}
+          onChange={(e) => setDevigMethod(e.target.value as DevigMethod, 'global')}
         >
           {DEVIG.map((m) => (
             <option key={m} value={m}>
@@ -160,7 +164,7 @@ function PricingSection({ agent }: { agent: boolean }) {
           className="td-btn"
           disabled={!sport}
           onClick={() => {
-            setMargin('sport', sport, g.margin, { asAgent: agent })
+            setMargin(g.marginBps, 'sport', sport, undefined, { asAgent: agent })
             setSport('')
           }}
         >
@@ -172,24 +176,27 @@ function PricingSection({ agent }: { agent: boolean }) {
           No per-sport/market rows — every market inherits the global config.
         </p>
       ) : (
-        rows.map((r) => (
-          <div className="td-row" key={`${r.scope}:${r.key}`}>
-            <span className="td-k">
-              {r.scope}:{r.key}
-            </span>
-            <input
-              type="range"
-              min={Math.round(floor * 1000)}
-              max={120}
-              value={Math.round(r.margin * 1000)}
-              aria-label={`${r.key} margin`}
-              onChange={(e) =>
-                setMargin(r.scope, r.key, Number(e.target.value) / 1000, { asAgent: agent })
-              }
-            />
-            <span className="td-v">{pct(r.margin)}</span>
-          </div>
-        ))
+        rows.map((r) => {
+          const key = r.sportId ?? r.marketType ?? ''
+          return (
+            <div className="td-row" key={`${r.scope}:${key}`}>
+              <span className="td-k">
+                {r.scope}:{key}
+              </span>
+              <input
+                type="range"
+                min={floor}
+                max={1200}
+                value={r.marginBps}
+                aria-label={`${key} margin`}
+                onChange={(e) =>
+                  setMargin(Number(e.target.value), r.scope, r.sportId, r.marketType, { asAgent: agent })
+                }
+              />
+              <span className="td-v">{pct(r.marginBps)}</span>
+            </div>
+          )
+        })
       )}
     </section>
   )

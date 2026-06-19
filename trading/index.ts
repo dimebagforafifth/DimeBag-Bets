@@ -9,11 +9,8 @@ export type {
   LineOverride,
   MarketLimit,
   MarketSuspension,
-  PricingConfigRow,
   TradingScope,
   TimeToEventTier,
-  MarginPosture,
-  DevigMethod,
 } from './types.js'
 
 // Overrides
@@ -52,23 +49,8 @@ export {
   __resetSuspensionMeta,
 } from './suspensions.js'
 
-// Pricing config (Lane A interface)
-export {
-  globalRow,
-  rowFor,
-  allRows,
-  effectiveConfig,
-  devigMethodFor,
-  postureFor,
-  marginFloor,
-  setMargin,
-  setMarginFloor,
-  setPosture,
-  setDevigMethod,
-  subscribePricingConfig,
-  pricingConfigVersion,
-  __resetPricingConfig,
-} from './pricing-config.js'
+// Pricing config now lives on Lane A's authoritative store (lib/odds/pricing-config) — the B
+// stand-in was collapsed onto it in the reconcile lane. Import margin/posture/de-vig from there.
 
 // The gate (post-pipeline hook) + hold readout
 export { applyOverrides, gateWager, type GateLeg, type GateWagerInput } from './gate.js'

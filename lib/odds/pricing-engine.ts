@@ -20,8 +20,10 @@ import { applyMargin as haircutPrice, priceFromDecimal, impliedProbability } fro
 import { devig, type DevigMethod } from './devig.js'
 
 /** An operator's hold posture. 'custom' uses the explicit margin settings; the named presets
- *  drive a starting margin + shade (the operator can then switch to custom and fine-tune). */
-export type PricePosture = 'sharp' | 'recreational' | 'custom'
+ *  drive a starting margin + shade (the operator can then switch to custom and fine-tune).
+ *  'balanced' sits between sharp and recreational (= today's default 450 bps, no shade) — it is
+ *  the posture the collapsed Trading Desk (Lane B) carried over. */
+export type PricePosture = 'sharp' | 'balanced' | 'recreational' | 'custom'
 
 /** The margin knobs that drive `applyMargin` — base juice, favorite shade, and the de-vig
  *  method the upstream step used. (A pricing_config row resolves to exactly these.) */
@@ -39,8 +41,12 @@ export interface MarginSettings {
  * action; RECREATIONAL runs fatter juice (~550 bps) and shades the favorite, where the public
  * piles in. An operator adopts one as a starting point, then switches to 'custom' to fine-tune.
  */
-export const PRICING_POSTURE_PRESETS: Readonly<Record<'sharp' | 'recreational', MarginSettings>> = {
+export const PRICING_POSTURE_PRESETS: Readonly<
+  Record<'sharp' | 'balanced' | 'recreational', MarginSettings>
+> = {
   sharp: { marginBps: 250, favoriteShadeBps: 0, devigMethod: 'power' },
+  // BALANCED — today's default hold (450 bps, no shade); the middle posture Lane B carried in.
+  balanced: { marginBps: 450, favoriteShadeBps: 0, devigMethod: 'power' },
   recreational: { marginBps: 550, favoriteShadeBps: 75, devigMethod: 'power' },
 }
 

@@ -65,26 +65,7 @@ export interface MarketSuspension {
   at: number
 }
 
-/* ───────────────────────────── pricing config (Lane A interface) ─────────────────────────────
- * Lane A owns the pricing pipeline + `pricing_config`; Lane B's Trading Desk READS/WRITES these
- * rows (margin, posture, de-vig method) and Lane A's devig/applyMargin consume them. Until A's
- * authoritative store lands this is the interface B writes against.
- * // SEAM (Lane A / wiring): replace this store with A's pricing_config; keep the row shape.
- */
-
-export type MarginPosture = 'recreational' | 'balanced' | 'sharp'
-export type DevigMethod = 'multiplicative' | 'additive' | 'power' | 'shin'
-
-/** One pricing-config row. `key` is '' (global), a sportID, or a marketType. A row inherits the
- *  global row for any unset field. `margin_floor` is the manager's hard minimum an agent edit may
- *  not undercut (agents inherit; they can only ADD margin, never widen below the floor). */
-export interface PricingConfigRow {
-  scope: TradingScope
-  key: string
-  /** Base margin (overround) as a fraction, e.g. 0.045 = 4.5%. */
-  margin: number
-  /** Manager floor on `margin` — an agent override is clamped to at least this. */
-  margin_floor: number
-  posture: MarginPosture
-  devig_method: DevigMethod
-}
+/* Pricing config (margin / posture / de-vig + the manager margin floor + agent-clamp governance)
+ * was COLLAPSED onto Lane A's authoritative store in the reconcile lane — see
+ * lib/odds/pricing-config.ts (PricingConfigRow, PricePosture, DevigMethod). The Trading Desk tile
+ * imports those directly; this module keeps only the gate schemas (overrides / limits / suspensions). */

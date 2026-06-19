@@ -34,7 +34,18 @@ export interface PricingConfigRow {
   posture: PricePosture
   /** Extra margin in bps applied to the favorite only. */
   favoriteShadeBps: number
+  /**
+   * Manager governance floor in bps — the lowest `marginBps` an AGENT may set (an agent can't
+   * thin the book's hold below this). Authoritative on the GLOBAL row (per-row values on
+   * sport/market rows are ignored; `marginFloor()` reads the global row). Optional for backward
+   * compatibility with rows persisted before this field existed (reads default to
+   * `DEFAULT_MARGIN_FLOOR_BPS`). Mirrors Lane B's validated `margin_floor` governance.
+   */
+  marginFloorBps?: number
 }
+
+/** Default agent margin floor (bps) — Lane B's 0.02 floor == 200 bps. */
+export const DEFAULT_MARGIN_FLOOR_BPS = 200
 
 /** The single global row a book starts with — 450 bps / power, reproducing today's pricing. */
 export const DEFAULT_PRICING_ROW: PricingConfigRow = {
@@ -43,6 +54,7 @@ export const DEFAULT_PRICING_ROW: PricingConfigRow = {
   marginBps: 450,
   posture: 'recreational',
   favoriteShadeBps: 0,
+  marginFloorBps: DEFAULT_MARGIN_FLOOR_BPS,
 }
 
 /** The margin knobs a row resolves to (for `pricing-engine.applyMargin` / `priceMarket`). */
@@ -162,6 +174,64 @@ export function setPosture(
   const k = rowKey(scope, sportId, marketType)
   const existing = rows.find((r) => keyOf(r) === k) ?? { scope, sportId, marketType, ...toMarginSettings(DEFAULT_PRICING_ROW), posture }
   upsertPricingRow(applyPosturePreset(existing as PricingConfigRow, posture))
+}
+
+/* ----------------------- governance (collapsed from Lane B) ---------------- */
+
+/** The book's global row (the default + the home of the manager margin floor). */
+export function globalRow(): PricingConfigRow {
+  return rows.find((r) => r.scope === 'global') ?? DEFAULT_PRICING_ROW
+}
+
+/** The manager's agent-margin floor in bps (authoritative on the global row). */
+export function marginFloor(): number {
+  return globalRow().marginFloorBps ?? DEFAULT_MARGIN_FLOOR_BPS
+}
+
+/** Set the manager's agent-margin floor (bps, ≥0). A MANAGER action — an agent never calls this.
+ *  The manager may lower it. Stored on the global row. */
+export function setMarginFloor(bps: number): void {
+  const floor = Number.isFinite(bps) ? Math.max(0, Math.round(bps)) : 0
+  upsertPricingRow({ ...globalRow(), scope: 'global', marginFloorBps: floor })
+}
+
+/** Find the row at (scope, sport, market), or synthesize one off the default margin knobs. */
+function rowAt(scope: PricingConfigRow['scope'], sportId?: string, marketType?: MarketType): PricingConfigRow {
+  const k = rowKey(scope, sportId, marketType)
+  const existing = rows.find((r) => keyOf(r) === k)
+  if (existing) return existing
+  return { scope, sportId, marketType, ...toMarginSettings(DEFAULT_PRICING_ROW), posture: 'custom' }
+}
+
+/**
+ * Set a row's base margin (bps). Manual edit ⇒ posture becomes 'custom'. GOVERNANCE: when
+ * `asAgent`, the value is clamped UP to the manager's `marginFloor()` (an agent can't thin the
+ * hold below the floor); a non-finite value also resolves to the floor. The manager (no
+ * `asAgent`) may set any non-negative margin, including below the floor. Capped at 5000 bps
+ * (the pricing_config column bound). Mirrors Lane B's validated agent-clamp.
+ */
+export function setMargin(
+  marginBps: number,
+  scope: PricingConfigRow['scope'] = 'global',
+  sportId?: string,
+  marketType?: MarketType,
+  opts: { asAgent?: boolean } = {},
+): void {
+  const floor = marginFloor()
+  let bps = Number.isFinite(marginBps) ? Math.round(marginBps) : floor
+  if (opts.asAgent) bps = Math.max(bps, floor) // agents cannot go below the manager floor
+  bps = Math.max(0, Math.min(5000, bps))
+  upsertPricingRow({ ...rowAt(scope, sportId, marketType), scope, sportId, marketType, marginBps: bps, posture: 'custom' })
+}
+
+/** Set a row's de-vig method (Trading Desk action). Leaves margin/posture untouched. */
+export function setDevigMethod(
+  devigMethod: DevigMethod,
+  scope: PricingConfigRow['scope'] = 'global',
+  sportId?: string,
+  marketType?: MarketType,
+): void {
+  upsertPricingRow({ ...rowAt(scope, sportId, marketType), scope, sportId, marketType, devigMethod })
 }
 
 /** Test/boot helper: restore the single default global row. */

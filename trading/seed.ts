@@ -8,7 +8,13 @@ import { mockSlate } from '../app/book/mockBook.js'
 import { setOverride, __resetOverrides, getOverrides } from './overrides.js'
 import { setLimit, __resetLimits, getLimits } from './limits.js'
 import { suspend, unsuspend, listSuspensions, __resetSuspensionMeta } from './suspensions.js'
-import { setMargin, setPosture, setMarginFloor, __resetPricingConfig } from './pricing-config.js'
+// Pricing config is Lane A's authoritative store (B's stand-in was collapsed onto it) — bps.
+import {
+  setMargin,
+  setPosture,
+  setMarginFloor,
+  __resetPricingConfig,
+} from '../lib/odds/pricing-config.js'
 
 let seeded = false
 
@@ -16,11 +22,11 @@ let seeded = false
 export function seedTradingDesk(now: number): void {
   __resetTrading()
 
-  // Manager pricing posture: a tighter floor, a sharper soccer book.
-  setMarginFloor(0.02)
-  setPosture('global', '', 'balanced')
-  setMargin('sport', 'SOCCER', 0.05)
-  setPosture('sport', 'SOCCER', 'sharp')
+  // Manager pricing posture: a tighter floor, a sharper soccer book (bps).
+  setMarginFloor(200) // 2.00%
+  setPosture('balanced', 'global')
+  setMargin(500, 'sport', 'SOCCER') // 5.00%
+  setPosture('sharp', 'sport', 'SOCCER')
 
   // A per-sport limit (football tightened) + a global near-tip-off ceiling.
   setLimit({

@@ -15,12 +15,9 @@ import { applyOverrides } from './gate.js'
 import { setOverride, clearOverride, subscribeOverrides, __resetOverrides } from './overrides.js'
 import { setLimit, __resetLimits } from './limits.js'
 import { suspend, unsuspend, __resetSuspensionMeta } from './suspensions.js'
-import {
-  setMargin,
-  setMarginFloor,
-  effectiveConfig,
-  __resetPricingConfig,
-} from './pricing-config.js'
+// Pricing config collapsed onto Lane A's store; the desk's margin governance is now tested in
+// lib/odds/pricing-config.test.ts. Here we only reset it between gate tests.
+import { __resetPricingConfig } from '../lib/odds/pricing-config.js'
 import { marketHold } from './hold.js'
 
 const NOW = 1_000_000
@@ -183,16 +180,8 @@ describe('limits — reject over-max stake/payout, hold no money', () => {
   })
 })
 
-describe('pricing config — agent can’t widen margin below the manager floor', () => {
-  it('clamps an agent margin edit up to the floor; a manager may set below it', () => {
-    setMarginFloor(0.03) // manager floor 3%
-    setMargin('sport', 'FOOTBALL', 0.01, { asAgent: true }) // agent tries to widen to 1%
-    expect(effectiveConfig({ sport: 'FOOTBALL' }).margin).toBeGreaterThanOrEqual(0.03)
-    // a manager edit is not floored to the agent rule (though never below the global floor)
-    setMargin('sport', 'BASKETBALL', 0.05, {})
-    expect(effectiveConfig({ sport: 'BASKETBALL' }).margin).toBeCloseTo(0.05, 6)
-  })
-})
+// Pricing-config margin governance (agent-clamp to the manager floor, manager-below-floor, NaN→
+// floor) moved with the store to lib/odds/pricing-config.test.ts in the reconcile lane.
 
 describe('review regressions — confirmed gate findings', () => {
   afterEach(() => {
@@ -302,14 +291,6 @@ describe('review regressions — confirmed gate findings', () => {
     }
   })
 
-  it('a non-finite (NaN) agent margin can’t bypass the manager floor', () => {
-    setMarginFloor(0.03)
-    setMargin('global', '', Number.NaN, { asAgent: true })
-    const eff = effectiveConfig({})
-    expect(Number.isFinite(eff.margin)).toBe(true)
-    expect(eff.margin).toBeGreaterThanOrEqual(0.03)
-    expect(eff.margin_floor).toBe(0.03) // reports the enforced floor
-  })
 })
 
 describe('hold readout — hold% == published − true', () => {

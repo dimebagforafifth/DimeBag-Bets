@@ -30,8 +30,10 @@ create table if not exists pricing_config (
   devig_method       text not null default 'power'
                        check (devig_method in ('multiplicative','additive','power','shin')),
   margin_bps         integer not null default 450 check (margin_bps >= 0 and margin_bps <= 5000),
+  -- manager governance floor: the lowest margin_bps an agent may set (read off the global row)
+  margin_floor_bps   integer not null default 200 check (margin_floor_bps >= 0 and margin_floor_bps <= 5000),
   posture            text not null default 'recreational'
-                       check (posture in ('sharp','recreational','custom')),
+                       check (posture in ('sharp','balanced','recreational','custom')),
   favorite_shade_bps integer not null default 0 check (favorite_shade_bps >= 0 and favorite_shade_bps <= 2000),
   updated_at         timestamptz not null default now(),
   -- one row per (owner, scope, sport, market) — the resolver's identity key

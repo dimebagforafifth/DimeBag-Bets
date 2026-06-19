@@ -6,7 +6,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { TradingDeskPanel } from './TradingDeskPanel.js'
 import { __resetTrading } from './seed.js'
-import { marginFloor, effectiveConfig } from './pricing-config.js'
+import { marginFloor, resolvePricingConfig } from '../lib/odds/pricing-config.js'
 import { listSuspensions } from './suspensions.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -58,7 +58,7 @@ describe('TradingDeskPanel', () => {
       agentToggle.checked = true
       agentToggle.dispatchEvent(new Event('change', { bubbles: true }))
     })
-    const floor = marginFloor()
+    const floor = marginFloor() // bps
     const range = host.querySelector('input[aria-label="global margin"]') as HTMLInputElement
     act(() => {
       const setter = Object.getOwnPropertyDescriptor(
@@ -68,6 +68,6 @@ describe('TradingDeskPanel', () => {
       setter.call(range, '0') // try to widen margin to 0
       range.dispatchEvent(new Event('input', { bubbles: true }))
     })
-    expect(effectiveConfig({}).margin).toBeGreaterThanOrEqual(floor)
+    expect(resolvePricingConfig().marginBps).toBeGreaterThanOrEqual(floor)
   })
 })
