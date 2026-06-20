@@ -15,7 +15,7 @@ import type { Role } from '../org/index.js'
  *  sections registered via app/player-sections — added here so the Section state +
  *  render guard accept them and they're reachable by players. players/pools/limits are
  *  the round-3 Community & Contests sections; 'profile' stays additively alongside the
- *  richer 'players' hub.) */
+ *  richer 'players' hub. boosts/splits/referrals are the round-4 Engagement sections.) */
 export type Section =
   | 'casino'
   | 'sportsbook'
@@ -31,6 +31,9 @@ export type Section =
   | 'players'
   | 'pools'
   | 'limits'
+  | 'boosts'
+  | 'splits'
+  | 'referrals'
   | 'management'
 
 export const ALL_SECTIONS: Section[] = [
@@ -48,6 +51,9 @@ export const ALL_SECTIONS: Section[] = [
   'players',
   'pools',
   'limits',
+  'boosts',
+  'splits',
+  'referrals',
   'management',
 ]
 const PLAYER_SECTIONS: Section[] = [
@@ -65,6 +71,9 @@ const PLAYER_SECTIONS: Section[] = [
   'players',
   'pools',
   'limits',
+  'boosts',
+  'splits',
+  'referrals',
 ]
 const STAFF_SECTIONS: Section[] = ['management', 'leaderboard']
 

@@ -5,6 +5,8 @@ import { ErrorBoundary } from './ErrorBoundary.js'
 import { AuthProvider, Login, useAuth } from '../auth/index.js'
 import { installAlertTransport } from './alert-transport.js'
 import { armBonusEngine } from '../bonus/index.js'
+import { armBoostEngine } from '../boosts/index.js'
+import { armReferrals } from '../referrals/index.js'
 import { setActiveEconomyTenant } from '../core/index.js'
 import { getActiveTenant } from '../persistence/index.js'
 import './theme.css'
@@ -24,6 +26,14 @@ function Root() {
   // bonus playthrough clears from ACTUAL betting. Safe + off-by-default — arming only records
   // turnover, never grants; money grants happen solely via fireTrigger/expireDue → core.grant.
   useEffect(() => armBonusEngine(), [])
+  // Arm the boost engine (round 4 B): subscribes to core settlement so a winning, qualifying bet
+  // gets its boost uplift granted via the bonus engine's grant path. Off-by-default — with no boost
+  // rules authored it grants nothing; the BoostsPanel also arms it on mount (idempotent).
+  useEffect(() => armBoostEngine(), [])
+  // Arm referrals (round 4 D): subscribes to core settlement so a referee's first qualifying settled
+  // wager pays both parties through core.grant. Off-by-default — the program ships disabled, so an
+  // unconfigured book grants nothing; the referral panel also arms on mount.
+  useEffect(() => armReferrals(), [])
   // Point core's economy policy at the active tenant at boot (multi-tenant books). app/economy-config
   // already syncs core on import; this makes the tenant binding explicit so a balance-mode book's
   // policy is in force before the first wager. Off-by-default: with no config the tenant resolves to

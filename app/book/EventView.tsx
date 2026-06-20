@@ -7,6 +7,7 @@
 
 import type { NormalizedEvent, NormalizedMarket } from '../../lib/odds/contract.js'
 import { PriceChip, type ToggleLeg } from './MarketChips.js'
+import { MarketSplitBar } from '../../splits/index.js'
 
 const STAT_LABEL: Record<string, string> = {
   points: 'Points',
@@ -24,6 +25,7 @@ function MarketBlock({
   market,
   slipKeys,
   onToggle,
+  viewerId,
 }: {
   title: string
   isProp?: boolean
@@ -31,6 +33,7 @@ function MarketBlock({
   market: NormalizedMarket
   slipKeys: Set<string>
   onToggle: ToggleLeg
+  viewerId: string
 }) {
   // chips in pairs (home/away, over/under) so a market reads as rows of two
   const rows: NormalizedMarket['selections'][] = []
@@ -52,6 +55,8 @@ function MarketBlock({
           ))}
         </div>
       ))}
+      {/* Round-4 C: public betting split for this market (read-only; "No action yet" when empty). */}
+      <MarketSplitBar marketId={market.marketId} viewerId={viewerId} />
     </div>
   )
 }
@@ -61,11 +66,13 @@ export function EventView({
   slipKeys,
   onToggle,
   onBack,
+  viewerId,
 }: {
   event: NormalizedEvent
   slipKeys: Set<string>
   onToggle: ToggleLeg
   onBack: () => void
+  viewerId: string
 }) {
   const byType = (t: NormalizedMarket['type']) => event.markets.filter((m) => m.type === t)
   const [ml] = byType('moneyline')
@@ -97,6 +104,7 @@ export function EventView({
           market={ml}
           slipKeys={slipKeys}
           onToggle={onToggle}
+          viewerId={viewerId}
         />
       )}
       {spreads[0] && (
@@ -106,6 +114,7 @@ export function EventView({
           market={spreads[0]}
           slipKeys={slipKeys}
           onToggle={onToggle}
+          viewerId={viewerId}
         />
       )}
       {totals[0] && (
@@ -115,6 +124,7 @@ export function EventView({
           market={totals[0]}
           slipKeys={slipKeys}
           onToggle={onToggle}
+          viewerId={viewerId}
         />
       )}
 
@@ -125,6 +135,7 @@ export function EventView({
           market={spreads[1]}
           slipKeys={slipKeys}
           onToggle={onToggle}
+          viewerId={viewerId}
         />
       )}
       {totals[1] && (
@@ -134,6 +145,7 @@ export function EventView({
           market={totals[1]}
           slipKeys={slipKeys}
           onToggle={onToggle}
+          viewerId={viewerId}
         />
       )}
 
@@ -146,6 +158,7 @@ export function EventView({
           market={m}
           slipKeys={slipKeys}
           onToggle={onToggle}
+          viewerId={viewerId}
         />
       ))}
     </div>

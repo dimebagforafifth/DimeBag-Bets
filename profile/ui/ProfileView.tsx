@@ -25,6 +25,9 @@ import {
 import { follow, isFollowing, unfollow, followCounts } from '../follow-graph.js'
 import { formatMoney } from '../../games/shared/money.js'
 import { PnlChart } from './PnlChart.js'
+// Round-4 C: the CLV-beat credibility card (closing-line beat + value-vs-taken). Imported from
+// its component path (not the splits/ barrel) to avoid the barrel's section self-registration here.
+import { ClvBeatCard } from '../../splits/ui/ClvBeatCard.js'
 import { LockedBlock, moneyTone, pct, signedMoney, StatCell, units as fmtUnits } from './bits.js'
 
 export function ProfileView({
@@ -176,6 +179,8 @@ export function ProfileView({
                 </div>
                 <div className="prof-cards">
                   <ClvCard stats={stats} />
+                  {/* Round-4 C: closing-line-beat credibility for the viewed player (honestly gated). */}
+                  <ClvBeatCard accountId={ownerId} />
                   <TailCard stats={stats} />
                 </div>
               </>

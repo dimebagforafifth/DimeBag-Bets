@@ -128,6 +128,7 @@ export function BookView({
       slipKeys={slipKeys}
       onToggle={toggle}
       onBack={() => setOpenEventId(null)}
+      viewerId={viewerId}
     />
   ) : (
     <BookLobby

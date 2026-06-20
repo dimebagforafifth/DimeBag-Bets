@@ -46,6 +46,10 @@ import { billingManifests } from '../../billing/manifest.js'
 // section, not a console tile, so it mounts via register-player-sections, not here.)
 import { poolsManifests } from '../../pools/manifest.js'
 import { responsiblePlayManifests } from '../../features/responsible-play/manifest.js'
+// Round 4 (Engagement): C → Public Splits (Players, spread); D → Referral Program (Rewards,
+// spread). B's Boosts tile already rides rewardsAdminManifests (no registry edit); A adds no tile.
+import { splitsManifests } from '../../splits/manifest.js'
+import { referralManifests } from '../../features/referrals/manifest.js'
 
 /** Every console feature, grouped into sections at render time by `groupBySection`.
  *  Listed in section order so each section's tiles read top-to-bottom as written. */
@@ -65,6 +69,7 @@ export const REGISTRY: FeatureManifest[] = [
   ...agentsManifests,
   ...cashierDeskManifests,
   ...responsiblePlayManifests, // Responsible Play (r3 D — read-only player self-limits view)
+  ...splitsManifests, // Public Splits (r4 C — read-only bets%/handle% by market)
   // Catalog
   ...catalogManifests,
   sgpRulesManifest, // SGP Rules (B — same-game-parlay conflict gate; single manifest)
@@ -77,6 +82,7 @@ export const REGISTRY: FeatureManifest[] = [
   ...operatorManualManifests,
   // Rewards (the loyalty program admin)
   ...rewardsAdminManifests,
+  ...referralManifests, // Referral Program (r4 D — invite loops; rewards via core grant path)
   ...competitionsManifests, // Competitions creator (C — author & run contests)
   // CRM + analytics (D — read-only back-office: Player CRM / Integrity / Abuse Watch in
   // Players, Analytics in Control; grouped to their sections at render)
