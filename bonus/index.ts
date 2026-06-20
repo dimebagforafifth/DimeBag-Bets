@@ -37,6 +37,7 @@ export {
   grantsForPlayer,
   eligibilityContext,
   fireTrigger,
+  grantRuleTo,
   recordTurnover,
   expireDue,
   armBonusEngine,

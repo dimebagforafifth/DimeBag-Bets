@@ -13,6 +13,7 @@ import { CompPanel } from './CompPanel.js'
 import { EconomyPanel } from './EconomyPanel.js'
 import { ReportingPanel } from './ReportingPanel.js'
 import { BonusEnginePanel } from './BonusEnginePanel.js'
+import { boostsManifest } from '../../boosts/boosts-tile.js'
 
 export const rewardsAdminManifests: FeatureManifest[] = [
   {
@@ -67,6 +68,9 @@ export const rewardsAdminManifests: FeatureManifest[] = [
     icon: BarChart3,
     Panel: ReportingPanel,
   },
+  // Boosts (round 4, Lane B) — profit & odds boosts, a bonus-engine offer with a slip qualifier.
+  // Rides this rewards spread alongside the Bonus Engine; money only through the engine's grant.
+  boostsManifest,
 ]
 
 export default rewardsAdminManifests

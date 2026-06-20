@@ -289,6 +289,86 @@ export interface FireResult {
 }
 
 /**
+ * Issue ONE rule to ONE player through the single grant path — the shared core of `fireTrigger`
+ * and `grantRuleTo`. Returns the created ticket, or null when the player is skipped (ineligible /
+ * already-held / 0-value / capped out). Pushes the ticket onto `grants` but does NOT notify — the
+ * caller batches the notify. Money moves ONLY here, via `core.grant` inside `mutateBook`.
+ */
+function issueRuleToPlayer(
+  rule: BonusRule,
+  player: Member,
+  trigger: BonusTrigger,
+  ctx: RewardContext,
+  now: number,
+  org: Org,
+  // An explicit eligibility context (e.g. a settlement-time caller passing the player's AT-PLACEMENT
+  // state) — so the gate isn't re-evaluated against a figure the same event just moved. Defaults to
+  // the live context, preserving fireTrigger's behaviour exactly.
+  eligCtx?: EligibilityContext,
+): BonusGrant | null {
+  if (rule.oncePerPlayer && hasGrantFromRule(player.id, rule.id)) return null
+  if (!isEligible(rule, eligCtx ?? eligibilityContext(org, player.id))) return null
+
+  // free-spins: a count, not credit — granted through the rewards hub, no playthrough.
+  if (rule.reward.kind === 'free-spins') {
+    const spins = rule.reward.spins ?? 0
+    if (spins <= 0) return null
+    grantFreeSpins(player.id, spins)
+    const ticket: BonusGrant = {
+      id: nextGrantId(now),
+      ruleId: rule.id,
+      ruleName: rule.name,
+      trigger,
+      playerId: player.id,
+      playerName: player.name,
+      grantedCents: 0,
+      requiredTurnoverCents: 0,
+      turnoverCents: 0,
+      maxWinCents: rule.maxWinCents,
+      status: 'cleared',
+      grantedAt: now,
+      expiresAt: now + rule.expiryMs,
+      clearedAt: now,
+      spins,
+    }
+    grants = [ticket, ...grants]
+    return ticket
+  }
+
+  const grantCents = rewardGrantCents(rule, ctx)
+  if (grantCents <= 0) return null
+  // Respect the economy's issuance caps — the same gate every reward path checks.
+  if (!canIssue(Math.round(grantCents / 100), now).ok) return null
+
+  // THE money move: core.grant inside mutateBook (persists + fires GrantEvent).
+  mutateBook(() => {
+    grant(player.account, grantCents, { bonus: rule.id, type: 'bonus', trigger })
+  })
+  recordIssuance('bonus', Math.round(grantCents / 100), now)
+
+  const required = requiredTurnoverCents(rule, grantCents)
+  const ticket: BonusGrant = {
+    id: nextGrantId(now),
+    ruleId: rule.id,
+    ruleName: rule.name,
+    trigger,
+    playerId: player.id,
+    playerName: player.name,
+    grantedCents: grantCents,
+    requiredTurnoverCents: required,
+    turnoverCents: 0,
+    maxWinCents: rule.maxWinCents,
+    // A zero-playthrough bonus clears the instant it's granted.
+    status: required === 0 ? 'cleared' : 'active',
+    grantedAt: now,
+    expiresAt: now + rule.expiryMs,
+    clearedAt: required === 0 ? now : undefined,
+  }
+  grants = [ticket, ...grants]
+  return ticket
+}
+
+/**
  * Fire every enabled rule bound to `trigger` for the player(s) the trigger concerns,
  * granting the (eligibility-gated, max-win-capped) reward through core. Returns the grants
  * created. Money moves ONLY here, via `core.grant` inside `mutateBook`; never a direct poke.
@@ -303,87 +383,41 @@ export function fireTrigger(trigger: BonusTrigger, opts: TriggerOpts = {}): Fire
 
   for (const rule of live) {
     for (const player of players) {
-      if (rule.oncePerPlayer && hasGrantFromRule(player.id, rule.id)) {
-        skipped += 1
-        continue
-      }
-      if (!isEligible(rule, eligibilityContext(org, player.id))) {
-        skipped += 1
-        continue
-      }
-
-      // free-spins: a count, not credit — granted through the rewards hub, no playthrough.
-      if (rule.reward.kind === 'free-spins') {
-        const spins = rule.reward.spins ?? 0
-        if (spins <= 0) {
-          skipped += 1
-          continue
-        }
-        grantFreeSpins(player.id, spins)
-        const ticket: BonusGrant = {
-          id: nextGrantId(now),
-          ruleId: rule.id,
-          ruleName: rule.name,
-          trigger,
-          playerId: player.id,
-          playerName: player.name,
-          grantedCents: 0,
-          requiredTurnoverCents: 0,
-          turnoverCents: 0,
-          maxWinCents: rule.maxWinCents,
-          status: 'cleared',
-          grantedAt: now,
-          expiresAt: now + rule.expiryMs,
-          clearedAt: now,
-          spins,
-        }
-        grants = [ticket, ...grants]
-        created.push(ticket)
-        continue
-      }
-
-      const grantCents = rewardGrantCents(rule, opts)
-      if (grantCents <= 0) {
-        skipped += 1
-        continue
-      }
-      // Respect the economy's issuance caps — the same gate every reward path checks.
-      if (!canIssue(Math.round(grantCents / 100), now).ok) {
-        skipped += 1
-        continue
-      }
-
-      // THE money move: core.grant inside mutateBook (persists + fires GrantEvent).
-      mutateBook(() => {
-        grant(player.account, grantCents, { bonus: rule.id, type: 'bonus', trigger })
-      })
-      recordIssuance('bonus', Math.round(grantCents / 100), now)
-
-      const required = requiredTurnoverCents(rule, grantCents)
-      const ticket: BonusGrant = {
-        id: nextGrantId(now),
-        ruleId: rule.id,
-        ruleName: rule.name,
-        trigger,
-        playerId: player.id,
-        playerName: player.name,
-        grantedCents: grantCents,
-        requiredTurnoverCents: required,
-        turnoverCents: 0,
-        maxWinCents: rule.maxWinCents,
-        // A zero-playthrough bonus clears the instant it's granted.
-        status: required === 0 ? 'cleared' : 'active',
-        grantedAt: now,
-        expiresAt: now + rule.expiryMs,
-        clearedAt: required === 0 ? now : undefined,
-      }
-      grants = [ticket, ...grants]
-      created.push(ticket)
+      const ticket = issueRuleToPlayer(rule, player, trigger, opts, now, org)
+      if (ticket) created.push(ticket)
+      else skipped += 1
     }
   }
 
   if (created.length > 0) notifyGrants()
   return { granted: created, skipped }
+}
+
+/**
+ * Issue ONE named rule to ONE player through the engine's grant path — the targeted issuance a
+ * per-event reward needs (e.g. a settlement-driven profit/odds BOOST that must grant exactly the
+ * matching rule, sized off this bet, not fire every rule on the trigger). It runs the SAME path
+ * `fireTrigger` does (eligibility → max-win cap → issuance cap → core.grant inside mutateBook →
+ * playthrough/expiry ticket), so a boost is a real bonus grant — never a second money path.
+ * Returns the created ticket, or null if the rule is missing/disabled, the target isn't a player,
+ * or the player is skipped. // SEAM: the boosts lane (and any future per-event reward) calls this.
+ */
+export function grantRuleTo(
+  ruleId: string,
+  playerId: string,
+  ctx: RewardContext = {},
+  now = Date.now(),
+  eligCtx?: EligibilityContext,
+): BonusGrant | null {
+  const rule = rules.find((r) => r.id === ruleId)
+  if (!rule || !rule.enabled) return null
+  const org = getBook()
+  if (!org.members[playerId]) return null
+  const player = getMember(org, playerId)
+  if (player.role !== 'player') return null
+  const ticket = issueRuleToPlayer(rule, player, rule.trigger, ctx, now, org, eligCtx)
+  if (ticket) notifyGrants()
+  return ticket
 }
 
 /* --------------------------------- playthrough → clear --------------------- */
@@ -393,7 +427,11 @@ export function fireTrigger(trigger: BonusTrigger, opts: TriggerOpts = {}): Fire
  * once it reaches the requirement, the grant CLEARS — a state flip only (the credits are
  * already in the core balance). Returns the grants that just cleared. Moves no money.
  */
-export function recordTurnover(playerId: string, stakeCents: number, now = Date.now()): BonusGrant[] {
+export function recordTurnover(
+  playerId: string,
+  stakeCents: number,
+  now = Date.now(),
+): BonusGrant[] {
   if (stakeCents <= 0) return []
   const cleared: BonusGrant[] = []
   let touched = false
@@ -402,7 +440,12 @@ export function recordTurnover(playerId: string, stakeCents: number, now = Date.
     touched = true
     const turnoverCents = g.turnoverCents + stakeCents
     if (turnoverCents >= g.requiredTurnoverCents) {
-      const next: BonusGrant = { ...g, turnoverCents: g.requiredTurnoverCents, status: 'cleared', clearedAt: now }
+      const next: BonusGrant = {
+        ...g,
+        turnoverCents: g.requiredTurnoverCents,
+        status: 'cleared',
+        clearedAt: now,
+      }
       cleared.push(next)
       return next
     }
@@ -426,7 +469,12 @@ export function expireDue(now = Date.now()): BonusGrant[] {
     if (g.status !== 'active' || now < g.expiresAt) return g
     if (g.grantedCents > 0) {
       try {
-        adjustFigure(g.playerId, -g.grantedCents, `Bonus expired — clawback (${g.ruleName})`, 'bonus-engine')
+        adjustFigure(
+          g.playerId,
+          -g.grantedCents,
+          `Bonus expired — clawback (${g.ruleName})`,
+          'bonus-engine',
+        )
       } catch {
         // member gone from the book (edge) — still mark the ticket expired below.
       }
@@ -483,29 +531,83 @@ export function seedBonusDemo(now: number): void {
   const day = DAY
   const demo: BonusGrant[] = [
     {
-      id: 'bg_seed_dana', ruleId: 'reload-match', ruleName: 'Reload Match 50%', trigger: 'deposit',
-      playerId: 'p-dana', playerName: 'Dana (VIP)', grantedCents: 5_000_00, requiredTurnoverCents: 25_000_00,
-      turnoverCents: 17_400_00, maxWinCents: 5_000_00, status: 'active', grantedAt: now - 2 * day, expiresAt: now + 5 * day,
+      id: 'bg_seed_dana',
+      ruleId: 'reload-match',
+      ruleName: 'Reload Match 50%',
+      trigger: 'deposit',
+      playerId: 'p-dana',
+      playerName: 'Dana (VIP)',
+      grantedCents: 5_000_00,
+      requiredTurnoverCents: 25_000_00,
+      turnoverCents: 17_400_00,
+      maxWinCents: 5_000_00,
+      status: 'active',
+      grantedAt: now - 2 * day,
+      expiresAt: now + 5 * day,
     },
     {
-      id: 'bg_seed_lena', ruleId: 'welcome-credit', ruleName: 'Welcome Bonus', trigger: 'signup',
-      playerId: 'p-lena', playerName: 'Lena', grantedCents: 500_00, requiredTurnoverCents: 1_500_00,
-      turnoverCents: 600_00, maxWinCents: 2_000_00, status: 'active', grantedAt: now - 1 * day, expiresAt: now + 13 * day,
+      id: 'bg_seed_lena',
+      ruleId: 'welcome-credit',
+      ruleName: 'Welcome Bonus',
+      trigger: 'signup',
+      playerId: 'p-lena',
+      playerName: 'Lena',
+      grantedCents: 500_00,
+      requiredTurnoverCents: 1_500_00,
+      turnoverCents: 600_00,
+      maxWinCents: 2_000_00,
+      status: 'active',
+      grantedAt: now - 1 * day,
+      expiresAt: now + 13 * day,
     },
     {
-      id: 'bg_seed_priya', ruleId: 'first-bet-boost', ruleName: 'First-Bet Free Play', trigger: 'first-bet',
-      playerId: 'p-priya', playerName: 'Priya', grantedCents: 250_00, requiredTurnoverCents: 250_00,
-      turnoverCents: 250_00, maxWinCents: 1_000_00, status: 'cleared', grantedAt: now - 3 * day, expiresAt: now + 4 * day, clearedAt: now - 2 * day,
+      id: 'bg_seed_priya',
+      ruleId: 'first-bet-boost',
+      ruleName: 'First-Bet Free Play',
+      trigger: 'first-bet',
+      playerId: 'p-priya',
+      playerName: 'Priya',
+      grantedCents: 250_00,
+      requiredTurnoverCents: 250_00,
+      turnoverCents: 250_00,
+      maxWinCents: 1_000_00,
+      status: 'cleared',
+      grantedAt: now - 3 * day,
+      expiresAt: now + 4 * day,
+      clearedAt: now - 2 * day,
     },
     {
-      id: 'bg_seed_tariq', ruleId: 'comeback-rakeback', ruleName: 'Comeback Rakeback 10%', trigger: 'losing-streak',
-      playerId: 'p-tariq', playerName: 'Tariq', grantedCents: 800_00, requiredTurnoverCents: 1_600_00,
-      turnoverCents: 400_00, maxWinCents: 2_500_00, status: 'expired', grantedAt: now - 8 * day, expiresAt: now - 3 * day, expiredAt: now - 3 * day,
+      id: 'bg_seed_tariq',
+      ruleId: 'comeback-rakeback',
+      ruleName: 'Comeback Rakeback 10%',
+      trigger: 'losing-streak',
+      playerId: 'p-tariq',
+      playerName: 'Tariq',
+      grantedCents: 800_00,
+      requiredTurnoverCents: 1_600_00,
+      turnoverCents: 400_00,
+      maxWinCents: 2_500_00,
+      status: 'expired',
+      grantedAt: now - 8 * day,
+      expiresAt: now - 3 * day,
+      expiredAt: now - 3 * day,
     },
     {
-      id: 'bg_seed_marco', ruleId: 'daily-spins', ruleName: 'Daily Free Spins', trigger: 'daily',
-      playerId: 'p-marco', playerName: 'Marco', grantedCents: 0, requiredTurnoverCents: 0, turnoverCents: 0,
-      maxWinCents: null, status: 'cleared', grantedAt: now - 1 * day, expiresAt: now, clearedAt: now - 1 * day, spins: 3,
+      id: 'bg_seed_marco',
+      ruleId: 'daily-spins',
+      ruleName: 'Daily Free Spins',
+      trigger: 'daily',
+      playerId: 'p-marco',
+      playerName: 'Marco',
+      grantedCents: 0,
+      requiredTurnoverCents: 0,
+      turnoverCents: 0,
+      maxWinCents: null,
+      status: 'cleared',
+      grantedAt: now - 1 * day,
+      expiresAt: now,
+      clearedAt: now - 1 * day,
+      spins: 3,
     },
   ]
   grants = [...demo, ...grants]

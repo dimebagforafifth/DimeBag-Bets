@@ -1,0 +1,291 @@
+/**
+ * Boosts surfaces — graphite-and-gold, on the global tokens (app/theme.css).
+ */
+
+.boosts,
+.boosts-player {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: var(--space-4, 16px);
+}
+
+.boosts-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4, 16px);
+  margin-bottom: var(--space-5, 24px);
+}
+.boosts-back {
+  appearance: none;
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 8px);
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.boosts-h1,
+.boosts-player-head .boosts-h1 {
+  font-family: var(--font-head);
+  font-size: var(--text-2xl, 28px);
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+.boosts-sub {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm, 13px);
+}
+.boosts-player-head {
+  margin-bottom: var(--space-5, 24px);
+}
+
+.boosts-section {
+  margin-bottom: var(--space-6, 32px);
+}
+.boosts-h2 {
+  font-family: var(--font-head);
+  font-size: var(--text-lg, 18px);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 var(--space-3, 12px);
+}
+.boosts-empty {
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4, 16px);
+  text-align: center;
+}
+
+/* Composer */
+.boosts-composer {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4, 16px);
+  margin-bottom: var(--space-6, 32px);
+}
+.boosts-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-3, 12px);
+}
+.boosts-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--text-xs, 11px);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.boosts-field-wide {
+  grid-column: span 2;
+}
+.boosts-field input,
+.boosts-field select {
+  appearance: none;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 10px;
+  font-size: var(--text-md, 15px);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.boosts-field-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: var(--text-sm, 13px);
+  align-self: end;
+}
+.boosts-create {
+  appearance: none;
+  background: var(--gold);
+  color: #1a1407;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  padding: 9px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.boosts-create:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Boost list (admin) */
+.boosts-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.boosts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  padding: 12px 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+.boosts-row:first-child {
+  border-top: none;
+}
+.boosts-row.is-on {
+  background: color-mix(in srgb, var(--gold) 6%, var(--surface));
+}
+.boosts-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.boosts-row-name {
+  font-weight: 600;
+  color: var(--text);
+}
+.boosts-row-bits {
+  font-size: var(--text-xs, 11px);
+  color: var(--faint);
+}
+.boosts-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.boosts-toggle {
+  appearance: none;
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: var(--text-xs, 11px);
+  font-weight: 700;
+  cursor: pointer;
+}
+.boosts-toggle.is-on {
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 45%, var(--line));
+}
+.boosts-remove {
+  appearance: none;
+  background: none;
+  border: none;
+  color: var(--faint);
+  cursor: pointer;
+  font-size: var(--text-md, 15px);
+}
+.boosts-remove:hover {
+  color: var(--red);
+}
+
+/* Grants */
+.boosts-grants {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.boosts-grant {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: 9px 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm, 13px);
+}
+.boosts-grant:first-child {
+  border-top: none;
+}
+.boosts-grant-name {
+  font-weight: 600;
+  color: var(--text);
+}
+.boosts-grant-rule {
+  flex: 1;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.boosts-grant-amt {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--gem);
+}
+.boosts-grant-status {
+  font-size: var(--text-xs, 11px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+}
+.boosts-grant-status.is-cleared {
+  color: var(--green);
+}
+.boosts-grant-status.is-expired {
+  color: var(--red);
+}
+
+/* Player offers */
+.boosts-offers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3, 12px);
+}
+.boosts-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4, 16px);
+}
+.boosts-offer-tag {
+  align-self: flex-start;
+  font-size: var(--text-xs, 11px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  padding: 2px 9px;
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.boosts-offer-tag.is-odds {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 45%, var(--line));
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+.boosts-offer-name {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: var(--text-lg, 18px);
+  color: var(--text);
+}
+.boosts-offer-desc {
+  color: var(--muted);
+  font-size: var(--text-sm, 13px);
+}
+.boosts-offer-cap {
+  font-size: var(--text-xs, 11px);
+  color: var(--faint);
+}
