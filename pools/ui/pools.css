@@ -1,0 +1,291 @@
+/* Pools & Leagues — player surface. Consumes the GLOBAL design tokens (app/theme.css): the
+   graphite canvas + the one gold accent; green/red kept to win/loss + the figure. No per-feature
+   palette. Scoped under .pool. // SEAM (D): polish pass may refine spacing/animation. */
+
+.pool {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-7);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+.pool-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.pool-h1 {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--text-2xl, 28px);
+  margin: 0;
+}
+.pool-sub {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.pool-tabs {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 3px;
+  margin-bottom: var(--space-4);
+}
+.pool-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.pool-tab.is-on {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.pool-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.pool-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.pool-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.pool-name {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: var(--text-md);
+}
+.pool-kind {
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.pool-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.pool-chip {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-variant-numeric: tabular-nums;
+}
+.pool-pill {
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.pool-pill.is-open {
+  color: var(--gold-bright);
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+}
+.pool-pill.is-locked,
+.pool-pill.is-scoring {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 45%, var(--line));
+}
+.pool-pill.is-settled {
+  color: var(--gold);
+}
+.pool-pill.is-void {
+  color: var(--faint);
+  border-style: dashed;
+}
+
+.pool-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  flex-wrap: wrap;
+}
+.pool-btn {
+  flex: none;
+  border: 0;
+  background: var(--gold);
+  color: #1a1408;
+  font: inherit;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.pool-btn:hover {
+  background: var(--gold-bright);
+}
+.pool-btn:disabled {
+  background: var(--surface-2);
+  color: var(--faint);
+  cursor: not-allowed;
+}
+.pool-ghost {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.pool-ghost:hover {
+  color: var(--text);
+  border-color: var(--faint);
+}
+
+/* standings table */
+.pool-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  margin-top: var(--space-3);
+}
+.pool-table th,
+.pool-table td {
+  padding: 7px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.pool-table th {
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.pool-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pool-mine {
+  color: var(--gold-bright);
+  font-weight: 700;
+}
+
+/* forms */
+.pool-form {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.pool-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.pool-field input,
+.pool-field select {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  padding: 8px 10px;
+}
+.pool-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.pool-pick-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.pool-pick-label {
+  flex: 1;
+  font-size: var(--text-sm);
+}
+.pool-opt {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.pool-opt.is-on {
+  border-color: var(--gold);
+  color: var(--bg);
+  background: var(--gold);
+}
+.pool-conf {
+  width: 56px;
+}
+.pool-warn {
+  margin: 0;
+  color: var(--red);
+  font-size: var(--text-xs);
+}
+.pool-flash {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+}
+.pool-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+}
+.pool-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 0 0 var(--space-2);
+  cursor: pointer;
+}
+.pool-back:hover {
+  color: var(--gold);
+}

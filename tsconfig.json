@@ -46,6 +46,7 @@
     "rewards",
     "import",
     "trading",
-    "billing"
+    "billing",
+    "pools"
   ]
 }
