@@ -28,12 +28,12 @@ import { PRICING_POSTURE_PRESETS } from './pricing-engine.js'
 beforeEach(() => __resetPricingConfig())
 
 describe('defaults reproduce today', () => {
-  it('seeds exactly one global row at 450 bps / power', () => {
+  it('seeds exactly one global row at the calibrated 1318 bps / power (hold-neutral default)', () => {
     const rows = getPricingRows()
     expect(rows).toHaveLength(1)
     expect(rows[0]).toEqual(DEFAULT_PRICING_ROW)
-    expect(DEFAULT_PRICING_ROW.marginBps).toBe(450)
-    expect(resolveMarginSettings()).toEqual({ marginBps: 450, favoriteShadeBps: 0, devigMethod: 'power' })
+    expect(DEFAULT_PRICING_ROW.marginBps).toBe(1318)
+    expect(resolveMarginSettings()).toEqual({ marginBps: 1318, favoriteShadeBps: 0, devigMethod: 'power' })
   })
 })
 
@@ -44,11 +44,11 @@ describe('resolution — most specific wins', () => {
     upsertPricingRow(sport)
     upsertPricingRow(market)
 
-    expect(resolvePricingConfig().marginBps).toBe(450) // nothing specific → global
+    expect(resolvePricingConfig().marginBps).toBe(1318) // nothing specific → global default
     expect(resolvePricingConfig('BASKETBALL').marginBps).toBe(300) // sport row
     expect(resolvePricingConfig('BASKETBALL', 'moneyline').marginBps).toBe(300) // sport (no ml market row)
     expect(resolvePricingConfig('BASKETBALL', 'prop').marginBps).toBe(800) // market row
-    expect(resolvePricingConfig('FOOTBALL').marginBps).toBe(450) // other sport → global
+    expect(resolvePricingConfig('FOOTBALL').marginBps).toBe(1318) // other sport → global default
   })
 
   it('upsert replaces a row in place (keyed by scope+sport+market)', () => {
@@ -81,7 +81,7 @@ describe('posture presets', () => {
     expect(toMarginSettings(row).favoriteShadeBps).toBe(PRICING_POSTURE_PRESETS.recreational.favoriteShadeBps)
   })
 
-  it("the 'balanced' posture (carried from Lane B) sits at today's 450 bps, no shade", () => {
+  it("the 'balanced' posture (carried from Lane B) is a moderate 450 bps, no shade", () => {
     expect(PRICING_POSTURE_PRESETS.balanced).toEqual({ marginBps: 450, favoriteShadeBps: 0, devigMethod: 'power' })
     const stamped = applyPosturePreset(DEFAULT_PRICING_ROW, 'balanced')
     expect(stamped.posture).toBe('balanced')
@@ -135,6 +135,6 @@ describe('governance — manager margin floor + agent clamp (collapsed from Lane
     setDevigMethod('shin', 'sport', 'SOCCER')
     const row = resolvePricingConfig('SOCCER')
     expect(row.devigMethod).toBe('shin')
-    expect(row.marginBps).toBe(450) // inherited the default knobs, margin untouched
+    expect(row.marginBps).toBe(1318) // inherited the default knobs, margin untouched
   })
 })

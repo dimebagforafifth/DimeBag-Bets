@@ -19,11 +19,19 @@ import type {
   OddsSelectionRow,
   OddsFeedProvider,
   Price,
+  MarketType,
 } from './contract.js'
-import { applyPricing, resolveMargin, type MarginConfig } from './pricing.js'
-import { getMarginConfig } from './margin-config.js'
+// The PRINCIPLED pipeline (publish-swap lane): the poller margins each market through
+// devig → applyMargin (priceMarket) using A's pricing_config, instead of the legacy per-price
+// haircut. The legacy pricing.ts is untouched (still used by slip.ts / cashout.ts).
+import { priceMarket, type MarginSettings } from './pricing-engine.js'
+import { resolveMarginSettings } from './pricing-config.js'
 import { MockProvider } from './providers/MockProvider.js'
 import { SGOProvider } from './providers/SGOProvider.js'
+
+/** Resolve the margin settings for a (sport, market). Injected into `buildRows` so the pricing
+ *  stays a PURE function (no global-store read); the Poller passes A's pricing_config resolver. */
+export type MarginResolver = (sportId: string, marketType: MarketType) => MarginSettings
 
 /*
  * SGO league codes we poll. These are SGO's exact, case-sensitive `leagueID` values,
@@ -69,12 +77,10 @@ export interface PollerConfig {
   provider?: OddsFeedProvider
   cache: OddsCache
   leagues?: readonly string[]
-  /** Flat house margin (legacy). Wrapped as `{ base: margin }` when no `marginConfig` is given. */
-  margin?: number
-  /** Operator hold posture (base + per-market overrides). Wins over `margin`. When BOTH are
-   *  absent the poller reads the live `getMarginConfig()` each cycle, so a console posture
-   *  change reprices the next poll. */
-  marginConfig?: MarginConfig
+  /** How each market's margin settings are resolved (sport, market) → MarginSettings. Defaults to
+   *  A's pricing_config (`resolveMarginSettings`), read LIVE each cycle so a Trading Desk change
+   *  reprices the next poll. Injectable for deterministic tests. */
+  resolveSettings?: MarginResolver
   /** ISO timestamp source (injectable for deterministic tests). */
   now?: () => string
   /** Called when ONE league's fetch fails (e.g. a plan-gated league 4xx's). The cycle
@@ -90,13 +96,18 @@ export interface PollResult {
   overridesPreserved: number
 }
 
-/** Flatten a slate into cache rows, preserving overrides. Pure (given `overrides` + `now`).
- *  `margin` is either a flat rate (applied to every market) or an operator `MarginConfig`
- *  whose per-market override decides each market's juice. */
+/**
+ * Flatten a slate into cache rows, pricing each MARKET through the principled pipeline
+ * (devig → applyMargin) and preserving overrides. PURE given `resolveSettings` + `overrides` +
+ * `now`: the margin settings are RESOLVED BY THE CALLER and injected (no global-store read here),
+ * so this stays unit-testable. `priceMarket` runs once per market over all its raw American
+ * prices (de-vig needs the whole market); an OVERRIDDEN selection keeps its hand-set display
+ * price and is NEVER re-margined (margin once, override once — override wins at publish).
+ */
 export function buildRows(
   events: NormalizedEvent[],
   overrides: Map<string, Price>,
-  margin: number | MarginConfig,
+  resolveSettings: MarginResolver,
   now: string,
 ): {
   events: OddsEventRow[]
@@ -108,9 +119,6 @@ export function buildRows(
   const marketRows: OddsMarketRow[] = []
   const selectionRows: OddsSelectionRow[] = []
   let overridesPreserved = 0
-
-  // Normalize a flat rate to a config so per-market resolution is uniform.
-  const marginConfig: MarginConfig = typeof margin === 'number' ? { base: margin } : margin
 
   for (const e of events) {
     eventRows.push({
@@ -124,8 +132,6 @@ export function buildRows(
       updated_at: now,
     })
     for (const m of e.markets) {
-      // The juice for THIS market type — its per-market override, or the operator's base.
-      const marketMargin = resolveMargin(marginConfig, m.type)
       marketRows.push({
         market_id: m.marketId,
         event_id: e.eventId,
@@ -135,28 +141,36 @@ export function buildRows(
         player_id: m.playerId ?? null,
         updated_at: now,
       })
-      for (const s of m.selections) {
+      // Margin the WHOLE market once: devig all raw prices, re-apply the operator's hold.
+      const settings = resolveSettings(e.sport, m.type)
+      const priced = priceMarket(
+        m.selections.map((s) => s.priceRaw.american),
+        settings,
+      )
+      m.selections.forEach((s, i) => {
         const override = overrides.get(s.selectionId) ?? null
-        // applyPricing ALWAYS recomputes display from the fresh raw price (margin), unless an
-        // override is supplied — then the override wins and the manual line is preserved.
-        const priced = applyPricing(s.priceRaw, { margin: marketMargin, override })
-        if (priced.override) overridesPreserved++
+        // Override wins (hand-set line preserved, never re-margined); else the principled price.
+        const display: Price = override ?? {
+          american: priced[i].american,
+          decimal: priced[i].decimal,
+        }
+        if (override) overridesPreserved++
         selectionRows.push({
           selection_id: s.selectionId,
           market_id: m.marketId,
           event_id: e.eventId,
           side: s.side,
           line: s.line ?? null,
-          price_raw_american: priced.priceRaw.american,
-          price_raw_decimal: priced.priceRaw.decimal,
-          price_display_american: priced.priceDisplay.american,
-          price_display_decimal: priced.priceDisplay.decimal,
+          price_raw_american: s.priceRaw.american,
+          price_raw_decimal: s.priceRaw.decimal,
+          price_display_american: display.american,
+          price_display_decimal: display.decimal,
           bookmaker: s.bookmaker,
           available: s.available,
-          override: priced.override,
+          override: !!override,
           updated_at: now,
         })
-      }
+      })
     }
   }
   return { events: eventRows, markets: marketRows, selections: selectionRows, overridesPreserved }
@@ -166,8 +180,8 @@ export class Poller {
   private readonly provider: OddsFeedProvider
   private readonly cache: OddsCache
   private readonly leagues: readonly string[]
-  /** An explicit margin override (flat rate or config). null = read the live store per cycle. */
-  private readonly marginOverride: MarginConfig | null
+  /** Resolves each market's margin settings (default: A's live pricing_config). */
+  private readonly resolveSettings: MarginResolver
   private readonly now: () => string
   private readonly onLeagueError: (league: string, error: unknown) => void
   private timer: ReturnType<typeof setInterval> | null = null
@@ -177,7 +191,7 @@ export class Poller {
     this.provider = cfg.provider ?? selectProvider()
     this.cache = cfg.cache
     this.leagues = cfg.leagues ?? ACTIVE_LEAGUES
-    this.marginOverride = cfg.marginConfig ?? (cfg.margin != null ? { base: cfg.margin } : null)
+    this.resolveSettings = cfg.resolveSettings ?? ((sportId, marketType) => resolveMarginSettings(sportId, marketType))
     this.now = cfg.now ?? (() => new Date().toISOString())
     this.onLeagueError = cfg.onLeagueError ?? (() => {})
   }
@@ -203,9 +217,9 @@ export class Poller {
       }
     }
     const overrides = await this.cache.getOverrides(events.map((e) => e.eventId))
-    // Explicit config wins; otherwise the live operator posture, read fresh each cycle.
-    const marginConfig = this.marginOverride ?? getMarginConfig()
-    const rows = buildRows(events, overrides, marginConfig, this.now())
+    // Margin settings resolved per market from A's pricing_config (read fresh each cycle), injected
+    // into the pure buildRows so a Trading Desk change reprices the next poll.
+    const rows = buildRows(events, overrides, this.resolveSettings, this.now())
     // Events + markets first (FK parents), then selections.
     await this.cache.writeEvents(rows.events)
     await this.cache.writeMarkets(rows.markets)

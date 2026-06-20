@@ -43,10 +43,8 @@ export const AGENT_GRANTABLE: readonly GrantableTile[] = [
   { key: 'transactions', label: 'Transactions' },
   { key: 'ledger', label: 'Ledger' },
   { key: 'agent-performance', label: 'Agent Performance' },
-  // Margin & pricing posture (hold / per-market juice). Grantable per the pricing manifest's
-  // note (features/pricing/manifest.ts): manager-only by default, but a manager may extend it
-  // to an agent. Not in DEFAULT_AGENT_KEYS — an agent only sees it once explicitly granted.
-  { key: 'margin-pricing', label: 'Margin & Pricing' },
+  // (The 'margin-pricing' grant was retired with the MarginPanel tile in the publish-swap lane;
+  // pricing now lives in the manager-only Trading Desk.)
   // A capability, not a console section: lets an agent comp/reward THEIR OWN players
   // (within the manager's allowance). Gates the Player Rewards (comp) tile + the action.
   { key: 'rewards-comp', label: 'Issue player rewards (comp)' },

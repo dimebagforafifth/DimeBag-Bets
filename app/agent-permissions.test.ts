@@ -47,12 +47,12 @@ describe('agent permissions', () => {
     expect(isTileGranted('a2', 'players')).toBe(true) // a2 untouched → default
   })
 
-  it('margin-pricing is grantable but not in the default set (round-4 pricing grant)', () => {
-    // The pricing tile (features/pricing) is now in the allow-list, so a manager CAN grant it…
-    expect(AGENT_GRANTABLE_KEYS).toContain('margin-pricing')
-    expect(DEFAULT_AGENT_KEYS).not.toContain('margin-pricing') // …but a new agent doesn't get it
-    expect(isTileGranted('a1', 'margin-pricing')).toBe(false)
+  it('margin-pricing was retired with the MarginPanel tile (no longer grantable)', () => {
+    // The legacy Margin & Pricing tile was retired in the publish-swap lane; pricing now lives in
+    // the manager-only Trading Desk, so the old grant key is gone from the allow-list and a stray
+    // grant is refused.
+    expect(AGENT_GRANTABLE_KEYS).not.toContain('margin-pricing')
     setAgentTile('a1', 'margin-pricing', true)
-    expect(isTileGranted('a1', 'margin-pricing')).toBe(true) // accepted (it's in the allow-list)
+    expect(isTileGranted('a1', 'margin-pricing')).toBe(false) // not in the allow-list → rejected
   })
 })

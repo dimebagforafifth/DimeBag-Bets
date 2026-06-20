@@ -45,9 +45,12 @@ export const PRICING_POSTURE_PRESETS: Readonly<
   Record<'sharp' | 'balanced' | 'recreational', MarginSettings>
 > = {
   sharp: { marginBps: 250, favoriteShadeBps: 0, devigMethod: 'power' },
-  // BALANCED — today's default hold (450 bps, no shade); the middle posture Lane B carried in.
+  // BALANCED — a moderate de-vigged hold (~2.3% on a balanced 2-way). The middle posture.
   balanced: { marginBps: 450, favoriteShadeBps: 0, devigMethod: 'power' },
-  recreational: { marginBps: 550, favoriteShadeBps: 75, devigMethod: 'power' },
+  // RECREATIONAL — CALIBRATED so the principled pipeline reproduces today's legacy PUBLISHED hold
+  // (~7.06% on a -110/-110 2-way). NOTE bps here is the haircut RATE on the fair line, ≈ 2× the
+  // resulting hold on a balanced 2-way — so 1318 bps ⇒ ~7% hold, not 13%. See the publish-swap lane.
+  recreational: { marginBps: 1318, favoriteShadeBps: 75, devigMethod: 'power' },
 }
 
 /** One priced selection out of `applyMargin`. */

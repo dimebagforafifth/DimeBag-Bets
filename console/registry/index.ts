@@ -25,7 +25,6 @@ import { rewardsAdminManifests } from '../../features/rewards/manifest.js'
 // Round-3 lanes ship ready-to-mount manifests; the registry owner spreads them in (the lanes
 // don't edit this shared file). C → Margin & Pricing (Control); D → CRM/analytics (3 Players
 // tiles + 1 Control tile). groupBySection routes each tile to its section regardless of order.
-import { pricingManifests } from '../../features/pricing/manifest.js'
 import { crmManifests } from '../../features/crm/manifest.js'
 // Round-4: C's creator/competitions console tile (author & run branded contests → Rewards).
 import { competitionsManifests } from '../../creator/manifest.js'
@@ -65,7 +64,7 @@ export const REGISTRY: FeatureManifest[] = [
   casinoEdgeManifest, // Casino Edge (B — per-game house-edge bands; SUPERSEDES the flat-RTP control)
   // Control
   ...controlManifests,
-  ...pricingManifests, // Margin & Pricing (C — operator economics)
+  // (Margin & Pricing / features/pricing retired — the Trading Desk is the single pricing surface.)
   ...economyManifests, // Economy Mode (A — credit/PPH ↔ balance/wallet, whole book)
   tradingDeskManifest, // Trading Desk (r2 B — margins, overrides, limits, suspensions; single manifest)
   ...operatorManualManifests,

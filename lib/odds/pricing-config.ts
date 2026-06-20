@@ -47,11 +47,17 @@ export interface PricingConfigRow {
 /** Default agent margin floor (bps) — Lane B's 0.02 floor == 200 bps. */
 export const DEFAULT_MARGIN_FLOOR_BPS = 200
 
-/** The single global row a book starts with — 450 bps / power, reproducing today's pricing. */
+/**
+ * The single global row a book starts with. CALIBRATED (publish-swap lane): 1318 bps / power /
+ * shade 0 makes the live principled pipeline (devig → applyMargin in the poller) reproduce today's
+ * legacy PUBLISHED hold (~7.06% on a -110/-110 2-way), so going live does not silently change the
+ * book's take. bps is the haircut RATE on the fair line (≈ 2× the hold on a balanced 2-way), not
+ * the hold itself. Symmetric (shade 0) like the legacy haircut; tune per sport/market from the desk.
+ */
 export const DEFAULT_PRICING_ROW: PricingConfigRow = {
   scope: 'global',
   devigMethod: DEFAULT_DEVIG_METHOD,
-  marginBps: 450,
+  marginBps: 1318,
   posture: 'recreational',
   favoriteShadeBps: 0,
   marginFloorBps: DEFAULT_MARGIN_FLOOR_BPS,

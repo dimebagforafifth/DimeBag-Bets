@@ -29,7 +29,9 @@ create table if not exists pricing_config (
                        check (market_type is null or market_type in ('moneyline','spread','total','prop')),
   devig_method       text not null default 'power'
                        check (devig_method in ('multiplicative','additive','power','shin')),
-  margin_bps         integer not null default 450 check (margin_bps >= 0 and margin_bps <= 5000),
+  -- calibrated default: 1318 bps (haircut rate on the fair line) reproduces today's legacy
+  -- published hold (~7.06% on a -110/-110 2-way) once the principled pipeline is live.
+  margin_bps         integer not null default 1318 check (margin_bps >= 0 and margin_bps <= 5000),
   -- manager governance floor: the lowest margin_bps an agent may set (read off the global row)
   margin_floor_bps   integer not null default 200 check (margin_floor_bps >= 0 and margin_floor_bps <= 5000),
   posture            text not null default 'recreational'

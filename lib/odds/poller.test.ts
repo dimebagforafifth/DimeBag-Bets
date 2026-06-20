@@ -9,8 +9,12 @@ import {
   type OddsCache,
 } from './poller.js'
 import { MockProvider, MOCK_EVENTS } from './providers/MockProvider.js'
-import { applyMargin, priceFromAmerican, makeOverride, DEFAULT_MARGIN } from './pricing.js'
-import { setBaseMargin, setMarketMargin, __resetMarginConfig } from './margin-config.js'
+import { applyMargin, priceFromAmerican, makeOverride } from './pricing.js'
+// The poller now margins through the PRINCIPLED pipeline (devig → applyMargin) with the margin
+// settings INJECTED, so buildRows stays pure. Unit tests pass a constant resolver; the integration
+// tests drive A's pricing_config (the single live pricing surface).
+import { priceMarket, type MarginSettings } from './pricing-engine.js'
+import { setMargin, __resetPricingConfig } from './pricing-config.js'
 import type {
   ListEventsOptions,
   NormalizedEvent,
@@ -22,6 +26,15 @@ import type {
 } from './contract.js'
 
 const NOW = '2026-06-15T12:00:00.000Z'
+
+// Calibrated default settings (1318 bps) + a constant injected resolver for the pure buildRows tests.
+const SETTINGS: MarginSettings = { marginBps: 1318, favoriteShadeBps: 0, devigMethod: 'power' }
+const RESOLVE = () => SETTINGS
+/** The principled published price for selection `i` of a market with these raw American prices. */
+const expectedDisplay = (rawAmericans: number[], i: number, settings: MarginSettings = SETTINGS) => {
+  const p = priceMarket(rawAmericans, settings)[i]
+  return { american: p.american, decimal: p.decimal }
+}
 
 /**
  * A tiny hand-built slate: one event, two markets (moneyline + spread), so the row
@@ -94,7 +107,7 @@ function tinySlate(): NormalizedEvent[] {
 describe('buildRows — flattening NormalizedEvent[] into snake_case cache rows', () => {
   it('flattens events/markets/selections with correct snake_case fields and a fixed now', () => {
     const slate = tinySlate()
-    const { events, markets, selections } = buildRows(slate, new Map(), DEFAULT_MARGIN, NOW)
+    const { events, markets, selections } = buildRows(slate, new Map(), RESOLVE, NOW)
 
     // one event, two markets, four selections
     expect(events).toHaveLength(1)
@@ -144,8 +157,8 @@ describe('buildRows — flattening NormalizedEvent[] into snake_case cache rows'
     const rawHome = priceFromAmerican(-120)
     expect(mlHome!.price_raw_american).toBe(rawHome.american)
     expect(mlHome!.price_raw_decimal).toBe(rawHome.decimal)
-    // display price is the margined raw (no override here)
-    const dispHome = applyMargin(rawHome, DEFAULT_MARGIN)
+    // display price is the principled price for ml-home (index 0 of the moneyline market [-120,105])
+    const dispHome = expectedDisplay([-120, 105], 0)
     expect(mlHome!.price_display_american).toBe(dispHome.american)
     expect(mlHome!.price_display_decimal).toBe(dispHome.decimal)
 
@@ -163,7 +176,7 @@ describe('buildRows — flattening NormalizedEvent[] into snake_case cache rows'
   it('populates stat_id and player_id for a prop market (and null for team markets)', () => {
     // Use the LIVE NBA mock event which carries a LeBron points prop.
     const nba = MOCK_EVENTS.find((e) => e.eventId === 'mock-nba-lal-bos')!
-    const { markets } = buildRows([nba], new Map(), DEFAULT_MARGIN, NOW)
+    const { markets } = buildRows([nba], new Map(), RESOLVE, NOW)
 
     const prop = markets.find((m) => m.type === 'prop')
     expect(prop).toBeDefined()
@@ -179,7 +192,7 @@ describe('buildRows — flattening NormalizedEvent[] into snake_case cache rows'
     const { events, markets, selections, overridesPreserved } = buildRows(
       MOCK_EVENTS,
       new Map(),
-      DEFAULT_MARGIN,
+      RESOLVE,
       NOW,
     )
     expect(events).toHaveLength(MOCK_EVENTS.length)
@@ -203,12 +216,12 @@ describe('buildRows — override preservation', () => {
     const override: Price = makeOverride(135)
     const overrides = new Map<string, Price>([['ev-1-ml-home', override]])
 
-    const { selections, overridesPreserved } = buildRows(slate, overrides, DEFAULT_MARGIN, NOW)
+    const { selections, overridesPreserved } = buildRows(slate, overrides, RESOLVE, NOW)
 
     expect(overridesPreserved).toBe(1)
 
     const overridden = selections.find((s) => s.selection_id === 'ev-1-ml-home')!
-    // display === the override verbatim
+    // display === the override verbatim (the hand-set line is NEVER re-margined)
     expect(overridden.override).toBe(true)
     expect(overridden.price_display_american).toBe(override.american)
     expect(overridden.price_display_decimal).toBe(override.decimal)
@@ -217,18 +230,22 @@ describe('buildRows — override preservation', () => {
     const rawHome = priceFromAmerican(-120)
     expect(overridden.price_raw_american).toBe(rawHome.american)
     expect(overridden.price_raw_decimal).toBe(rawHome.decimal)
-    // sanity: the override display differs from what the margin would have produced
-    const margined = applyMargin(rawHome, DEFAULT_MARGIN)
-    expect(overridden.price_display_american).not.toBe(margined.american)
+    // sanity: the override display differs from the principled price it would otherwise get
+    expect(overridden.price_display_american).not.toBe(expectedDisplay([-120, 105], 0).american)
 
-    // every NON-overridden selection gets the margined display + override=false
+    // every NON-overridden selection gets the principled (per-market) display + override=false.
+    // ml-away is index 1 of [-120,105]; the spread is [-110,-110] indices 0/1.
+    const expectedFor: Record<string, { american: number; decimal: number }> = {
+      'ev-1-ml-away': expectedDisplay([-120, 105], 1),
+      'ev-1-sp-home': expectedDisplay([-110, -110], 0),
+      'ev-1-sp-away': expectedDisplay([-110, -110], 1),
+    }
     for (const s of selections) {
       if (s.selection_id === 'ev-1-ml-home') continue
       expect(s.override).toBe(false)
-      const raw: Price = { american: s.price_raw_american, decimal: s.price_raw_decimal }
-      const expectedDisplay = applyMargin(raw, DEFAULT_MARGIN)
-      expect(s.price_display_american).toBe(expectedDisplay.american)
-      expect(s.price_display_decimal).toBe(expectedDisplay.decimal)
+      const want = expectedFor[s.selection_id]
+      expect(s.price_display_american).toBe(want.american)
+      expect(s.price_display_decimal).toBe(want.decimal)
     }
   })
 
@@ -238,7 +255,7 @@ describe('buildRows — override preservation', () => {
       ['ev-1-ml-home', makeOverride(135)],
       ['ev-1-sp-away', makeOverride(-105)],
     ])
-    const { overridesPreserved, selections } = buildRows(slate, overrides, DEFAULT_MARGIN, NOW)
+    const { overridesPreserved, selections } = buildRows(slate, overrides, RESOLVE, NOW)
     expect(overridesPreserved).toBe(2)
     expect(
       selections
@@ -251,7 +268,7 @@ describe('buildRows — override preservation', () => {
   it('ignores override entries that match no selection', () => {
     const slate = tinySlate()
     const overrides = new Map<string, Price>([['does-not-exist', makeOverride(200)]])
-    const { overridesPreserved, selections } = buildRows(slate, overrides, DEFAULT_MARGIN, NOW)
+    const { overridesPreserved, selections } = buildRows(slate, overrides, RESOLVE, NOW)
     expect(overridesPreserved).toBe(0)
     expect(selections.every((s) => s.override === false)).toBe(true)
   })
@@ -473,71 +490,61 @@ describe('Poller.pollOnce — per-league fault isolation', () => {
   })
 })
 
-describe('Poller — live operator margin config (the console → poller seam)', () => {
-  // The store is process-global; isolate every case.
-  beforeEach(() => __resetMarginConfig())
-  afterEach(() => __resetMarginConfig())
+describe('Poller — live pricing config (the Trading Desk → poller seam)', () => {
+  // A's pricing_config is process-global; isolate every case.
+  beforeEach(() => __resetPricingConfig())
+  afterEach(() => __resetPricingConfig())
 
   const mlDisplay = (cache: FakeCache) =>
     cache.selections.find((s) => s.selection_id === 'ev-1-ml-home')!.price_display_decimal
   const spDisplay = (cache: FakeCache) =>
     cache.selections.find((s) => s.selection_id === 'ev-1-sp-home')!.price_display_decimal
+  // ml-home is index 0 of [-120,105]; sp-home is index 0 of [-110,-110]. No config ⇒ the
+  // calibrated 1318 bps default.
+  const ml = (bps: number) =>
+    expectedDisplay([-120, 105], 0, { marginBps: bps, favoriteShadeBps: 0, devigMethod: 'power' }).decimal
+  const sp = (bps: number) =>
+    expectedDisplay([-110, -110], 0, { marginBps: bps, favoriteShadeBps: 0, devigMethod: 'power' }).decimal
 
-  it('an unconfigured poller prices off the LIVE margin store (a console change reprices)', async () => {
-    setBaseMargin(0.1) // operator dialed the hold up to 10%
+  it('prices off the LIVE pricing_config (a Trading Desk margin change reprices)', async () => {
+    setMargin(1000, 'global') // operator dialed the hold to 1000 bps
     const cache = new FakeCache()
-    const poller = new Poller({
-      provider: new MockProvider(tinySlate()),
-      cache,
-      leagues: ['NBA'],
-      now: () => NOW,
-    })
+    const poller = new Poller({ provider: new MockProvider(tinySlate()), cache, leagues: ['NBA'], now: () => NOW })
     await poller.pollOnce()
-    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), 0.1).decimal)
-    // …and that is NOT the legacy default — the store is genuinely driving the price
-    expect(mlDisplay(cache)).not.toBe(applyMargin(priceFromAmerican(-120), DEFAULT_MARGIN).decimal)
+    expect(mlDisplay(cache)).toBe(ml(1000))
+    expect(mlDisplay(cache)).not.toBe(ml(1318)) // genuinely off the store, not the default
   })
 
   it('picks up a store change on the NEXT cycle (read per-poll, not frozen at construction)', async () => {
     const cache = new FakeCache()
-    const poller = new Poller({
-      provider: new MockProvider(tinySlate()),
-      cache,
-      leagues: ['NBA'],
-      now: () => NOW,
-    })
+    const poller = new Poller({ provider: new MockProvider(tinySlate()), cache, leagues: ['NBA'], now: () => NOW })
     await poller.pollOnce()
-    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), DEFAULT_MARGIN).decimal)
-    setBaseMargin(0.2) // operator changes posture between cycles
+    expect(mlDisplay(cache)).toBe(ml(1318)) // calibrated default
+    setMargin(2000, 'global') // operator changes posture between cycles
     await poller.pollOnce()
-    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), 0.2).decimal)
+    expect(mlDisplay(cache)).toBe(ml(2000))
   })
 
-  it('applies a per-market override from the store — only that market reprices', async () => {
-    setMarketMargin('spread', 0.12) // fatter spreads, moneyline left at the base
+  it('applies a per-market row — only that market reprices', async () => {
+    setMargin(2000, 'market', undefined, 'spread') // fatter spreads, moneyline left at the default
+    const cache = new FakeCache()
+    const poller = new Poller({ provider: new MockProvider(tinySlate()), cache, leagues: ['NBA'], now: () => NOW })
+    await poller.pollOnce()
+    expect(spDisplay(cache)).toBe(sp(2000))
+    expect(mlDisplay(cache)).toBe(ml(1318)) // moneyline still the global default
+  })
+
+  it('an injected resolver overrides the live store (deterministic tests / explicit config)', async () => {
+    setMargin(3000, 'global') // store says 3000 bps…
     const cache = new FakeCache()
     const poller = new Poller({
       provider: new MockProvider(tinySlate()),
       cache,
       leagues: ['NBA'],
+      resolveSettings: () => ({ marginBps: 700, favoriteShadeBps: 0, devigMethod: 'power' }), // …injected 700 wins
       now: () => NOW,
     })
     await poller.pollOnce()
-    expect(spDisplay(cache)).toBe(applyMargin(priceFromAmerican(-110), 0.12).decimal)
-    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), DEFAULT_MARGIN).decimal)
-  })
-
-  it('an explicit flat margin still works and overrides the live store (back-compat)', async () => {
-    setBaseMargin(0.3) // store says 30%…
-    const cache = new FakeCache()
-    const poller = new Poller({
-      provider: new MockProvider(tinySlate()),
-      cache,
-      leagues: ['NBA'],
-      margin: 0.07, // …but an explicitly injected flat 7% wins
-      now: () => NOW,
-    })
-    await poller.pollOnce()
-    expect(mlDisplay(cache)).toBe(applyMargin(priceFromAmerican(-120), 0.07).decimal)
+    expect(mlDisplay(cache)).toBe(ml(700))
   })
 })

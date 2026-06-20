@@ -51,17 +51,9 @@ export type {
   MarginPosture,
 } from './pricing.js'
 
-// The live operator margin config — the console setting writes it, the poller reads it.
-export {
-  getMarginConfig,
-  getMarginVersion,
-  subscribeMargin,
-  setMarginConfig,
-  setBaseMargin,
-  setMarketMargin,
-  applyPosture,
-  __resetMarginConfig,
-} from './margin-config.js'
+// (The legacy in-memory margin-config store was retired in the publish-swap lane — the poller now
+// margins through A's pricing_config via the principled pipeline, and the Trading Desk is the single
+// pricing surface. pricing.ts keeps MarginConfig/resolveMargin/MARGIN_POSTURES for slip/cashout.)
 
 export {
   SGOProvider,
