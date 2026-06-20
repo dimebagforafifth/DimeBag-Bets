@@ -41,6 +41,11 @@ import { importManifests } from '../../features/import/manifest.js'
 // C → Billing & Invoices (Operations, spread). Neither lane edits this shared file.
 import { tradingDeskManifest } from '../../trading/trading-desk-tile.js'
 import { billingManifests } from '../../billing/manifest.js'
+// Round 3 (Community & Contests): C → Pools & Leagues (Operations, spread); D → Responsible Play
+// (Players, spread). Neither lane edits this shared file. (A/B's profile is a player-facing
+// section, not a console tile, so it mounts via register-player-sections, not here.)
+import { poolsManifests } from '../../pools/manifest.js'
+import { responsiblePlayManifests } from '../../features/responsible-play/manifest.js'
 
 /** Every console feature, grouped into sections at render time by `groupBySection`.
  *  Listed in section order so each section's tiles read top-to-bottom as written. */
@@ -54,10 +59,12 @@ export const REGISTRY: FeatureManifest[] = [
   ...challengesDeskManifests, // Challenges Desk (C — operator settle/void of P2P challenges)
   ...importManifests, // Player Import (D — migrate a legacy book via CSV)
   ...billingManifests, // Billing & Invoices (r2 C — operator fiat per-head billing)
+  ...poolsManifests, // Pools & Leagues (r3 C — operate player-run pools/leagues/squares)
   // Players
   ...playersManifests,
   ...agentsManifests,
   ...cashierDeskManifests,
+  ...responsiblePlayManifests, // Responsible Play (r3 D — read-only player self-limits view)
   // Catalog
   ...catalogManifests,
   sgpRulesManifest, // SGP Rules (B — same-game-parlay conflict gate; single manifest)

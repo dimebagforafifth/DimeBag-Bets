@@ -13,7 +13,9 @@ import type { Role } from '../org/index.js'
 
 /** The app's top-level sections. (community/profile/pickem are the round-2 player
  *  sections registered via app/player-sections — added here so the Section state +
- *  render guard accept them and they're reachable by players.) */
+ *  render guard accept them and they're reachable by players. players/pools/limits are
+ *  the round-3 Community & Contests sections; 'profile' stays additively alongside the
+ *  richer 'players' hub.) */
 export type Section =
   | 'casino'
   | 'sportsbook'
@@ -26,6 +28,9 @@ export type Section =
   | 'challenges'
   | 'competitions'
   | 'gamification'
+  | 'players'
+  | 'pools'
+  | 'limits'
   | 'management'
 
 export const ALL_SECTIONS: Section[] = [
@@ -40,6 +45,9 @@ export const ALL_SECTIONS: Section[] = [
   'challenges',
   'competitions',
   'gamification',
+  'players',
+  'pools',
+  'limits',
   'management',
 ]
 const PLAYER_SECTIONS: Section[] = [
@@ -54,6 +62,9 @@ const PLAYER_SECTIONS: Section[] = [
   'challenges',
   'competitions',
   'gamification',
+  'players',
+  'pools',
+  'limits',
 ]
 const STAFF_SECTIONS: Section[] = ['management', 'leaderboard']
 
