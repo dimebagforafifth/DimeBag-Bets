@@ -33,7 +33,8 @@ import type { NormalizedEvent } from '../../lib/odds/contract.js'
 import { getBook } from '../book-store.js'
 import { combinedDecimal, type SlipLeg, type SlipMode } from './slip.js'
 import { firstBlockMessage, validateSlip } from './sgp-rules.js'
-import { gateWager } from '../../trading/gate.js'
+import { gateWager, type GateLeg } from '../../trading/gate.js'
+import { isSuspended } from '../../trading/suspensions.js'
 import { cashOutMath, cashOutQuote } from './cashout.js'
 import { toReturnCents } from './odds-format.js'
 import {
@@ -235,8 +236,45 @@ export interface CashOutResult {
   fullyClosed: boolean
 }
 
+/** A bet leg's market identity for the suspension + limit gate (trading/gate). */
+function gateLeg(leg: SlipLeg): GateLeg {
+  return {
+    marketType: leg.marketType,
+    marketId: leg.marketId,
+    ...(leg.sport != null ? { sport: leg.sport } : {}),
+  }
+}
+
+/** True if any leg's market/sport is suspended by the desk — cash-out freezes while suspended. */
+function anyLegSuspended(legs: SlipLeg[]): boolean {
+  return legs.some(
+    (l) =>
+      isSuspended(l.marketType) ||
+      isSuspended(l.marketId) ||
+      (l.sport != null && isSuspended(l.sport)),
+  )
+}
+
 /**
- * Cash out an open book bet at its current live value, through the shared `core`.
+ * The live FULL cash-out offer for an open bet, in cents — or null when it can't be cashed
+ * right now (settled, a leg off the board, OR a desk suspension freezing the ticket). The UI
+ * reads this so a suspended bet shows no stale offer. Mirrors the guard in `cashOutBookBet`.
+ */
+export function liveCashOutOffer(
+  bet: BookBet,
+  events: NormalizedEvent[],
+  margin?: number,
+): number | null {
+  if (bet.status !== 'open' || anyLegSuspended(bet.legs)) return null
+  const q = cashOutQuote(bet, events, margin)
+  return q.cashable ? q.offerCents : null
+}
+
+/**
+ * Cash out an open book bet at its current live value, through the shared `core`. Works for
+ * a single, a cross-game parlay, OR a same-game / bet-builder ticket — the offer comes from
+ * `cashOutQuote`, which re-uses the SGP correlation for a same-game ticket, so multi-leg
+ * cash-out prices on the same path the ticket was built on.
  *
  * Full (`fraction` 1/omitted): the whole wager resolves at the offer via
  * `resolveAtMultiplier` (m = offer/stake), so the figure moves by offer − stake; status
@@ -244,8 +282,15 @@ export interface CashOutResult {
  * moves the figure by exactly the cashed portion's P/L, and the kept stake is RE-PLACED as
  * a fresh wager at the same price, so it keeps riding and settles normally later.
  *
- * Returns null when the bet is unknown, already settled, or not currently cashable (a leg
- * dropped off the live board). Credit/balance only — integer cents through `core`.
+ * Gate parity (Round 2): a desk SUSPENSION on any leg freezes the whole cash-out (you can't
+ * close against a pulled price). A partial's RIDING remainder is fresh exposure, so it must
+ * clear the same suspension + stake/payout gate as a new wager — checked BEFORE any money
+ * moves, so a remainder the gate forbids cancels the partial atomically (a full cash-out,
+ * which only reduces exposure, is never blocked by limits).
+ *
+ * Returns null when the bet is unknown, already settled, not currently cashable (a leg
+ * dropped off the live board), suspended, or when a partial's remainder fails the gate.
+ * Credit/balance only — integer cents through `core`.
  */
 export function cashOutBookBet(
   betId: string,
@@ -256,6 +301,9 @@ export function cashOutBookBet(
   const rec = getBets().find((b) => b.id === betId)
   if (!lb || !rec || lb.wager.status === 'resolved' || rec.status !== 'open') return null
 
+  // A suspension freezes cash-out on the whole ticket — nothing moves while a leg is pulled.
+  if (anyLegSuspended(lb.legs)) return null
+
   const quote = cashOutQuote(rec, events, opts.margin)
   if (!quote.cashable) return null
 
@@ -264,6 +312,22 @@ export function cashOutBookBet(
     lb.wager.stake,
     opts.fraction ?? 1,
   )
+
+  // The riding remainder of a partial must clear the gate (suspension already excluded above,
+  // so this catches a stake/payout limit). Verified BEFORE any settle/re-hold so a forbidden
+  // remainder leaves the bet exactly as it was — the player can still take a FULL cash-out.
+  if (keptStakeCents > 0) {
+    try {
+      gateWager({
+        legs: lb.legs.map(gateLeg),
+        stakeCents: keptStakeCents,
+        payoutCents: toReturnCents(keptStakeCents, lb.decimal),
+      })
+    } catch {
+      return null
+    }
+  }
+
   resolveAtMultiplier(lb.account, lb.wager, multiplier)
 
   if (keptStakeCents > 0) {

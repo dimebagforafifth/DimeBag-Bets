@@ -1,0 +1,57 @@
+/* The same-game bet builder — its own clean, full-width view inside the book. Reuses the
+   book's graphite-and-gold tokens (--bk-* alias the global theme) and the existing chip /
+   leg / summary classes; this sheet only lays out the two panes + the blocked-pick state. */
+
+.bk-builder {
+  grid-column: 1 / -1; /* span the book's main+aside grid as a dedicated surface */
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+  color: var(--bk-text);
+  font-family: var(--bk-font);
+}
+
+.bk-builder-menu {
+  min-width: 0;
+}
+
+.bk-builder-ticket {
+  position: sticky;
+  top: 16px;
+  background: var(--bk-surface);
+  border: 1px solid var(--bk-line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* a small gold tag marking the guided one-game context */
+.bk-builder-tag {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--bk-graphite);
+  background: var(--bk-gold);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+/* a pick that would contradict a chosen leg: greyed, struck through, not addable */
+.bk-builder .bk-chip.is-blocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  border-color: var(--bk-line);
+}
+.bk-builder .bk-chip.is-blocked:active {
+  transform: none;
+}
+
+@media (max-width: 760px) {
+  .bk-builder {
+    grid-template-columns: 1fr;
+  }
+  .bk-builder-ticket {
+    position: static;
+  }
+}

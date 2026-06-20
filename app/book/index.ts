@@ -6,6 +6,7 @@
  */
 
 export { BookView } from './BookView.js'
+export { BetBuilder } from './BetBuilder.js'
 export {
   useBookOdds,
   useBookEvent,
@@ -26,10 +27,22 @@ export {
   placeBookBet,
   settleBookBet,
   cashOutBookBet,
+  liveCashOutOffer,
   accountFor,
   __resetPlacement,
   type CashOutResult,
 } from './placement.js'
+
+export {
+  builderGroups,
+  builderQuote,
+  selectionAvailability,
+  toggleBuilderLeg,
+  legsOffBoard,
+  type BuilderGroup,
+  type BuilderQuote,
+  type LegAvailability,
+} from './builder.js'
 
 export {
   cashOutQuote,

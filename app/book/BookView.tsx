@@ -15,10 +15,10 @@ import type { Role } from '../../org/index.js'
 import { useBookOdds } from './odds-source.js'
 import { getBetsVersion, subscribeBets, betsForViewer, type BookBet } from './bets-store.js'
 import { legFromSelection, movedLegKeys, type SlipLeg, type SlipMode } from './slip.js'
-import { placeBookBet, cashOutBookBet } from './placement.js'
-import { cashOutQuote } from './cashout.js'
+import { placeBookBet, cashOutBookBet, liveCashOutOffer } from './placement.js'
 import { BookLobby } from './BookLobby.js'
 import { EventView } from './EventView.js'
+import { BetBuilder } from './BetBuilder.js'
 import { BetSlip } from './BetSlip.js'
 import { BookActivity } from './BookActivity.js'
 import { SimulateControl } from './SimulateControl.js'
@@ -50,6 +50,7 @@ export function BookView({
 
   const [activeLeague, setActiveLeague] = useState<string | null>(null)
   const [openEventId, setOpenEventId] = useState<string | null>(null)
+  const [builderOpen, setBuilderOpen] = useState(false)
   const [legs, setLegs] = useState<SlipLeg[]>([])
   const [mode, setMode] = useState<SlipMode>('single')
   const [stakeCents, setStakeCents] = useState(0)
@@ -106,12 +107,10 @@ export function BookView({
   }
 
   // The current full cash-out offer for an open bet, valued off the LIVE slate (null when
-  // not cashable). Recomputed as the slate moves, so the offer ticks with the odds.
+  // not cashable OR a leg's market is suspended — the gate freezes cash-out). Recomputed as
+  // the slate moves, so the offer ticks with the odds.
   const cashOutValueFor = useCallback(
-    (bet: BookBet): number | null => {
-      const q = cashOutQuote(bet, events)
-      return q.cashable ? q.offerCents : null
-    },
+    (bet: BookBet): number | null => liveCashOutOffer(bet, events),
     [events],
   )
 
@@ -138,9 +137,30 @@ export function BookView({
       onLeague={setActiveLeague}
       slipKeys={slipKeys}
       onToggle={toggle}
-      onOpenEvent={setOpenEventId}
+      onOpenEvent={(id) => {
+        setOpenEventId(id)
+        setBuilderOpen(false) // always land on the markets view first
+      }}
     />
   )
+
+  if (builderOpen && openEvent) {
+    return (
+      <div className="bk">
+        <BetBuilder
+          key={openEvent.eventId}
+          event={openEvent}
+          account={account}
+          playerName={playerName}
+          onBack={() => setBuilderOpen(false)}
+          onPlaced={() => {
+            setBuilderOpen(false)
+            onBalanceChange?.()
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="bk">
@@ -151,6 +171,11 @@ export function BookView({
             {source === 'live' ? 'Live feed' : 'Demo feed'}
           </span>
         </div>
+        {openEvent && (
+          <button type="button" className="bk-build-cta" onClick={() => setBuilderOpen(true)}>
+            ＋ Build a same-game bet
+          </button>
+        )}
         {board}
       </div>
 
