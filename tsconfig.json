@@ -47,6 +47,7 @@
     "import",
     "trading",
     "billing",
-    "profile"
+    "profile",
+    "pools"
   ]
 }
