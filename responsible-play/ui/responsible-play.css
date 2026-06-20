@@ -1,0 +1,261 @@
+/* Limits & Activity — the player's responsible-play surface. Tokens only (app/theme.css). */
+
+.rp {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.rp-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.rp-title {
+  font-family: var(--font-head);
+  font-size: var(--text-2xl);
+  margin: 0;
+  color: var(--text);
+}
+.rp-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.rp-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.rp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.rp-h2 {
+  font-family: var(--font-head);
+  font-size: var(--text-lg);
+  margin: 0;
+  color: var(--text);
+}
+
+/* chips */
+.rp-chips {
+  display: inline-flex;
+  gap: var(--space-1);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+.rp-chip {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.rp-chip.is-on {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+/* stat sheet */
+.rp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.rp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+.rp-stat.is-big {
+  grid-column: span 1;
+}
+.rp-stat-label {
+  font-size: var(--text-xs);
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rp-stat-value {
+  font-family: var(--font-num);
+  font-size: var(--text-lg);
+  color: var(--text);
+}
+.rp-stat.is-big .rp-stat-value {
+  font-size: var(--text-xl);
+}
+.rp-up {
+  color: var(--green);
+}
+.rp-down {
+  color: var(--red);
+}
+
+/* limits */
+.rp-limit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+.rp-limit:first-of-type {
+  border-top: 0;
+}
+.rp-limit-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.rp-limit-label {
+  font-weight: 600;
+  color: var(--text);
+}
+.rp-limit-now {
+  font-family: var(--font-num);
+  color: var(--gold);
+  font-size: var(--text-sm);
+}
+.rp-limit-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.rp-limit-pending {
+  margin: 0;
+  color: var(--gold);
+  font-size: var(--text-xs);
+}
+.rp-limit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.rp-money-in {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding-left: 8px;
+}
+.rp-money-cur {
+  color: var(--faint);
+}
+.rp-money-in .rp-input {
+  border: 0;
+  background: transparent;
+  width: 90px;
+}
+.rp-input {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  padding: 6px 8px;
+}
+.rp-select {
+  cursor: pointer;
+}
+.rp-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rp-btn {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.rp-btn:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.rp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.rp-btn-primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1407;
+  font-weight: 600;
+}
+.rp-btn-primary:hover:not(:disabled) {
+  background: var(--gold-bright);
+}
+.rp-btn-danger {
+  border-color: var(--red);
+  color: var(--red);
+}
+.rp-confirm {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.rp-msg {
+  margin: 0;
+  color: var(--green);
+  font-size: var(--text-xs);
+}
+.rp-empty {
+  margin: 0;
+  color: var(--faint);
+  font-size: var(--text-sm);
+}
+
+.rp-cooloff-on {
+  background: var(--surface-2);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.rp-session {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.rp-session.is-over {
+  border-color: var(--gold);
+  color: var(--text);
+}
+
+@media (max-width: 520px) {
+  .rp-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

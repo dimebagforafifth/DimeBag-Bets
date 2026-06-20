@@ -30,3 +30,25 @@ export {
   getActiveEconomyTenant,
   __resetEconomy,
 } from './economy.js'
+export type {
+  LimitKind,
+  LimitPeriod,
+  LimitInput,
+  ActiveLimit,
+  LimitUsage,
+  LimitUsageReader,
+} from './limits.js'
+export {
+  LOOSEN_DELAY_MS,
+  periodStartMs,
+  setPlayerLimit,
+  clearPlayerLimit,
+  installPlayerLimit,
+  getEffectiveLimits,
+  getPlayerLimitState,
+  hasLimits,
+  assertWithinLimits,
+  setLimitUsageReader,
+  setLimitsClock,
+  __resetLimits,
+} from './limits.js'

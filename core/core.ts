@@ -10,6 +10,7 @@
 
 import type { Account, Outcome, Wager } from './types.js'
 import { getEconomyMode, getBalanceFloorCents } from './economy.js'
+import { assertWithinLimits } from './limits.js'
 
 let wagerSeq = 0
 
@@ -176,6 +177,9 @@ export function placeWager(account: Account, stake: number, id?: string): Wager 
     // new action on this account. Existing bets still settle.
     throw new Error('betting is locked on this account')
   }
+  // Responsible-play gate: the player's own wager/loss cap or cool-off (no-op if none set,
+  // so default placement is byte-identical). Mirrors the economy-floor consultation above.
+  assertWithinLimits(account, stake)
   const available = availableToWager(account)
   if (stake > available) {
     throw new Error(`stake ${stake} exceeds availableToWager ${available}`)
@@ -280,7 +284,14 @@ export function resolveWager(
 
   wager.status = 'resolved'
   wager.outcome = outcome
-  emitResolved({ accountId: account.id, wagerId: wager.id, stake: wager.stake, outcome, payoutMultiplier: mult, profit })
+  emitResolved({
+    accountId: account.id,
+    wagerId: wager.id,
+    stake: wager.stake,
+    outcome,
+    payoutMultiplier: mult,
+    profit,
+  })
 }
 
 /**
@@ -353,9 +364,7 @@ export function grant(account: Account, cents: number, meta?: Record<string, unk
  */
 export function settleWeek(account: Account): void {
   if (account.pending !== 0) {
-    throw new Error(
-      `cannot settle with ${account.pending} still pending; grade all wagers first`,
-    )
+    throw new Error(`cannot settle with ${account.pending} still pending; grade all wagers first`)
   }
   account.balance = 0
 }
