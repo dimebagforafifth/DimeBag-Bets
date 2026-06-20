@@ -1,0 +1,175 @@
+/* Invite Friends — the player referral surface. Global tokens only (app/theme.css). */
+
+.ref {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.ref-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ref-title {
+  font-family: var(--font-head);
+  font-size: var(--text-2xl);
+  margin: 0;
+  color: var(--text);
+}
+.ref-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.ref-off {
+  color: var(--faint);
+  font-size: var(--text-sm);
+}
+
+.ref-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.ref-h2 {
+  font-family: var(--font-head);
+  font-size: var(--text-lg);
+  margin: 0;
+  color: var(--text);
+}
+.ref-fine {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.ref-code-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.ref-code {
+  font-family: var(--font-num);
+  font-size: var(--text-xl);
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  background: var(--surface-2);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+}
+.ref-link {
+  margin: 0;
+  color: var(--faint);
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+
+.ref-follow,
+.ref-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ref-follow-row,
+.ref-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--line);
+}
+.ref-follow-row:first-child,
+.ref-list-row:first-child {
+  border-top: 0;
+}
+.ref-follow-name {
+  color: var(--text);
+}
+
+.ref-badge {
+  font-size: var(--text-xs);
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.ref-badge.is-rewarded {
+  color: var(--green);
+  border-color: var(--green);
+}
+.ref-badge.is-qualified {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.ref-redeem {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.ref-input {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  padding: 6px 10px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.ref-btn {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.ref-btn:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+.ref-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ref-btn-sm {
+  padding: 4px 10px;
+  font-size: var(--text-xs);
+}
+.ref-btn-primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1407;
+  font-weight: 600;
+}
+.ref-btn-primary:hover:not(:disabled) {
+  background: var(--gold-bright);
+}
+
+.ref-msg-ok {
+  margin: 0;
+  color: var(--green);
+  font-size: var(--text-xs);
+}
+.ref-msg-err {
+  margin: 0;
+  color: var(--red);
+  font-size: var(--text-xs);
+}
