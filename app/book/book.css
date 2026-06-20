@@ -302,6 +302,28 @@
 .bk-back:hover {
   color: var(--bk-gold);
 }
+/* entry into the guided same-game builder, shown above an open game's markets */
+.bk-build-cta {
+  align-self: flex-start;
+  margin: 4px 0 12px;
+  background: transparent;
+  border: 1px solid var(--bk-gold);
+  color: var(--bk-gold);
+  font-family: var(--bk-font);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.bk-build-cta:hover {
+  background: var(--bk-gold);
+  color: var(--bk-graphite);
+}
 .bk-mblock {
   background: var(--bk-surface);
   border: 1px solid var(--bk-line);
