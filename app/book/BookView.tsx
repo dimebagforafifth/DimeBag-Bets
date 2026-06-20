@@ -142,6 +142,7 @@ export function BookView({
         setOpenEventId(id)
         setBuilderOpen(false) // always land on the markets view first
       }}
+      viewerId={viewerId}
     />
   )
 

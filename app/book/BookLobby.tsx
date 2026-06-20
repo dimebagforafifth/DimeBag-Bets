@@ -7,6 +7,7 @@
 
 import type { NormalizedEvent, NormalizedMarket } from '../../lib/odds/contract.js'
 import { PriceChip, type ToggleLeg } from './MarketChips.js'
+import { MarketSplitBar } from '../../splits/index.js'
 
 function startLabel(iso: string): string {
   const d = new Date(iso)
@@ -63,13 +64,16 @@ function EventCard({
   slipKeys,
   onToggle,
   onOpen,
+  viewerId,
 }: {
   event: NormalizedEvent
   slipKeys: Set<string>
   onToggle: ToggleLeg
   onOpen: (id: string) => void
+  viewerId: string
 }) {
   const extra = event.markets.length - 3 // beyond the three game lines
+  const ml = mainMarket(event, 'moneyline')
   return (
     <div className="bk-event">
       <div className="bk-event-top">
@@ -110,6 +114,9 @@ function EventCard({
           onToggle={onToggle}
         />
       </div>
+      {/* Round-4 C: one compact public-split signal per card (moneyline, tickets-only) — a clean
+          discovery hint; the full per-market splits live in EventView. Empty → "No action yet". */}
+      {ml && <MarketSplitBar marketId={ml.marketId} viewerId={viewerId} showHandle={false} />}
       {extra > 0 && (
         <button type="button" className="bk-more" onClick={() => onOpen(event.eventId)}>
           More wagers ({extra}) →
@@ -127,6 +134,7 @@ export function BookLobby({
   slipKeys,
   onToggle,
   onOpenEvent,
+  viewerId,
 }: {
   events: NormalizedEvent[]
   leagues: string[]
@@ -135,6 +143,7 @@ export function BookLobby({
   slipKeys: Set<string>
   onToggle: ToggleLeg
   onOpenEvent: (id: string) => void
+  viewerId: string
 }) {
   const shown = activeLeague ? events.filter((e) => e.leagueId === activeLeague) : events
   const live = shown.filter((e) => e.status === 'live')
@@ -174,6 +183,7 @@ export function BookLobby({
                   slipKeys={slipKeys}
                   onToggle={onToggle}
                   onOpen={onOpenEvent}
+                  viewerId={viewerId}
                 />
               ))}
             </div>
@@ -189,6 +199,7 @@ export function BookLobby({
                 slipKeys={slipKeys}
                 onToggle={onToggle}
                 onOpen={onOpenEvent}
+                viewerId={viewerId}
               />
             ))}
             {upcoming.length === 0 && (
