@@ -14,6 +14,8 @@
 >
 > **Open question that needs your call before wiring up the backend:** should `accounts.balance` be **maintained directly** (simple, matches how `core` mutates in place) or **treated as a cache rebuilt from the `transactions` ledger** (stronger audit guarantee)? The schema supports either; pick one before building the balance-write path. Also worth confirming early (see research doc): The Odds API ToS for non-real-money use, and whether a live-dealer studio would onboard a non-redeemable points app.
 >
+> **Action needed from you — Google login (added 2026-06-19):** Google sign-in + email verification are now built in the code (`auth/supabaseAdapter.ts`, `auth/Login.tsx`), but need **Supabase dashboard config** to go live: enable the **Google provider** (client id/secret), add the deployed origin to the **allowed redirect URLs** (`SUPABASE_AUTH_REDIRECT_URL`), and turn on **email confirmation** + customize the template. The code path is ready and waiting for those keys; until then the app runs on the demo adapter exactly as before. (See `docs/pending-issues.md` → "Full-repo review" for the rest of this session's work: server-side bet grading, the multi-user authz migration `0007`, and the pre-player-auth checklist.)
+>
 > *(Remove this block once you've read it and made the call.)*
 
 ---

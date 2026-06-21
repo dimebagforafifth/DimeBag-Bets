@@ -20,9 +20,10 @@ export {
   winChance,
   multiplierFor,
   isWin,
+  gradeRoll,
   hashServerSeed,
 } from './fair.js'
-export type { DiceDirection, DiceHouseConfig } from './fair.js'
+export type { DiceDirection, DiceHouseConfig, DiceOutcome } from './fair.js'
 
 export type { DiceRound, PlayDiceOptions } from './engine.js'
 export { randomServerSeed, playDice } from './engine.js'

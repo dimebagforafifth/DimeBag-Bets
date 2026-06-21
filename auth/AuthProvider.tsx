@@ -13,7 +13,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createAuthAdapter } from './adapter.js'
 import { DEMO_OPERATOR_USERNAME } from './demoAdapter.js'
-import type { AuthAdapter, AuthContextValue, AuthStatus, Session } from './types.js'
+import type { AuthAdapter, AuthContextValue, AuthStatus, Session, SignUpResult } from './types.js'
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
@@ -49,13 +49,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [adapter],
   )
   const signUp = useCallback(
-    async (username: string, password: string, displayName?: string) => {
-      const s = await adapter.signUp(username, password, displayName)
-      setSession(s)
-      setStatus('authenticated')
+    async (username: string, password: string, displayName?: string): Promise<SignUpResult> => {
+      const result = await adapter.signUp(username, password, displayName)
+      // Only flip to authenticated when a real session came back. A pending-verification
+      // result leaves the user unauthenticated (they confirm via email first); the caller
+      // shows the "check your email" state from the returned result.
+      if ('session' in result) {
+        setSession(result.session)
+        setStatus('authenticated')
+      }
+      return result
     },
     [adapter],
   )
+  const signInWithGoogle = useCallback(async () => {
+    // Redirect-based: the browser leaves for Google and returns to the app, where the
+    // mount-time getSession() establishes the session. Nothing to set here.
+    await adapter.signInWithOAuth('google')
+  }, [adapter])
   const signOut = useCallback(async () => {
     await adapter.signOut()
     setSession(null)
@@ -63,8 +74,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [adapter])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user: session?.user ?? null, isDemo: adapter.kind === 'demo', signIn, signUp, signOut }),
-    [status, session, adapter, signIn, signUp, signOut],
+    () => ({
+      status,
+      user: session?.user ?? null,
+      isDemo: adapter.kind === 'demo',
+      canUseOAuth: adapter.kind === 'supabase',
+      signIn,
+      signUp,
+      signInWithGoogle,
+      signOut,
+    }),
+    [status, session, adapter, signIn, signUp, signInWithGoogle, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -76,8 +96,12 @@ const FALLBACK: AuthContextValue = {
   status: 'authenticated',
   user: { id: 'mgr', username: DEMO_OPERATOR_USERNAME, displayName: 'Operator' },
   isDemo: true,
+  canUseOAuth: false,
   async signIn() {},
-  async signUp() {},
+  async signUp() {
+    return { session: { user: FALLBACK.user!, token: 'demo-fallback', expiresAt: null } }
+  },
+  async signInWithGoogle() {},
   async signOut() {},
 }
 
