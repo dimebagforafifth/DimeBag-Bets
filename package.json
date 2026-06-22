@@ -16,7 +16,9 @@
     "format:check": "prettier --check .",
     "poll:once": "vite-node scripts/poll-odds-once.ts",
     "poll:loop": "vite-node scripts/poll-odds-loop.ts",
-    "dev:snapshot": "vite-node scripts/dev-snapshot.ts"
+    "dev:snapshot": "vite-node scripts/dev-snapshot.ts",
+    "worker": "vite-node worker/index.ts",
+    "worker:dev": "vite-node --watch worker/index.ts"
   },
   "engines": {
     "node": "20.x"
