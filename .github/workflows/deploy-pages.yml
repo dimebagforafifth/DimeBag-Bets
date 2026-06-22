@@ -1,0 +1,53 @@
+name: Deploy Pages
+
+# Auto-publish the static demo whenever main changes, so the live GitHub Pages site
+# (served from the gh-pages branch) always reflects main — instead of the manual
+# build-and-push that left it stale. Self-contained: builds with CLI flags into a
+# clean dist-pages/ and force-pushes a fresh gh-pages, touching no other config.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # allow a manual redeploy from the Actions tab
+
+# One deploy at a time; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: write # the job pushes the built site to the gh-pages branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      # GitHub Pages serves under the repo subpath; build the demo with that base into a
+      # clean dist-pages/ (CLI flags, so no change to vite.config or the tracked docs/).
+      - run: npx vite build --base=/DimeBag-Bets/ --outDir=dist-pages --emptyOutDir
+      # The SPA needs a 404 fallback (deep links) and .nojekyll (so Pages serves Vite's
+      # _-prefixed assets verbatim).
+      - name: Assemble site
+        run: |
+          cp dist-pages/index.html dist-pages/404.html
+          touch dist-pages/.nojekyll
+      # Force-push a single fresh commit to gh-pages — keeps that branch tiny and the
+      # live site exactly in sync with this build.
+      - name: Publish to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist-pages
+          git init -q
+          git checkout -q -b gh-pages
+          git add -A
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -qm "deploy: ${GITHUB_SHA::7} (auto, from main)"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
