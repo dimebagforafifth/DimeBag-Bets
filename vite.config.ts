@@ -6,22 +6,22 @@ import react from '@vitejs/plugin-react'
 // runner (core + game logic). Vite resolves the `.js` import specifiers used by
 // the pure modules to their `.ts` sources, so the same code runs in tests, the
 // browser now, and a server later.
-// GitHub Pages serves under the repo subpath, so the Pages build needs a base + a docs/ outDir.
+// GitHub Pages serves under the repo subpath, so the Pages build needs a base + its own outDir.
 // Gate it behind PAGES_BUILD=1 so the dev server and the normal dist build are byte-for-byte
-// unchanged (base '/', outDir 'dist', hidden maps).
+// unchanged (base '/', outDir 'dist'). The Pages build writes to its OWN gitignored dir
+// (dist-pages) — the CI deploy workflow publishes that to the gh-pages branch, so build
+// artifacts are never hand-committed into the tracked docs/ (which holds project markdown).
 const pagesBuild = process.env.PAGES_BUILD === '1'
 
 export default defineConfig({
   plugins: [react()],
   base: pagesBuild ? '/DimeBag-Bets/' : '/',
   build: {
-    outDir: pagesBuild ? 'docs' : 'dist',
-    // The Pages build writes INTO the tracked docs/ (which holds the project markdown), so never
-    // wipe it; the gitignored dist build empties as usual.
-    emptyOutDir: !pagesBuild,
+    outDir: pagesBuild ? 'dist-pages' : 'dist',
+    // Both outputs are gitignored, so always start clean.
+    emptyOutDir: true,
     // dist: hidden sourcemaps (error de-minify, gitignored — never enter the repo). Pages: no maps
-    // at all — the demo is committed to a public repo, so skip them (smaller; the source is public
-    // anyway, so nothing extra leaks).
+    // at all — the public demo doesn't need them (smaller; the source is public anyway).
     sourcemap: pagesBuild ? false : 'hidden',
     rollupOptions: {
       output: {

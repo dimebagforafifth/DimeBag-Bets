@@ -1,11 +1,5 @@
 dist
+dist-pages
 coverage
 node_modules
 package-lock.json
-
-# Generated GitHub Pages build (minified bundles + emitted HTML), committed by
-# the PAGES_BUILD step — not ours to format.
-docs/assets
-docs/index.html
-docs/404.html
-docs/favicon.svg
