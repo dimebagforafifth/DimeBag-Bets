@@ -517,14 +517,33 @@ function AuthMenu({
   role: Role
   onSignOut: () => void | Promise<void>
 }) {
+  // An avatar + tight name/role chip reads as ONE identity control; sign-out is a
+  // subtle icon button rather than a competing text button (declutters the header).
+  const initial = name.trim().charAt(0).toUpperCase() || '?'
   return (
     <div className="auth-menu">
+      <span className="auth-avatar" aria-hidden="true">
+        {initial}
+      </span>
       <span className="auth-id">
         <span className="auth-id-name">{name}</span>
         <span className="auth-id-role">{role}</span>
       </span>
-      <button className="auth-signout" onClick={() => void onSignOut()} title="Sign out">
-        Sign out
+      <button
+        className="auth-signout"
+        onClick={() => void onSignOut()}
+        title="Sign out"
+        aria-label="Sign out"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+          <path
+            d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M4 12h11"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
     </div>
   )

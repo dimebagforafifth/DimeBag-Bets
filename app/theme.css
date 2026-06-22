@@ -500,17 +500,30 @@ body {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
+/* The balance + week standing read as ONE "wallet" unit: a contained pill, set off
+   from the account controls (sound / VIP / identity) instead of floating loose. */
 .figure {
   display: flex;
-  gap: 16px;
+  align-items: stretch;
+  gap: 14px;
+  padding: 6px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--sheen);
 }
 .figure-block {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   line-height: 1.2;
+}
+/* a hairline between the two figures so they read as paired, not crowded */
+.figure-block + .figure-block {
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
 }
 .figure-label {
   font-size: 10px;

@@ -191,38 +191,61 @@
 }
 
 /* Header identity menu (replaces the implicit "operator") */
+/* Compact identity chip in the header. A thin divider sets it apart from the sound/
+   VIP controls to its left, so the top-right reads as grouped, not cluttered. */
 .auth-menu {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
+.auth-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 700;
+  color: #14171c;
+  background: linear-gradient(160deg, var(--gold-bright), var(--gold));
+  box-shadow: var(--sheen);
 }
 .auth-id {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   line-height: 1.15;
 }
 .auth-id-name {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
 }
 .auth-id-role {
-  font-size: 10.5px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   color: var(--muted);
 }
+/* icon-only sign-out — quiet by default, gold on hover (subordinate to the CTA) */
 .auth-signout {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
   border: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--muted);
-  border-radius: 7px;
-  padding: 5px 9px;
-  font-size: 12px;
-  font-weight: 700;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  transition:
+    color var(--dur) ease,
+    border-color var(--dur) ease;
 }
 .auth-signout:hover {
-  color: var(--text);
-  border-color: var(--muted);
+  color: var(--gold-bright);
+  border-color: color-mix(in srgb, var(--gold) 50%, var(--line));
 }
