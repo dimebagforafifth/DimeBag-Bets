@@ -60,7 +60,7 @@ export interface GameDef {
 
 /**
  * Lazy-load a game's view so each game UI ships as its OWN chunk, fetched only
- * when the player opens that game — instead of bundling all 20 game UIs (the bulk
+ * when the player opens that game — instead of bundling all 21 game UIs (the bulk
  * of the app) into the initial download. The shell stays small; a game's code
  * (and its CSS) arrives on first open and is cached thereafter. The lobby cards
  * use the static `*Meta` above, so the hub renders with no game chunk loaded.

@@ -19,7 +19,7 @@ DimeBag-Bets/
 │   ├── core.ts            ←   availableToWager / placeWager / resolveWager / settleWeek
 │   ├── fair.ts            ←   HMAC-SHA256 float stream, server-seed commitment
 │   └── index.ts           ←   public surface
-├── games/                 ← 13 self-contained game modules (each with a ui/ subfolder)
+├── games/                 ← 21 self-contained game modules (each with a ui/ subfolder)
 │   ├── shared/            ←   common helpers (money.ts, Rules.tsx, WinPopup.tsx, NumberInput.tsx)
 │   ├── mines/             ←   each game: fair.ts / multiplier.ts / index.ts (meta) / ui/
 │   ├── crash/
@@ -33,7 +33,15 @@ DimeBag-Bets/
 │   ├── dragon-tower/
 │   ├── pump/
 │   ├── roulette/
-│   └── blackjack/
+│   ├── blackjack/
+│   ├── baccarat/
+│   ├── coinflip/
+│   ├── diamonds/
+│   ├── videopoker/
+│   ├── cases/
+│   ├── sicbo/
+│   ├── threecardpoker/
+│   └── slots/
 ├── sportsbook/            ← markets, odds, live pricing, parlay engine, store, mock feed
 ├── sportsdata/            ← sports data feed layer (provider abstraction)
 ├── ledger/                ← transaction history across every game and the book
@@ -151,25 +159,20 @@ Games share one cryptographic scheme:
 
 ### Game catalog
 
-| Game         | House edge | RTP    | Top multiplier (example)                         |
-|--------------|-----------:|-------:|--------------------------------------------------|
-| Mines        | 1%         | 99%    | 5,148,297× (12 mines, full clear)                |
-| Crash        | 1%         | 99%    | 1,000,000× (capped)                              |
-| Dice         | 1%         | 99%    | 9,900× (at 0.01% win chance)                      |
-| Limbo        | 1%         | 99%    | 1,000,000× (capped)                              |
-| Plinko       | 1%         | ~98%   | 1000× (16 rows, high risk)                        |
-| Keno         | 1%         | 99%    | High (10-of-10 at high risk)                     |
-| Wheel        | 1%         | 99%    | 49.50× (50 segments, high risk)                  |
-| HiLo         | 1%         | 99%    | Unbounded (product of step multipliers)          |
-| Roulette     | 2.70%      | 97.30% | 36× (straight-up, single number)                 |
-| Blackjack    | ~0.5%      | ~99.5% | 2.5× (blackjack pays 3:2)                        |
-| Dragon Tower | 2%         | 98%    | 256,901.12× (Master, 4/1 per row, 9 rows)        |
-| Pump         | 2%         | 98%    | 3,203,384.80× (Expert, 10 pops, 15 pumps)        |
-| Chicken Road | 2%         | 98%    | 386.90× (Daredevil, 55%/lane, 10 lanes)          |
+The live casino catalog is the `GAMES` registry in `app/games.ts`. The current
+set is:
 
-Most games expose a **configurable edge** (default 1%, or 2% for the Stake-modeled grid games);
-Roulette's 2.70% and Blackjack's ~0.5% are inherent to the game's geometry/rules rather than a
-knob. RTP for the computed-paytable games (Keno, Wheel) is exactly `(1 − edge)` before rounding.
+| Group | Games |
+| ----- | ----- |
+| Original multiplier/RNG games | Mines, Crash, Dice, Limbo, Keno, Plinko, Wheel, HiLo |
+| Grid/climb/streak games | Dragon Tower, Pump, Chicken Road, Coin Flip |
+| Table/card games | Blackjack, Roulette, Baccarat, Sic Bo, Three Card Poker, Video Poker |
+| Arcade/paytable games | Diamonds, Cases, Slots |
+
+Most computed-paytable games expose a configurable edge through their own house
+config and manager-facing RTP controls. Canonical table/card games use their
+published schedules or inherent geometry instead of a single global edge knob.
+See `docs/odds.md` for detailed multiplier and RTP notes.
 
 ### Shared game helpers (`games/shared/`)
 
@@ -216,7 +219,7 @@ Ticket status lifecycle: `open → won | lost | push | void | cashed`.
 
 ## 5. The app shell (`app/`)
 
-The shell owns **one** shared `Account` and routes between three sections.
+The shell owns **one** shared `Account` and routes between the player and operator sections.
 
 ### One account, held in a ref
 
@@ -229,14 +232,23 @@ re-render whenever a game calls `onBalanceChange()`.
 ### Sections
 
 ```ts
-type Section = 'casino' | 'sportsbook' | 'management';
+type Section =
+  | 'casino'
+  | 'sportsbook'
+  | 'rewards'
+  | 'mybets'
+  | 'leaderboard'
+  | 'management';
 ```
 
 - **Casino** — a lobby that maps the `GAMES` registry to cards (icon, name, tagline, `Play >`).
-  Clicking a card opens that game's page with a back crumb, the game `Component`, and a `Ledger`.
-- **Sportsbook** and **Management** — their state (live feed, open bets) **survives** section
-  switches because the `SportsbookStore` is created once at the shell level (`sbStoreRef`), not
-  per-switch. It settles against the shared account and pings the header to re-render.
+  Clicking a card opens that game's page with a back crumb, the lazy game `Component`, and a
+  scoped `Ledger`.
+- **Sportsbook** — the contract-native book UI places through the shared account and connects
+  to the odds cache/feed lane.
+- **Rewards, My Bets, Leaderboard, and registry-driven player sections** — player-facing
+  surfaces that read from the same account/ledger context.
+- **Management** — the role-gated operator console and feature registry.
 
 ### The `GAMES` registry — adding a game is *one* entry
 

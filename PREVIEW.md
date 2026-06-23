@@ -1,96 +1,79 @@
-# DimeBag-Bets — Work Preview
+# DimeBag-Bets - Work Preview
 
-A points-based (non–real-money) **sports betting + casino** web app with a deliberately
-clean interface, plus a graphite-and-gold **operator console** for running the book.
-Everything runs on one shared credit/balance `core` (integer **coins/cents**, closed
-loop — no real money, no payments, no KYC).
+This is the quick tour of what you can inspect locally and how the main work
+areas relate to each other. Points are display-only and have no cash value.
 
-> **How to read this file:** it's a guided index of everything built so far and how to
-> see each surface live. Money is points only; a "$" is just display formatting.
-
----
-
-## Run it locally
+## Run Locally
 
 ```bash
 npm install
-npm run dev      # Vite dev server (http://localhost:5173 by default)
-npm test         # vitest — full suite
-npx tsc --noEmit # typecheck
-npm run build    # production build
+npm run dev
 ```
 
-The app shell has a top nav: **Casino · Sportsbook · My Bets · Leaderboard · Management**.
-Casino/Sportsbook/My Bets/Leaderboard are player surfaces; **Management** is the operator
-console (role-gated to managers).
+Then open the Vite URL, usually `http://localhost:5173`.
 
----
+Main verification commands:
 
-## What's built
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
-### Shared money core (`core/`)
-The contract everything goes through: `placeWager → resolveWager → adjust`, `settleWeek`,
-`grant`/`adjustBalance`, with `balance`/`pending`/`availableToWager` and per-account credit
-limits. All amounts are **integer cents** (`games/shared/money.ts`). No module tracks its
-own points.
+## Player Surfaces
 
-### Casino games (`games/`)
-Provably-fair, on the shared core, each a vertical slice (logic + clean UI): **Mines,
-Crash, Plinko, Slots, Dice, Limbo, Keno, Blackjack, Roulette, Baccarat, Hi-Lo, Wheel,
-Cases, Coinflip, Diamonds, Dragon Tower, Chicken Road, Pump, Sic Bo, Three-Card Poker,
-Video Poker**, with a shared sound engine, win popups, and an anti-spoiler ledger feed.
+| Surface                       | What to look for                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| Casino                        | 21 registered games, lazy-loaded from the lobby                                 |
+| Sportsbook                    | Contract-native book UI, odds cache connection, tickets, parlays, bet placement |
+| My Bets                       | Player bet history split across casino and sportsbook activity                  |
+| Rewards                       | VIP/reward accrual from real wagers                                             |
+| Leaderboard                   | Player standings                                                                |
+| Profile / Community / Pick'em | Registry-driven player sections                                                 |
+| Responsible play              | Limits, cooldowns, and play gates around wager surfaces                         |
 
-### Sportsbook (`sportsbook/`)
-Odds/ticket engine (`priceTicket`/`placeTicket`/`gradeTicket`), a live mock feed, live
-UI components (badges, odds ticks, kickoff countdown, feed status), and **same-game
-parlays** priced through the existing engine.
+## Operator Surfaces
 
-### Player engagement (player surfaces)
-- **Bet builder / same-game parlays** — combine markets on one game, priced + placed
-  through the existing bet path.
-- **Live activity ticker** — read-only feed of recent bets/wins.
-- **Glossary tooltips** — one reusable info-dot + a single glossary, applied across
-  casino + sportsbook.
-- **Responsible-play tools** — player self-set limits, cooldowns, and session reminders
-  that actually block over-limit play.
+| Area                       | What it covers                                         |
+| -------------------------- | ------------------------------------------------------ |
+| Management console         | Role-gated launcher and book operations                |
+| Players/members            | Manager, agent, sub-agent, and player hierarchy        |
+| Risk/exposure              | Open exposure, standings, and operational views        |
+| Catalog/control            | Game availability and house-edge controls              |
+| Cashier/ledger/settlements | Adjustments, durable entries, weekly runs, and exports |
+| CRM/growth/reporting       | Customer and performance workflows                     |
 
-### Manager console — app launcher (`app/ManagerConsole.tsx`)
-The Management section redesigned from tab-pills into a clean **app launcher**: one
-backdrop, square purpose-coloured app tiles grouped into Operations · Catalog ·
-Insight & Growth; click a tile to open that tool. (Branch `integration/consolidate`.)
+## Core Systems
 
-### Operator console — app grid (`console/`, `features/`)
-A separate graphite-and-gold **VANTAGE** operator console: a shell (`console/shell`) with
-a top bar + figures strip + responsive tile grid driven by a `FeatureManifest` registry
-(`console/registry`), and feature panels organised by section under `features/operations`,
-`features/players`, `features/catalog`, `features/control`. (Branch `integration/console`.)
+| System         | Notes                                                                          |
+| -------------- | ------------------------------------------------------------------------------ |
+| `core/`        | Source of truth for credit limit, balance, pending holds, and wager settlement |
+| `ledger/`      | Append-only transaction/audit helpers that mirror core money movements         |
+| `sportsdata/`  | Provider adapters and odds/scores feed seams                                   |
+| `persistence/` | Memory/local storage abstraction and versioned documents                       |
+| `supabase/`    | Migrations and server-side foundation for auth, tenancy, RPCs, and settlement  |
+| `api/`         | Edge-portable handlers for fairness and bet resolution work                    |
 
-### Money-desk lane (`features/figures|cashier|transactions|settlements`, `features/_desk`)
-Four operator feature modules that wrap the core/ledger/settlement logic — coins only,
-every mutation routed through the sanctioned wrappers:
-- **Weekly Sheet** — per-player by-day win/loss, filter chips, sort, CSV export, bulk settle.
-- **Cashier Desk** — Grant/Deduct/Set with live balance preview + batch confirm (audited).
-- **Ledger** — full durable coin ledger; filter by player/type/date; CSV/JSON export.
-- **Settlement Run** — schedule + who's-up/down preview + lock + settle + archive.
+## Branch Map
 
-Plus a shared `features/_desk` lib (pure helpers + UI primitives) with unit tests.
-(Branch `feat/console-money-desk`.)
+| Branch                        | Purpose                                                        |
+| ----------------------------- | -------------------------------------------------------------- |
+| `main`                        | Integration target and CI source                               |
+| `integration/consolidate`     | Casino, sportsbook, and player-facing consolidation            |
+| `integration/console`         | Operator console shell and feature registry                    |
+| `feat/console-money-desk`     | Cashier, ledger, figures, settlements, and shared desk helpers |
+| `feat/player-engagement`      | Bet builder, activity ticker, glossary, and responsible play   |
+| `feat/auth-and-roles`         | Auth and role-gated routes                                     |
+| `feat/server-data-foundation` | Supabase persistence foundation                                |
 
----
+Branch names above are a working map, not a guarantee that every branch is current
+with `main`.
 
-## Branch map (where the work lives)
+## Best First Checks
 
-| Branch | What's on it |
-|---|---|
-| `integration/consolidate` | Casino + sportsbook + player features + manager-console app-launcher |
-| `integration/console` | Operator console: shell + registry + section feature panels |
-| `feat/console-money-desk` | Money-desk lane (figures / cashier / transactions / settlements) + this preview |
-| `feat/player-engagement` | Bet builder/SGP, activity ticker, glossary, responsible-play |
-| `feat/console-shell` | Operator-console shell + empty registry (phase 1) |
-| `feat/auth-and-roles` | Auth + route role-gating |
-| `feat/server-data-foundation` | Supabase persistence foundation |
-| _(plus other feature/audit branches from parallel work)_ | |
-
-## Status
-Full test suite green on `feat/console-money-desk`: **183 files / 1241 tests**, `tsc`
-clean, production build OK.
+1. Open the app and verify the role-specific navigation.
+2. Place a casino bet and confirm the header figure plus My Bets update.
+3. Place a sportsbook ticket and confirm it shares the same account.
+4. Open Management and inspect the console registry/feature tiles.
+5. Run the verification commands before making behavior changes.

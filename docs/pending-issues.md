@@ -113,15 +113,17 @@ See `fixed-issues.md` for what has already been resolved.
 
 ---
 
-## Repo hygiene before the second engineer ramps up
+## Repo hygiene before the second engineer ramps up — ✅ FIXED (2026-06)
 
 - **Severity:** Low (process)
-- **Problem:** `README.md` is a one-line stub, `docs/` was empty (now has these
-  two files), there is no LICENSE, no CI workflow, and no ESLint/Prettier config.
-- **Intended fix:** add a real README (setup + `npm` scripts), an ESLint/Prettier
-  config, and a CI workflow running `npm test` + `npm run typecheck` +
-  `npm run build` on PRs — useful guardrails for the two-person, shared-`core`
-  workflow (CLAUDE.md §9).
+- **Was:** `README.md` was a one-line stub, `docs/` was empty, there was no
+  LICENSE, no CI workflow, and no ESLint/Prettier config.
+- **Fix shipped:** real `README.md` (setup + `npm` scripts), `eslint.config.js`
+  + `.prettierrc.json`/`.prettierignore`, and `.github/workflows/ci.yml` running
+  `typecheck` + `lint` + `test` + `build` on every push to `main` and every PR —
+  the guardrail for the two-person, shared-`core` workflow (CLAUDE.md §9). `docs/`
+  is now populated. Added a proprietary `LICENSE` (All Rights Reserved) and set
+  `"license": "UNLICENSED"` in `package.json` to match (`private: true` product).
 
 ---
 
