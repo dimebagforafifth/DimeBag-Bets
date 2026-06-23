@@ -2,7 +2,7 @@
 
 Companion to [`checklist.md`](./checklist.md) and [`agent-tasks.md`](./agent-tasks.md) (see the [audit README](./README.md)). Where `checklist.md` is a generic, source-distilled list, **this doc is DimeBag-specific**: it covers common production issues *beyond* that checklist, scored against the **actual repo state as of 2026-06-23**, with a concrete fix for each in this codebase.
 
-It deliberately does **not** repeat items already tracked elsewhere — for money-path / fairness / RLS-population work see [`docs/pending-issues.md`](../pending-issues.md); for the generic list see `checklist.md`. Items here are mostly *new* surface area.
+It deliberately does **not** repeat items already tracked elsewhere — for money-path / fairness / RLS-population work see [`docs/operations/pending-issues.md`](../operations/pending-issues.md); for the generic list see `checklist.md`. Items here are mostly *new* surface area.
 
 ## Status legend
 - 🔴 **Missing** — not present; should be added.

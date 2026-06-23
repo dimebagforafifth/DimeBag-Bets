@@ -90,10 +90,10 @@ npm run build
 - [Plain-English Overview](OVERVIEW.md) - status, decisions, and next work.
 - [Work Preview](PREVIEW.md) - surfaces and branches at a glance.
 - [Docs Index](docs/README.md) - all deep-dive docs grouped by topic.
-- [Architecture](docs/architecture.md) - how the app is organized.
-- [Money Model](docs/money-model.md) - balance, pending holds, and settlement.
-- [Provably Fair](docs/provably-fair.md) - seed commitments and verification.
-- [Pending Issues](docs/pending-issues.md) - known follow-ups and deferred fixes.
+- [Architecture](docs/architecture/architecture.md) - how the app is organized.
+- [Money Model](docs/architecture/money-model.md) - balance, pending holds, and settlement.
+- [Provably Fair](docs/odds-and-fairness/provably-fair.md) - seed commitments and verification.
+- [Pending Issues](docs/operations/pending-issues.md) - known follow-ups and deferred fixes.
 
 ## License
 

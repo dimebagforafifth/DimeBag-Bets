@@ -2,7 +2,7 @@
  * Dual-rate odds poller for the always-on worker.
  *
  * Vercel serverless can't hold a setInterval, so the deployed app's only schedule is a
- * once-a-day Vercel Cron backstop (docs/odds-polling.md). True LIVE odds need a persistent
+ * once-a-day Vercel Cron backstop (docs/odds-and-fairness/odds-polling.md). True LIVE odds need a persistent
  * loop — that's this. It reuses the SAME cost-disciplined `runPollCycle()` the /api/poll-odds
  * route runs; nothing about pricing/grading/cache changes.
  *

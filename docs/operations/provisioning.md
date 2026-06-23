@@ -72,7 +72,7 @@ works; the browser build needs the `VITE_` ones.
   the live cache and **subscribes to Realtime** automatically — no interval polling, prices
   update on push. With no keys it stays on the mock slate. Nothing to flip.
 - To fill the cache, the **poller** must run. It's mock-safe: it only calls the real SGO feed
-  when `SGO_LIVE=1`. Three ways to run it (see `docs/odds-polling.md`):
+  when `SGO_LIVE=1`. Three ways to run it (see `../odds-and-fairness/odds-polling.md`):
   - **Vercel Cron** — already declared in `vercel.json` (`/api/poll-odds`). Note Hobby plans
     cap crons at ~once/day; that's a backstop, not live cadence.
   - **External pinger** (e.g. cron-job.org) hitting `https://<app>/api/poll-odds` every minute

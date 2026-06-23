@@ -7,7 +7,7 @@
  *
  * Ctrl-C to stop. (This is the dev/worker form of scheduling; the DEPLOYED app schedules
  * via Vercel Cron / an external pinger hitting /api/poll-odds — serverless can't hold a
- * setInterval. See docs/odds-polling.md.)
+ * setInterval. See docs/odds-and-fairness/odds-polling.md.)
  */
 import {
   runPollCycle,

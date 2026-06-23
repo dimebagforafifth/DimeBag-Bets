@@ -172,7 +172,7 @@ set is:
 Most computed-paytable games expose a configurable edge through their own house
 config and manager-facing RTP controls. Canonical table/card games use their
 published schedules or inherent geometry instead of a single global edge knob.
-See `docs/odds.md` for detailed multiplier and RTP notes.
+See `../odds-and-fairness/odds.md` for detailed multiplier and RTP notes.
 
 ### Shared game helpers (`games/shared/`)
 

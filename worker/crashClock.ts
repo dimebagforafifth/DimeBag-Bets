@@ -5,7 +5,7 @@
  * timer, ticks the multiplier, and — crucially — WITHHOLDS the crash point until the round
  * busts. Today Crash takes the fairness reveal at bet time and runs a client-timed clock
  * (marked INTERIM in the game's start()); this worker is the path that closes that seam
- * (docs/provably-fair-server.md → "Server-timed Crash clock").
+ * (docs/odds-and-fairness/provably-fair-server.md → "Server-timed Crash clock").
  *
  * Fairness (unchanged math, core/fair.ts):
  *   • Before the round: commit() returns {commitId, serverSeedHash}. We broadcast the HASH only

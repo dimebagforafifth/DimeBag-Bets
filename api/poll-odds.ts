@@ -2,7 +2,7 @@
  * Vercel Serverless Function — runs ONE odds poll cycle. A scheduler (Vercel Cron, an
  * external uptime pinger, or the local loop) hits this on a repeating interval to keep
  * the Supabase odds cache fresh; serverless is stateless, so the SCHEDULE lives outside
- * the function (it can't hold a setInterval). See docs/odds-polling.md.
+ * the function (it can't hold a setInterval). See docs/odds-and-fairness/odds-polling.md.
  *
  * Cost discipline: runPollCycle only calls the real SGO feed when SGO_LIVE=1. In the
  * default (mock) mode this route is a no-op — the cron can fire harmlessly, burning no
