@@ -171,7 +171,7 @@ export function CrashGame({
       // the client/operator can't pick a favourable one. The hash is committed first; the seed
       // is revealed next. INTERIM: the live client-timed clock needs the crash point now, so we
       // take the reveal immediately — the genuine withhold-until-after-play flow is the
-      // server-timed-clock SEAM (resolveCrash + realtime; see docs/provably-fair-server.md).
+      // server-timed-clock SEAM (resolveCrash + realtime; see docs/odds-and-fairness/provably-fair-server.md).
       const commit = await fairnessClient.commit()
       const revealed = await fairnessClient.reveal(commit.commitId)
       nonceRef.current += 1

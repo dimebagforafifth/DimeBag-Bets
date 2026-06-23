@@ -66,7 +66,7 @@ export interface PromoCronOptions {
   /**
    * Dispatch a due bonus server-side. REQUIRED to actually fire — money moves through the
    * server-authoritative grant path, which needs the book/org hydrated on the server (see
-   * docs/provisioning.md). Without it the cron reports `ran:false` and advances nothing.
+   * docs/operations/provisioning.md). Without it the cron reports `ran:false` and advances nothing.
    */
   send?: (draft: BonusDraft) => void
 }
@@ -124,7 +124,7 @@ export async function runScheduledPromosCron(opts: PromoCronOptions = {}): Promi
       ran: false,
       fired: 0,
       failed: 0,
-      reason: 'no bonus dispatcher wired (server money path — see docs/provisioning.md)',
+      reason: 'no bonus dispatcher wired (server money path — see docs/operations/provisioning.md)',
     }
   }
 

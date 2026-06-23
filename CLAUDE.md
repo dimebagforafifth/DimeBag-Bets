@@ -7,14 +7,14 @@
 > **Handoff note for Joe — please read at the start of your next session (added 2026-06-16).**
 >
 > Since you were away, the repo got a full review + fixes, issue tracking, provider research, and a first Supabase schema. New things to look at:
-> - `docs/fixed-issues.md` — bugs found & fixed (incl. a dice EV exploit and a crash auto-cashout race).
-> - `docs/pending-issues.md` + GitHub issues #2–#8 — open items for Phase 1+.
+> - `docs/operations/fixed-issues.md` — bugs found & fixed (incl. a dice EV exploit and a crash auto-cashout race).
+> - `docs/operations/pending-issues.md` + GitHub issues #2–#8 — open items for Phase 1+.
 > - `docs/research/research-live-data-providers.md` — which sportsbook odds API + live-casino option to use (with a manual fill-in table for sales-gated data).
 > - `supabase/migrations/…_init_core_and_sportsbook.sql` — initial DB schema (money core + provider-agnostic sportsbook), **not yet applied to a remote**.
 >
 > **Open question that needs your call before wiring up the backend:** should `accounts.balance` be **maintained directly** (simple, matches how `core` mutates in place) or **treated as a cache rebuilt from the `transactions` ledger** (stronger audit guarantee)? The schema supports either; pick one before building the balance-write path. Also worth confirming early (see research doc): The Odds API ToS for non-real-money use, and whether a live-dealer studio would onboard a non-redeemable points app.
 >
-> **Action needed from you — Google login (added 2026-06-19):** Google sign-in + email verification are now built in the code (`auth/supabaseAdapter.ts`, `auth/Login.tsx`), but need **Supabase dashboard config** to go live: enable the **Google provider** (client id/secret), add the deployed origin to the **allowed redirect URLs** (`SUPABASE_AUTH_REDIRECT_URL`), and turn on **email confirmation** + customize the template. The code path is ready and waiting for those keys; until then the app runs on the demo adapter exactly as before. (See `docs/pending-issues.md` → "Full-repo review" for the rest of this session's work: server-side bet grading, the multi-user authz migration `0007`, and the pre-player-auth checklist.)
+> **Action needed from you — Google login (added 2026-06-19):** Google sign-in + email verification are now built in the code (`auth/supabaseAdapter.ts`, `auth/Login.tsx`), but need **Supabase dashboard config** to go live: enable the **Google provider** (client id/secret), add the deployed origin to the **allowed redirect URLs** (`SUPABASE_AUTH_REDIRECT_URL`), and turn on **email confirmation** + customize the template. The code path is ready and waiting for those keys; until then the app runs on the demo adapter exactly as before. (See `docs/operations/pending-issues.md` → "Full-repo review" for the rest of this session's work: server-side bet grading, the multi-user authz migration `0007`, and the pre-player-auth checklist.)
 >
 > *(Remove this block once you've read it and made the call.)*
 

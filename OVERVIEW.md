@@ -81,7 +81,7 @@ one player figure and one audit story instead of a pile of disconnected balances
 - [README](README.md) - setup, scripts, and repo map.
 - [Work Preview](PREVIEW.md) - current surfaces and branch map.
 - [Docs Index](docs/README.md) - all deeper documentation by topic.
-- [Pending Issues](docs/pending-issues.md) - open risks and follow-ups.
+- [Pending Issues](docs/operations/pending-issues.md) - open risks and follow-ups.
 
 Recommended first move: choose the production balance storage model, then wire
 that path through Supabase before expanding live play.
