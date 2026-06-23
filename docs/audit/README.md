@@ -5,6 +5,7 @@ A ready-to-run audit package for scanning this repo for security, cost, performa
 ## Contents
 - [`checklist.md`](./checklist.md) — the master checklist, deduplicated and categorized. Source of truth for *what* gets checked.
 - [`agent-tasks.md`](./agent-tasks.md) — one self-contained agent prompt per category, ready to dispatch.
+- [`gap-analysis.md`](./gap-analysis.md) — **DimeBag-specific** extended audit: common 2026 production issues *beyond* the generic checklist, scored against the actual repo (🔴 missing / 🟡 partial / 🟢 N/A-by-design) with a concrete fix for each, backed by current external research.
 
 ## How to run later
 
