@@ -181,6 +181,80 @@ everywhere, all money through `core`). Findings + this session's work below.
 
 ---
 
+## Production-readiness gaps (2026-06-23 audit)
+
+The **top 7** items from the extended, repo-scored audit in
+[`docs/audit/gap-analysis.md`](audit/gap-analysis.md) (which also covers reliability,
+perf/cost, SEO, and a11y, plus the OWASP Top 10:2025 mapping and current 2026 research).
+Each item below is a summary — the full rationale + fix is in that doc.
+
+### G1 — Idempotency & atomic balance mutation
+- **Severity:** High (money/points integrity; Critical once balances persist)
+- **Where:** `core/core.ts` (in-place mutation + `wagerSeq`), `app/App.tsx` (ref), `supabase/migrations/0003_money_rpcs.sql`
+- **Problem:** No protection against a double-submitted or concurrent bet. Once the balance
+  moves to Supabase, two requests can each pass `stake ≤ availableToWager` before either writes
+  → **double-spend** of the hold.
+- **Intended fix:** Make `placeWager` a single atomic RPC (`UPDATE … WHERE available ≥ stake
+  RETURNING …`, 0 rows = rejected); add a client-minted **idempotency key** with a `UNIQUE`
+  constraint; mint wager ids from the DB. See gap-analysis §1.1.
+
+### G2 — HTTP security headers
+- **Severity:** Medium (defense-in-depth; cheap, high-value — OWASP A02, now #2)
+- **Where:** `vercel.json` (no `headers` block)
+- **Problem:** No CSP / HSTS / `X-Content-Type-Options` / anti-clickjacking / `Referrer-Policy` /
+  `Permissions-Policy`. With the Supabase session in `localStorage`, an XSS becomes token theft.
+- **Intended fix:** Add a `headers` block to `vercel.json` (CSP starts in report-only to find
+  breakage). Snippet in gap-analysis §2.1.
+
+### G3 — Rate limiting + bot protection at the HTTP edge
+- **Severity:** High (do before individual player logins; abuse + cost)
+- **Where:** `api/fairness.ts` (open + unthrottled), future player API routes; `auth/`
+- **Problem:** `commit` can be spammed to grow `fairness_seeds` and burn function quota; no
+  brute-force protection once auth is live; no signup bot protection (skews leaderboard / farms
+  referrals).
+- **Intended fix:** Add an IP/user rate limiter (e.g. `@upstash/ratelimit` + Vercel KV) on
+  `api/*`, tightest on `fairness:commit`; add Turnstile/hCaptcha + Supabase CAPTCHA on signup.
+  See gap-analysis §2.2, §2.4.
+
+### G4 — Runtime schema validation at trust boundaries (zod)
+- **Severity:** Medium-High (extends the existing "external feed not schema-validated" finding)
+- **Where:** `api/fairness.ts` (`req.nonce as number`), `sportsdata/vendors/theOddsApi.ts`
+  (casts vendor JSON), env reads
+- **Problem:** API bodies, the odds feed, and env vars are trusted/cast — one malformed payload
+  reaches pricing or the balance path; a missing prod secret fails late.
+- **Intended fix:** Add `zod`; validate every `api/*` body, the feed at the network boundary, and
+  **env at startup** (hard-fail in prod). Folds in the open feed-validation finding above. See
+  gap-analysis §2.3, §3.5.
+
+### G5 — Error tracking + uptime monitoring
+- **Severity:** Medium (launch readiness — OWASP A10, new for 2025)
+- **Where:** `app/ErrorBoundary.tsx` (catches but doesn't report), `worker/health.ts` (unmonitored)
+- **Problem:** Exceptions are caught for users but reported nowhere; the worker's health endpoint
+  has no external watcher/alert.
+- **Intended fix:** Add Sentry (React app + Vercel functions + worker), wire `ErrorBoundary` to
+  `captureException`; point an external monitor at `worker/health.ts` + a key page, alerting to
+  the existing Slack. See gap-analysis §3.1, §3.2.
+
+### G6 — CI security automation
+- **Severity:** Medium (cheap; catches the issues vibe-coded repos leak most — OWASP A03)
+- **Where:** `.github/workflows/ci.yml` (no audit/scan), repo settings
+- **Problem:** CI runs typecheck/lint/test/build but no dependency audit, Dependabot, CodeQL, or
+  secret scanning — and there are already known leaked secrets to rotate (SGO key, dev GH token).
+- **Intended fix:** Add `.github/dependabot.yml`; add `npm audit`/`osv-scanner` as a
+  merge-blocking step; enable CodeQL + secret scanning + push protection; verify new deps aren't
+  slopsquats. See gap-analysis §2.6.
+
+### G7 — Published Privacy Policy + Terms + data-rights path
+- **Severity:** Medium (pre-launch legal hygiene; GDPR/CCPA apply even points-only)
+- **Where:** no `/privacy` or `/terms` routes; `profile/privacy.ts` is profile-visibility, not legal
+- **Problem:** Google OAuth collects email; IP/gameplay are processed — but there's no published
+  policy and no data export / account-deletion path.
+- **Intended fix:** Add `/privacy` + `/terms` pages (data, processors, retention, arbitration,
+  AI disclosure) and a self-serve export/delete flow. Keep points **non-purchasable and
+  non-redeemable** (legal invariant — gap-analysis §5.3). See gap-analysis §5.1, §5.2.
+
+---
+
 ## Tracked elsewhere / not bugs
 
 - **M2 (crash floor vs round):** intentionally not changing — see
