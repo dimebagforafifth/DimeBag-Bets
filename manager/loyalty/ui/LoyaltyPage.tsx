@@ -1,6 +1,6 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { getVipConfig, getVipVersion, mutateVipConfig, subscribeVip } from '../../../app/vip-store.js'
-import { setAutoGrant, setRankMinWagered, setRankReward, setReleased, type RankId } from '../../../vip/index.js'
+import { setAutoGrant, setRankMinWagered, setRankReward, setReleased, type RankId } from '../../../features/vip/index.js'
 import { NumberInput } from '../../../games/shared/NumberInput.js'
 import { formatMoney, toCents } from '../../../games/shared/money.js'
 import './loyalty.css'

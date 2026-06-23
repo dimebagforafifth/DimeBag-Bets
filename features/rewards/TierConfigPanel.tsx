@@ -13,8 +13,8 @@ import {
   updateRewardsConfig,
   subscribeRewardsConfig,
   getRewardsConfigVersion,
-} from '../../rewards/economy.js'
-import { tierVisual, num, type TierConfig } from '../../rewards/data.js'
+} from './economy.js'
+import { tierVisual, num, type TierConfig } from './data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
 

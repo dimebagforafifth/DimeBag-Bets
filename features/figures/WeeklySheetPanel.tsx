@@ -12,7 +12,7 @@
  * never real money.
  */
 import { Fragment, useMemo, useState, useSyncExternalStore } from 'react'
-import { agentOf, type Member } from '../../org/index.js'
+import { agentOf, type Member } from '../org/index.js'
 import {
   getAnalyticsRecords,
   subscribeAnalytics,

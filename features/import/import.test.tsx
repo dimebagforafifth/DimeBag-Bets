@@ -4,7 +4,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { ImportPanel } from './ImportPanel.js'
 import { importManifests } from './manifest.js'
-import { __resetImport, __seedImport } from '../../import/index.js'
+import { __resetImport, __seedImport } from './index.js'
 import { listPlayers } from '../../app/book-store.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 

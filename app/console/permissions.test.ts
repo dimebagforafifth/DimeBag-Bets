@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { Role } from '../../org/index.js'
+import type { Role } from '../../features/org/index.js'
 import {
   ALL_CAPABILITIES,
   MANAGER_ONLY,

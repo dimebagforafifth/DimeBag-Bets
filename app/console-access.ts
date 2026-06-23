@@ -11,7 +11,7 @@
  * features/_desk/scope via the viewer; this controls only which TOOLS appear.
  */
 
-import type { Role } from '../org/index.js'
+import type { Role } from '../features/org/index.js'
 import type { FeatureManifest } from '../console/registry/types.js'
 import { grantedTiles } from './agent-permissions.js'
 

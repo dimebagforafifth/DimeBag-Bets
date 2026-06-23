@@ -13,7 +13,7 @@
  */
 import { useState, useSyncExternalStore } from 'react'
 import { formatMoney } from '../../games/shared/money.js'
-import { settlementStatement, bookFigure, type Settlement } from '../../org/index.js'
+import { settlementStatement, bookFigure, type Settlement } from '../org/index.js'
 import {
   getSettings,
   getSettingsVersion,

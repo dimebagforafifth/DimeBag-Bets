@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { membersByRole } from '../../org/index.js'
+import { membersByRole } from '../org/index.js'
 import { getBook } from '../../app/book-store.js'
 import { WeeklySheetPanel } from './WeeklySheetPanel.js'
 import weeklySheetManifests from './manifest.js'

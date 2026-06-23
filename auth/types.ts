@@ -1,4 +1,4 @@
-import type { Role } from '../org/index.js'
+import type { Role } from '../features/org/index.js'
 
 /**
  * Auth module types (CLAUDE.md §6 — Supabase is the one backend service).

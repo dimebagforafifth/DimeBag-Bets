@@ -8,7 +8,7 @@
  * book wins what players lose, so book net = −Σ profit and hold = book net / handle.
  */
 
-import { bookPending, creditUtilization, membersByRole, type Org } from '../org/index.js'
+import { bookPending, creditUtilization, membersByRole, type Org } from '../features/org/index.js'
 import type { BetRow } from './ledger-stats.js'
 
 export interface HoldStats {

@@ -6,7 +6,7 @@ import {
   addPlayer,
   getMember,
   type Org,
-} from '../../org/index.js'
+} from '../org/index.js'
 import { setViewer } from '../../app/viewer.js'
 import { effectiveScopeId, scopedPlayers, inScope, scopeOptions, ALL_SCOPE } from './scope.js'
 

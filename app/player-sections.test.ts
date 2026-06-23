@@ -140,7 +140,7 @@ describe('prop-aware render path — the registry is the single render path (rou
 describe('records module self-registers its Profile section', () => {
   it('importing records/ registers a "profile" section visible to players', async () => {
     __resetPlayerSections()
-    const { profileSectionManifest } = await import('../records/index.js')
+    const { profileSectionManifest } = await import('../features/records/index.js')
     // The import side-effect registered it; re-assert the manifest is the Profile section.
     expect(profileSectionManifest.key).toBe('profile')
     expect(profileSectionManifest.roles).toContain('player')

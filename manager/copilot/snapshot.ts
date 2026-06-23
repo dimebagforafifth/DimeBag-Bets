@@ -19,7 +19,7 @@ import {
   type GameHold,
   type PlayerActivity,
 } from '../reporting/analytics.js'
-import { bookFigure, creditUtilization, getMember, playerCount, type Org } from '../../org/index.js'
+import { bookFigure, creditUtilization, getMember, playerCount, type Org } from '../../features/org/index.js'
 
 const DAY = 86_400_000
 

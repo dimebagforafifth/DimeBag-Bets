@@ -22,7 +22,7 @@ import {
 import { getBets, __resetBets } from './bets-store.js'
 import { cashOutQuote, cashOutMath } from './cashout.js'
 import { suspendMarket, __resetRiskControls } from '../risk-controls.js'
-import { setLimit, __resetLimits } from '../../trading/limits.js'
+import { setLimit, __resetLimits } from '../../features/trading/limits.js'
 
 const NOW = 1_750_000_000_000
 

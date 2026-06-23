@@ -6,7 +6,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { getBook } from '../../app/book-store.js'
 import { formatMoney } from '../../games/shared/money.js'
-import { __resetResponsiblePlay, setLimit } from '../../responsible-play/index.js'
+import { __resetResponsiblePlay, setLimit } from './index.js'
 import { responsiblePlayManifests } from './manifest.js'
 import { ResponsiblePlayConsole } from './ResponsiblePlayConsole.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true

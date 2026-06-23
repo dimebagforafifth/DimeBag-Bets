@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { addAgent, addPlayer, addSubAgent, createOrg, type Org } from '../../org/index.js'
+import { addAgent, addPlayer, addSubAgent, createOrg, type Org } from '../../features/org/index.js'
 import { planBonus, targetPlayers } from './promotions.js'
 
 /** mgr → sa → a → {p1 active, p2 suspended}; p3 active straight under mgr. */

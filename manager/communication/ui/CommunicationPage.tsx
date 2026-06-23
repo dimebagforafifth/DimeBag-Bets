@@ -1,6 +1,6 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { getBook, getBookVersion, subscribeBook } from '../../../app/book-store.js'
-import { membersByRole } from '../../../org/index.js'
+import { membersByRole } from '../../../features/org/index.js'
 import type { Severity } from '../announcements.js'
 import { commsStore } from '../comms-store.js'
 import { ALL_PLAYERS } from '../messages.js'

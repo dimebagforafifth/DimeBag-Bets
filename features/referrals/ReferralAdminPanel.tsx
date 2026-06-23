@@ -16,8 +16,8 @@ import {
   getReferralsVersion,
   setReferralConfig,
   subscribeReferrals,
-} from '../../referrals/index.js'
-import type { ReferralStatus } from '../../referrals/index.js'
+} from './index.js'
+import type { ReferralStatus } from './index.js'
 
 const nameOf = (id: string | null): string => (id ? (getBook().members[id]?.name ?? id) : '—')
 

@@ -72,12 +72,16 @@ describe('tsconfig coverage guard', () => {
     ).toEqual([])
   })
 
-  it('the round-4 reconciliation holds: gamification + rewards are source AND covered', () => {
+  it('feature modules consolidated under features/ are covered by the features include', () => {
+    // The reorg moved the former top-level feature dirs (e.g. gamification, rewards) under
+    // features/, so they are no longer roots — and `features` in include covers them all.
     const sourceDirs = rootSourceDirs(ROOT)
     const include = tsconfigInclude(ROOT)
-    // Both are real source dirs (they were the gap) and now sit in include.
-    expect(sourceDirs).toEqual(expect.arrayContaining(['gamification', 'rewards']))
-    expect(include).toEqual(expect.arrayContaining(['gamification', 'rewards']))
+    expect(sourceDirs).not.toContain('gamification')
+    expect(sourceDirs).not.toContain('rewards')
+    expect(hasTsSource(join(ROOT, 'features', 'gamification'))).toBe(true)
+    expect(hasTsSource(join(ROOT, 'features', 'rewards'))).toBe(true)
+    expect(include).toContain('features')
   })
 
   it('the detector flags a source dir that is absent from include (proves the guard bites)', () => {

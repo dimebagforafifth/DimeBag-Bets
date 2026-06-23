@@ -3,7 +3,7 @@
 import { describe, expect, it, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { membersByRole } from '../../org/index.js'
+import { membersByRole } from '../../features/org/index.js'
 import { getBook } from '../book-store.js'
 import { Dashboard } from './Dashboard.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true

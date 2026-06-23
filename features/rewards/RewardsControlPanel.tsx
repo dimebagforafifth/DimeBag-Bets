@@ -12,8 +12,8 @@ import {
   getRewardsConfigVersion,
   type RewardFeature,
   type ProfitBoost,
-} from '../../rewards/economy.js'
-import { fmt } from '../../rewards/data.js'
+} from './economy.js'
+import { fmt } from './data.js'
 import {
   announceFeature,
   announcePromo,
@@ -21,7 +21,7 @@ import {
   getPublishLog,
   subscribePublishLog,
   getPublishLogVersion,
-} from '../../rewards/publishing.js'
+} from './publishing.js'
 import { commsStore, configuredChannels } from '../../manager/communication/index.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'

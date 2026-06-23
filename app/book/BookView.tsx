@@ -11,7 +11,7 @@
 
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import { availableToWager, type Account } from '../../core/index.js'
-import type { Role } from '../../org/index.js'
+import type { Role } from '../../features/org/index.js'
 import { useBookOdds } from './odds-source.js'
 import { getBetsVersion, subscribeBets, betsForViewer, type BookBet } from './bets-store.js'
 import { legFromSelection, movedLegKeys, type SlipLeg, type SlipMode } from './slip.js'

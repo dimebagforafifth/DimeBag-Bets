@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from 'react'
-import { PlayerSearch, PlayerProfile } from '../../org/ui/PlayerLookup.js'
+import { PlayerSearch, PlayerProfile } from '../org/ui/PlayerLookup.js'
 import {
   getBook,
   getBookVersion,

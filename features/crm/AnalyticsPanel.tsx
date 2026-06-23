@@ -4,7 +4,7 @@
  * active member. Read-only; integer cents; no money path.
  */
 import { useSyncExternalStore } from 'react'
-import { buildOperatorAnalytics, subscribeCrm, crmVersion } from '../../crm/index.js'
+import { buildOperatorAnalytics, subscribeCrm, crmVersion } from './index.js'
 import { formatMoney } from '../../games/shared/money.js'
 import { PanelShell } from '../operations/shared.js'
 import './crm.css'

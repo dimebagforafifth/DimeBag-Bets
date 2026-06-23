@@ -34,8 +34,8 @@ import { mockSlate } from './mockBook.js'
 // Trading Desk gate (Lane B): apply live line overrides at the publish boundary, after the
 // pricing pipeline. // SEAM (Lane A): when A's publish pipeline lands, it calls applyOverrides
 // as its post-margin hook; this wiring keeps published odds override-aware in the meantime.
-import { applyOverrides } from '../../trading/gate.js'
-import { subscribeOverrides } from '../../trading/overrides.js'
+import { applyOverrides } from '../../features/trading/gate.js'
+import { subscribeOverrides } from '../../features/trading/overrides.js'
 
 export type OddsSourceKind = 'mock' | 'live'
 

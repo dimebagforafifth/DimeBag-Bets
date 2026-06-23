@@ -9,7 +9,7 @@
  * so access can't drift between "what's shown" and "what's reachable".
  */
 
-import type { Role } from '../org/index.js'
+import type { Role } from '../features/org/index.js'
 
 /** The app's top-level sections. (community/profile/pickem are the round-2 player
  *  sections registered via app/player-sections — added here so the Section state +

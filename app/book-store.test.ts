@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { placeWager, resolveWager, resolveAtMultiplier } from '../core/index.js'
-import { bookFigure, getMember, setActive } from '../org/index.js'
+import { bookFigure, getMember, setActive } from '../features/org/index.js'
 import {
   getBook,
   getBookVersion,
@@ -12,7 +12,7 @@ import {
   setCurrentPlayer,
   subscribeBook,
 } from './book-store.js'
-import type { Org } from '../org/index.js'
+import type { Org } from '../features/org/index.js'
 
 /**
  * The keystone: the book store hands the casino/sportsbook a real org PLAYER's

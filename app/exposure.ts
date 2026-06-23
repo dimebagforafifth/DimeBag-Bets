@@ -17,7 +17,7 @@ import { getBets, openBets, type BookBet } from './book/bets-store.js'
 import { toReturnCents } from './book/odds-format.js'
 import type { SlipLeg } from './book/slip.js'
 import { correlationForSport, impliedProbability } from '../lib/odds/pricing.js'
-import { downline, membersByRole, type Org } from '../org/index.js'
+import { downline, membersByRole, type Org } from '../features/org/index.js'
 
 export interface ExposureByGame {
   key: string

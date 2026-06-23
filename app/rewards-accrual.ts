@@ -6,8 +6,8 @@
  * player's balance. Imported for its side effect from app/App.tsx (like book-ledger).
  */
 import { onWagerPlaced, onWagerResolved } from '../core/index.js'
-import { settleWager, applyProfitBoost } from '../rewards/players.js'
-import { rewardsNow } from '../rewards/clock.js'
+import { settleWager, applyProfitBoost } from '../features/rewards/players.js'
+import { rewardsNow } from '../features/rewards/clock.js'
 
 // On placement: accrue rakeback + advance rank/warm-up from the real stake.
 onWagerPlaced((e) => {

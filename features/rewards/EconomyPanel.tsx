@@ -9,9 +9,9 @@ import {
   updateRewardsConfig,
   subscribeRewardsConfig,
   getRewardsConfigVersion,
-} from '../../rewards/economy.js'
-import { totalIssued, subscribeIssuance, getIssuanceVersion } from '../../rewards/comp.js'
-import { fmt } from '../../rewards/data.js'
+} from './economy.js'
+import { totalIssued, subscribeIssuance, getIssuanceVersion } from './comp.js'
+import { fmt } from './data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
 

@@ -4,7 +4,7 @@ import {
   eligibleParents,
   setCommissionPct,
   type Role,
-} from '../../org/index.js'
+} from '../org/index.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { toCents } from '../../games/shared/money.js'
 import './players.css'

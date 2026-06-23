@@ -1,6 +1,6 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { availableToWager, type Account } from '../core/index.js'
-import type { Member } from '../org/index.js'
+import type { Member } from '../features/org/index.js'
 import { subscribeBookLedger, getBookLedger } from './book-ledger.js'
 import { summarize, byGame, isSportsbook, toBetRows, SIDE_LABEL, type BetRow, type Side } from './ledger-stats.js'
 import { formatMoney } from '../games/shared/money.js'

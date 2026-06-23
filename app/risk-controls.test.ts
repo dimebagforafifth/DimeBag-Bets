@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { getBook } from './book-store.js'
-import { getMember, setBettingLocked, setMaxWager } from '../org/index.js'
+import { getMember, setBettingLocked, setMaxWager } from '../features/org/index.js'
 import { consolidatedExposure, correlatedDownside } from './exposure.js'
 import type { BookBet } from './book/bets-store.js'
 import type { SlipLeg } from './book/slip.js'

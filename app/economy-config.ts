@@ -21,7 +21,7 @@ import {
   setActiveEconomyTenant,
   type EconomyMode,
 } from '../core/index.js'
-import { membersByRole, type Org } from '../org/index.js'
+import { membersByRole, type Org } from '../features/org/index.js'
 import { getBook, mutateBook } from './book-store.js'
 import { adjustFigure } from './manager-actions.js'
 import { recordAudit } from './audit-store.js'

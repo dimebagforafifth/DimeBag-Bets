@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { addPlayer, createOrg, type Org } from '../../org/index.js'
+import { addPlayer, createOrg, type Org } from '../../features/org/index.js'
 import type { AnalyticsRecord } from '../reporting/analytics.js'
 import { buildSnapshot } from './snapshot.js'
 

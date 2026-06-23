@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import type { Member } from '../../org/index.js'
+import type { Member } from '../org/index.js'
 import { getBook } from '../../app/book-store.js'
 import { setViewer } from '../../app/viewer.js'
 import {
@@ -13,7 +13,7 @@ import {
   createCode,
   getReferralConfig,
   setReferralConfig,
-} from '../../referrals/index.js'
+} from './index.js'
 import { referralManifests } from './manifest.js'
 import { ReferralAdminPanel } from './ReferralAdminPanel.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true

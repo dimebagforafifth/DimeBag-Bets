@@ -15,19 +15,19 @@
  */
 
 import { registerPlayerSection } from './player-sections.js'
-import { CommunitySection, communitySection } from '../social/index.js'
-import { PickemSection, pickemSectionMeta } from '../pickem/index.js'
-import { ChallengesSection, challengesSection } from '../p2p/index.js'
-import { CompetitionsSection, competitionsSectionMeta } from '../events/index.js'
-import { GamificationPanel } from '../gamification/ui/index.js'
-import { PoolsSection, poolsSection } from '../pools/index.js'
-import { LimitsActivitySection, responsiblePlaySection } from '../responsible-play/index.js'
-import { ReferralSection, referralsSection } from '../referrals/index.js'
+import { CommunitySection, communitySection } from '../features/social/index.js'
+import { PickemSection, pickemSectionMeta } from '../features/pickem/index.js'
+import { ChallengesSection, challengesSection } from '../features/p2p/index.js'
+import { CompetitionsSection, competitionsSectionMeta } from '../features/events/index.js'
+import { GamificationPanel } from '../features/gamification/ui/index.js'
+import { PoolsSection, poolsSection } from '../features/pools/index.js'
+import { LimitsActivitySection, responsiblePlaySection } from '../features/responsible-play/index.js'
+import { ReferralSection, referralsSection } from '../features/referrals/index.js'
 import { listPlayers } from './book-store.js'
-import '../records/index.js' // side-effect: records self-registers the 'profile' section
-import '../profile/index.js' // side-effect: profile/ self-registers the round-3 'players' hub section
-import '../boosts/index.js' // side-effect: boosts/ self-registers the round-4 'boosts' section
-import '../splits/index.js' // side-effect: splits/ self-registers the round-4 'splits' section
+import '../features/records/index.js' // side-effect: records self-registers the 'profile' section
+import '../features/profile/index.js' // side-effect: profile/ self-registers the round-3 'players' hub section
+import '../features/boosts/index.js' // side-effect: boosts/ self-registers the round-4 'boosts' section
+import '../features/splits/index.js' // side-effect: splits/ self-registers the round-4 'splits' section
 
 // A (social) — { id, label, roles, … } → manifest; render injects viewer identity + account.
 registerPlayerSection({
@@ -136,7 +136,7 @@ registerPlayerSection({
   render: (ctx) => <LimitsActivitySection playerId={ctx.player.id} playerName={ctx.player.name} />,
 })
 
-// B (profile) self-registers the 'players' hub on import ('../profile/index.js', above).
+// B (profile) self-registers the 'players' hub on import ('../features/profile/index.js', above).
 
 // ── Round-4 (Engagement) sections ───────────────────────────────────────────
 // B (boosts) self-registers 'boosts' and C (splits) self-registers 'splits' on import (above).

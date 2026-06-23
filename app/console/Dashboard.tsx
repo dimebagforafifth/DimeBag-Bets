@@ -1,6 +1,6 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { formatMoney } from '../../games/shared/money.js'
-import { membersByRole } from '../../org/index.js'
+import { membersByRole } from '../../features/org/index.js'
 import { getBook, getBookVersion, subscribeBook } from '../book-store.js'
 import {
   getExposureByGame,

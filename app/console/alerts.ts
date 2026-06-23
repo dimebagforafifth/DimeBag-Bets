@@ -6,7 +6,7 @@
  * exposure rules and adds win/pending watches. Moves no money.
  */
 
-import { membersByRole, type Org } from '../../org/index.js'
+import { membersByRole, type Org } from '../../features/org/index.js'
 import { checkAlerts, type RiskThresholds } from '../risk.js'
 import type { BetRow } from '../ledger-stats.js'
 

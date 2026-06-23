@@ -9,7 +9,7 @@
  * console render exactly as before for a manager.
  */
 
-import type { Role } from '../org/index.js'
+import type { Role } from '../features/org/index.js'
 
 export interface Viewer {
   memberId: string

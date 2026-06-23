@@ -13,7 +13,7 @@ import { CompPanel } from './CompPanel.js'
 import { EconomyPanel } from './EconomyPanel.js'
 import { ReportingPanel } from './ReportingPanel.js'
 import { BonusEnginePanel } from './BonusEnginePanel.js'
-import { boostsManifest } from '../../boosts/boosts-tile.js'
+import { boostsManifest } from '../boosts/boosts-tile.js'
 
 export const rewardsAdminManifests: FeatureManifest[] = [
   {

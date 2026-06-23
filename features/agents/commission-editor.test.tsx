@@ -8,7 +8,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { CommissionEditor } from './CommissionEditor.js'
 import { getBook } from '../../app/book-store.js'
-import { commissionConfigOf } from '../../org/index.js'
+import { commissionConfigOf } from '../org/index.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 let host: HTMLElement

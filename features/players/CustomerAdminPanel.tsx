@@ -7,7 +7,7 @@ import {
   setCreditLimit,
   type Member,
   type Org,
-} from '../../org/index.js'
+} from '../org/index.js'
 import {
   credentialStatus,
   requestPasswordReset,

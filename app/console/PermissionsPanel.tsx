@@ -1,6 +1,6 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import './console.css' // con-* page styles (the console shell doesn't load these)
-import { membersByRole, type Member, type Role } from '../../org/index.js'
+import { membersByRole, type Member, type Role } from '../../features/org/index.js'
 import { getBook, getBookVersion, subscribeBook } from '../book-store.js'
 import {
   CAPABILITY_LABEL,

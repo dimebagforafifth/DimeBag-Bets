@@ -13,7 +13,7 @@ import {
   commissionConfigOf,
   type CommissionModel,
   type Member,
-} from '../../org/index.js'
+} from '../org/index.js'
 import { getBook, mutateBook } from '../../app/book-store.js'
 import { formatMoney } from '../../games/shared/money.js'
 

@@ -29,7 +29,7 @@ import { useResolving } from '../../shared/useResolving.js'
 import { useSettleOnExit } from '../../shared/useSettleOnExit.js'
 import { ProfitReadout } from '../../shared/ProfitReadout.js'
 import { NumberInput } from '../../shared/NumberInput.js'
-import { play } from '../../../sound/index.js'
+import { play } from '../../../features/sound/index.js'
 import { formatMoney, toCents } from '../../shared/money.js'
 import './crash.css'
 

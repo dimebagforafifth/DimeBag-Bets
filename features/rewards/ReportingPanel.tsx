@@ -9,14 +9,14 @@ import {
   totalIssued,
   subscribeIssuance,
   getIssuanceVersion,
-} from '../../rewards/comp.js'
+} from './comp.js'
 import {
   allPlayerRewards,
   subscribeRewardsPlayers,
   getRewardsPlayersVersion,
   type CompRecord,
-} from '../../rewards/players.js'
-import { fmt } from '../../rewards/data.js'
+} from './players.js'
+import { fmt } from './data.js'
 import { PanelShell } from '../_desk/shared.js'
 import './rewards-admin.css'
 

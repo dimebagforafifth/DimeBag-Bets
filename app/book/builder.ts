@@ -21,7 +21,7 @@ import type {
   NormalizedMarket,
   Selection,
 } from '../../lib/odds/contract.js'
-import { isSuspended } from '../../trading/suspensions.js'
+import { isSuspended } from '../../features/trading/suspensions.js'
 import { combinedDecimal, legFromSelection, type SlipLeg } from './slip.js'
 import { profitCents as profitOf, toReturnCents } from './odds-format.js'
 import {

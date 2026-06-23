@@ -10,7 +10,7 @@
  * Credit/balance only — `stakeCents` / `returnCents` are integer cents.
  */
 
-import { downline, type Role } from '../../org/index.js'
+import { downline, type Role } from '../../features/org/index.js'
 import { getBook } from '../book-store.js'
 import type { SlipLeg, SlipMode } from './slip.js'
 

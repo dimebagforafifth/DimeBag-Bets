@@ -7,7 +7,7 @@ import {
   setCommissionPct,
   setCreditLimit,
   type Member,
-} from '../../org/index.js'
+} from '../org/index.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
 import { PanelShell } from '../_desk/shared.js'

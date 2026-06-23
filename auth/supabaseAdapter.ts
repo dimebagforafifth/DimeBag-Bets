@@ -18,7 +18,7 @@
 
 import { getSupabaseEnv, type SupabaseEnv } from '../persistence/index.js'
 import { authEmailDomain, oauthRedirectUrl } from './config.js'
-import type { Role } from '../org/index.js'
+import type { Role } from '../features/org/index.js'
 import type { AuthAdapter, AuthUser, OAuthProvider, Session, SignUpResult } from './types.js'
 
 /* ── the slice of supabase-js we depend on (so a fake can stand in) ─────────────── */

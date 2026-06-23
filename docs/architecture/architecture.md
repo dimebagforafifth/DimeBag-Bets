@@ -46,12 +46,21 @@ DimeBag-Bets/
 ├── sportsdata/            ← sports data feed layer (provider abstraction)
 ├── ledger/                ← transaction history across every game and the book
 ├── persistence/           ← storage abstraction (memory / localStorage / Supabase later)
+├── auth/                  ← authentication adapters (demo + Supabase)
+├── console/ · manager/    ← operator console + management surfaces
+├── features/              ← business/feature modules, each self-contained
+│   ├── org/               ←   agent/house hierarchy (Management section)
+│   ├── rewards/ vip/ bonus/ boosts/ referrals/   ←   loyalty & promos
+│   ├── crm/ billing/ pools/ pickem/ p2p/ splits/ trading/
+│   ├── responsible-play/ sound/ social/ profile/ records/ …
+│   └── (operator panels register into console/registry via each module's manifest.ts)
 ├── app/                   ← the unified clean interface shell
 │   ├── App.tsx            ←   owns the one shared Account; routes the sections
 │   ├── games.ts           ←   the GAMES registry + GameProps contract
 │   └── theme.css
-├── sound/                 ← SoundToggle.tsx, engine.ts, index.ts, sound.css
-├── org/                   ← Management section (admin / house-config layer)
+├── api/ worker/ scripts/  ← serverless endpoints, background worker, dev scripts
+├── supabase/              ← database migrations
+├── lib/                   ← shared low-level utilities (odds contract, …)
 ├── memory/                ← agent work notes (project status tracking)
 └── docs/                  ← this file and other white papers
 ```

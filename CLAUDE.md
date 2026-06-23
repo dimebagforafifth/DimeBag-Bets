@@ -112,9 +112,18 @@ DimeBag-Bets/
 │   ├── mines/         ← standalone Mines (Section 7)
 │   └── crash/         ← standalone Crash (Section 7)
 ├── sportsbook/        ← sportsbook module (later phases)
+├── features/          ← business/feature modules, each self-contained (rewards, crm, org, vip, …)
+├── persistence/ ledger/ sportsdata/ auth/  ← platform integration seams
+├── console/ manager/  ← operator console + management surfaces
 ├── app/               ← the unified clean interface shell (Phase 2)
+├── api/ worker/ scripts/ supabase/  ← serverless endpoints, worker, dev scripts, DB migrations
 └── docs/              ← white papers, cost map, charts
 ```
+
+> As the app grew, business/feature modules were consolidated under a single
+> `features/` umbrella (one self-contained folder per concern) to keep the repo
+> root focused on the foundational pieces above. Genuine platform seams and
+> operator surfaces stay at the root.
 
 **Rules:**
 - Games are **modular in code but not independent in data** — every module reads/writes the one shared balance via `core` and uses the place → grade → adjust flow.

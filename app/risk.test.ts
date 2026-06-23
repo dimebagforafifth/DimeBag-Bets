@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createOrg, addPlayer, type Org } from '../org/index.js'
+import { createOrg, addPlayer, type Org } from '../features/org/index.js'
 import type { BetRow } from './ledger-stats.js'
 import { bookHold, holdByGame, winnersLosers, checkAlerts } from './risk.js'
 

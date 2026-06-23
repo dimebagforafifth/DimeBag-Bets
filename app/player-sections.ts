@@ -20,7 +20,7 @@
 
 import { createElement, type ComponentType, type ReactNode } from 'react'
 import type { Account } from '../core/index.js'
-import type { Role } from '../org/types.js'
+import type { Role } from '../features/org/types.js'
 
 /**
  * The shell state a player section can ask for. The shell builds this once — from the active

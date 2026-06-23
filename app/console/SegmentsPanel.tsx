@@ -10,7 +10,7 @@ import {
   subscribeAnalytics,
 } from '../../manager/reporting/index.js'
 import { getPlayerVip, getVipConfig, getVipVersion, subscribeVip } from '../vip-store.js'
-import { rankFor } from '../../vip/index.js'
+import { rankFor } from '../../features/vip/index.js'
 import { classify, SEGMENT_LABEL, type Segment } from './segments.js'
 
 const ORDER: Segment[] = ['vip', 'new', 'casual', 'dormant']

@@ -14,7 +14,7 @@
  * edge-store/book-store (subscribe + version snapshot, persistedDoc namespace 'dimebag').
  */
 
-import { bookFigure, type Settlement } from '../org/index.js'
+import { bookFigure, type Settlement } from '../features/org/index.js'
 import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { getBook, settleBook } from './book-store.js'

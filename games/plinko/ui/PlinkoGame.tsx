@@ -25,7 +25,7 @@ import {
 import { fairnessClient } from '../../shared/fair.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
-import { play } from '../../../sound/index.js'
+import { play } from '../../../features/sound/index.js'
 import { NumberInput } from '../../shared/NumberInput.js'
 import { formatMoney, toCents } from '../../shared/money.js'
 import { signalReveal } from '../../shared/reveal-bus.js'

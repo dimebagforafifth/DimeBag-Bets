@@ -8,7 +8,7 @@
  */
 
 import { adjustBalance } from '../core/index.js'
-import { getMember, type Org } from '../org/index.js'
+import { getMember, type Org } from '../features/org/index.js'
 import type { LedgerEntry } from '../ledger/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { getBook, mutateBook } from './book-store.js'

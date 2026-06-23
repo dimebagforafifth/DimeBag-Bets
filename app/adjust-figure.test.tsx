@@ -7,8 +7,8 @@
 import { describe, expect, it } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import type { Member } from '../org/index.js'
-import { AdjustFigure } from '../org/ui/Management.js'
+import type { Member } from '../features/org/index.js'
+import { AdjustFigure } from '../features/org/ui/Management.js'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 

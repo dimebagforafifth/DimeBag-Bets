@@ -7,7 +7,7 @@
 
 import type { NormalizedEvent, NormalizedMarket } from '../../lib/odds/contract.js'
 import { PriceChip, type ToggleLeg } from './MarketChips.js'
-import { MarketSplitBar } from '../../splits/index.js'
+import { MarketSplitBar } from '../../features/splits/index.js'
 
 function startLabel(iso: string): string {
   const d = new Date(iso)

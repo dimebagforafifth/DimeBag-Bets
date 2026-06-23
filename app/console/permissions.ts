@@ -17,7 +17,7 @@
  * permissions-store.ts.
  */
 
-import type { Role } from '../../org/index.js'
+import type { Role } from '../../features/org/index.js'
 
 /** One capability per console tool. */
 export type Capability =

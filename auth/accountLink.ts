@@ -20,7 +20,7 @@
 
 import { getBook } from '../app/book-store.js'
 import type { Account } from '../core/index.js'
-import type { Member } from '../org/index.js'
+import type { Member } from '../features/org/index.js'
 
 /**
  * The accounts selector: which account id this auth user maps to in the active tenant's

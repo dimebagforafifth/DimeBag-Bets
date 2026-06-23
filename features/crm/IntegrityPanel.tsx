@@ -4,8 +4,8 @@
  * from financial exposure. Read-only; no money path.
  */
 import { useSyncExternalStore } from 'react'
-import { buildCrmProfiles, subscribeCrm, crmVersion } from '../../crm/index.js'
-import type { RiskBand } from '../../crm/index.js'
+import { buildCrmProfiles, subscribeCrm, crmVersion } from './index.js'
+import type { RiskBand } from './index.js'
 import { PanelShell } from '../operations/shared.js'
 import './crm.css'
 

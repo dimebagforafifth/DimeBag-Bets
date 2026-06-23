@@ -10,20 +10,20 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { getBook, getBookVersion, subscribeBook } from '../../app/book-store.js'
 import { getViewer, subscribeViewer, getViewerVersion } from '../../app/viewer.js'
-import { fmt } from '../../rewards/data.js'
+import { fmt } from './data.js'
 import {
   issueComp,
   compAllowanceLeft,
   subscribeIssuance,
   getIssuanceVersion,
   type CompRequest,
-} from '../../rewards/comp.js'
+} from './comp.js'
 import {
   getPlayerRewards,
   subscribeRewardsPlayers,
   getRewardsPlayersVersion,
   type CompKind,
-} from '../../rewards/players.js'
+} from './players.js'
 import { PanelShell } from '../_desk/shared.js'
 import { ScopeBar, scopedPlayers, ALL_SCOPE } from '../_desk/scope.js'
 import './rewards-admin.css'

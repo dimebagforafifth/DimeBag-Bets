@@ -8,7 +8,7 @@
  */
 import { describe, it, expect, afterEach } from 'vitest'
 import { availableToWager, placeWager, setEconomyPolicy, __resetEconomy, type Account } from './index.js'
-import { createOrg, addPlayer, settleOrgWeek, getMember } from '../org/index.js'
+import { createOrg, addPlayer, settleOrgWeek, getMember } from '../features/org/index.js'
 
 afterEach(() => __resetEconomy())
 

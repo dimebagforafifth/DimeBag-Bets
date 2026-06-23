@@ -31,7 +31,7 @@ import {
   type Member,
   type Org,
   type Settlement,
-} from '../org/index.js'
+} from '../features/org/index.js'
 import { onWagerResolved } from '../core/index.js'
 import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 

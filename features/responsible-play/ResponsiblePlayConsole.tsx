@@ -19,7 +19,7 @@ import {
   limitedPlayerIds,
   limitStateOf,
   subscribeLimits,
-} from '../../responsible-play/index.js'
+} from './index.js'
 
 const fmtDate = (ms: number): string => new Date(ms).toLocaleDateString()
 const capText = (l?: { amountCents?: number | null; period?: string | null }): string =>

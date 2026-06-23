@@ -27,7 +27,7 @@ import { rewardsAdminManifests } from '../../features/rewards/manifest.js'
 // tiles + 1 Control tile). groupBySection routes each tile to its section regardless of order.
 import { crmManifests } from '../../features/crm/manifest.js'
 // Round-4: C's creator/competitions console tile (author & run branded contests → Rewards).
-import { competitionsManifests } from '../../creator/manifest.js'
+import { competitionsManifests } from '../../features/creator/manifest.js'
 // Upgrade round — four lanes ship ready-to-mount manifests; the registry owner spreads them here
 // (the lanes don't edit this shared file). A → Economy Mode (Control); B → SGP Rules + Casino Edge
 // (Catalog, both SINGLE manifest objects, added bare not spread); C → Challenges Desk (Operations);
@@ -35,20 +35,20 @@ import { competitionsManifests } from '../../creator/manifest.js'
 import { economyManifests } from '../../features/economy/manifest.js'
 import { sgpRulesManifest } from '../../app/book/sgp-rules-tile.js'
 import { casinoEdgeManifest } from '../../app/casino-edge/casino-edge-tile.js'
-import { challengesDeskManifests } from '../../p2p/manifest.js'
+import { challengesDeskManifests } from '../../features/p2p/manifest.js'
 import { importManifests } from '../../features/import/manifest.js'
 // Round 2 (Trading & Monetization): B → Trading Desk (Control, single manifest object added bare);
 // C → Billing & Invoices (Operations, spread). Neither lane edits this shared file.
-import { tradingDeskManifest } from '../../trading/trading-desk-tile.js'
-import { billingManifests } from '../../billing/manifest.js'
+import { tradingDeskManifest } from '../../features/trading/trading-desk-tile.js'
+import { billingManifests } from '../../features/billing/manifest.js'
 // Round 3 (Community & Contests): C → Pools & Leagues (Operations, spread); D → Responsible Play
 // (Players, spread). Neither lane edits this shared file. (A/B's profile is a player-facing
 // section, not a console tile, so it mounts via register-player-sections, not here.)
-import { poolsManifests } from '../../pools/manifest.js'
+import { poolsManifests } from '../../features/pools/manifest.js'
 import { responsiblePlayManifests } from '../../features/responsible-play/manifest.js'
 // Round 4 (Engagement): C → Public Splits (Players, spread); D → Referral Program (Rewards,
 // spread). B's Boosts tile already rides rewardsAdminManifests (no registry edit); A adds no tile.
-import { splitsManifests } from '../../splits/manifest.js'
+import { splitsManifests } from '../../features/splits/manifest.js'
 import { referralManifests } from '../../features/referrals/manifest.js'
 
 /** Every console feature, grouped into sections at render time by `groupBySection`.

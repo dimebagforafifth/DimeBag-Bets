@@ -14,10 +14,10 @@ import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
 // Supabase cache) and places through `core`. The legacy `sportsbook/` module stays in the
 // tree (its own tests pass) for futures/trading/cash-out to be harvested later.
 import { BookView, connectOddsCache } from './book/index.js'
-import { RewardsSection } from '../rewards/index.js'
+import { RewardsSection } from '../features/rewards/index.js'
 import './rewards-accrual.js' // side effect: accrue rewards from real wagers
 import { formatMoney } from '../games/shared/money.js'
-import { SoundToggle } from '../sound/index.js'
+import { SoundToggle } from '../features/sound/index.js'
 import { Console } from '../console/shell/index.js'
 // The money-desk lane + member list are now first-class entries in REGISTRY itself
 // (console/registry/index.ts), so the console mounts the whole feature set directly.
@@ -27,7 +27,7 @@ import { registryForRole } from './console-access.js'
 import { setViewer } from './viewer.js'
 import { subscribeAgentPermissions, getAgentPermissionsVersion } from './agent-permissions.js'
 import { getAnalyticsRecords } from '../manager/reporting/index.js'
-import { rosterOf, type Role } from '../org/index.js'
+import { rosterOf, type Role } from '../features/org/index.js'
 import {
   getBook,
   getBookVersion,
@@ -45,7 +45,7 @@ import { setActiveGame } from './ledger-store.js'
 import { ResponsiblePlayGate } from './ResponsiblePlayGate.js'
 import './book-ledger.js' // side-effect: the durable, persisted transaction record subscribes to core
 import './exposure.js' // side-effect: the live per-game open-exposure tracker subscribes to core
-import { Leaderboard, VipBadge } from '../vip/ui/index.js'
+import { Leaderboard, VipBadge } from '../features/vip/ui/index.js'
 // Player sections. The registry (app/player-sections) is the SINGLE render path: it drives the
 // nav tabs, role-gating, AND the active body — `renderPlayerSection` injects the shell context
 // (active player + account / viewer identity / demo flag / balance-refresh) into each section's

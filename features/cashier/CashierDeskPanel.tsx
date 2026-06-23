@@ -11,7 +11,7 @@
  * over/under-shoot a Set.
  */
 import { useState, useSyncExternalStore } from 'react'
-import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
+import { PlayerSearch } from '../org/ui/PlayerLookup.js'
 import { getBookLedger, subscribeBookLedger } from '../../app/book-ledger.js'
 import { adjustFigure } from '../../app/manager-actions.js'
 import { toCents, formatMoney } from '../../games/shared/money.js'

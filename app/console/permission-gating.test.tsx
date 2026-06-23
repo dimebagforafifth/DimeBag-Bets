@@ -4,7 +4,7 @@
 import { describe, expect, it, afterEach } from 'vitest'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import type { Role } from '../../org/index.js'
+import type { Role } from '../../features/org/index.js'
 import { getBook, listPlayers } from '../book-store.js'
 import { ManagerConsole } from '../ManagerConsole.js'
 import { setGrant, __resetPermissions } from './permissions-store.js'

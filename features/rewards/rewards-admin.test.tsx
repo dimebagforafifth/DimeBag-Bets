@@ -13,9 +13,9 @@ import { setAgentTile, __resetAllAgentPermissions } from '../../app/agent-permis
 import { setViewer } from '../../app/viewer.js'
 import { rewardsAdminManifests } from './manifest.js'
 import { CompPanel } from './CompPanel.js'
-import { __resetRewardsPlayers } from '../../rewards/players.js'
-import { resetRewardsConfig } from '../../rewards/economy.js'
-import { __resetIssuance } from '../../rewards/comp.js'
+import { __resetRewardsPlayers } from './players.js'
+import { resetRewardsConfig } from './economy.js'
+import { __resetIssuance } from './comp.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const REWARDS_KEYS = rewardsAdminManifests.map((m) => m.key)

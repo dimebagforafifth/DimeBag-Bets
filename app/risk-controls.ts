@@ -20,7 +20,7 @@ import {
   setMaxWager,
   type Member,
   type Org,
-} from '../org/index.js'
+} from '../features/org/index.js'
 import { combinedDecimal, legFromSelection, type SlipLeg } from './book/slip.js'
 import { mockSlate } from './book/mockBook.js'
 import type { NormalizedEvent } from '../lib/odds/contract.js'

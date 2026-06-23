@@ -4,9 +4,9 @@
  * fresh session is thin) and renders the segment/lifecycle picture. No money path.
  */
 import { useSyncExternalStore } from 'react'
-import { buildCrmProfiles, subscribeCrm, crmVersion } from '../../crm/index.js'
-import { SEGMENT_LABEL, LIFECYCLE_LABEL } from '../../crm/index.js'
-import type { CrmSegment, LifecycleStage } from '../../crm/index.js'
+import { buildCrmProfiles, subscribeCrm, crmVersion } from './index.js'
+import { SEGMENT_LABEL, LIFECYCLE_LABEL } from './index.js'
+import type { CrmSegment, LifecycleStage } from './index.js'
 import { formatMoney } from '../../games/shared/money.js'
 import { PanelShell } from '../operations/shared.js'
 import './crm.css'

@@ -4,7 +4,7 @@
  * shared console PanelShell.
  */
 import { useSyncExternalStore } from 'react'
-import { VipPanel } from '../../vip/ui/index.js'
+import { VipPanel } from '../vip/ui/index.js'
 import { getBookVersion, listPlayers, subscribeBook } from '../../app/book-store.js'
 import { PanelShell } from '../operations/shared.js'
 

@@ -1,5 +1,5 @@
 import { useMemo, useSyncExternalStore } from 'react'
-import { allAgents, agentPerformance, type AgentPerformance } from '../../org/index.js'
+import { allAgents, agentPerformance, type AgentPerformance } from '../org/index.js'
 import { getBook, getBookVersion, subscribeBook } from '../../app/book-store.js'
 import { formatMoney } from '../../games/shared/money.js'
 import { PanelShell } from '../_desk/shared.js'

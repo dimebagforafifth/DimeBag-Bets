@@ -4,8 +4,8 @@
  * no-cash motives the white paper calls out. Read-only; no money path.
  */
 import { useSyncExternalStore } from 'react'
-import { buildAbuseClusters, getCrmDataset, subscribeCrm, crmVersion } from '../../crm/index.js'
-import type { AbuseKind, ClusterKind } from '../../crm/index.js'
+import { buildAbuseClusters, getCrmDataset, subscribeCrm, crmVersion } from './index.js'
+import type { AbuseKind, ClusterKind } from './index.js'
 import { PanelShell } from '../operations/shared.js'
 import './crm.css'
 

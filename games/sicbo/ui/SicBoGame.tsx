@@ -17,7 +17,7 @@ import { fairnessClient } from '../../shared/fair.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { signalReveal } from '../../shared/reveal-bus.js'
-import { play } from '../../../sound/index.js'
+import { play } from '../../../features/sound/index.js'
 import { formatMoney } from '../../shared/money.js'
 import './sicbo.css'
 

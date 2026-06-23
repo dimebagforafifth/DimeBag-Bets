@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { addAgent, addPlayer, addSubAgent, createOrg, type Org } from '../../org/index.js'
+import { addAgent, addPlayer, addSubAgent, createOrg, type Org } from '../org/index.js'
 import { ALL_SCOPE, inScope, scopedPlayers, scopeOptions } from './scope.js'
 
 /** mgr → master(sa) → agent(a) → {p1, p2}; player p3 straight under the manager. */

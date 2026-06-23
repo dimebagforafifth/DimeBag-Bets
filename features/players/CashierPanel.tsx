@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from 'react'
-import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
-import { AdjustFigure } from '../../org/ui/Management.js'
+import { PlayerSearch } from '../org/ui/PlayerLookup.js'
+import { AdjustFigure } from '../org/ui/Management.js'
 import { getBook, getBookVersion, subscribeBook } from '../../app/book-store.js'
 import { adjustFigure } from '../../app/manager-actions.js'
 import './players.css'

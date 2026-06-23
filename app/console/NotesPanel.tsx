@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { setMemberProfile } from '../../org/index.js'
-import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
+import { setMemberProfile } from '../../features/org/index.js'
+import { PlayerSearch } from '../../features/org/ui/PlayerLookup.js'
 import { getBook, getBookVersion, mutateBook, subscribeBook } from '../book-store.js'
 import { addTag, getTags, getTagsVersion, removeTag, subscribeTags } from './tags-store.js'
 import { ScopeBar, inScope, ALL_SCOPE } from '../../features/_desk/scope.js'

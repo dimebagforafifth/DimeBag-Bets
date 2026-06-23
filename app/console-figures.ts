@@ -9,7 +9,7 @@
  *
  * Display-ready strings, matching FiguresStrip's prop contract.
  */
-import { bookFigure, type Org } from '../org/index.js'
+import { bookFigure, type Org } from '../features/org/index.js'
 import { formatMoney } from '../games/shared/money.js'
 import { bookActivity, inRange, type AnalyticsRecord } from '../manager/reporting/index.js'
 

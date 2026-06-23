@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from 'react'
-import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
-import { setMaxWager, setMinWager } from '../../org/index.js'
+import { PlayerSearch } from '../org/ui/PlayerLookup.js'
+import { setMaxWager, setMinWager } from '../org/index.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { formatMoney, toCents } from '../../games/shared/money.js'
 import { ScopeBar, inScope, ALL_SCOPE } from '../_desk/scope.js'

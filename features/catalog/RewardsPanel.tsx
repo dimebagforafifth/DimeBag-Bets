@@ -1,4 +1,4 @@
-import { GamificationConfigPage } from '../../gamification/index.js'
+import { GamificationConfigPage } from '../gamification/index.js'
 import './catalog.css'
 
 /**

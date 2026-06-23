@@ -11,7 +11,7 @@
  * net loss (matching org.agentCommission). Pure read — money moves only via Settle.
  */
 import { useMemo, useState } from 'react'
-import { agentOf, membersByRole, type Member, type Org } from '../../org/index.js'
+import { agentOf, membersByRole, type Member, type Org } from '../org/index.js'
 import { getBookVersion } from '../../app/book-store.js'
 import { PanelShell, useBook, Figure } from '../_desk/shared.js'
 import { ScopeBar, scopedPlayers, ALL_SCOPE } from '../_desk/scope.js'

@@ -23,7 +23,7 @@ import {
   type Member,
   type Org,
   type Role,
-} from '../../org/index.js'
+} from '../org/index.js'
 import { getBook, getBookVersion, subscribeBook, mutateBook } from '../../app/book-store.js'
 import { adjustFigure } from '../../app/manager-actions.js'
 import {

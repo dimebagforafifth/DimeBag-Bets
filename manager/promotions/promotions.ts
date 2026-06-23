@@ -7,8 +7,8 @@
  * file moves no money and touches no store.
  */
 
-import type { Member, Org } from '../../org/index.js'
-import { downline, getMember } from '../../org/index.js'
+import type { Member, Org } from '../../features/org/index.js'
+import { downline, getMember } from '../../features/org/index.js'
 
 export type BonusType = 'freeplay' | 'bonus'
 

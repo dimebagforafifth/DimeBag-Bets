@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { formatMoney, toCents } from '../../games/shared/money.js'
 import { getBook, getBookVersion, subscribeBook } from '../../app/book-store.js'
-import { getRewardsConfig } from '../../rewards/economy.js'
+import { getRewardsConfig } from './economy.js'
 import {
   getBonusRules,
   getBonusRulesVersion,
@@ -27,7 +27,7 @@ import {
   type RewardKind,
   type PlayerSegment,
   type BonusGrant,
-} from '../../bonus/index.js'
+} from '../bonus/index.js'
 import { PanelShell } from '../_desk/shared.js'
 import './bonus-admin.css'
 

@@ -14,7 +14,7 @@ import { getBets, __resetBets } from './bets-store.js'
 import { settleBookBet, __resetPlacement } from './placement.js'
 import { parlayPrice } from './slip.js'
 import { suspendMarket, __resetRiskControls } from '../risk-controls.js'
-import { __resetLimits } from '../../trading/limits.js'
+import { __resetLimits } from '../../features/trading/limits.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const P = (american: number, decimal: number): Price => ({ american, decimal })

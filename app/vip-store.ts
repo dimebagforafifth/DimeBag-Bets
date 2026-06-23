@@ -21,7 +21,7 @@ import {
   type LeaderboardRow,
   type PlayerVip,
   type VipConfig,
-} from '../vip/index.js'
+} from '../features/vip/index.js'
 
 /* ----------------------------- persistence ------------------------------ */
 

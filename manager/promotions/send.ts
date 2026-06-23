@@ -9,7 +9,7 @@
  */
 
 import { getBook, mutateBook } from '../../app/book-store.js'
-import { getMember } from '../../org/index.js'
+import { getMember } from '../../features/org/index.js'
 import { grant } from '../../core/index.js'
 import { planBonus, type BonusDraft } from './promotions.js'
 import { promoStore, type PromoStore } from './promo-store.js'

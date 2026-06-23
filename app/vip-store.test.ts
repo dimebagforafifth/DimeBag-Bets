@@ -10,7 +10,7 @@ import {
   subscribeVip,
   takeFreePlay,
 } from './vip-store.js'
-import { setAutoGrant } from '../vip/index.js'
+import { setAutoGrant } from '../features/vip/index.js'
 
 /**
  * The VIP store subscribes to core's onWagerResolved, so a real wager driven

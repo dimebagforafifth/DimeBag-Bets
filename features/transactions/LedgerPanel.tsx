@@ -8,7 +8,7 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import { getBookLedger, subscribeBookLedger } from '../../app/book-ledger.js'
 import type { LedgerEntry } from '../../ledger/index.js'
-import { PlayerSearch } from '../../org/ui/PlayerLookup.js'
+import { PlayerSearch } from '../org/ui/PlayerLookup.js'
 import { formatMoney } from '../../games/shared/money.js'
 import {
   PanelShell,

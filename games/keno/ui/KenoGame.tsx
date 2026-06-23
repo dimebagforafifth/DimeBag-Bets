@@ -15,7 +15,7 @@ import {
   type KenoRound,
 } from '../index.js'
 import { fairnessClient } from '../../shared/fair.js'
-import { play as playSound } from '../../../sound/index.js'
+import { play as playSound } from '../../../features/sound/index.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { signalReveal } from '../../shared/reveal-bus.js'
 import { Rules } from '../../shared/Rules.js'

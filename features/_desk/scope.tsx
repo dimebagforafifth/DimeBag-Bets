@@ -1,4 +1,4 @@
-import { allAgents, downline, membersByRole, rosterOf, type Member, type Org } from '../../org/index.js'
+import { allAgents, downline, membersByRole, rosterOf, type Member, type Org } from '../org/index.js'
 import { getViewer, viewerIsScopedAgent } from '../../app/viewer.js'
 import './scope.css'
 

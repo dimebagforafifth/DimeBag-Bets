@@ -31,7 +31,7 @@ import {
   type CanonicalField,
   type ImportBatch,
   type ImportRow,
-} from '../../import/index.js'
+} from './index.js'
 import { useEconomyMode, ModeGate } from '../../app/economy-mode.js'
 import './import.css'
 

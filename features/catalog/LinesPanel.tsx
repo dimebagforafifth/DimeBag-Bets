@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 import { TradingDesk } from '../../sportsbook/trading/ui/TradingDesk.js'
 import type { CirclingApi } from '../../sportsbook/trading/ui/LineControls.js'
 import { getBookVersion, subscribeBook, listPlayers, mutateBook } from '../../app/book-store.js'
-import { setMaxWager } from '../../org/index.js'
+import { setMaxWager } from '../org/index.js'
 import './catalog.css'
 
 /** The holding limit a circled player is dropped to (cents) — $5 a bet. */

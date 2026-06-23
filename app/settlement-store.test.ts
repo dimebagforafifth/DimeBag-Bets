@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { adjustBalance, placeWager } from '../core/index.js'
-import { bookFigure, type Settlement } from '../org/index.js'
+import { bookFigure, type Settlement } from '../features/org/index.js'
 import { getBook } from './book-store.js'
 import { getBookLedger } from './book-ledger.js'
 import { getAuditLog } from './audit-store.js'

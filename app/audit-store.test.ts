@@ -8,7 +8,7 @@ import {
   setBookBettingLocked,
   setCreditLimit,
   setMaxWager,
-} from '../org/index.js'
+} from '../features/org/index.js'
 import { getBook } from './book-store.js'
 import { auditedMutate } from './manager-actions.js'
 import { getAuditLog, recordAudit } from './audit-store.js'
