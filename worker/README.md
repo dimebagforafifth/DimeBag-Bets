@@ -11,7 +11,7 @@ long-lived loops Vercel functions structurally can't (a stateless function can't
 
 It holds **no durable money state** — the ledger, auth, and realtime stay on Supabase. If the
 process dies, your host restarts it and it rejoins from the server-authoritative fairness seed
-and the last good odds slate. Nothing is lost. See `docs/research-vps-vs-serverless.md` for
+and the last good odds slate. Nothing is lost. See `docs/research/research-vps-vs-serverless.md` for
 why this worker (not a VPS migration) is the right call.
 
 ## Files

@@ -23,8 +23,17 @@ nontechnical status.
 | [Trading](trading.md)                                          | Bookmaker tooling, devig, exposure, Kelly, arbitrage, and hedging |
 | [Live odds](live-odds.md)                                      | Live odds behavior and operational notes                          |
 | [Odds polling](odds-polling.md)                                | Feed polling lane                                                 |
-| [Live data provider research](research-live-data-providers.md) | Provider options and tradeoffs                                    |
 | [Sportsbook upgrade report](sportsbook-upgrade-report.md)      | Sportsbook feature gap/status report                              |
+
+## Research
+
+Longer-form research write-ups live in [`research/`](research/).
+
+| Doc                                                                          | Use it for                                                       |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [Betting app design research](research/betting-app-design-research.md)       | Visual language, motion, IA, mobile patterns, responsible design |
+| [Live data provider research](research/research-live-data-providers.md)      | Sportsbook odds API + live-casino provider options and tradeoffs |
+| [VPS vs serverless research](research/research-vps-vs-serverless.md)         | Hosting/runtime tradeoffs for the backend                        |
 
 ## Operations and Follow-Up
 

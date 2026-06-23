@@ -9,7 +9,7 @@
 > Since you were away, the repo got a full review + fixes, issue tracking, provider research, and a first Supabase schema. New things to look at:
 > - `docs/fixed-issues.md` — bugs found & fixed (incl. a dice EV exploit and a crash auto-cashout race).
 > - `docs/pending-issues.md` + GitHub issues #2–#8 — open items for Phase 1+.
-> - `docs/research-live-data-providers.md` — which sportsbook odds API + live-casino option to use (with a manual fill-in table for sales-gated data).
+> - `docs/research/research-live-data-providers.md` — which sportsbook odds API + live-casino option to use (with a manual fill-in table for sales-gated data).
 > - `supabase/migrations/…_init_core_and_sportsbook.sql` — initial DB schema (money core + provider-agnostic sportsbook), **not yet applied to a remote**.
 >
 > **Open question that needs your call before wiring up the backend:** should `accounts.balance` be **maintained directly** (simple, matches how `core` mutates in place) or **treated as a cache rebuilt from the `transactions` ledger** (stronger audit guarantee)? The schema supports either; pick one before building the balance-write path. Also worth confirming early (see research doc): The Odds API ToS for non-real-money use, and whether a live-dealer studio would onboard a non-redeemable points app.
