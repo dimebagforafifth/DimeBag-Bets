@@ -3,7 +3,7 @@
 Three small, self-contained libraries that add real infrastructure value **without
 touching any existing code**. Each lives in its own folder, ships its own tests, and
 integrates through a named seam so it rolls up one line at a time. They are not yet
-wired into the app — they are ready when you are. See `docs/ARCHITECTURE.md` for the
+wired into the app — they are ready when you are. See `docs/architecture.md` for the
 overall map.
 
 ---
@@ -14,6 +14,7 @@ State today is in-memory and resets on reload. This module is the seam that fixe
 without any module learning where bytes live.
 
 **API**
+
 - `KVStore` — `get / set / remove / keys / clear`, JSON value semantics (stored values
   are snapshots, not live refs).
 - `createMemoryStore()` — tests / SSR.
@@ -24,6 +25,7 @@ without any module learning where bytes live.
   `load / save / reset`; a stale on-disk version is migrated or safely discarded.
 
 **Roll up**
+
 ```ts
 import { createLocalStore, persistedDoc } from '../persistence/index.js'
 const store = createLocalStore({ namespace: 'dimebag' })
@@ -31,6 +33,7 @@ const acctDoc = persistedDoc(store, 'account', { version: 1, initial: seedAccoun
 // boot:   accountRef.current = acctDoc.load()
 // change: acctDoc.save(account)   // after each onBalanceChange
 ```
+
 Later: add `createSupabaseStore(): KVStore` in this folder — nothing upstream changes.
 
 ---
@@ -41,6 +44,7 @@ Later: add `createSupabaseStore(): KVStore` in this folder — nothing upstream 
 changing `core`.
 
 **API**
+
 - `createLedger({ now? })` → `Ledger` with core-mirroring wrappers:
   `place / resolve / resolveAt / settle`. Each does exactly what `core` does **and**
   records an immutable `LedgerEntry` (kind, account, wager, balance/pending delta +
@@ -50,12 +54,14 @@ changing `core`.
 - `summarize(entries)` → `{ placed, resolved, turnover, net }` (pure).
 
 **Roll up** — where a module calls `core` directly, call the ledger instead:
+
 ```ts
 const ledger = createLedger()
 const wager = ledger.place(account, stake, { game: 'mines' })
 ledger.resolveAt(account, wager, multiplier, { game: 'mines' })
 // later: render ledger.entries(account.id) as "recent activity"; pair with persistence to save it.
 ```
+
 Existing code is untouched until it opts in.
 
 ---
@@ -67,6 +73,7 @@ testable (injected fetch) and vendor-agnostic (a mapping layer is the only place
 knows vendor field names).
 
 **API**
+
 - `ApiEvent` / `ApiBookmaker` / `ApiMarket` / `ApiOutcome` — the external DTO
   (h2h / spreads / totals, American prices).
 - `mapEvent(api, { bookmaker? })` / `mapSlate(api[])` — translate DTO → internal
@@ -78,10 +85,15 @@ knows vendor field names).
 - `fetchJsonSlate(url, init?)` — a production `fetchSlate` that GETs JSON.
 
 **Roll up** — one line where the store is created (today `createMockFeed()`):
+
 ```ts
 import { createHttpFeed, fetchJsonSlate } from '../sportsdata/index.js'
-createStore(account, { feed: createHttpFeed({ fetchSlate: fetchJsonSlate(ODDS_URL) }), onBalanceChange })
+createStore(account, {
+  feed: createHttpFeed({ fetchSlate: fetchJsonSlate(ODDS_URL) }),
+  onBalanceChange,
+})
 ```
+
 The store, pricing, live model, cash-out, and UI are all unchanged.
 
 ---

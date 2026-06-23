@@ -9,7 +9,7 @@
  *     write). // TODO(api)
  *
  * Why a seam and not a rewrite: there is no central money chokepoint above `core` —
- * the 20 games + the sportsbook each call `core` directly and synchronously, and the
+ * the 21 games + the sportsbook each call `core` directly and synchronously, and the
  * provably-fair RNG must stay untouched. Routing those through here would make play
  * async and reaches into other lanes (game logic / player UI), so it is NOT done here.
  * Instead this wires the service over real data and is the path operator money flows
