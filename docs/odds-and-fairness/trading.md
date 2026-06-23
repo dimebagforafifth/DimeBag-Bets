@@ -149,7 +149,7 @@ maxBookStake(1000, 3.0)      // 500  — a 500 stake at 3.0 risks exactly 1000
 ## Design notes
 
 - **Composes, doesn't fork.** Reuses `sportsbook/odds.ts` for American↔decimal and chains internally (`arbitrage` → `overround` + `balancedStakeFractions`; `marketSafety` → `expectedValue`).
-- **Decimal-first**, integer-cents-friendly: stakes/returns are plain numbers, so settle through `core` unchanged (see [money-model.md](money-model.md)).
+- **Decimal-first**, integer-cents-friendly: stakes/returns are plain numbers, so settle through `core` unchanged (see [money-model.md](../architecture/money-model.md)).
 - **Numerically hardened**: the power/Shin solvers bracket-and-bisect with early stop; edge cases (heavy favourites, lopsided books, unnormalised inputs) are guarded and tested.
 - **Tested**: every function has known-value tests (e.g. Kelly 10% at p=0.55/d=2.0; the −110/−110 overround; a [2.1, 2.1] arb), and the devig/pricing math was cross-checked against an independent from-first-principles oracle.
 

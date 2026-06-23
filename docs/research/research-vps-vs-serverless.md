@@ -43,11 +43,11 @@ which is exactly how multi-tenant SaaS is built.
 
 1. **Crash round-clock.** Crash is server-authoritative by design: the server must run the
    round timer, tick the multiplier, and withhold the crash point until resolve. A stateless
-   Vercel function can't hold a `setInterval`. (`docs/provably-fair-server.md` marks the
+   Vercel function can't hold a `setInterval`. (`docs/odds-and-fairness/provably-fair-server.md` marks the
    "server-timed Crash clock" as the open seam; `resolveCrash` is already built as the path it
    plugs into.)
 2. **Seconds-cadence live odds.** The live feed polls **every ~4s** (live) / 30s (pre-match)
-   (`docs/live-odds.md`). A free external pinger (cron-job.org floor = 60s) **cannot** deliver
+   (`docs/odds-and-fairness/live-odds.md`). A free external pinger (cron-job.org floor = 60s) **cannot** deliver
    that — it only buys near-real-time. True live odds need a persistent loop. (Vercel Cron is
    even slower: Hobby ≈ once/day, Pro = every minute.)
 
@@ -165,5 +165,5 @@ Until then, the managed stack + one worker is the disciplined choice — it hono
 - Corelab / HostMyCode — _2026 VPS hardening checklists_ (SSH keys, UFW, Fail2Ban, unattended
   upgrades, offsite backups).
 - Supabase pricing & RLS multi-tenancy docs.
-- Repo: `docs/provably-fair-server.md`, `docs/odds-polling.md`, `docs/live-odds.md`,
-  `docs/provisioning.md`, `docs/management-surface.md`, `docs/pph-console-gap-report.md`.
+- Repo: `docs/odds-and-fairness/provably-fair-server.md`, `docs/odds-and-fairness/odds-polling.md`, `docs/odds-and-fairness/live-odds.md`,
+  `docs/operations/provisioning.md`, `docs/architecture/management-surface.md`, `docs/operations/pph-console-gap-report.md`.
