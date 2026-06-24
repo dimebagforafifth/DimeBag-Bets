@@ -85,6 +85,31 @@ describe('createOddsApiSlate', () => {
     expect(quotas).toEqual([480])
   })
 
+  it('rejects malformed odds before the slate can be mapped', async () => {
+    const slate = createOddsApiSlate({
+      config,
+      includeScores: false,
+      fetchFn: stubFetch([
+        {
+          match: '/odds/',
+          body: [{ ...oddsEvent('g1'), bookmakers: [{ key: 'dk', markets: [{ key: 'h2h', outcomes: [{ name: 'Lakers', price: 'bad' }] }] }] }],
+        },
+      ]),
+    })
+    await expect(slate()).rejects.toThrow(/malformed odds payload at \$\[0\]\.bookmakers\[0\]\.markets\[0\]\.outcomes\[0\]\.price/)
+  })
+
+  it('rejects malformed score rows before score coercion can produce NaN', async () => {
+    const slate = createOddsApiSlate({
+      config,
+      fetchFn: stubFetch([
+        { match: '/odds/', body: [oddsEvent('g1')] },
+        { match: '/scores/', body: [{ id: 'g1', completed: false, scores: [{ name: 'Lakers', score: 'not-a-score' }] }] },
+      ]),
+    })
+    await expect(slate()).rejects.toThrow(/malformed scores payload at \$\[0\]\.scores\[0\]\.score/)
+  })
+
   it('keeps pre-match odds when the scores call is skipped', async () => {
     const slate = createOddsApiSlate({
       config,

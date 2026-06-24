@@ -57,18 +57,20 @@ function validateApiEvent(value: unknown, label: string, path: string): ApiEvent
   const status = value.status
   if (status != null && (typeof status !== 'string' || !STATUSES.has(status))) fail(label, `${path}.status`)
 
-  if (value.bookmakers != null && !Array.isArray(value.bookmakers)) fail(label, `${path}.bookmakers`)
-  const bookmakers = (value.bookmakers as unknown[] | undefined ?? []).map((book, b) => {
+  if (!Array.isArray(value.bookmakers)) fail(label, `${path}.bookmakers`)
+  const bookmakers = value.bookmakers.map((book, b) => {
     if (!isRecord(book)) fail(label, `${path}.bookmakers[${b}]`)
     if (!Array.isArray(book.markets)) fail(label, `${path}.bookmakers[${b}].markets`)
+    const markets = book.markets as unknown[]
     return {
       key: stringField(book.key, label, `${path}.bookmakers[${b}].key`),
-      markets: book.markets.map((market, m) => {
+      markets: markets.map((market, m) => {
         if (!isRecord(market)) fail(label, `${path}.bookmakers[${b}].markets[${m}]`)
         if (!Array.isArray(market.outcomes)) fail(label, `${path}.bookmakers[${b}].markets[${m}].outcomes`)
+        const outcomes = market.outcomes as unknown[]
         return {
           key: validateMarketKey(market.key, label, `${path}.bookmakers[${b}].markets[${m}].key`),
-          outcomes: market.outcomes.map((outcome, o) => {
+          outcomes: outcomes.map((outcome, o) => {
             if (!isRecord(outcome)) fail(label, `${path}.bookmakers[${b}].markets[${m}].outcomes[${o}]`)
             return {
               name: stringField(outcome.name, label, `${path}.bookmakers[${b}].markets[${m}].outcomes[${o}].name`),
@@ -110,13 +112,14 @@ export function validateOddsApiScoreEvents(value: unknown, label = 'scores'): Od
     if (!isRecord(event)) fail(label, path)
     const scores = event.scores
     if (scores != null && !Array.isArray(scores)) fail(label, `${path}.scores`)
+    const rows = scores as unknown[] | null | undefined
     return {
       id: stringField(event.id, label, `${path}.id`),
       completed: optionalBoolean(event.completed, label, `${path}.completed`),
       scores:
-        scores == null
-          ? scores
-          : scores.map((row, s) => {
+        rows == null
+          ? rows
+          : rows.map((row, s) => {
               if (!isRecord(row)) fail(label, `${path}.scores[${s}]`)
               const score = typeof row.score === 'string' ? Number(row.score) : row.score
               if (typeof score !== 'number' || !Number.isFinite(score)) fail(label, `${path}.scores[${s}].score`)
