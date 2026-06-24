@@ -14,21 +14,21 @@
    ========================================================================== */
 :root {
   /* ---- graphite surfaces (one ramp, shared with the console) ---- */
-  --bg: #0f1217; /* the canvas — deep, warm-neutral graphite (was navy) */
-  --surface: #161a21; /* cards, panels, inputs sit on this */
-  --surface-2: #1d222b; /* raised / hovered surfaces, chips */
-  --line: #2a2f3a; /* hairline borders */
+  --bg: #101113; /* logo-derived near-black graphite */
+  --surface: #161616; /* cards, panels, inputs sit on this */
+  --surface-2: #20201f; /* raised / hovered surfaces, chips */
+  --line: #333332; /* hairline borders */
 
   /* ---- text ---- */
-  --text: #eaedf2;
-  --muted: #97a2b2; /* secondary text — readable on graphite */
-  --faint: #7c89a3; /* tertiary labels, footer, disabled — kept above 4.5:1 on every surface */
+  --text: #fcfcfb;
+  --muted: #c4c4c2; /* secondary text from the logo's white inlays */
+  --faint: #919190; /* tertiary labels, footer, disabled */
 
   /* ---- THE accent: DimeBag gold (one confident accent) ---- */
-  --gold: #d6b14a; /* brand, primary actions, focus, treasure */
-  --gold-bright: #ecca6e; /* glints, hover, the lit edge of a gradient */
-  --gold-press: #c39c34; /* pressed / active CTA */
-  --gold-glow: 214, 177, 74; /* RGB channels for translucent gold glows */
+  --gold: #f0be4a; /* brand, primary actions, focus, treasure */
+  --gold-bright: #f5c459; /* glints, hover, the lit edge of a gradient */
+  --gold-press: #c99528; /* pressed / active CTA */
+  --gold-glow: 240, 190, 74; /* RGB channels for translucent gold glows */
 
   /* ---- account direction + live status (kept narrow + conventional) ---- */
   --green: #34d399; /* figure UP / a win / "live" — refined, not neon */
@@ -39,8 +39,8 @@
   /* The treasure the games are chasing: gems, multipliers + win popups derive
      from --gem (now gold, so a win reads as treasure). --gem-glow holds its RGB
      for soft glows. A game may re-point --gem locally — Mines keeps its emerald. */
-  --gem: #e0b44a;
-  --gem-glow: 224, 180, 74;
+  --gem: #f0be4a;
+  --gem-glow: 240, 190, 74;
 
   /* ---- shape ---- */
   --radius: 12px;
