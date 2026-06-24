@@ -280,7 +280,7 @@ export async function handleFairness(
       if (!req.commitId) return { status: 400, body: { error: 'commitId required' } }
       // Post-play disclosure for verification. (A standalone reveal is safe once the wager's
       // clientSeed + nonce are already fixed at placement; binding that on the server is the
-      // server-authoritative-money seam — see docs/provably-fair-server.md.)
+      // server-authoritative-money seam — see docs/odds-and-fairness/provably-fair-server.md.)
       return { status: 200, body: await vault.reveal(req.commitId) }
     }
     case 'resolveCrash': {

@@ -3,7 +3,7 @@
 Three small, self-contained libraries that add real infrastructure value **without
 touching any existing code**. Each lives in its own folder, ships its own tests, and
 integrates through a named seam so it rolls up one line at a time. They are not yet
-wired into the app — they are ready when you are. See `docs/architecture.md` for the
+wired into the app — they are ready when you are. See `architecture.md` for the
 overall map.
 
 ---

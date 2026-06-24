@@ -10,7 +10,7 @@
  * route can't be triggered by anyone.
  *
  * Money moves only through the server-authoritative grant path inside the worker's `send`
- * dispatcher (see persistence/promo-cron.ts + docs/provisioning.md) — never in this handler.
+ * dispatcher (see persistence/promo-cron.ts + docs/operations/provisioning.md) — never in this handler.
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
@@ -30,7 +30,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
   try {
     // No `send` dispatcher is wired here yet: the server-side bonus grant needs the book/org
-    // hydrated server-side (TODO(api), see docs/provisioning.md). Until then the live cron
+    // hydrated server-side (TODO(api), see docs/operations/provisioning.md). Until then the live cron
     // reports ran:false and advances nothing — no scheduled bonus is lost.
     const result = await runScheduledPromosCron()
     send(res, 200, { ok: true, at: new Date().toISOString(), ...result })
