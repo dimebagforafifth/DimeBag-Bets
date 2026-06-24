@@ -8,6 +8,7 @@ import {
   resolveAtMultiplier,
   resolveWager,
   settleWeek,
+  onSettlement,
 } from './core.js'
 
 /** A fresh account for each test. creditLimit 1000, flat figure, nothing pending. */
@@ -290,6 +291,43 @@ describe('settleWeek', () => {
     const a = account()
     placeWager(a, 100)
     expect(() => settleWeek(a)).toThrow(/still pending/)
+  })
+
+  it('returns a settlement record marking a positive figure paid out', () => {
+    const a = account({ balance: 450 })
+    const rec = settleWeek(a, { week: '2026-W26', now: 1000 })
+    expect(rec).toMatchObject({
+      accountId: 'acct_1',
+      closingBalance: 450,
+      direction: 'paid_out',
+      week: '2026-W26',
+      timestamp: 1000,
+    })
+    expect(a.balance).toBe(0)
+  })
+
+  it('marks a negative figure paid in and a flat figure flat', () => {
+    expect(settleWeek(account({ balance: -450 })).direction).toBe('paid_in')
+    expect(settleWeek(account({ balance: 0 })).direction).toBe('flat')
+  })
+
+  it('emits the settlement on the channel before zeroing', () => {
+    const seen: number[] = []
+    const off = onSettlement((e) => seen.push(e.closingBalance))
+    const a = account({ balance: 300 })
+    settleWeek(a)
+    off()
+    expect(seen).toEqual([300])
+  })
+
+  it('does not let a throwing settlement listener break the reset', () => {
+    const off = onSettlement(() => {
+      throw new Error('ledger down')
+    })
+    const a = account({ balance: 200 })
+    expect(() => settleWeek(a)).not.toThrow()
+    expect(a.balance).toBe(0)
+    off()
   })
 })
 
