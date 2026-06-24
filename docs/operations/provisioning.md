@@ -62,9 +62,18 @@ works; the browser build needs the `VITE_` ones.
 | `POLL_INTERVAL_SECONDS` | server | local-loop / pinger cadence (≥15; default 60) |
 | `CRON_SECRET` | server | guards `/api/poll-odds` **and** `/api/run-promos` |
 | `SUPABASE_AUTH_EMAIL_DOMAIN` | both (optional) | synthetic-email domain for username login (default `users.dimebag.local`) |
+| `FAIRNESS_SECRET` | **server only** | server seed authority secret; set a strong random value before production |
+| `FAIRNESS_COMMIT_RATE_LIMIT_MAX` | server | max `/api/fairness` `commit` calls per limiter window (default `20`) |
+| `FAIRNESS_COMMIT_RATE_LIMIT_WINDOW_MS` | server | commit limiter window in milliseconds (default `60000`) |
 
 > **Rotate first:** the SGO key and any GitHub token used during development have been in
 > chat/transcripts — rotate them before going live.
+
+Set the two `FAIRNESS_COMMIT_RATE_LIMIT_*` values explicitly in Vercel before player auth is
+enabled. The current serverless limiter is IP-keyed and in-memory per function instance; it is
+the lightweight guard for the existing route. When authenticated player ids are available, add
+the verified user id to the limiter key and move the bucket to Vercel KV/Upstash or equivalent
+durable edge storage for global enforcement.
 
 ## 4. Odds feed + cache (live prices in the book)
 

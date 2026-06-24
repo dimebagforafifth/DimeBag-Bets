@@ -1,0 +1,795 @@
+/* ============================================================================
+   EXPERIMENTAL lobby — font + palette study (NOT the live theme).
+   Self-contained: defines its own tokens, fonts (Fontshare CDN), and motion.
+   Palette + type are swapped live via [data-theme] / [data-font] on <html>.
+   ========================================================================== */
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&f[]=general-sans@400,500,600&display=swap');
+
+/* ---- TYPE studies ---------------------------------------------------------- */
+:root,
+[data-font='grotesk'] {
+  --font-display: 'Clash Display', system-ui, sans-serif;
+  --font-body: 'Satoshi', system-ui, -apple-system, sans-serif;
+}
+[data-font='editorial'] {
+  --font-display: 'Cabinet Grotesk', Georgia, system-ui, sans-serif;
+  --font-body: 'General Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ---- PALETTE studies (default = jade) -------------------------------------
+   Off-black bases (never #000), one desaturated accent each, tinted shadows. */
+:root,
+[data-theme='jade'] {
+  --bg: #0b0e0d;
+  --surface: #121614;
+  --surface-2: #1a201d;
+  --line: #28302c;
+  --text: #e9efeb;
+  --muted: #9aa69f;
+  --faint: #6d7a73;
+  --accent: #46c08a;
+  --accent-bright: #6fdba7;
+  --accent-press: #38a576;
+  --accent-rgb: 70, 192, 138;
+  --ink: #07100c; /* text that sits ON the accent */
+}
+[data-theme='ember'] {
+  --bg: #0e0b0a;
+  --surface: #171211;
+  --surface-2: #201917;
+  --line: #322826;
+  --text: #f1eae7;
+  --muted: #ab9d97;
+  --faint: #7c6f69;
+  --accent: #e8704a;
+  --accent-bright: #f48f6f;
+  --accent-press: #cf5c39;
+  --accent-rgb: 232, 112, 74;
+  --ink: #1a0d08;
+}
+[data-theme='ice'] {
+  --bg: #0a0c10;
+  --surface: #111419;
+  --surface-2: #181d24;
+  --line: #262d36;
+  --text: #e8edf3;
+  --muted: #97a2b1;
+  --faint: #6b7685;
+  --accent: #5aa6f0;
+  --accent-bright: #84c0f8;
+  --accent-press: #4790db;
+  --accent-rgb: 90, 166, 240;
+  --ink: #06121f;
+}
+[data-theme='gold'] {
+  --bg: #0f1217;
+  --surface: #161a21;
+  --surface-2: #1d222b;
+  --line: #2a2f3a;
+  --text: #eaedf2;
+  --muted: #97a2b2;
+  --faint: #7c89a3;
+  --accent: #d6b14a;
+  --accent-bright: #ecca6e;
+  --accent-press: #c39c34;
+  --accent-rgb: 214, 177, 74;
+  --ink: #14171c;
+}
+
+:root {
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-lg: 28px; /* the bento-soft corner */
+  --maxw: 1240px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.7);
+  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#exp-root {
+  margin: 0;
+  min-height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  /* a faint accent aura rising from the floor, so the page never reads as flat black */
+  background-image: radial-gradient(
+    120% 80% at 50% 120%,
+    rgba(var(--accent-rgb), 0.08),
+    transparent 60%
+  );
+  background-attachment: fixed;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+::selection {
+  background: rgba(var(--accent-rgb), 0.3);
+}
+
+.exp {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- LAB BAR (the only non-product chrome) -------------------------------- */
+.exp-lab {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px 20px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.exp-lab-badge {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  color: var(--ink);
+  background: var(--accent);
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+.exp-lab-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.exp-lab-label {
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10.5px;
+}
+.exp-lab-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12.5px;
+  transition: all 0.25s var(--ease);
+}
+.exp-lab-chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.exp-lab-chip.is-on {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+.exp-lab-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: var(--glass-edge);
+}
+
+/* ---- TOP BAR -------------------------------------------------------------- */
+.exp-top {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 22px 24px;
+}
+.exp-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+}
+.exp-brand-dot {
+  color: var(--accent);
+}
+.exp-nav {
+  display: flex;
+  gap: 4px;
+  margin-right: auto;
+}
+.exp-nav-link {
+  padding: 8px 14px;
+  border-radius: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s var(--ease);
+}
+.exp-nav-link:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.exp-nav-link.is-on {
+  color: var(--text);
+}
+.exp-wallet {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 7px 15px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--glass-edge);
+}
+.exp-wallet-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+.exp-wallet-value {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--accent-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- MAIN ----------------------------------------------------------------- */
+.exp-main {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 24px 24px 64px;
+  flex: 1;
+}
+
+/* HERO — asymmetric split (3fr / 2fr), copy left, featured spotlight right. */
+.exp-hero {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 32px;
+  align-items: center;
+  padding: 36px 0 52px;
+}
+.exp-eyebrow {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.exp-hero-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.6rem, 6vw, 4.4rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  margin: 14px 0 0;
+}
+.exp-hero-accent {
+  color: var(--accent);
+  font-style: italic;
+}
+.exp-hero-sub {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 46ch;
+}
+.exp-hero-cta {
+  display: flex;
+  gap: 12px;
+  margin: 28px 0 0;
+  flex-wrap: wrap;
+}
+.exp-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 13px 22px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  transition:
+    transform 0.12s var(--ease),
+    background 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+.exp-btn-primary {
+  background: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 14px 30px -14px rgba(var(--accent-rgb), 0.7);
+}
+.exp-btn-primary:hover {
+  background: var(--accent-bright);
+}
+.exp-btn-primary:active {
+  transform: translateY(1px) scale(0.985);
+}
+.exp-btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--text);
+}
+.exp-btn-ghost:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+  background: var(--surface);
+}
+.exp-btn-ghost:active {
+  transform: translateY(1px);
+}
+.exp-stats {
+  display: flex;
+  gap: 36px;
+  margin: 34px 0 0;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--line); /* logic-grouping by line, not a card */
+}
+.exp-stats dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+.exp-stats dd {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.55rem;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* FEATURED card (right of hero) — liquid-glass surface + spotlight. */
+.exp-featured {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 26px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--accent) 16%, var(--surface)) 0%,
+    var(--surface) 58%
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  box-shadow: var(--shadow), var(--glass-edge);
+}
+.exp-featured-flag {
+  align-self: flex-start;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.exp-featured-art {
+  display: grid;
+  place-items: center;
+  height: 150px;
+  color: var(--accent);
+}
+.exp-featured-art svg {
+  width: 86px;
+  height: 86px;
+  filter: drop-shadow(0 10px 26px rgba(var(--accent-rgb), 0.55));
+  animation: exp-float 6s ease-in-out infinite;
+}
+.exp-featured-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.exp-featured-tag {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.exp-featured-play {
+  margin-top: 6px;
+  align-self: flex-start;
+}
+
+/* LIVE DROPS rail ----------------------------------------------------------- */
+.exp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 18px;
+}
+.exp-section-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.exp-section-meta {
+  font-size: 12px;
+  color: var(--faint);
+}
+.exp-drops {
+  margin: 8px 0 44px;
+}
+.exp-drops-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.exp-drop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--glass-edge);
+  animation: exp-rise 0.5s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+.exp-drop-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+  background: linear-gradient(150deg, var(--accent-bright), var(--accent));
+}
+.exp-drop-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.exp-drop-who {
+  font-weight: 600;
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.exp-drop-game {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+.exp-drop-win {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.exp-drop-mult {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--accent-bright);
+  font-variant-numeric: tabular-nums;
+}
+.exp-drop-amount {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* skeleton loading — shimmer matched to the row, not a spinner */
+.exp-drop.is-skeleton {
+  pointer-events: none;
+}
+.exp-skel {
+  display: block;
+  border-radius: 7px;
+  background: linear-gradient(
+    100deg,
+    var(--surface-2) 30%,
+    color-mix(in srgb, var(--surface-2) 60%, var(--line)) 50%,
+    var(--surface-2) 70%
+  );
+  background-size: 220% 100%;
+  animation: exp-shimmer 1.3s linear infinite;
+}
+.exp-skel-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.exp-skel-line {
+  height: 10px;
+  flex: 1;
+}
+.exp-skel-line.short {
+  max-width: 56px;
+}
+
+/* THE FLOOR — game grid -------------------------------------------------------
+   Fixed column counts per device class so cards stay proportioned everywhere. */
+.exp-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border-radius: 11px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--faint);
+  transition: border-color 0.2s var(--ease);
+}
+.exp-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  color: var(--accent);
+}
+.exp-search input {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  width: 150px;
+}
+.exp-search input::placeholder {
+  color: var(--faint);
+}
+.exp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+@media (min-width: 620px) {
+  .exp-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 940px) {
+  .exp-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.exp-card {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--glass-edge);
+  transition:
+    transform 0.28s var(--ease),
+    border-color 0.28s var(--ease),
+    box-shadow 0.28s var(--ease);
+  /* Reveal is driven by GSAP ScrollTrigger.batch (opacity only, so this hover transform
+     stays intact). If reduced-motion is set, GSAP skips and the card simply renders. */
+}
+.exp-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px rgba(var(--accent-rgb), 0.12);
+}
+.exp-card:active {
+  transform: translateY(-1px);
+}
+.exp-card-art {
+  display: grid;
+  place-items: center;
+  height: 92px;
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  background: radial-gradient(
+    120% 100% at 50% 0%,
+    color-mix(in srgb, var(--accent) 18%, var(--surface-2)),
+    var(--surface-2) 72%
+  );
+}
+.exp-card-art svg {
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 6px 14px rgba(var(--accent-rgb), 0.45));
+  transition: transform 0.28s var(--ease);
+}
+.exp-card:hover .exp-card-art svg {
+  transform: scale(1.08) rotate(-2deg);
+}
+.exp-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 2px 0;
+  flex: 1;
+}
+.exp-card-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+.exp-card-tag {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.exp-card-play {
+  margin-top: auto;
+  padding-top: 12px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.22s var(--ease),
+    transform 0.22s var(--ease);
+}
+.exp-card-play::after {
+  content: ' →';
+}
+.exp-card:hover .exp-card-play {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* spotlight glow shared by featured + cards (cursor-tracked, no re-render) */
+.exp-spot {
+  position: relative;
+  isolation: isolate;
+}
+.exp-spot-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  background: radial-gradient(
+    220px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(var(--accent-rgb), 0.16),
+    transparent 62%
+  );
+}
+.exp-spot:hover .exp-spot-glow {
+  opacity: 1;
+}
+
+/* EMPTY state — composed, with a way out (not a dead end) */
+.exp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 56px 24px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--faint);
+}
+.exp-empty-title {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+}
+.exp-empty-sub {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* FOOTER -------------------------------------------------------------------- */
+.exp-foot {
+  border-top: 1px solid var(--line);
+  padding: 22px 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--faint);
+  font-size: 12px;
+}
+.exp-foot-tag {
+  color: var(--accent);
+  opacity: 0.85;
+}
+
+/* ---- motion keyframes ----------------------------------------------------- */
+@keyframes exp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes exp-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes exp-shimmer {
+  to {
+    background-position: -220% 0;
+  }
+}
+
+/* ---- responsive ----------------------------------------------------------- */
+@media (max-width: 880px) {
+  .exp-hero {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 20px 0 36px;
+  }
+  .exp-nav {
+    display: none; /* a real build would collapse to a menu; out of scope for the study */
+  }
+}
+@media (max-width: 540px) {
+  .exp-top {
+    gap: 14px;
+    padding: 18px 16px;
+  }
+  .exp-main {
+    padding: 16px 16px 48px;
+  }
+  .exp-stats {
+    gap: 22px;
+  }
+}
+
+/* respect reduced motion — drop the perpetual + reveal motion to a blink */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

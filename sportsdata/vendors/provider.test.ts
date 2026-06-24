@@ -124,6 +124,17 @@ describe('TheOddsAPI provider — odds + scores endpoints, quota tracking', () =
     expect(slate[0].scores).toEqual([{ name: 'Lakers', score: 110 }, { name: 'Celtics', score: 104 }])
     expect(p.usage()).toEqual({ remaining: 480, used: 20 })
   })
+
+  it('rejects malformed provider odds before the poller maps them', async () => {
+    const fetchFn: FetchLike = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => [{ id: 'g1', sport_title: 'NBA', home_team: 'Lakers', away_team: 'Celtics', commence_time: 'x' }],
+      headers: { get: () => null },
+    })
+    const p = createTheOddsApiProvider({ config: { apiKey: 'k', sportKeys: ['basketball_nba'] }, fetchFn })
+    await expect(p.fetchOdds()).rejects.toThrow(/malformed odds payload at \$\[0\]\.bookmakers/)
+  })
 })
 
 describe('OddsPapi stub', () => {

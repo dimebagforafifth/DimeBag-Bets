@@ -32,16 +32,6 @@ Docs are grouped by topic:
 | [Odds polling](odds-and-fairness/odds-polling.md)                         | Feed polling lane                                                 |
 | [Sportsbook upgrade report](odds-and-fairness/sportsbook-upgrade-report.md) | Sportsbook feature gap/status report                            |
 
-## Research — [`research/`](research/)
-
-Longer-form research write-ups.
-
-| Doc                                                                          | Use it for                                                       |
-| ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [Betting app design research](research/betting-app-design-research.md)       | Visual language, motion, IA, mobile patterns, responsible design |
-| [Live data provider research](research/research-live-data-providers.md)      | Sportsbook odds API + live-casino provider options and tradeoffs |
-| [VPS vs serverless research](research/research-vps-vs-serverless.md)         | Hosting/runtime tradeoffs for the backend                        |
-
 ## Operations and Follow-Up — [`operations/`](operations/)
 
 | Doc                                                            | Use it for                                           |

@@ -60,9 +60,76 @@ export interface FairnessResult {
   body: unknown
 }
 
+export interface RateLimitDecision {
+  allowed: boolean
+  retryAfterSeconds?: number
+}
+
+export interface FairnessRateLimiter {
+  limit(key: string): RateLimitDecision | Promise<RateLimitDecision>
+}
+
+export interface FairnessRateLimitConfig {
+  max: number
+  windowMs: number
+}
+
+export interface FairnessHandlerOptions {
+  commitRateLimiter?: FairnessRateLimiter
+  rateLimitKey?: string
+}
+
+const DEFAULT_COMMIT_RATE_LIMIT: FairnessRateLimitConfig = {
+  max: 20,
+  windowMs: 60_000,
+}
+
 /** Build the default (stateless, derived) authority from an env bag. */
 export function defaultVault(env: Record<string, string | undefined> = {}): SeedVault {
   return createDerivedVault(resolveMasterSecret(env).secret)
+}
+
+function readPositiveInt(value: string | undefined, fallback: number): number {
+  if (value === undefined || value.trim() === '') return fallback
+  const n = Number(value)
+  return Number.isInteger(n) && n > 0 ? n : fallback
+}
+
+export function fairnessCommitRateLimitConfigFromEnv(
+  env: Record<string, string | undefined> = {},
+): FairnessRateLimitConfig {
+  return {
+    max: readPositiveInt(env.FAIRNESS_COMMIT_RATE_LIMIT_MAX, DEFAULT_COMMIT_RATE_LIMIT.max),
+    windowMs: readPositiveInt(
+      env.FAIRNESS_COMMIT_RATE_LIMIT_WINDOW_MS,
+      DEFAULT_COMMIT_RATE_LIMIT.windowMs,
+    ),
+  }
+}
+
+export function createInMemoryRateLimiter(
+  config: FairnessRateLimitConfig = DEFAULT_COMMIT_RATE_LIMIT,
+  now: () => number = () => Date.now(),
+): FairnessRateLimiter {
+  const buckets = new Map<string, { count: number; resetAt: number }>()
+  return {
+    limit(key) {
+      const t = now()
+      const current = buckets.get(key)
+      if (!current || t >= current.resetAt) {
+        buckets.set(key, { count: 1, resetAt: t + config.windowMs })
+        return { allowed: true }
+      }
+      if (current.count >= config.max) {
+        return {
+          allowed: false,
+          retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - t) / 1000)),
+        }
+      }
+      current.count += 1
+      return { allowed: true }
+    },
+  }
 }
 
 /**
@@ -189,9 +256,23 @@ export function vaultFromEnv(env: EnvSource = {}): SeedVault {
 export async function handleFairness(
   req: FairnessRequest,
   vault: SeedVault = defaultVault(),
+  options: FairnessHandlerOptions = {},
 ): Promise<FairnessResult> {
   switch (req?.action) {
     case 'commit': {
+      if (options.commitRateLimiter) {
+        const key = options.rateLimitKey?.trim() || 'anonymous'
+        const decision = await options.commitRateLimiter.limit(`fairness:commit:${key}`)
+        if (!decision.allowed) {
+          return {
+            status: 429,
+            body: {
+              error: 'rate limit exceeded',
+              retryAfterSeconds: decision.retryAfterSeconds,
+            },
+          }
+        }
+      }
       // Returns ONLY the hash — never the seed. This is the pre-play commitment.
       return { status: 200, body: await vault.commit() }
     }
@@ -250,6 +331,35 @@ async function readJson(req: IncomingMessage): Promise<unknown> {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'))
 }
 
+function headerValue(req: IncomingMessage, name: string): string | undefined {
+  const value = req.headers[name.toLowerCase()]
+  if (Array.isArray(value)) return value[0]
+  return value
+}
+
+export function fairnessRateLimitKeyFromRequest(req: IncomingMessage): string {
+  const forwarded =
+    headerValue(req, 'x-vercel-forwarded-for') ??
+    headerValue(req, 'x-forwarded-for') ??
+    headerValue(req, 'x-real-ip') ??
+    headerValue(req, 'cf-connecting-ip')
+  const ip = forwarded?.split(',')[0]?.trim()
+  return ip || req.socket.remoteAddress || 'unknown'
+}
+
+let commitLimiter: FairnessRateLimiter | undefined
+let commitLimiterConfigKey = ''
+
+function getCommitRateLimiter(env: Record<string, string | undefined>): FairnessRateLimiter {
+  const config = fairnessCommitRateLimitConfigFromEnv(env)
+  const key = `${config.max}:${config.windowMs}`
+  if (!commitLimiter || commitLimiterConfigKey !== key) {
+    commitLimiter = createInMemoryRateLimiter(config)
+    commitLimiterConfigKey = key
+  }
+  return commitLimiter
+}
+
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   if (req.method !== 'POST') {
     send(res, 405, { error: 'method not allowed' })
@@ -258,7 +368,10 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   try {
     const body = (await readJson(req)) as FairnessRequest
     // Durable Supabase-backed vault when keys are present, else the stateless derived default.
-    const result = await handleFairness(body, vaultFromEnv(process.env))
+    const result = await handleFairness(body, vaultFromEnv(process.env), {
+      commitRateLimiter: getCommitRateLimiter(process.env),
+      rateLimitKey: fairnessRateLimitKeyFromRequest(req),
+    })
     send(res, result.status, result.body)
   } catch {
     // Never leak internals (e.g. the secret); keep it generic.

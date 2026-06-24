@@ -21,6 +21,7 @@
  */
 
 import type { ApiEvent, ApiScore } from '../types.js'
+import { validateApiEvents, validateOddsApiScoreEvents } from './validation.js'
 
 export interface OddsApiConfig {
   /** Vendor API key. */
@@ -141,13 +142,13 @@ export function createOddsApiSlate(opts: OddsApiClientOptions): () => Promise<Ap
       const oddsRes = await fetchFn(oddsUrl(opts.config, sport))
       if (!oddsRes.ok) throw new Error(`odds request for ${sport} responded ${oddsRes.status}`)
       opts.onQuota?.(readQuota(oddsRes.headers))
-      const odds = (await oddsRes.json()) as ApiEvent[]
+      const odds = validateApiEvents(await oddsRes.json(), 'odds')
 
       let events = odds
       if (includeScores) {
         const scoresRes = await fetchFn(scoresUrl(opts.config, sport))
         if (scoresRes.ok) {
-          const scores = (await scoresRes.json()) as OddsApiScoreEvent[]
+          const scores = validateOddsApiScoreEvents(await scoresRes.json(), 'scores')
           events = mergeScores(odds, scores)
         }
         // a failed scores call is non-fatal: keep the pre-match odds.

@@ -10,7 +10,6 @@ import { createRoot } from 'react-dom/client'
 import { App } from './App.js'
 import { AuthProvider } from '../auth/index.js'
 import { createDemoAdapter, __resetDemoAuth } from '../auth/demoAdapter.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 async function mountApp() {
@@ -29,8 +28,19 @@ async function mountApp() {
   return { host, root }
 }
 
-const navLabels = (host: HTMLElement) =>
-  [...host.querySelectorAll('.nav-tab')].map((t) => t.textContent)
+// Secondary sections now fold into the header's "More" dropdown, so the full set of
+// sections a role can reach = the inline primary tabs + the dropdown items. Open the
+// "More" menu (if present) so its items are in the DOM, then read both (minus the
+// "More" button's own label).
+const navLabels = (host: HTMLElement) => {
+  const more = host.querySelector<HTMLButtonElement>('button.nav-more-btn')
+  if (more) act(() => more.click())
+  const inline = [...host.querySelectorAll('.nav-primary .nav-tab')]
+    .map((t) => t.textContent ?? '')
+    .filter((label) => !/^more/i.test(label))
+  const dropped = [...host.querySelectorAll('.drop-item')].map((t) => t.textContent)
+  return [...inline, ...dropped]
+}
 
 describe('route role-gating', () => {
   beforeEach(() => __resetDemoAuth())

@@ -42,6 +42,13 @@ function click(host: HTMLElement, selector: string, text: RegExp): boolean {
   act(() => el.click())
   return true
 }
+// Secondary sections (Leaderboard, Management, …) now live in the header's "More"
+// dropdown rather than as inline tabs, so leaving Plinko that way means opening the
+// menu first, then clicking the section inside it.
+function clickMore(host: HTMLElement, text: RegExp): boolean {
+  click(host, 'button.nav-more-btn', /more/i)
+  return click(host, '.drop-item', text)
+}
 async function openPlinkoAndDrop(host: HTMLElement): Promise<void> {
   // From wherever we are, get to the casino lobby, open Plinko, drop a ball.
   click(host, 'button.nav-tab', /^casino$/i)
@@ -74,8 +81,8 @@ describe('leaving Plinko by any route keeps the balance change', () => {
       { name: '← Casino crumb', go: () => void click(host, 'button.crumb', /casino/i) },
       { name: 'My Bets tab', go: () => void click(host, 'button.nav-tab', /my bets/i) },
       { name: 'Sportsbook tab', go: () => void click(host, 'button.nav-tab', /sportsbook/i) },
-      { name: 'Leaderboard tab', go: () => void click(host, 'button.nav-tab', /leaderboard/i) },
-      { name: 'Management tab', go: () => void click(host, 'button.nav-tab', /management/i) },
+      { name: 'Leaderboard tab', go: () => void clickMore(host, /leaderboard/i) },
+      { name: 'Management tab', go: () => void clickMore(host, /management/i) },
       { name: 'Casino tab', go: () => void click(host, 'button.nav-tab', /^casino$/i) },
     ]
 

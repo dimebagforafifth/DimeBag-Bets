@@ -48,6 +48,11 @@
   --radius-lg: 18px;
   --gap: 16px;
 
+  /* ---- one shared content width ---- the header bar + the page content both cap to
+     this and centre, so on wide laptops/desktops the UI reads as a deliberately fitted
+     column instead of stretching edge-to-edge, while phones/tablets fill the width. */
+  --content-max: 1200px;
+
   /* ---- elevation: ONE systematic shadow ramp (was ad-hoc per component) ----
      Layered (ambient + key) shadows tuned for a deep graphite canvas — soft, never
      harsh. Use --elev-1 for resting cards, -2 for hover/raised, -3 for popovers/modals.
@@ -245,16 +250,16 @@ body {
 }
 
 .app {
+  /* dvh tracks the real viewport as mobile browser chrome shows/hides (vs 100vh, which
+     jumps); 100% stays a fallback for engines without dvh. */
   min-height: 100%;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
 .app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 28px;
+  padding: 14px 24px;
   border-bottom: 1px solid var(--line);
   /* a quiet sticky glass header — content blurs softly under it on scroll */
   position: sticky;
@@ -263,6 +268,17 @@ body {
   background: color-mix(in srgb, var(--bg) 78%, transparent);
   backdrop-filter: blur(12px) saturate(1.1);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
+}
+/* The bar's content caps to the shared width and centres, so on wide screens the brand
+   and account controls line up with the page content below instead of hugging the edges. */
+.app-header-inner {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .brand {
@@ -330,7 +346,7 @@ body {
 /* ---- Casino lobby ---- */
 .lobby {
   width: 100%;
-  max-width: 1060px;
+  max-width: var(--content-max);
 }
 .lobby-head {
   display: flex;
@@ -359,11 +375,30 @@ body {
   color: var(--muted);
   font-size: 14px;
 }
+/* The hub grid steps through fixed column counts per device class so cards stay well
+   proportioned at every common width — phones 2-up, large phones/small tablets 3-up,
+   tablets/laptops 4-up, desktops 5-up — rather than a fluid count that can leave cards
+   too wide on big screens or too cramped on small ones. */
 .lobby-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* phones (mobile-first) */
   grid-auto-rows: 1fr; /* even card heights per row despite varying descriptions */
   gap: 16px;
+}
+@media (min-width: 560px) {
+  .lobby-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 880px) {
+  .lobby-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 1180px) {
+  .lobby-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 .game-card {
   --accent: var(--gold);
@@ -1049,49 +1084,46 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 /* ===== responsive: keep the shell clean on smaller screens (CLAUDE.md §2) =====
-   The shell was the one part with no breakpoints — every game CSS already has
-   them. On a phone the header (brand + 4 tabs + two figures + the VIP chip +
-   sound) overflowed; let it wrap gracefully and tighten the lobby grid. */
-@media (max-width: 760px) {
+   The bar now stays a single, non-wrapping row at every size: below 760px the inline
+   tabs + "More" overflow collapse into one compact nav menu (see menu.css), so the
+   header never has to wrap. These breakpoints just tighten spacing and the hub grid. */
+@media (max-width: 759px) {
   .app-header {
-    flex-wrap: wrap;
-    gap: 12px 16px;
-    padding: 14px 16px;
+    padding: 12px 16px;
+  }
+  .app-header-inner {
+    gap: 12px;
   }
   .header-left {
-    gap: 14px;
-    flex-wrap: wrap;
+    gap: 12px;
   }
   .header-right {
-    gap: 16px;
-    margin-left: auto;
-  }
-  .figure {
-    gap: 18px;
-  }
-  .nav {
-    flex-wrap: wrap;
+    gap: 10px;
   }
   .app-main {
-    padding: 28px 14px;
+    padding: 24px 16px;
   }
 }
 @media (max-width: 460px) {
   .app-header {
-    padding: 12px;
+    padding: 11px 12px;
   }
-  .nav-tab {
-    padding: 6px 10px;
-    font-size: 13px;
+  .app-main {
+    padding: 20px 12px;
   }
   .figure {
-    gap: 14px;
+    gap: 10px;
+    padding: 5px 10px;
+  }
+  /* drop the name/role text on the tightest phones — the avatar + caret still opens
+     the same account menu, so nothing is lost while the bar stays uncrowded. */
+  .account-trigger .auth-id {
+    display: none;
   }
   .lobby-title {
-    font-size: 22px;
+    font-size: 26px;
   }
   .lobby-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
   }
 }
