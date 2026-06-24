@@ -198,13 +198,17 @@ Each item below is a summary — the full rationale + fix is in that doc.
   RETURNING …`, 0 rows = rejected); add a client-minted **idempotency key** with a `UNIQUE`
   constraint; mint wager ids from the DB. See gap-analysis §1.1.
 
-### G2 — HTTP security headers
+### G2 — HTTP security headers — ✅ FIXED (2026-06-24)
 - **Severity:** Medium (defense-in-depth; cheap, high-value — OWASP A02, now #2)
-- **Where:** `vercel.json` (no `headers` block)
-- **Problem:** No CSP / HSTS / `X-Content-Type-Options` / anti-clickjacking / `Referrer-Policy` /
-  `Permissions-Policy`. With the Supabase session in `localStorage`, an XSS becomes token theft.
-- **Intended fix:** Add a `headers` block to `vercel.json` (CSP starts in report-only to find
-  breakage). Snippet in gap-analysis §2.1.
+- **Where:** `vercel.json`
+- **Fix shipped:** Added a route-wide `headers` block with CSP in
+  `Content-Security-Policy-Report-Only`, HSTS, `X-Content-Type-Options`, `Referrer-Policy`,
+  `X-Frame-Options`, and a restrictive `Permissions-Policy`. The starter CSP is tuned for the
+  current app surface: same-origin app assets, Google Fonts already imported by CSS, Supabase
+  HTTP/WebSocket traffic, and the known odds provider APIs. Added `vercel-config.test.ts` so the
+  hardening block does not disappear silently.
+- **Follow-up:** Review report-only CSP violations after deploy, then promote it to enforcing
+  `Content-Security-Policy` once any remaining production-only origins are accounted for.
 
 ### G3 — Rate limiting + bot protection at the HTTP edge
 - **Severity:** High (do before individual player logins; abuse + cost)

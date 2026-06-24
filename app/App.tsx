@@ -17,7 +17,18 @@ import { BookView, connectOddsCache } from './book/index.js'
 import { RewardsSection } from '../rewards/index.js'
 import './rewards-accrual.js' // side effect: accrue rewards from real wagers
 import { formatMoney } from '../games/shared/money.js'
-import { SoundToggle } from '../sound/index.js'
+import { useSoundEnabled, toggleSound } from '../sound/index.js'
+import {
+  Menu as DropMenu,
+  MenuItem as DropItem,
+  MenuButton as DropButton,
+  MenuDivider as DropDivider,
+  MenuHeader as DropHeader,
+  type ClickEvent,
+} from '@szhsin/react-menu'
+import '@szhsin/react-menu/dist/core.css'
+import { ChevronDown, Volume2, VolumeX, LogOut, Menu as HamburgerIcon } from 'lucide-react'
+import './menu.css'
 import { Console } from '../console/shell/index.js'
 // The money-desk lane + member list are now first-class entries in REGISTRY itself
 // (console/registry/index.ts), so the console mounts the whole feature set directly.
@@ -210,67 +221,138 @@ export function App() {
     setRoute(null)
   }
 
+  // One ordered, role-gated tab list feeding both the inline nav and the dropdowns:
+  // the hardcoded sections (NAV) first, then the registry-driven player sections, each
+  // carrying its own activator so the header stays declarative.
+  const navTabs: { key: string; label: string; onClick: () => void }[] = [
+    ...NAV.filter((t) => visibleSections.includes(t.key)).map((t) => ({
+      key: t.key as string,
+      label: t.label,
+      onClick: () => (t.key === 'casino' ? openCasino() : setSection(t.key)),
+    })),
+    ...playerSectionsFor(role)
+      .filter((m) => visibleSections.includes(m.key as Section))
+      .map((m) => ({
+        key: m.key,
+        label: m.label,
+        onClick: () => setSection(m.key as Section),
+      })),
+  ]
+  // Keep only the two play modes + My Bets in the always-visible bar; everything else
+  // (Rewards, Leaderboard, Profile, Community, Pick'em, Management) folds into a single
+  // "More" dropdown so the banner never crowds (CLAUDE.md §2 — clean above all).
+  const PRIMARY_KEYS = ['casino', 'sportsbook', 'mybets']
+  const primaryTabs = navTabs.filter((t) => PRIMARY_KEYS.includes(t.key))
+  const moreTabs = navTabs.filter((t) => !PRIMARY_KEYS.includes(t.key))
+  const moreActive = moreTabs.some((t) => t.key === activeSection)
+  const currentLabel = navTabs.find((t) => t.key === activeSection)?.label ?? ''
+
   return (
     <div className="app">
       <header className="app-header">
-        <div className="header-left">
-          <button className="brand" onClick={openHome}>
-            DimeBag<span className="brand-dot">·</span>Bets
-          </button>
-          <nav className="nav">
-            {NAV.filter((t) => visibleSections.includes(t.key)).map((t) => (
-              <button
-                key={t.key}
-                className={`nav-tab ${activeSection === t.key ? 'is-on' : ''}`}
-                onClick={() => (t.key === 'casino' ? openCasino() : setSection(t.key))}
-              >
-                {t.label}
-              </button>
-            ))}
-            {/* Registry-driven player sections (round 2: Profile / Community / Pick'em). The
-                registry role-gates them; we also intersect with allowedSections so nav + render
-                guard stay one source of truth. */}
-            {playerSectionsFor(role)
-              .filter((m) => visibleSections.includes(m.key as Section))
-              .map((m) => (
+        <div className="app-header-inner">
+          <div className="header-left">
+            <button className="brand" onClick={openHome}>
+              DimeBag<span className="brand-dot">·</span>Bets
+            </button>
+            {/* ≥ tablet: the primary tabs inline, with a single "More" dropdown for the rest. */}
+            <nav className="nav nav-primary" aria-label="Primary">
+              {primaryTabs.map((t) => (
                 <button
-                  key={m.key}
-                  className={`nav-tab ${activeSection === m.key ? 'is-on' : ''}`}
-                  onClick={() => setSection(m.key as Section)}
+                  key={t.key}
+                  className={`nav-tab ${activeSection === t.key ? 'is-on' : ''}`}
+                  onClick={t.onClick}
                 >
-                  {m.label}
+                  {t.label}
                 </button>
               ))}
-          </nav>
-        </div>
-        <div className="header-right">
-          <div className="figure">
-            {/* Lead with what a player actually reads as "how much I have" — the
-                amount they can bet right now (availableToWager = credit + figure −
-                at-risk). The week's win/loss standing rides alongside as a plain
-                up/down, not signed jargon. */}
-            <div className="figure-block is-primary">
-              <span className="figure-label">{economyMode === 'balance' ? 'Available' : 'Balance'}</span>
-              <span className="figure-value">
-                {account ? formatMoney(availableToWager(account)) : '—'}
-              </span>
-            </div>
-            <div className="figure-block">
-              <span className="figure-label">{economyMode === 'balance' ? 'Wallet' : 'This week'}</span>
-              {account ? (
-                <WeekFigure cents={account.balance} />
-              ) : (
-                <span className="figure-value">—</span>
+              {moreTabs.length > 0 && (
+                <DropMenu
+                  transition
+                  align="start"
+                  gap={6}
+                  menuClassName="drop-menu"
+                  menuButton={
+                    <DropButton className={`nav-tab nav-more-btn ${moreActive ? 'is-on' : ''}`}>
+                      More
+                      <ChevronDown size={15} className="drop-caret" aria-hidden="true" />
+                    </DropButton>
+                  }
+                >
+                  {moreTabs.map((t) => (
+                    <DropItem
+                      key={t.key}
+                      className={`drop-item ${activeSection === t.key ? 'is-on' : ''}`}
+                      onClick={t.onClick}
+                    >
+                      {t.label}
+                    </DropItem>
+                  ))}
+                </DropMenu>
               )}
-            </div>
+            </nav>
+            {/* < tablet: one compact menu holds every section so the bar stays a single row. */}
+            <DropMenu
+              transition
+              align="start"
+              gap={6}
+              menuClassName="drop-menu"
+              menuButton={
+                <DropButton className="nav-compact-btn" aria-label="Open navigation">
+                  <HamburgerIcon size={18} aria-hidden="true" />
+                  {currentLabel && <span className="nav-compact-label">{currentLabel}</span>}
+                  <ChevronDown size={15} className="drop-caret" aria-hidden="true" />
+                </DropButton>
+              }
+            >
+              {navTabs.map((t) => (
+                <DropItem
+                  key={t.key}
+                  className={`drop-item ${activeSection === t.key ? 'is-on' : ''}`}
+                  onClick={t.onClick}
+                >
+                  {t.label}
+                </DropItem>
+              ))}
+            </DropMenu>
           </div>
-          {player && account && <VipBadge playerId={player.id} />}
-          <SoundToggle />
-          {/* In Management the Console's own TopBar owns operator identity + sign-out,
-              so we drop the app header's AuthMenu there to avoid a duplicate control. */}
-          {activeSection !== 'management' && (
-            <AuthMenu name={user?.displayName ?? 'Guest'} role={role} onSignOut={signOut} />
-          )}
+          <div className="header-right">
+            <div className="figure">
+              {/* Lead with what a player actually reads as "how much I have" — the
+                  amount they can bet right now (availableToWager = credit + figure −
+                  at-risk). The week's win/loss standing rides alongside as a plain
+                  up/down, not signed jargon. */}
+              <div className="figure-block is-primary">
+                <span className="figure-label">
+                  {economyMode === 'balance' ? 'Available' : 'Balance'}
+                </span>
+                <span className="figure-value">
+                  {account ? formatMoney(availableToWager(account)) : '—'}
+                </span>
+              </div>
+              <div className="figure-block">
+                <span className="figure-label">
+                  {economyMode === 'balance' ? 'Wallet' : 'This week'}
+                </span>
+                {account ? (
+                  <WeekFigure cents={account.balance} />
+                ) : (
+                  <span className="figure-value">—</span>
+                )}
+              </div>
+            </div>
+            {/* In Management the Console's own TopBar owns operator identity + sign-out, so we
+                drop the app header's account menu there to avoid a duplicate control. The VIP
+                tier + sound toggle now live INSIDE this one avatar menu (declutters the bar). */}
+            {activeSection !== 'management' && (
+              <AccountMenu
+                name={user?.displayName ?? 'Guest'}
+                role={role}
+                playerId={player && account ? player.id : null}
+                onSignOut={signOut}
+              />
+            )}
+          </div>
         </div>
       </header>
 
@@ -506,46 +588,73 @@ function NoPlayer({
   )
 }
 
-/** The signed-in identity + a sign-out — the real session, replacing the app's old
- *  implicit "operator". */
-function AuthMenu({
+/**
+ * The single account control on the right of the bar: an avatar + name/role chip that
+ * opens ONE dropdown holding everything that used to float loose beside it — the player's
+ * VIP tier, the sound toggle, and sign-out. Folding three controls into one menu is the
+ * main declutter on the right-hand side (CLAUDE.md §2). `@szhsin/react-menu` gives us the
+ * accessible behaviour for free (ARIA roles, arrow-key nav, Esc, focus return, click-out).
+ */
+function AccountMenu({
   name,
   role,
+  playerId,
   onSignOut,
 }: {
   name: string
   role: Role
+  playerId: string | null
   onSignOut: () => void | Promise<void>
 }) {
-  // An avatar + tight name/role chip reads as ONE identity control; sign-out is a
-  // subtle icon button rather than a competing text button (declutters the header).
   const initial = name.trim().charAt(0).toUpperCase() || '?'
+  const soundOn = useSoundEnabled()
   return (
-    <div className="auth-menu">
-      <span className="auth-avatar" aria-hidden="true">
-        {initial}
-      </span>
-      <span className="auth-id">
-        <span className="auth-id-name">{name}</span>
-        <span className="auth-id-role">{role}</span>
-      </span>
-      <button
-        className="auth-signout"
-        onClick={() => void onSignOut()}
-        title="Sign out"
-        aria-label="Sign out"
+    <DropMenu
+      transition
+      align="end"
+      gap={6}
+      menuClassName="drop-menu account-menu"
+      menuButton={
+        <DropButton className="account-trigger" aria-label="Account menu">
+          <span className="auth-avatar" aria-hidden="true">
+            {initial}
+          </span>
+          <span className="auth-id">
+            <span className="auth-id-name">{name}</span>
+            <span className="auth-id-role">{role}</span>
+          </span>
+          <ChevronDown size={15} className="account-caret" aria-hidden="true" />
+        </DropButton>
+      }
+    >
+      {/* The VIP tier ladder rides at the top of the menu as a display-only header. */}
+      {playerId && (
+        <DropHeader className="account-vip">
+          <VipBadge playerId={playerId} />
+        </DropHeader>
+      )}
+      {/* The one mute control — toggles in place (keepOpen) so the menu doesn't close. */}
+      <DropItem
+        className="drop-item account-row"
+        onClick={(e: ClickEvent) => {
+          e.keepOpen = true
+          toggleSound()
+        }}
       >
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-          <path
-            d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M4 12h11"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-    </div>
+        {soundOn ? (
+          <Volume2 size={16} aria-hidden="true" />
+        ) : (
+          <VolumeX size={16} aria-hidden="true" />
+        )}
+        <span className="account-row-label">Sound</span>
+        <span className="account-row-state">{soundOn ? 'On' : 'Off'}</span>
+      </DropItem>
+      <DropDivider />
+      <DropItem className="drop-item account-row" onClick={() => void onSignOut()}>
+        <LogOut size={16} aria-hidden="true" />
+        <span className="account-row-label">Sign out</span>
+      </DropItem>
+    </DropMenu>
   )
 }
 

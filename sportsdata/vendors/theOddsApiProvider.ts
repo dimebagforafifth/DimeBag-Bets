@@ -19,6 +19,7 @@ import {
   type OddsApiConfig,
   type Quota,
 } from './theOddsApi.js'
+import { validateApiEvents, validateOddsApiScoreEvents } from './validation.js'
 
 export interface TheOddsApiProviderOptions {
   config: OddsApiConfig
@@ -41,7 +42,7 @@ export function createTheOddsApiProvider(opts: TheOddsApiProviderOptions): OddsF
       const res = await f(oddsUrl(opts.config, sport))
       if (!res.ok) throw new Error(`odds request for ${sport} responded ${res.status}`)
       lastQuota = readQuota(res.headers)
-      out.push(...((await res.json()) as ApiEvent[]))
+      out.push(...validateApiEvents(await res.json(), 'odds'))
     }
     return out
   }
@@ -52,7 +53,7 @@ export function createTheOddsApiProvider(opts: TheOddsApiProviderOptions): OddsF
     for (const sport of opts.config.sportKeys) {
       const res = await f(scoresUrl(opts.config, sport))
       // A failed scores call is non-fatal — pre-match odds still stand.
-      if (res.ok) out.push(...((await res.json()) as ApiScoreEvent[]))
+      if (res.ok) out.push(...validateOddsApiScoreEvents(await res.json(), 'scores'))
     }
     return out
   }

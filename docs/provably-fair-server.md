@@ -95,4 +95,21 @@ invariant.
 # Server-only secret for the provably-fair authority. Unset → a flagged dev fallback (local
 # points-only play). Set a strong random value in production.
 FAIRNESS_SECRET=<random-string>
+
+# HTTP-edge spam protection for POST /api/fairness {action:"commit"}.
+# Defaults are intentionally usable in dev, but set them explicitly in production so the
+# endpoint cannot be used to grow fairness_seeds or burn function quota once auth is live.
+FAIRNESS_COMMIT_RATE_LIMIT_MAX=20
+FAIRNESS_COMMIT_RATE_LIMIT_WINDOW_MS=60000
 ```
+
+The current limiter is a lightweight fixed-window bucket keyed by the caller IP that Vercel
+forwards to the serverless function. It preserves the API body contract: normal `commit`,
+`reveal`, and `resolveCrash` responses are unchanged; only excessive `commit` calls return
+`429 { "error": "rate limit exceeded", "retryAfterSeconds": ... }`.
+
+Before individual player auth goes live, keep those env values set in Vercel and mirror them
+in any future Supabase Edge Function deployment. When verified users are available, add the
+authenticated user id to the limiter key, and for multi-instance/global enforcement replace
+the in-memory bucket with Vercel KV/Upstash or an equivalent durable edge limiter using the
+same `FairnessRateLimiter` interface in `api/fairness.ts`.

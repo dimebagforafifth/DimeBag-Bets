@@ -1,0 +1,206 @@
+/* DimeBag-Bets — header dropdown menus (@szhsin/react-menu, themed to the graphite &
+   gold tokens in theme.css). One restrained popover style serves both the left-nav
+   "More" overflow + the mobile nav menu, and the right-side account menu. The library
+   gives us the accessible behaviour (ARIA roles, arrow-key nav, Esc, focus return,
+   click-outside); this file only dresses it in the brand (CLAUDE.md §2 — clean above all).
+   We import the library's structural `core.css` (positioning only) and override the look
+   here, so none of its light-theme defaults leak in. */
+
+/* ---------------------------------------------------------------------------
+   Triggers — the buttons that open a menu
+   --------------------------------------------------------------------------- */
+
+/* Reset the library button so our own classes (.nav-tab, .account-trigger,
+   .nav-compact-btn) fully own the look. */
+.szh-menu-button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* The "More" overflow button reads as one more nav tab, with a caret. (.nav-tab in
+   theme.css supplies the resting/hover/active look; this only adds the caret row.) */
+.nav-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* The caret flips when its menu is open — a small, honest "this is expanded" cue. */
+.drop-caret {
+  transition: transform var(--dur) var(--ease-out);
+}
+.szh-menu-button[aria-expanded='true'] .drop-caret {
+  transform: rotate(180deg);
+}
+
+/* Mobile: a single compact button collapses the WHOLE nav into one menu so the bar
+   stays a tidy single row on phones. Hidden on tablet/desktop (the inline tabs show). */
+.nav-compact-btn {
+  display: none; /* shown < 760px via the media query below */
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--sheen);
+  transition:
+    border-color var(--dur) ease,
+    background var(--dur) ease;
+}
+.nav-compact-btn:hover {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.nav-compact-label {
+  font-family: var(--font-head);
+  letter-spacing: 0.2px;
+}
+
+/* The account trigger: avatar + name/role chip + caret, as ONE control. Reuses the
+   .auth-avatar / .auth-id type styles from auth.css. */
+.account-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: var(--sheen);
+  transition:
+    border-color var(--dur) ease,
+    background var(--dur) ease;
+}
+.account-trigger:hover {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.account-caret {
+  color: var(--muted);
+  flex: 0 0 auto;
+  transition: transform var(--dur) var(--ease-out);
+}
+.szh-menu-button[aria-expanded='true'] .account-caret {
+  transform: rotate(180deg);
+}
+
+/* ---------------------------------------------------------------------------
+   The popover surface — shared by every menu
+   --------------------------------------------------------------------------- */
+.drop-menu {
+  min-width: 184px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--elev-3), var(--sheen);
+  /* a hairline gold top edge ties popovers to the brand, like the auth card */
+  border-top-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+  /* subtle fade + lift between the opening/open states (reduced-motion honoured globally) */
+  transition:
+    opacity var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-out);
+}
+
+/* Items */
+.drop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  transition:
+    color var(--dur) ease,
+    background var(--dur) ease;
+}
+/* @szhsin marks the focused/hovered item with --hover (keyboard + pointer share it). */
+.drop-item.szh-menu__item--hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+/* The active section reads gold with a small leading marker, mirroring the inline
+   tab's gold underline so "where am I" is consistent across the bar and the menu. */
+.drop-item.is-on {
+  color: var(--gold-bright);
+}
+.drop-item.is-on::before {
+  content: '';
+  width: 3px;
+  align-self: stretch;
+  margin: 1px 2px 1px -4px;
+  border-radius: 2px;
+  background: var(--gold);
+}
+
+.szh-menu__divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--line);
+}
+
+/* ---------------------------------------------------------------------------
+   Account menu specifics
+   --------------------------------------------------------------------------- */
+.account-menu {
+  min-width: 220px;
+}
+/* The VIP tier ladder sits at the top as a display-only header. Inside the menu we
+   suppress its own hover-popover (the menu already gives it room) and let the chip fill
+   the width. */
+.account-vip {
+  padding: 4px 4px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.account-vip .vip-chip {
+  width: 100%;
+}
+.account-vip .vip-pop {
+  display: none; /* no nested hover-popover inside the dropdown */
+}
+
+/* The sound + sign-out rows: icon, label, trailing state ("On"/"Off"). */
+.account-row .account-row-label {
+  flex: 1;
+}
+.account-row-state {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--faint);
+}
+.account-row.szh-menu__item--hover .account-row-state {
+  color: var(--gold-bright);
+}
+
+/* ---------------------------------------------------------------------------
+   Open / close transition (the `transition` prop toggles these state classes).
+   Subtle fade + lift; reduced-motion is honoured globally in theme.css.
+   --------------------------------------------------------------------------- */
+.szh-menu--state-closed,
+.szh-menu--state-closing {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.szh-menu--state-opening,
+.szh-menu--state-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive switch: inline tabs (tablet/desktop) ⇄ one compact menu (phone)
+   --------------------------------------------------------------------------- */
+@media (max-width: 759px) {
+  .nav-primary {
+    display: none;
+  }
+  .nav-compact-btn {
+    display: inline-flex;
+  }
+}
