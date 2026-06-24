@@ -45,6 +45,7 @@ const PALETTES: Palette[] = [
   { id: 'ice', name: 'Slate / Ice', swatch: '#5aa6f0', note: 'electric blue' },
   { id: 'gold', name: 'Graphite / Gold', swatch: '#d6b14a', note: 'the live theme, refined' },
 ]
+type ArtStyle = 'render' | 'glyph'
 type FontStudy = { id: string; name: string; note: string }
 const FONTS: FontStudy[] = [
   { id: 'grotesk', name: 'Clash Display · Satoshi', note: 'confident, sporting' },
@@ -97,6 +98,7 @@ const DROPS: Drop[] = [
 export function ExperimentalLobby() {
   const [palette, setPalette] = useState('jade')
   const [font, setFont] = useState('grotesk')
+  const [art, setArt] = useState<ArtStyle>('render')
   const [query, setQuery] = useState('')
   const [dropsLoading, setDropsLoading] = useState(true)
   // One scope for every GSAP selector below, so tweens are confined to this component
@@ -187,7 +189,14 @@ export function ExperimentalLobby() {
 
   return (
     <div className="exp" ref={rootRef}>
-      <LabBar palette={palette} font={font} onPalette={setPalette} onFont={setFont} />
+      <LabBar
+        palette={palette}
+        font={font}
+        art={art}
+        onPalette={setPalette}
+        onFont={setFont}
+        onArt={setArt}
+      />
 
       <header className="exp-top">
         <a className="exp-brand" href="#">
@@ -246,7 +255,7 @@ export function ExperimentalLobby() {
           <SpotlightCard className="exp-featured">
             <span className="exp-featured-flag">Featured</span>
             <span className="exp-featured-art">
-              <GameIcon kind={featured.key} />
+              <GameIcon kind={featured.key} variant={art} />
             </span>
             <div className="exp-featured-body">
               <h2 className="exp-featured-name">{featured.name}</h2>
@@ -323,7 +332,7 @@ export function ExperimentalLobby() {
               {filtered.map((g, i) => (
                 <SpotlightCard className="exp-card" key={g.key} style={{ '--i': i } as CSSVars}>
                   <span className="exp-card-art">
-                    <GameIcon kind={g.key} />
+                    <GameIcon kind={g.key} variant={art} />
                   </span>
                   <span className="exp-card-body">
                     <span className="exp-card-name">{g.name}</span>
@@ -351,16 +360,25 @@ type CSSVars = CSSProperties & Record<string, string | number>
 /* ---------------------------------------------------------------------------
    The lab bar — the only non-product chrome. Lets the user flip palette + font live.
    --------------------------------------------------------------------------- */
+const ART_STYLES: { id: ArtStyle; name: string; note: string }[] = [
+  { id: 'render', name: '3D Render', note: 'Higgsfield nano-banana-2 art' },
+  { id: 'glyph', name: 'Line Glyph', note: 'original SVG line-art' },
+]
+
 function LabBar({
   palette,
   font,
+  art,
   onPalette,
   onFont,
+  onArt,
 }: {
   palette: string
   font: string
+  art: ArtStyle
   onPalette: (id: string) => void
   onFont: (id: string) => void
+  onArt: (id: ArtStyle) => void
 }) {
   return (
     <div className="exp-lab">
@@ -389,6 +407,19 @@ function LabBar({
             title={f.note}
           >
             {f.name}
+          </button>
+        ))}
+      </div>
+      <div className="exp-lab-group" role="group" aria-label="Art">
+        <span className="exp-lab-label">Art</span>
+        {ART_STYLES.map((a) => (
+          <button
+            key={a.id}
+            className={`exp-lab-chip ${art === a.id ? 'is-on' : ''}`}
+            onClick={() => onArt(a.id)}
+            title={a.note}
+          >
+            {a.name}
           </button>
         ))}
       </div>
@@ -454,7 +485,21 @@ function EmptyGlyph() {
    the same product. Pure SVG, no dependency. currentColor inherits the palette accent;
    cut-outs use --bg to punch through to the card surface.
    --------------------------------------------------------------------------- */
-function GameIcon({ kind }: { kind: string }) {
+function GameIcon({ kind, variant }: { kind: string; variant: ArtStyle }) {
+  // 'render' shows the Higgsfield 3D PNG art (in /public/game-icons); 'glyph' keeps the
+  // original line-art SVG so the two can be A/B'd from the lab bar before we commit the
+  // renders to the live demo.
+  if (variant === 'render') {
+    return (
+      <img
+        className="exp-art-img"
+        src={`/game-icons/${kind}.png`}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+      />
+    )
+  }
   switch (kind) {
     case 'crash':
       return (
