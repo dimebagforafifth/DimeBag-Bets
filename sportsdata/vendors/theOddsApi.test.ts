@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   oddsUrl,
   scoresUrl,
@@ -85,7 +85,8 @@ describe('createOddsApiSlate', () => {
     expect(quotas).toEqual([480])
   })
 
-  it('rejects malformed odds before the slate can be mapped', async () => {
+  it('warns and drops malformed odds instead of mapping a NaN price into the slate', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const slate = createOddsApiSlate({
       config,
       includeScores: false,
@@ -96,10 +97,16 @@ describe('createOddsApiSlate', () => {
         },
       ]),
     })
-    await expect(slate()).rejects.toThrow(/malformed odds payload at \$\[0\]\.bookmakers\[0\]\.markets\[0\]\.outcomes\[0\]\.price/)
+    // The malformed sport contributes nothing — an empty slate, never a NaN price downstream.
+    await expect(slate()).resolves.toEqual([])
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringMatching(/dropping malformed odds .*outcomes\[0\]\.price/),
+    )
+    warn.mockRestore()
   })
 
-  it('rejects malformed score rows before score coercion can produce NaN', async () => {
+  it('warns and keeps pre-match odds when score rows are malformed (no NaN score)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const slate = createOddsApiSlate({
       config,
       fetchFn: stubFetch([
@@ -107,7 +114,14 @@ describe('createOddsApiSlate', () => {
         { match: '/scores/', body: [{ id: 'g1', completed: false, scores: [{ name: 'Lakers', score: 'not-a-score' }] }] },
       ]),
     })
-    await expect(slate()).rejects.toThrow(/malformed scores payload at \$\[0\]\.scores\[0\]\.score/)
+    const events = await slate()
+    // The pre-match odds stand; the malformed score is dropped, never coerced into a NaN.
+    expect(events).toHaveLength(1)
+    expect(events[0].scores).toBeUndefined()
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringMatching(/ignoring malformed scores .*scores\[0\]\.score/),
+    )
+    warn.mockRestore()
   })
 
   it('keeps pre-match odds when the scores call is skipped', async () => {

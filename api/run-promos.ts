@@ -15,6 +15,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { runScheduledPromosCron } from '../persistence/index.js'
+import { getServerEnv, validateServerEnv } from '../lib/env.js'
 
 function send(res: ServerResponse, status: number, body: unknown): void {
   res.statusCode = status
@@ -22,8 +23,19 @@ function send(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body))
 }
 
+// Validate the server environment once per process (cold start) — loud-fail in production on a
+// malformed knob; warn-and-continue locally. This route takes no request body; its only
+// untrusted input is the optional Bearer secret checked below.
+let serverEnvChecked = false
+function ensureServerEnv(): void {
+  if (serverEnvChecked) return
+  validateServerEnv()
+  serverEnvChecked = true
+}
+
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const secret = process.env.CRON_SECRET
+  ensureServerEnv()
+  const secret = getServerEnv().CRON_SECRET
   if (secret && req.headers.authorization !== `Bearer ${secret}`) {
     send(res, 401, { error: 'unauthorized' })
     return

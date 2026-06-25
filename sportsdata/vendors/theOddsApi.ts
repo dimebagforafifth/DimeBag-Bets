@@ -21,7 +21,7 @@
  */
 
 import type { ApiEvent, ApiScore } from '../types.js'
-import { validateApiEvents, validateOddsApiScoreEvents } from './validation.js'
+import { apiEventsSchema, oddsApiScoreEventsSchema, formatZodIssue } from './validation.js'
 
 export interface OddsApiConfig {
   /** Vendor API key. */
@@ -142,14 +142,32 @@ export function createOddsApiSlate(opts: OddsApiClientOptions): () => Promise<Ap
       const oddsRes = await fetchFn(oddsUrl(opts.config, sport))
       if (!oddsRes.ok) throw new Error(`odds request for ${sport} responded ${oddsRes.status}`)
       opts.onQuota?.(readQuota(oddsRes.headers))
-      const odds = validateApiEvents(await oddsRes.json(), 'odds')
+
+      // Parse at the network boundary. A malformed odds payload must NOT crash the poll or leak
+      // a NaN price into pricing: warn and skip this sport (it contributes nothing this cycle).
+      const oddsParsed = apiEventsSchema.safeParse(await oddsRes.json())
+      if (!oddsParsed.success) {
+        console.warn(
+          `[theOddsApi] dropping malformed odds for ${sport}: ${formatZodIssue(oddsParsed.error)}`,
+        )
+        continue
+      }
+      const odds = oddsParsed.data
 
       let events = odds
       if (includeScores) {
         const scoresRes = await fetchFn(scoresUrl(opts.config, sport))
         if (scoresRes.ok) {
-          const scores = validateOddsApiScoreEvents(await scoresRes.json(), 'scores')
-          events = mergeScores(odds, scores)
+          // Malformed scores are non-fatal too: warn and keep the pre-match odds rather than
+          // grafting a NaN score onto a game.
+          const scoresParsed = oddsApiScoreEventsSchema.safeParse(await scoresRes.json())
+          if (scoresParsed.success) {
+            events = mergeScores(odds, scoresParsed.data)
+          } else {
+            console.warn(
+              `[theOddsApi] ignoring malformed scores for ${sport}: ${formatZodIssue(scoresParsed.error)}`,
+            )
+          }
         }
         // a failed scores call is non-fatal: keep the pre-match odds.
       }

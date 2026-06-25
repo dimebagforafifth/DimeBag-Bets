@@ -11,6 +11,7 @@ import type { BonusDraft } from './promotions.js'
 import { dueSchedules } from './schedule.js'
 import { scheduleStore, type ScheduleStore } from './schedule-store.js'
 import { sendBonus } from './send.js'
+import { readEnv } from '../../lib/env.js'
 
 export interface RunResult {
   fired: number
@@ -36,7 +37,7 @@ export function runDue(store: ScheduleStore, now: number, send: (d: BonusDraft) 
 }
 
 function inTest(): boolean {
-  return typeof process !== 'undefined' && !!process.env && process.env.VITEST === 'true'
+  return readEnv('VITEST') === 'true'
 }
 
 let timer: ReturnType<typeof setInterval> | null = null

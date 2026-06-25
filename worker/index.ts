@@ -21,17 +21,21 @@
 import { startHealthServer } from './health.js'
 import { startOddsPoller, type OddsPollerHandle } from './oddsPoller.js'
 import { startCrashClock, type CrashClockHandle } from './crashClock.js'
-
-const on = (name: string) => process.env[name] !== '0' && process.env[name] !== 'false'
+import { getServerEnv, validateServerEnv } from '../lib/env.js'
 
 function main(): void {
+  // Startup gate: in production a missing FAIRNESS_SECRET or a malformed cadence aborts the
+  // worker here (rather than later, mid-loop); locally it warns and falls back to safe defaults.
+  validateServerEnv()
   console.log('[worker] starting DimeBag-Bets worker')
   const health = startHealthServer()
 
+  // RUN_ODDS_POLLER / RUN_CRASH_CLOCK default on; off only when explicitly '0' / 'false'.
+  const env = getServerEnv()
   let poller: OddsPollerHandle | undefined
   let crash: CrashClockHandle | undefined
-  if (on('RUN_ODDS_POLLER')) poller = startOddsPoller()
-  if (on('RUN_CRASH_CLOCK')) crash = startCrashClock()
+  if (env.RUN_ODDS_POLLER) poller = startOddsPoller()
+  if (env.RUN_CRASH_CLOCK) crash = startCrashClock()
 
   if (!poller && !crash) {
     console.warn('[worker] both loops disabled — running health-only')

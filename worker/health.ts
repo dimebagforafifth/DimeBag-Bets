@@ -7,9 +7,10 @@
  * (platform-provided) or 8080.
  */
 import { createServer, type Server } from 'node:http'
+import { getServerEnv } from '../lib/env.js'
 
 export function startHealthServer(log: (msg: string) => void = console.log): Server {
-  const port = Number(process.env.PORT) || 8080
+  const port = getServerEnv().PORT ?? 8080
   const startedAt = Date.now()
   const server = createServer((req, res) => {
     if (req.url === '/health' || req.url === '/') {

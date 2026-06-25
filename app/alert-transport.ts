@@ -15,6 +15,7 @@
  */
 
 import type { FetchLike } from '../persistence/index.js'
+import { ambientEnv } from '../lib/env.js'
 import { onAlert, type Alert } from './risk-controls.js'
 
 /** One notification channel: where to POST, and (optionally) the destination it relays to. */
@@ -106,21 +107,6 @@ export function createAlertDispatcher(
   }
 }
 
-/** Read the ambient env. In the browser only VITE_-prefixed vars exist on import.meta.env and
- *  these alert endpoints aren't VITE_-prefixed, so the browser read is empty → inert; a server
- *  caller (where the relay endpoints live) gets process.env. */
-function ambientEnv(): Record<string, string | undefined> {
-  const out: Record<string, string | undefined> = {}
-  try {
-    const me = (import.meta as unknown as { env?: Record<string, string | undefined> }).env
-    if (me) Object.assign(out, me)
-  } catch {
-    /* import.meta.env unavailable in this runtime */
-  }
-  if (typeof process !== 'undefined' && process.env) Object.assign(out, process.env)
-  return out
-}
-
 export interface InstallAlertTransportOpts {
   /** Env source (defaults to the ambient env). */
   env?: Record<string, string | undefined>
@@ -136,6 +122,9 @@ export interface InstallAlertTransportOpts {
  * behaviour. With at least one endpoint it subscribes and dispatches every raised alert.
  */
 export function installAlertTransport(opts: InstallAlertTransportOpts = {}): () => void {
+  // In the browser only VITE_-prefixed vars exist on import.meta.env and these alert endpoints
+  // aren't VITE_-prefixed, so the browser read is empty → inert; a server caller (where the relay
+  // endpoints live) gets them from process.env via `ambientEnv`.
   const config = resolveAlertTransportConfig(opts.env ?? ambientEnv())
   if (!config) return () => {} // inert: no hook registered, nothing changes
   const dispatch = createAlertDispatcher(config, { fetch: opts.fetch })

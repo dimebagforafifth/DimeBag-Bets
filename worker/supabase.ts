@@ -12,13 +12,15 @@
  * clock logs ticks instead of broadcasting. That preserves the "off by default" invariant.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { getServerEnv } from '../lib/env.js'
 
 let cached: SupabaseClient | null | undefined
 
 export function getServiceClient(): SupabaseClient | null {
   if (cached !== undefined) return cached
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const env = getServerEnv()
+  const url = env.SUPABASE_URL
+  const key = env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) {
     cached = null
     return cached

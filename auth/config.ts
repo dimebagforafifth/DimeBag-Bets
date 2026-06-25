@@ -6,6 +6,7 @@
  */
 
 import { isSupabaseConfigured, type EnvSource } from '../persistence/index.js'
+import { readEnv } from '../lib/env.js'
 
 /**
  * The Supabase Auth adapter is implemented (auth/supabaseAdapter.ts) and
@@ -24,20 +25,6 @@ export function supabaseAuthReady(source?: EnvSource): boolean {
 /** The default synthetic-email domain for username logins (see `authEmailDomain`). */
 export const DEFAULT_AUTH_EMAIL_DOMAIN = 'users.dimebag.local'
 
-/** Read one var from process.env then the Vite import.meta.env, else undefined. */
-function readAmbient(name: string): string | undefined {
-  if (typeof process !== 'undefined' && process.env && process.env[name] != null) {
-    return process.env[name]
-  }
-  try {
-    const meta = import.meta as unknown as { env?: Record<string, string | undefined> }
-    if (meta?.env && meta.env[name] != null) return meta.env[name]
-  } catch {
-    /* import.meta.env unavailable in this runtime — ignore */
-  }
-  return undefined
-}
-
 /**
  * Supabase Auth is email-based, but DimeBag-Bets logs in with a USERNAME. The adapter
  * maps `username` → `username@<domain>`. The domain is configurable so an operator can
@@ -45,7 +32,7 @@ function readAmbient(name: string): string | undefined {
  * a non-routable internal domain for a points app where the username IS the identity.
  */
 export function authEmailDomain(source?: EnvSource): string {
-  const pick = (name: string) => (source ? source[name] : readAmbient(name))
+  const pick = (name: string) => readEnv(name, source)
   return (
     pick('SUPABASE_AUTH_EMAIL_DOMAIN') ||
     pick('VITE_SUPABASE_AUTH_EMAIL_DOMAIN') ||
@@ -61,7 +48,7 @@ export function authEmailDomain(source?: EnvSource): string {
  * callback lands back on the app, where `getSession()` reads the session from the URL.
  */
 export function oauthRedirectUrl(source?: EnvSource): string | undefined {
-  const pick = (name: string) => (source ? source[name] : readAmbient(name))
+  const pick = (name: string) => readEnv(name, source)
   const explicit = pick('SUPABASE_AUTH_REDIRECT_URL') || pick('VITE_SUPABASE_AUTH_REDIRECT_URL')
   if (explicit) return explicit
   if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin

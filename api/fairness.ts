@@ -22,6 +22,7 @@
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { z } from 'zod'
 import {
   createDerivedVault,
   createStoredVault,
@@ -49,6 +50,7 @@ import {
   type SupabaseEnv,
   type SupabaseStore,
 } from '../persistence/index.js'
+import { ambientEnv, validateServerEnv } from '../lib/env.js'
 
 export interface FairnessRequest {
   action: 'commit' | 'reveal' | 'resolveCrash' | 'resolve'
@@ -257,6 +259,39 @@ export function vaultFromEnv(env: EnvSource = {}): SeedVault {
 }
 
 /**
+ * Request schema (the trust boundary): a discriminated union on `action` that enforces the
+ * fields each action requires — commitId for reveal/resolveCrash/resolve, clientSeed+nonce for
+ * the resolve actions — and rejects an unknown action. The per-game `params` / crash `config`
+ * pass through as opaque objects; their contents are validated downstream (the resolver registry
+ * and the crash math), exactly as before. SEMANTIC checks that aren't structural — is `game` a
+ * registered resolver id, is a required round param present — stay in the handler below.
+ */
+const fairnessRequestSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('commit') }),
+  z.object({ action: z.literal('reveal'), commitId: z.string().min(1) }),
+  z.object({
+    action: z.literal('resolveCrash'),
+    commitId: z.string().min(1),
+    clientSeed: z.string(),
+    nonce: z.number(),
+    config: z.record(z.unknown()).optional(),
+  }),
+  z.object({
+    action: z.literal('resolve'),
+    commitId: z.string().min(1),
+    game: z.string().min(1),
+    clientSeed: z.string(),
+    nonce: z.number(),
+    params: z.record(z.unknown()).optional(),
+  }),
+])
+
+/** Flatten a zod error into a structured, JSON-safe issue list for a 400 body. */
+function issuesOf(error: z.ZodError): Array<{ path: string; message: string }> {
+  return error.issues.map((i) => ({ path: i.path.join('.') || '(root)', message: i.message }))
+}
+
+/**
  * Pure request handler — Supabase-edge-portable. Inject the vault so tests can pass a
  * durable/fake one; production passes the env-derived default.
  */
@@ -265,6 +300,12 @@ export async function handleFairness(
   vault: SeedVault = defaultVault(),
   options: FairnessHandlerOptions = {},
 ): Promise<FairnessResult> {
+  // Validate the request shape up front — nothing below runs on a malformed body. The per-case
+  // guards that follow remain as defensive narrowing (and keep TS's types tight).
+  const parsed = fairnessRequestSchema.safeParse(req)
+  if (!parsed.success) {
+    return { status: 400, body: { error: 'invalid fairness request', issues: issuesOf(parsed.error) } }
+  }
   switch (req?.action) {
     case 'commit': {
       if (options.commitRateLimiter) {
@@ -404,7 +445,19 @@ function getCommitRateLimiter(env: Record<string, string | undefined>): Fairness
   return commitLimiter
 }
 
+// Validate the server environment ONCE per process (cold start). In production a missing
+// FAIRNESS_SECRET or a malformed knob throws here, so the authority refuses to mint seeds on the
+// insecure dev fallback instead of failing silently at request time. Off the hot path: unit
+// tests call handleFairness directly and never reach this.
+let serverEnvChecked = false
+function ensureServerEnv(): void {
+  if (serverEnvChecked) return
+  validateServerEnv()
+  serverEnvChecked = true
+}
+
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  ensureServerEnv()
   if (req.method !== 'POST') {
     send(res, 405, { error: 'method not allowed' })
     return
@@ -412,8 +465,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   try {
     const body = (await readJson(req)) as FairnessRequest
     // Durable Supabase-backed vault when keys are present, else the stateless derived default.
-    const result = await handleFairness(body, vaultFromEnv(process.env), {
-      commitRateLimiter: getCommitRateLimiter(process.env),
+    const env = ambientEnv()
+    const result = await handleFairness(body, vaultFromEnv(env), {
+      commitRateLimiter: getCommitRateLimiter(env),
       rateLimitKey: fairnessRateLimitKeyFromRequest(req),
     })
     send(res, result.status, result.body)

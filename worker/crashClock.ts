@@ -27,16 +27,13 @@ import { createDerivedVault, resolveMasterSecret } from '../core/fairness-author
 import { crashPointFromSeeds } from '../games/crash/fair.js'
 import { multiplierAt, elapsedForMultiplier } from '../games/crash/curve.js'
 import { getServiceClient } from './supabase.js'
+import { ambientEnv, getServerEnv } from '../lib/env.js'
 
-const BETTING_MS = num('CRASH_BETTING_MS', 5000) // open-bet window before lift-off
-const TICK_MS = num('CRASH_TICK_MS', 100) // multiplier broadcast cadence
-const COOLDOWN_MS = num('CRASH_COOLDOWN_MS', 3000) // pause between rounds
+const env = getServerEnv()
+const BETTING_MS = env.CRASH_BETTING_MS ?? 5000 // open-bet window before lift-off
+const TICK_MS = env.CRASH_TICK_MS ?? 100 // multiplier broadcast cadence
+const COOLDOWN_MS = env.CRASH_COOLDOWN_MS ?? 3000 // pause between rounds
 const CHANNEL = 'crash:lobby'
-
-function num(name: string, dflt: number): number {
-  const raw = Number(process.env[name])
-  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : dflt
-}
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
@@ -62,7 +59,7 @@ export interface CrashClockHandle {
 }
 
 export function startCrashClock(log: (msg: string) => void = console.log): CrashClockHandle {
-  const secret = resolveMasterSecret(process.env)
+  const secret = resolveMasterSecret(ambientEnv())
   if (secret.isDevFallback) {
     log('[crash] WARNING: FAIRNESS_SECRET unset — using dev fallback seed (local play only)')
   }

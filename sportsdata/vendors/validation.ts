@@ -1,133 +1,144 @@
-import type { ApiEvent, ApiMarket, ApiScore } from '../types.js'
+/**
+ * Network-boundary validation for the odds/scores feed, built on zod.
+ *
+ * The vendor response is untrusted input crossing into pricing/grading, so it is PARSED here
+ * before anything downstream sees it: zod strips unknown fields and rejects the values that
+ * would otherwise propagate `NaN`/`undefined` into a price or score (a non-numeric `price`, a
+ * `score` string that doesn't parse, an empty team name). Score strings the vendor sends (e.g.
+ * `"58"`) are coerced to finite numbers at this boundary.
+ *
+ * Two entry styles:
+ *   - `validateApiEvents` / `validateOddsApiScoreEvents` THROW `malformed <label> payload at
+ *     <path>` on the first bad field — the strict contract `theOddsApiProvider` relies on.
+ *   - `apiEventsSchema` / `oddsApiScoreEventsSchema` (+ `formatZodIssue`) are the raw schemas for
+ *     callers that prefer `safeParse` and want to warn-and-continue instead of throwing (see
+ *     `theOddsApi.ts`).
+ */
+
+import { z } from 'zod'
+import type { ApiEvent } from '../types.js'
 import type { OddsApiScoreEvent } from './theOddsApi.js'
 
-const MARKET_KEYS = new Set(['h2h', 'spreads', 'totals'])
-const STATUSES = new Set(['upcoming', 'live', 'final'])
+// ── Field primitives (mirror the previous hand-rolled guards exactly) ────────────────────────
 
-function fail(label: string, path: string): never {
-  throw new Error(`malformed ${label} payload at ${path}`)
+/** Non-empty (after trim) string; the original VALUE is preserved (not trimmed). */
+const nonEmptyString = z
+  .string()
+  .refine((s) => s.trim() !== '', { message: 'expected a non-empty string' })
+
+/** A real, finite number — rejects `NaN` and `±Infinity` so they can't reach pricing. */
+const finiteNumber = z
+  .number()
+  .refine((n) => Number.isFinite(n), { message: 'expected a finite number' })
+
+/** Optional non-empty string: absent / null → undefined; empty string is rejected. */
+const optionalNonEmptyString = z.preprocess(
+  (v) => (v == null ? undefined : v),
+  nonEmptyString.optional(),
+)
+
+/** Optional finite number: absent / null → undefined. */
+const optionalFiniteNumber = z.preprocess(
+  (v) => (v == null ? undefined : v),
+  finiteNumber.optional(),
+)
+
+/** Optional boolean: absent / null → undefined. */
+const optionalBoolean = z.preprocess((v) => (v == null ? undefined : v), z.boolean().optional())
+
+/** Optional lifecycle status: absent / null → undefined; otherwise one of the three. */
+const optionalStatus = z.preprocess(
+  (v) => (v == null ? undefined : v),
+  z.enum(['upcoming', 'live', 'final']).optional(),
+)
+
+/** A score that the vendor may send as a string (`"58"`) — coerced to a finite number. */
+const coercedScore = z.preprocess((v) => (typeof v === 'string' ? Number(v) : v), finiteNumber)
+
+// ── Event schemas (unknown keys are stripped by zod's default object parsing) ────────────────
+
+const apiOutcomeSchema = z.object({
+  name: nonEmptyString,
+  price: finiteNumber,
+  point: optionalFiniteNumber,
+})
+
+const apiMarketSchema = z.object({
+  key: z.enum(['h2h', 'spreads', 'totals']),
+  outcomes: z.array(apiOutcomeSchema),
+})
+
+const apiBookmakerSchema = z.object({
+  key: nonEmptyString,
+  markets: z.array(apiMarketSchema),
+})
+
+const apiScoreSchema = z.object({
+  name: nonEmptyString,
+  score: finiteNumber,
+})
+
+const apiEventSchema = z.object({
+  id: nonEmptyString,
+  sport_key: optionalNonEmptyString,
+  sport_title: nonEmptyString,
+  home_team: nonEmptyString,
+  away_team: nonEmptyString,
+  commence_time: nonEmptyString,
+  status: optionalStatus,
+  completed: optionalBoolean,
+  official: optionalBoolean,
+  scores: z.array(apiScoreSchema).nullish(),
+  clock: optionalNonEmptyString,
+  progress: optionalFiniteNumber,
+  bookmakers: z.array(apiBookmakerSchema),
+})
+
+const scoreRowSchema = z.object({
+  name: nonEmptyString,
+  score: coercedScore,
+})
+
+const oddsApiScoreEventSchema = z.object({
+  id: nonEmptyString,
+  completed: optionalBoolean,
+  scores: z.array(scoreRowSchema).nullish(),
+})
+
+/** The slate-level schemas (an array of each). */
+export const apiEventsSchema = z.array(apiEventSchema)
+export const oddsApiScoreEventsSchema = z.array(oddsApiScoreEventSchema)
+
+// ── Issue formatting (preserves the legacy `$[0].bookmakers[0]...` path style) ───────────────
+
+/** Render a zod issue path as the `$[0].bookmakers[0].markets[0].outcomes[0].price` style. */
+function pathString(path: ReadonlyArray<string | number>): string {
+  let out = '$'
+  for (const seg of path) out += typeof seg === 'number' ? `[${seg}]` : `.${seg}`
+  return out
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
+/** The location + message of the first issue, e.g. `$[0].bookmakers[0].markets[0].key: ...`. */
+export function formatZodIssue(error: z.ZodError): string {
+  const issue = error.issues[0]
+  if (!issue) return 'unknown validation error'
+  return `${pathString(issue.path)}: ${issue.message}`
 }
 
-function stringField(value: unknown, label: string, path: string): string {
-  if (typeof value !== 'string' || value.trim() === '') fail(label, path)
-  return value
-}
-
-function optionalNumber(value: unknown, label: string, path: string): number | undefined {
-  if (value == null) return undefined
-  if (typeof value !== 'number' || !Number.isFinite(value)) fail(label, path)
-  return value
-}
-
-function requiredNumber(value: unknown, label: string, path: string): number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) fail(label, path)
-  return value
-}
-
-function optionalBoolean(value: unknown, label: string, path: string): boolean | undefined {
-  if (value == null) return undefined
-  if (typeof value !== 'boolean') fail(label, path)
-  return value
-}
-
-function validateScores(value: unknown, label: string, path: string): ApiScore[] | null | undefined {
-  if (value == null) return value
-  if (!Array.isArray(value)) fail(label, path)
-  return value.map((row, i) => {
-    if (!isRecord(row)) fail(label, `${path}[${i}]`)
-    return {
-      name: stringField(row.name, label, `${path}[${i}].name`),
-      score: requiredNumber(row.score, label, `${path}[${i}].score`),
-    }
-  })
-}
-
-function validateMarketKey(value: unknown, label: string, path: string): ApiMarket['key'] {
-  if (typeof value !== 'string' || !MARKET_KEYS.has(value)) fail(label, path)
-  return value as ApiMarket['key']
-}
-
-function validateApiEvent(value: unknown, label: string, path: string): ApiEvent {
-  if (!isRecord(value)) fail(label, path)
-
-  const status = value.status
-  if (status != null && (typeof status !== 'string' || !STATUSES.has(status))) fail(label, `${path}.status`)
-
-  if (!Array.isArray(value.bookmakers)) fail(label, `${path}.bookmakers`)
-  const bookmakers = value.bookmakers.map((book, b) => {
-    if (!isRecord(book)) fail(label, `${path}.bookmakers[${b}]`)
-    if (!Array.isArray(book.markets)) fail(label, `${path}.bookmakers[${b}].markets`)
-    const markets = book.markets as unknown[]
-    return {
-      key: stringField(book.key, label, `${path}.bookmakers[${b}].key`),
-      markets: markets.map((market, m) => {
-        if (!isRecord(market)) fail(label, `${path}.bookmakers[${b}].markets[${m}]`)
-        if (!Array.isArray(market.outcomes)) fail(label, `${path}.bookmakers[${b}].markets[${m}].outcomes`)
-        const outcomes = market.outcomes as unknown[]
-        return {
-          key: validateMarketKey(market.key, label, `${path}.bookmakers[${b}].markets[${m}].key`),
-          outcomes: outcomes.map((outcome, o) => {
-            if (!isRecord(outcome)) fail(label, `${path}.bookmakers[${b}].markets[${m}].outcomes[${o}]`)
-            return {
-              name: stringField(outcome.name, label, `${path}.bookmakers[${b}].markets[${m}].outcomes[${o}].name`),
-              price: requiredNumber(outcome.price, label, `${path}.bookmakers[${b}].markets[${m}].outcomes[${o}].price`),
-              point: optionalNumber(outcome.point, label, `${path}.bookmakers[${b}].markets[${m}].outcomes[${o}].point`),
-            }
-          }),
-        }
-      }),
-    }
-  })
-
-  return {
-    id: stringField(value.id, label, `${path}.id`),
-    sport_key: value.sport_key == null ? undefined : stringField(value.sport_key, label, `${path}.sport_key`),
-    sport_title: stringField(value.sport_title, label, `${path}.sport_title`),
-    home_team: stringField(value.home_team, label, `${path}.home_team`),
-    away_team: stringField(value.away_team, label, `${path}.away_team`),
-    commence_time: stringField(value.commence_time, label, `${path}.commence_time`),
-    status: status as ApiEvent['status'],
-    completed: optionalBoolean(value.completed, label, `${path}.completed`),
-    official: optionalBoolean(value.official, label, `${path}.official`),
-    scores: validateScores(value.scores, label, `${path}.scores`),
-    clock: value.clock == null ? undefined : stringField(value.clock, label, `${path}.clock`),
-    progress: optionalNumber(value.progress, label, `${path}.progress`),
-    bookmakers,
-  }
-}
+// ── Strict (throwing) validators — the contract theOddsApiProvider depends on ────────────────
 
 export function validateApiEvents(value: unknown, label = 'odds'): ApiEvent[] {
-  if (!Array.isArray(value)) fail(label, '$')
-  return value.map((event, i) => validateApiEvent(event, label, `$[${i}]`))
+  const result = apiEventsSchema.safeParse(value)
+  if (!result.success) {
+    throw new Error(`malformed ${label} payload at ${pathString(result.error.issues[0]?.path ?? [])}`)
+  }
+  return result.data
 }
 
 export function validateOddsApiScoreEvents(value: unknown, label = 'scores'): OddsApiScoreEvent[] {
-  if (!Array.isArray(value)) fail(label, '$')
-  return value.map((event, i) => {
-    const path = `$[${i}]`
-    if (!isRecord(event)) fail(label, path)
-    const scores = event.scores
-    if (scores != null && !Array.isArray(scores)) fail(label, `${path}.scores`)
-    const rows = scores as unknown[] | null | undefined
-    return {
-      id: stringField(event.id, label, `${path}.id`),
-      completed: optionalBoolean(event.completed, label, `${path}.completed`),
-      scores:
-        rows == null
-          ? rows
-          : rows.map((row, s) => {
-              if (!isRecord(row)) fail(label, `${path}.scores[${s}]`)
-              const score = typeof row.score === 'string' ? Number(row.score) : row.score
-              if (typeof score !== 'number' || !Number.isFinite(score)) fail(label, `${path}.scores[${s}].score`)
-              return {
-                name: stringField(row.name, label, `${path}.scores[${s}].name`),
-                score,
-              }
-            }),
-    }
-  })
+  const result = oddsApiScoreEventsSchema.safeParse(value)
+  if (!result.success) {
+    throw new Error(`malformed ${label} payload at ${pathString(result.error.issues[0]?.path ?? [])}`)
+  }
+  return result.data
 }

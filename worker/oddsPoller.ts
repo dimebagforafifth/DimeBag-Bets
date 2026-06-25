@@ -18,17 +18,18 @@
  */
 import { runPollCycle, schedulePolling, type Scheduler } from '../lib/odds/index.js'
 import { createRestOddsCache, type OddsCache } from '../lib/odds/index.js'
+import { getServerEnv } from '../lib/env.js'
 
 /** Fast cadence for in-play prices (ms). Override with LIVE_POLL_MS. Floored at 2s. */
 function livePollMs(): number {
-  const raw = Number(process.env.LIVE_POLL_MS)
-  return Number.isFinite(raw) && raw > 0 ? Math.max(2000, Math.floor(raw)) : 4000
+  const raw = getServerEnv().LIVE_POLL_MS
+  return raw !== undefined ? Math.max(2000, raw) : 4000
 }
 
 /** Slow cadence for the upcoming board (ms). Override with PREMATCH_POLL_MS. Floored at 10s. */
 function prematchPollMs(): number {
-  const raw = Number(process.env.PREMATCH_POLL_MS)
-  return Number.isFinite(raw) && raw > 0 ? Math.max(10_000, Math.floor(raw)) : 30_000
+  const raw = getServerEnv().PREMATCH_POLL_MS
+  return raw !== undefined ? Math.max(10_000, raw) : 30_000
 }
 
 function resolveCache(): { cache: OddsCache; label: string } {
