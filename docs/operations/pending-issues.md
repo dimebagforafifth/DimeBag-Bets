@@ -9,6 +9,23 @@ See `fixed-issues.md` for what has already been resolved.
 
 ---
 
+## Launch Blockers — Backend / External Setup Required
+
+These are the remaining pre-launch items. Everything else in this file is already
+done or deferred to Phase 1+. Pick these up once Supabase, OAuth, and hosting are wired.
+
+| # | Item | What to do |
+|---|------|------------|
+| 1 | **Apply Supabase migrations** | Run `supabase db push` against the remote project. Migrations 0001–0015 are all in `supabase/migrations/`. Balance is ledger-derived (0015). |
+| 2 | **Google OAuth in Supabase dashboard** | Enable Google provider (client id + secret), add deployed origin to allowed redirect URLs (`SUPABASE_AUTH_REDIRECT_URL`), enable email confirmation. Code is already done (`auth/supabaseAdapter.ts`, `auth/Login.tsx`). |
+| 3 | **Atomic placeWager — prevent double-spend (G1)** | Replace the current `place_wager` RPC with a single atomic `UPDATE … WHERE available >= stake RETURNING …` (0 rows = reject). Add a client-minted idempotency key with a `UNIQUE` constraint on `wagers`. See `docs/audit/gap-analysis.md §1.1`. Claude can write this migration — ask in the next session. |
+| 4 | **CSP: promote report-only → enforcing** | After first real Vercel deploy, check the CSP violation report in Vercel logs. Once clean, change `Content-Security-Policy-Report-Only` → `Content-Security-Policy` in `vercel.json`. |
+| 5 | **Error tracking — Sentry (G5)** | Create a Sentry project, get the DSN, add `VITE_SENTRY_DSN` env var. Wire `componentDidCatch` in `app/ErrorBoundary.tsx` to `Sentry.captureException`. Claude can add the SDK wiring — ask in the next session. |
+| 6 | **Edge rate limiting — auth routes (G3)** | `api/fairness.ts` already has in-memory rate limiting. For auth routes and the HTTP edge, add Upstash Ratelimit + Vercel KV. |
+| 7 | **Self-serve data export / delete** | Needed for GDPR/CCPA. Privacy policy currently directs users to email. Build account settings UI with export + delete once Supabase auth is live. |
+
+---
+
 ## H1 — Real provably-fair commit-reveal (server-authoritative)
 
 - **Severity:** High
