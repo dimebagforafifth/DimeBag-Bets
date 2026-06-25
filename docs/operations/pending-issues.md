@@ -256,14 +256,14 @@ Each item below is a summary — the full rationale + fix is in that doc.
   merge-blocking step; enable CodeQL + secret scanning + push protection; verify new deps aren't
   slopsquats. See gap-analysis §2.6.
 
-### G7 — Published Privacy Policy + Terms + data-rights path
+### G7 — Published Privacy Policy + Terms + data-rights path — ✅ FIXED (2026-06-25)
 - **Severity:** Medium (pre-launch legal hygiene; GDPR/CCPA apply even points-only)
-- **Where:** no `/privacy` or `/terms` routes; `profile/privacy.ts` is profile-visibility, not legal
-- **Problem:** Google OAuth collects email; IP/gameplay are processed — but there's no published
-  policy and no data export / account-deletion path.
-- **Intended fix:** Add `/privacy` + `/terms` pages (data, processors, retention, arbitration,
-  AI disclosure) and a self-serve export/delete flow. Keep points **non-purchasable and
-  non-redeemable** (legal invariant — gap-analysis §5.3). See gap-analysis §5.1, §5.2.
+- **Fix shipped:** Added `public/privacy.html` and `public/terms.html` (standalone static pages
+  served at `/privacy` and `/terms` via vercel.json rewrites). Cover: data collected (email,
+  gameplay, IP), sub-processors (Supabase, Vercel, Google), retention, export/deletion request
+  path (email), cookie/localStorage disclosure, children policy, AI disclosure, and the core
+  legal invariant that points have no monetary value and cannot be purchased or redeemed.
+- **Remaining:** self-serve export/delete UI (needs Supabase backend — deferred to Phase 1).
 
 ---
 

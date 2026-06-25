@@ -34,6 +34,10 @@
       ]
     }
   ],
+  "rewrites": [
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/terms",   "destination": "/terms.html" }
+  ],
   "crons": [
     { "path": "/api/poll-odds", "schedule": "0 12 * * *" },
     { "path": "/api/run-promos", "schedule": "0 13 * * *" }
