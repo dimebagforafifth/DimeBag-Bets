@@ -101,6 +101,34 @@ PlayStadium Dark should feel:
 
 ## Components
 
+### React Component System
+
+Use the repo's shadcn/ui-style React component layer as the working PlayStadium UI kit. It is based on Radix primitives, Tailwind-compatible styling, and the local `cn()` helper in `lib/utils.ts`.
+
+Current local component inventory:
+
+| Component | File | Use |
+| --- | --- | --- |
+| Button | `components/ui/button.tsx` | Primary, secondary, ghost, destructive, and icon actions |
+| Dialog | `components/ui/dialog.tsx` | Modal decisions, confirmations, focused setup flows |
+| Sheet | `components/ui/sheet.tsx` | Mobile menus, side panels, bet slips, filters |
+| Select | `components/ui/select.tsx` | Compact option picking for odds, markets, filters, settings |
+| Slider | `components/ui/slider.tsx` | Stake sizing, risk controls, numeric tuning |
+| Switch | `components/ui/switch.tsx` | Binary settings and on/off preferences |
+| Tabs | `components/ui/tabs.tsx` | View switching inside dense surfaces |
+| Table | `components/ui/table.tsx` | Structured sportsbook, ledger, history, and admin data |
+| Tooltip | `components/ui/tooltip.tsx` | Icon button labels, dense control hints, unfamiliar actions |
+
+Component direction:
+
+- Prefer these React components over one-off controls when building PlayStadium UI.
+- Keep variants mapped to the PlayStadium token system in `app/theme.css`.
+- Buttons should use icons where the action is familiar; text buttons are for clear commands.
+- Sheets are preferred for bet slips and mobile panels; dialogs are for decisions that interrupt the flow.
+- Tables should stay dense, scannable, and operational rather than decorative.
+- New components should follow the same shadcn/Radix pattern and live in `components/ui`.
+- Do not introduce a second competing component library without user approval.
+
 ### Primary Button
 
 - Background: Trophy Gold
