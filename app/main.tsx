@@ -9,6 +9,7 @@ import { armBoostEngine } from '../boosts/index.js'
 import { armReferrals } from '../referrals/index.js'
 import { setActiveEconomyTenant } from '../core/index.js'
 import { getActiveTenant } from '../persistence/index.js'
+import { TooltipProvider } from '../components/ui/tooltip.js'
 import './theme.css'
 
 /**
@@ -57,7 +58,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <Root />
+        <TooltipProvider>
+          <Root />
+        </TooltipProvider>
       </AuthProvider>
     </ErrorBoundary>
   </StrictMode>,

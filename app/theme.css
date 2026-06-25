@@ -2,6 +2,37 @@
    game + the sportsbook consume). Saira is loaded here so the shell + lobby get
    it on first paint, not after a flash. */
 @import url('https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700;800&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted-surface);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring-color);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
 
 /* ============================================================================
    GLOBAL DESIGN TOKENS — graphite & gold.
@@ -67,6 +98,26 @@
 
   /* ---- focus ring: ONE accessible ring used everywhere (was missing) ---- */
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px rgba(var(--gold-glow), 0.7);
+  --ring-color: var(--gold);
+
+  /* ---- shadcn/ui aliases, mapped onto PlayStadium tokens ---- */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--gold);
+  --primary-foreground: #14171c;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted-surface: var(--surface-2);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--text);
+  --destructive: var(--red);
+  --destructive-foreground: #ffffff;
+  --border: var(--line);
+  --input: var(--line);
 
   /* ---- motion: shared durations + easing so every transition has one rhythm ---- */
   --dur-fast: 0.13s;

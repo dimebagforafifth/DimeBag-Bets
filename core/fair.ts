@@ -71,3 +71,23 @@ export function firstFloat(serverSeed: string, clientSeed: string, nonce: number
 export function hashServerSeed(serverSeed: string): string {
   return bytesToHex(sha256(utf8ToBytes(serverSeed)))
 }
+
+/**
+ * Sample a uniform integer in [0, poolSize) from the float stream without modulo
+ * bias (issue #5). The naive `Math.floor(float * n)` skews some indices by ~1/2^32
+ * for non-power-of-two pool sizes. Rejection sampling discards floats in the
+ * "remainder zone" above `floor(2^32 / poolSize) × poolSize`, where bias would
+ * occur. The rejection probability is at most `poolSize / 2^32` per draw — at most
+ * one extra draw per ~4M calls — negligible cost, strict uniformity. Apply this
+ * anywhere a `Math.floor(float * n)` pick-and-remove needs strict fairness.
+ */
+export function uniformSample(
+  stream: Generator<number, never, unknown>,
+  poolSize: number,
+): number {
+  const threshold = (Math.floor(4294967296 / poolSize) * poolSize) / 4294967296
+  for (;;) {
+    const f = stream.next().value
+    if (f < threshold) return Math.floor(f * poolSize)
+  }
+}

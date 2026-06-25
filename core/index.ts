@@ -18,6 +18,8 @@ export {
   onWagerPlaced,
   onGrant,
   onSettlement,
+  setWagerIdFactory,
+  __resetWagerIds,
 } from './core.js'
 export type { ResolveEvent, PlaceEvent, GrantEvent, SettlementRecord } from './core.js'
 export type { EconomyMode, EconomyPolicy } from './economy.js'
@@ -53,3 +55,4 @@ export {
   setLimitsClock,
   __resetLimits,
 } from './limits.js'
+export { floatStream, firstFloat, firstUint32, hashServerSeed, uniformSample } from './fair.js'

@@ -13,7 +13,11 @@
     "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "core",
@@ -31,6 +35,7 @@
     "console",
     "features",
     "lib",
+    "components",
     "api",
     "scripts",
     "records",

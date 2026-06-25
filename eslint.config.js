@@ -13,7 +13,7 @@ export default tseslint.config(
   // docs/assets is the generated GitHub Pages build (minified bundles) committed
   // by the PAGES_BUILD step — never lint it (it floods CI with thousands of
   // no-unused-expressions/no-this-alias errors from minified code).
-  { ignores: ['dist/**', 'coverage/**', 'node_modules/**', 'docs/assets/**'] },
+  { ignores: ['dist/**', 'dist-pages/**', 'coverage/**', 'node_modules/**', 'docs/assets/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

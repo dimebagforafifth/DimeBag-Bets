@@ -136,6 +136,18 @@ names (Roobet-style) are easiest.
 
 ---
 
+## 🎨 Visual assets
+
+- **Pixel Beams** — animated halftone pixel-beam background (vivid color field
+  screened through a dot grid + soft beams/corner glow, inspired by
+  [Paper Design's Pixel Beams](https://shaders.com/collection/pixel-beams)).
+  Fully tweakable (30+ knobs) with brand presets mirroring Paper's six: *Money
+  Green, Ember Burst, Teal Noir, Magenta Flux, Indigo, Crimson*.
+  → [`brand/pixel-beams/`](brand/pixel-beams/README.md) · open
+  `brand/pixel-beams/playground.html` to tune it live.
+
+---
+
 ## ✅ Open decisions
 
 - [ ] **Direction:** clean/premium (Stack, Marker, Ante) vs. edgy (Degen, Dime, Bag)?

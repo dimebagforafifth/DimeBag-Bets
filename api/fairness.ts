@@ -35,6 +35,9 @@ import {
   DEFAULT_CRASH_CONFIG,
   type CrashHouseConfig,
 } from '../games/crash/fair.js'
+// Generic per-game outcome derivation (issue #2): lets the server resolve ANY game's outcome
+// from the withheld seed, not just Crash. Pure fair.ts math only — edge-portable.
+import { isGameId, resolveGameOutcome, type ResolveParams } from '../games/shared/resolvers.js'
 // The durable seed seam (CLAUDE.md §6). Imported here at the composition root only; OFF until
 // Supabase keys are present. The runtime durable store is the dedicated, service-role-only
 // `fairness_seeds` table (migration 0006) — see createFairnessSeedStore below.
@@ -48,11 +51,15 @@ import {
 } from '../persistence/index.js'
 
 export interface FairnessRequest {
-  action: 'commit' | 'reveal' | 'resolveCrash'
+  action: 'commit' | 'reveal' | 'resolveCrash' | 'resolve'
   commitId?: string
   clientSeed?: string
   nonce?: number
   config?: CrashHouseConfig
+  /** For the generic `resolve` action: which game to derive the outcome for. */
+  game?: string
+  /** For `resolve`: the per-round inputs the outcome depends on (mineCount, rows, …). */
+  params?: ResolveParams
 }
 
 export interface FairnessResult {
@@ -310,6 +317,43 @@ export async function handleFairness(
           // the edge returned here, never the current band.
           config,
         },
+      }
+    }
+    case 'resolve': {
+      // GENERIC server-authoritative resolution (issue #2): the server reveals the seed AND
+      // derives the outcome for ANY game via the resolver registry — the same thing
+      // resolveCrash does for Crash, for every other game. The client never needs the seed to
+      // compute the result, so it can be withheld until the round is settled.
+      if (!req.commitId) return { status: 400, body: { error: 'commitId required' } }
+      if (!isGameId(req.game)) return { status: 400, body: { error: 'unknown game' } }
+      if (typeof req.clientSeed !== 'string' || typeof req.nonce !== 'number') {
+        return { status: 400, body: { error: 'clientSeed and nonce required' } }
+      }
+      const game = req.game
+      const clientSeed = req.clientSeed
+      const nonce = req.nonce
+      const params = req.params ?? {}
+      try {
+        const resolved = await resolveCommit(vault, req.commitId, (serverSeed) =>
+          resolveGameOutcome(game, serverSeed, clientSeed, nonce, params),
+        )
+        return {
+          status: 200,
+          body: {
+            commitId: resolved.commitId,
+            serverSeed: resolved.serverSeed,
+            serverSeedHash: resolved.serverSeedHash,
+            game,
+            clientSeed,
+            nonce,
+            params,
+            outcome: resolved.outcome,
+          },
+        }
+      } catch (e) {
+        // A resolver throws on a missing/invalid round input (mineCount, rows, …) — a client
+        // error, not a server fault. Surface it as a 400 with the reason.
+        return { status: 400, body: { error: e instanceof Error ? e.message : 'resolve failed' } }
       }
     }
     default:
