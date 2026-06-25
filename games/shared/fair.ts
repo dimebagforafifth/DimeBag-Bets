@@ -22,15 +22,31 @@ import {
   type SeedVault,
 } from '../../core/fairness-authority.js'
 import { crashPointFromSeeds, DEFAULT_CRASH_CONFIG, type CrashHouseConfig } from '../crash/fair.js'
+import { resolveGameOutcome, type GameId, type ResolveParams } from './resolvers.js'
 
 export { hashServerSeed, verifyServerSeed }
 export type { Commitment, Revelation }
+export type { GameId, ResolveParams }
 
 /** The server-authoritative crash result: the reveal plus the server-derived crash point. */
 export interface CrashResolution extends Revelation {
   clientSeed: string
   nonce: number
   crashPoint: number
+}
+
+/**
+ * The server-authoritative result for ANY game: the reveal plus the server-derived outcome
+ * (the raw fair value the game's engine settles against). The generic counterpart to
+ * `CrashResolution`, returned by `resolveGame`. `outcome` is typed `unknown` because each game
+ * derives a different shape (a roll, a layout, a draw); the caller narrows it per game.
+ */
+export interface GameResolution<T = unknown> extends Revelation {
+  game: GameId
+  clientSeed: string
+  nonce: number
+  params: ResolveParams
+  outcome: T
 }
 
 export interface FairnessClient {
@@ -54,6 +70,22 @@ export interface FairnessClient {
     nonce: number,
     config?: CrashHouseConfig,
   ): Promise<CrashResolution>
+  /**
+   * GENERIC server-authoritative resolution (issue #2): ask the authority to reveal the seed
+   * AND derive the outcome for any game, so the client never needs the seed to compute the
+   * result. The withhold-until-settlement counterpart to `mintRound` (which reveals up front
+   * for the client to compute). `params` carries the round inputs the outcome depends on
+   * (mineCount, rows, difficulty, house config, …). Falls back to in-process derivation with
+   * the SAME registry when there's no server, so behaviour is identical with or without a
+   * backend. `<T>` is the game's outcome shape (e.g. `number` for Dice's roll).
+   */
+  resolveGame<T = unknown>(
+    game: GameId,
+    commitId: string,
+    clientSeed: string,
+    nonce: number,
+    params?: ResolveParams,
+  ): Promise<GameResolution<T>>
 }
 
 export interface FairnessClientOptions {
@@ -125,6 +157,30 @@ export function createFairnessClient(options: FairnessClientOptions = {}): Fairn
             clientSeed,
             nonce,
             crashPoint: crashPointFromSeeds(revealed.serverSeed, clientSeed, nonce, config),
+          }
+        },
+      )
+    },
+    resolveGame<T = unknown>(
+      game: GameId,
+      commitId: string,
+      clientSeed: string,
+      nonce: number,
+      params: ResolveParams = {},
+    ) {
+      return call<GameResolution<T>>(
+        { action: 'resolve', game, commitId, clientSeed, nonce, params },
+        async () => {
+          // No server: reveal locally and derive with the SAME registry the endpoint uses, so
+          // the local and remote results are identical.
+          const revealed = await localVault.reveal(commitId)
+          return {
+            ...revealed,
+            game,
+            clientSeed,
+            nonce,
+            params,
+            outcome: resolveGameOutcome(game, revealed.serverSeed, clientSeed, nonce, params) as T,
           }
         },
       )
