@@ -143,8 +143,7 @@ names (Roobet-style) are easiest.
   [Paper Design's Pixel Beams](https://shaders.com/collection/pixel-beams)).
   Fully tweakable (30+ knobs) with brand presets mirroring Paper's six: *Money
   Green, Ember Burst, Teal Noir, Magenta Flux, Indigo, Crimson*.
-  → [`brand/pixel-beams/`](brand/pixel-beams/README.md) · open
-  `brand/pixel-beams/playground.html` to tune it live.
+  _(Prototype removed from the repo — kept here as a brainstorm reference.)_
 
 ---
 
