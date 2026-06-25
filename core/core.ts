@@ -12,12 +12,39 @@ import type { Account, Outcome, Wager } from './types.js'
 import { getEconomyMode, getBalanceFloorCents } from './economy.js'
 import { assertWithinLimits } from './limits.js'
 
+/**
+ * How a wager id is minted when the caller doesn't supply one. The default is an
+ * in-memory sequence — fine for the demo, but it RESETS on reload and isn't safe
+ * across multiple instances / a server process, so ids can collide once wagers are
+ * durable (issue #6). A backend plugs in a collision-free source (DB sequence /
+ * UUID) via `setWagerIdFactory`, keeping the mint point in core instead of every
+ * caller inventing its own ids. `placeWager` still honours an explicit `id` arg.
+ */
 let wagerSeq = 0
+const defaultWagerIdFactory = (): string => {
+  wagerSeq += 1
+  return `w_${wagerSeq}`
+}
+let wagerIdFactory: () => string = defaultWagerIdFactory
 
 /** Mint a unique wager id when the caller doesn't supply one. */
 function nextWagerId(): string {
-  wagerSeq += 1
-  return `w_${wagerSeq}`
+  return wagerIdFactory()
+}
+
+/**
+ * Override how unsupplied wager ids are minted — e.g. a backend supplies DB-backed
+ * or UUID ids that are unique across instances and survive a restart. Only changes
+ * the fallback; an explicit `id` passed to `placeWager` always wins.
+ */
+export function setWagerIdFactory(factory: () => string): void {
+  wagerIdFactory = factory
+}
+
+/** Restore the default in-memory sequence and zero the counter (tests). */
+export function __resetWagerIds(): void {
+  wagerSeq = 0
+  wagerIdFactory = defaultWagerIdFactory
 }
 
 /* ----------------------- resolution event (the ledger) ------------------ */

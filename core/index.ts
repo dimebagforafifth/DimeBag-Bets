@@ -18,6 +18,8 @@ export {
   onWagerPlaced,
   onGrant,
   onSettlement,
+  setWagerIdFactory,
+  __resetWagerIds,
 } from './core.js'
 export type { ResolveEvent, PlaceEvent, GrantEvent, SettlementRecord } from './core.js'
 export type { EconomyMode, EconomyPolicy } from './economy.js'

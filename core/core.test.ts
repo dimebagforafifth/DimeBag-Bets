@@ -9,6 +9,8 @@ import {
   resolveWager,
   settleWeek,
   onSettlement,
+  setWagerIdFactory,
+  __resetWagerIds,
 } from './core.js'
 
 /** A fresh account for each test. creditLimit 1000, flat figure, nothing pending. */
@@ -23,6 +25,21 @@ describe('availableToWager', () => {
     expect(availableToWager(account({ balance: -250 }))).toBe(750)
     expect(availableToWager(account({ pending: 400 }))).toBe(600)
     expect(availableToWager(account({ balance: -200, pending: 300 }))).toBe(500)
+  })
+})
+
+describe('wager id minting (issue #6)', () => {
+  it('uses an injected factory for unsupplied ids, and resets to the default', () => {
+    let n = 0
+    setWagerIdFactory(() => `db_${++n}`)
+    expect(placeWager(account(), 100).id).toBe('db_1')
+    expect(placeWager(account(), 100).id).toBe('db_2')
+    // An explicit id always wins over the factory.
+    expect(placeWager(account(), 100, 'explicit').id).toBe('explicit')
+    __resetWagerIds()
+    // Back to the default in-memory sequence from a zeroed counter.
+    expect(placeWager(account(), 100).id).toBe('w_1')
+    __resetWagerIds() // leave global state clean for other tests
   })
 })
 
