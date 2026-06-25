@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Casino Lobby" description="PlayStadium casino lobby — sticky header with shared points balance, featured strip, and the Originals game grid." -->
+<helmet>
+  <script src="./ds-base.js"></script>
+</helmet>
+<div style="min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font-body);">
+
+  <header style="position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 86%, transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);">
+    <div style="max-width:var(--content-max);margin:0 auto;height:64px;display:flex;align-items:center;gap:24px;padding:0 24px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img src="../../assets/logo/playstadium-chip-logo.png" alt="PlayStadium.io" style="height:44px;width:auto;image-rendering:pixelated;" />
+        <span style="font-family:var(--font-display);font-size:28px;line-height:1;">PlayStadium</span>
+      </div>
+      <nav style="display:flex;gap:4px;">
+        <a href="#" style="font-size:13px;font-weight:600;color:var(--gold);background:color-mix(in srgb, var(--gold) 10%, transparent);text-decoration:none;padding:8px 14px;border-radius:8px;">Casino</a>
+        <a href="../sportsbook/Sportsbook.dc.html" style="font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:8px;">Sportsbook</a>
+        <a href="#" style="font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:8px;">My bets</a>
+      </nav>
+      <div style="margin-left:auto;">
+        <x-import component-from-global-scope="PlayStadiumDesignSystem_e4e367.WalletPill" balance="{{ balance }}" week-cents="{{ weekCents }}" hint-size="200px,46px"></x-import>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width:var(--content-max);margin:0 auto;padding:28px 24px 64px;">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;">
+      <h1 style="font-family:var(--font-head);text-transform:uppercase;letter-spacing:0.4px;font-size:28px;font-weight:700;margin:0;">All originals</h1>
+      <span style="font-family:var(--font-num);font-size:13px;color:var(--faint);">Points only · provably fair</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5, 1fr);grid-auto-rows:218px;gap:16px;">
+      <sc-for list="{{ games }}" as="g" hint-placeholder-count="21">
+        <div style="position:relative;height:218px;min-width:0;overflow:hidden;border-radius:12px;">
+          <x-import component-from-global-scope="PlayStadiumDesignSystem_e4e367.GameCard" name="{{ g.name }}" tag="{{ g.tag }}" icon="{{ g.icon }}" icon-alt="{{ g.name }}" style="position:absolute;inset:0;width:100%;height:100%" hint-size="100%,218px"></x-import>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const ICON = '../../assets/game-icons/'
+    return {
+      balance: '$8,420',
+      weekCents: 31200,
+      games: [
+        { name: 'Crash', tag: 'Ride the curve. Bank it before it cuts out.', icon: ICON + 'crash.png' },
+        { name: 'Mines', tag: 'Uncover gems for a rising multiplier.', icon: ICON + 'mines.png' },
+        { name: 'Plinko', tag: 'Drop the ball. Watch it find its multiplier.', icon: ICON + 'plinko.png' },
+        { name: 'Dice', tag: 'Roll over or under. Set your own edge.', icon: ICON + 'dice.png' },
+        { name: 'Limbo', tag: 'Pick a target. Beat it for the payout.', icon: ICON + 'limbo.png' },
+        { name: 'Wheel', tag: 'Spin the wheel. Land a multiplier.', icon: ICON + 'wheel.png' },
+        { name: 'Keno', tag: 'Mark your spots. Match the draw.', icon: ICON + 'keno.png' },
+        { name: 'Hi-Lo', tag: 'Higher or lower — stack the streak.', icon: ICON + 'hilo.png' },
+        { name: 'Dragon Tower', tag: 'Climb the tower. Dodge the dragons.', icon: ICON + 'dragon-tower.png' },
+        { name: 'Pump', tag: 'Pump it up. Cash out before it pops.', icon: ICON + 'pump.png' },
+        { name: 'Chicken Road', tag: 'Cross the road. Bank each step.', icon: ICON + 'chickenroad.png' },
+        { name: 'Coin Flip', tag: 'Heads or tails. Double or nothing.', icon: ICON + 'coinflip.png' },
+        { name: 'Diamonds', tag: 'Match the gems. Hit the combo.', icon: ICON + 'diamonds.png' },
+        { name: 'Cases', tag: 'Open the case. Reveal the reward.', icon: ICON + 'cases.png' },
+        { name: 'Blackjack', tag: 'Hit 21. Beat the dealer.', icon: ICON + 'blackjack.png' },
+        { name: 'Roulette', tag: 'Pick your number. Let it ride.', icon: ICON + 'roulette.png' },
+        { name: 'Baccarat', tag: 'Player or banker — call the winner.', icon: ICON + 'baccarat.png' },
+        { name: 'Sic Bo', tag: 'Three dice. Call the total.', icon: ICON + 'sicbo.png' },
+        { name: 'Slots', tag: 'Spin the reels. Line up the gold.', icon: ICON + 'slots.png' },
+        { name: 'Three Card Poker', tag: 'Three cards. Beat the house hand.', icon: ICON + 'threecardpoker.png' },
+        { name: 'Video Poker', tag: 'Hold, draw, and build your hand.', icon: ICON + 'videopoker.png' },
+      ],
+    }
+  }
+}
+</script>
+</body>
+</html>

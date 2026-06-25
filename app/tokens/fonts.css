@@ -1,0 +1,84 @@
+/* ============================================================================
+   FONTS — PlayStadium  ·  "Chip Gold & Carbon"
+   Imported from the Claude Design system (PlayStadium Design System). Barlow +
+   Barlow Condensed are the legible workhorses (body + UI); Barlow Condensed is
+   SELF-HOSTED below (OFL); Barlow + Barlow Semi Condensed load from Google Fonts.
+   The CHARACTER layer is DJR's Slight Chance (hand-drawn display) + Slight Chance
+   Mono (gamey numerals), with ECWC Standard for LED scoreboards.
+
+   The four self-hosted faces live in ../fonts/ and are referenced RELATIVELY so
+   Vite fingerprints them and rewrites the URL with the deploy base path
+   (`/DimeBag-Bets/` on GitHub Pages) — never hand a raw "/fonts" path here.
+
+   FONT LICENSING — licensed. Slight Chance + Slight Chance Mono are covered by a
+   purchased DJR Mini Combined License (15,000 monthly unique web visitors; see
+   app/fonts/DJR-LICENSE.txt). If monthly uniques outgrow 15k, upgrade the tier with
+   DJR (you pay only the difference). ECWC Standard is open source; Barlow / Barlow
+   Condensed are OFL.
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap');
+
+/* ---- Barlow Condensed — self-hosted (SIL Open Font License). Headline/accent. ---- */
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('../fonts/BarlowCondensed-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('../fonts/BarlowCondensed-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('../fonts/BarlowCondensed-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('../fonts/BarlowCondensed-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('../fonts/BarlowCondensed-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---- DJR Slight Chance — the brand's hand-drawn CHARACTER layer (hero display +
+   the wordmark's personality). Slight Chance Mono is the gamey numeral / live-
+   ticker face (multipliers, balances, scoreboards). Single Regular weight each. ---- */
+@font-face {
+  font-family: 'Slight Chance';
+  src: url('../fonts/SlightChance-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Slight Chance Mono';
+  src: url('../fonts/SlightChanceMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---- ECWC Standard — a dot-matrix LED scoreboard face. Reserved for literal
+   scoreboard / departure-board moments. Single Regular weight. ---- */
+@font-face {
+  font-family: 'ECWC Standard';
+  src: url('../fonts/ECWCStandard-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

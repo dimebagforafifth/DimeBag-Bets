@@ -17,6 +17,7 @@ import { BookView, connectOddsCache } from './book/index.js'
 import { RewardsSection } from '../rewards/index.js'
 import './rewards-accrual.js' // side effect: accrue rewards from real wagers
 import { formatMoney } from '../games/shared/money.js'
+import { WalletPill, Wordmark, ChipLogo, GameCard } from '../components/brand/index.js'
 import { useSoundEnabled, toggleSound } from '../sound/index.js'
 import {
   Menu as DropMenu,
@@ -71,6 +72,7 @@ import {
 } from './player-sections.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
+import { getFavourites, subscribeOnboarding, getOnboardingVersion } from './onboarding/onboarding-store.js'
 import { houseConfigFor, nativeRtp } from './edge-config.js'
 import {
   useAuth,
@@ -126,6 +128,13 @@ export function App() {
   // tree (Agent → Sub-Agent → Manager). Null only if the book has no players.
   const book = getBook()
   const { user, signOut, isDemo } = useAuth()
+  // Re-render when the player's onboarding favourites change, so the lobby re-orders
+  // live; the picks the player made at onboarding surface first in the Originals grid.
+  const onboardingVersion = useSyncExternalStore(subscribeOnboarding, getOnboardingVersion)
+  const lobbyFavourites = useMemo(
+    () => new Set(getFavourites(user?.id)),
+    [user?.id, onboardingVersion],
+  )
   // Who's signed in → their book member → role → which sections they may reach. App
   // already subscribes to the book, so this re-resolves live if the member changes.
   const authMember = memberForUser(user?.id)
@@ -252,8 +261,9 @@ export function App() {
       <header className="app-header">
         <div className="app-header-inner">
           <div className="header-left">
-            <button className="brand" onClick={openHome}>
-              DimeBag<span className="brand-dot">·</span>Bets
+            <button className="brand" onClick={openHome} aria-label="PlayStadium.io — home">
+              <ChipLogo size={22} className="brand-chip" aria-hidden="true" />
+              <Wordmark />
             </button>
             {/* ≥ tablet: the primary tabs inline, with a single "More" dropdown for the rest. */}
             <nav className="nav nav-primary" aria-label="Primary">
@@ -317,30 +327,20 @@ export function App() {
             </DropMenu>
           </div>
           <div className="header-right">
-            <div className="figure">
-              {/* Lead with what a player actually reads as "how much I have" — the
-                  amount they can bet right now (availableToWager = credit + figure −
-                  at-risk). The week's win/loss standing rides alongside as a plain
-                  up/down, not signed jargon. */}
-              <div className="figure-block is-primary">
-                <span className="figure-label">
-                  {economyMode === 'balance' ? 'Available' : 'Balance'}
-                </span>
-                <span className="figure-value">
-                  {account ? formatMoney(availableToWager(account)) : '—'}
-                </span>
-              </div>
-              <div className="figure-block">
-                <span className="figure-label">
-                  {economyMode === 'balance' ? 'Wallet' : 'This week'}
-                </span>
-                {account ? (
-                  <WeekFigure cents={account.balance} />
-                ) : (
-                  <span className="figure-value">—</span>
-                )}
-              </div>
-            </div>
+            {/* The balance + week standing read as ONE "wallet" unit — the brand
+                WalletPill. Lead with what a player reads as "how much I have": the
+                amount they can bet right now (availableToWager = credit + figure −
+                at-risk). The week's win/loss rides alongside as a plain up/down.
+                formatMoney is threaded through so a book's configured points
+                symbol / decimals / locale still applies. */}
+            <WalletPill
+              className="app-figure"
+              label={economyMode === 'balance' ? 'Available' : 'Balance'}
+              balance={account ? formatMoney(availableToWager(account)) : '—'}
+              weekLabel={economyMode === 'balance' ? 'Wallet' : 'This week'}
+              weekCents={account ? account.balance : 0}
+              formatWeek={(cents) => formatMoney(Math.abs(cents))}
+            />
             {/* In Management the Console's own TopBar owns operator identity + sign-out, so we
                 drop the app header's account menu there to avoid a duplicate control. The VIP
                 tier + sound toggle now live INSIDE this one avatar menu (declutters the bar). */}
@@ -478,7 +478,7 @@ export function App() {
                 <Ledger gameKey={liveGame.key} gameName={liveGame.name} accountId={account.id} />
               </div>
             ) : (
-              <Lobby onPlay={setRoute} />
+              <Lobby onPlay={setRoute} favourites={lobbyFavourites} />
             )}
           </div>
         )}
@@ -534,20 +534,6 @@ function GameMount({
       onBalanceChange={onBalanceChange}
       {...(cfg ? { houseConfig: cfg } : {})}
     />
-  )
-}
-
-/** The player's running win/loss for the week (core `balance`, the "figure")
- *  shown plainly under the headline Balance: ▲ up (the book owes you), ▼ down
- *  (you owe the book), or even. formatMoney already signs negatives, so we feed
- *  it the absolute value and carry the direction in the arrow + colour. */
-function WeekFigure({ cents }: { cents: number }) {
-  const tone = cents > 0 ? 'is-up' : cents < 0 ? 'is-down' : 'is-even'
-  const arrow = cents > 0 ? '▲ ' : cents < 0 ? '▼ ' : ''
-  return (
-    <span className={`figure-value ${tone}`}>
-      {cents === 0 ? 'Even' : `${arrow}${formatMoney(Math.abs(cents))}`}
-    </span>
   )
 }
 
@@ -680,8 +666,28 @@ const STAKE_DESC: Record<string, string> = {
   roulette: 'Place your chips on the single-zero European wheel and watch the ball land.',
 }
 
-/** The Casino hub: every registered game as a card. One tap opens its page. */
-function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
+/** Base-aware URL for a game's 3D icon PNG in /public/game-icons (the real product
+ *  asset — never redrawn; the inline GameIcon SVG is only an on-error fallback). */
+function gameIconUrl(key: string): string {
+  return import.meta.env.BASE_URL.replace(/\/$/, '') + '/game-icons/' + key + '.png'
+}
+
+/** The Casino hub: every registered game as a card. One tap opens its page.
+ *  `favourites` (from player onboarding) float to the front of the grid. */
+function Lobby({
+  onPlay,
+  favourites,
+}: {
+  onPlay: (key: string) => void
+  favourites: Set<string>
+}) {
+  const enabled = GAMES.filter((g) => isGameEnabled(g.key))
+  // Stable partition: the player's pinned favourites first, everything else after,
+  // each keeping the registry's original order.
+  const ordered = [
+    ...enabled.filter((g) => favourites.has(g.key)),
+    ...enabled.filter((g) => !favourites.has(g.key)),
+  ]
   return (
     <div className="lobby">
       <div className="lobby-head">
@@ -692,21 +698,19 @@ function Lobby({ onPlay }: { onPlay: (key: string) => void }) {
           book; renders nothing until there's activity, so a fresh book stays clean */}
       <ActivityTicker />
       <div className="lobby-grid">
-        {GAMES.filter((g) => isGameEnabled(g.key)).map((g) => (
-          // One graphite-and-gold system: every card inherits the gold --accent
-          // (theme.css), so the hub reads as one brand, not a per-game rainbow.
-          // Cards differ by their distinct line-art glyph + name. Each game keeps
-          // its own accent for INSIDE its page (g.accent), just not on the lobby.
-          <button key={g.key} className="game-card" onClick={() => onPlay(g.key)}>
-            <span className="card-art">
-              <GameIcon kind={g.key} />
-            </span>
-            <span className="card-body">
-              <span className="card-name">{g.name}</span>
-              {STAKE_DESC[g.key] && <span className="card-tag">{STAKE_DESC[g.key]}</span>}
-              <span className="card-play">Play →</span>
-            </span>
-          </button>
+        {ordered.map((g) => (
+          // The brand GameCard (Claude Design system): the real 3D game-icon PNG over
+          // a gold-tinted art zone, with the inline GameIcon SVG kept as a graceful
+          // fallback. One graphite-and-gold system — gold is the only accent.
+          <GameCard
+            key={g.key}
+            name={g.name}
+            tag={STAKE_DESC[g.key]}
+            icon={gameIconUrl(g.key)}
+            iconAlt={g.name}
+            art={<GameIcon kind={g.key} />}
+            onClick={() => onPlay(g.key)}
+          />
         ))}
       </div>
     </div>

@@ -26,8 +26,8 @@ export interface BookConfig {
 }
 
 export const DEFAULT_BOOK_CONFIG: BookConfig = {
-  name: 'DimeBag-Bets',
-  tagline: 'Clean, fast, points-based play.',
+  name: 'PlayStadium.io',
+  tagline: '21 Originals, one figure. Points only — no buy-in, no cash-out.',
   logoUrl: '',
   accent: '',
   domain: '',

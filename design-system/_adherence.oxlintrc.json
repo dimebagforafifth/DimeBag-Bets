@@ -1,0 +1,334 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/buttons/**",
+              "components/data/**",
+              "components/sportsbook/**",
+              "ui_kits/casino-lobby/**",
+              "ui_kits/playstadium-app/**",
+              "ui_kits/sportsbook/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Barlow Condensed|Slight Chance|Slight Chance Mono|ECWC Standard|Barlow|Barlow Semi Condensed))/i]",
+        "message": "Font not provided by the design system. Available: Barlow Condensed, Slight Chance, Slight Chance Mono, ECWC Standard, Barlow, Barlow Semi Condensed."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Badge'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|children|key|ref|className|style|children)$/]",
+        "message": "<Badge> doesn't accept that prop. Declared props: variant, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Badge'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:gold|solid|live|neutral)$/]",
+        "message": "<Badge> variant must be one of 'gold' | 'solid' | 'live' | 'neutral'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='BetSelection'] > JSXAttribute > JSXIdentifier[name!=/^(?:id|pick|event|price|key|ref|className|style|children)$/]",
+        "message": "<BetSelection> doesn't accept that prop. Declared props: id, pick, event, price."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|size|block|href|children|key|ref|className|style|children)$/]",
+        "message": "<Button> doesn't accept that prop. Declared props: variant, size, block, href, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:primary|ghost|text|danger)$/]",
+        "message": "<Button> variant must be one of 'primary' | 'ghost' | 'text' | 'danger'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:sm|md|lg)$/]",
+        "message": "<Button> size must be one of 'sm' | 'md' | 'lg'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Chip'] > JSXAttribute > JSXIdentifier[name!=/^(?:active|children|key|ref|className|style|children)$/]",
+        "message": "<Chip> doesn't accept that prop. Declared props: active, children."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='OddsOption'] > JSXAttribute > JSXIdentifier[name!=/^(?:id|label|price|move|key|ref|className|style|children)$/]",
+        "message": "<OddsOption> doesn't accept that prop. Declared props: id, label, price, move."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='OddsOption'] > JSXAttribute[name.name='move'] > Literal[value!=/^(?:up|down)$/]",
+        "message": "<OddsOption> move must be one of 'up' | 'down'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='GameCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:name|tag|icon|iconAlt|key|ref|className|style|children)$/]",
+        "message": "<GameCard> doesn't accept that prop. Declared props: name, tag, icon, iconAlt."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='OddsButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|price|selected|move|disabled|key|ref|className|style|children)$/]",
+        "message": "<OddsButton> doesn't accept that prop. Declared props: label, price, selected, move, disabled."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='OddsButton'] > JSXAttribute[name.name='move'] > Literal[value!=/^(?:up|down)$/]",
+        "message": "<OddsButton> move must be one of 'up' | 'down'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Stat'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|value|hot|key|ref|className|style|children)$/]",
+        "message": "<Stat> doesn't accept that prop. Declared props: label, value, hot."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='WalletPill'] > JSXAttribute > JSXIdentifier[name!=/^(?:balance|label|weekLabel|weekCents|key|ref|className|style|children)$/]",
+        "message": "<WalletPill> doesn't accept that prop. Declared props: balance, label, weekLabel, weekCents."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "Badge": {
+        "replaces": []
+      },
+      "BetSelection": {
+        "replaces": []
+      },
+      "Button": {
+        "replaces": []
+      },
+      "Chip": {
+        "replaces": []
+      },
+      "OddsOption": {
+        "replaces": []
+      },
+      "GameCard": {
+        "replaces": []
+      },
+      "OddsButton": {
+        "replaces": []
+      },
+      "Stat": {
+        "replaces": []
+      },
+      "WalletPill": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--accent",
+      "--accent-hover",
+      "--accent-press",
+      "--bg",
+      "--border-hairline",
+      "--content-max",
+      "--dur",
+      "--dur-fast",
+      "--dur-slow",
+      "--ease-in",
+      "--ease-out",
+      "--ease-spring",
+      "--elev-1",
+      "--elev-2",
+      "--elev-3",
+      "--elev-gold",
+      "--faint",
+      "--focus-ring-color",
+      "--font-body",
+      "--font-display",
+      "--font-head",
+      "--font-label",
+      "--font-mono",
+      "--font-num",
+      "--font-scoreboard",
+      "--gap",
+      "--gem",
+      "--gem-glow",
+      "--gold",
+      "--gold-bright",
+      "--gold-deep",
+      "--gold-glow",
+      "--gold-press",
+      "--green",
+      "--green-press",
+      "--leading-normal",
+      "--leading-relaxed",
+      "--leading-snug",
+      "--leading-tight",
+      "--line",
+      "--muted",
+      "--on-gold",
+      "--radius",
+      "--radius-lg",
+      "--radius-pill",
+      "--radius-sm",
+      "--red",
+      "--red-press",
+      "--ring",
+      "--sheen",
+      "--space-1",
+      "--space-2",
+      "--space-3",
+      "--space-4",
+      "--space-5",
+      "--space-6",
+      "--space-7",
+      "--space-8",
+      "--status-down",
+      "--status-up",
+      "--surface",
+      "--surface-2",
+      "--surface-card",
+      "--surface-page",
+      "--surface-raised",
+      "--text",
+      "--text-2xl",
+      "--text-3xl",
+      "--text-4xl",
+      "--text-base",
+      "--text-body",
+      "--text-heading",
+      "--text-lg",
+      "--text-md",
+      "--text-on-accent",
+      "--text-secondary",
+      "--text-sm",
+      "--text-tertiary",
+      "--text-xl",
+      "--text-xs",
+      "--tracking-caps",
+      "--tracking-eyebrow",
+      "--tracking-normal",
+      "--tracking-tight",
+      "--weight-black",
+      "--weight-bold",
+      "--weight-medium",
+      "--weight-regular",
+      "--weight-semibold"
+    ],
+    "tokenKinds": {
+      "--bg": "color",
+      "--surface": "color",
+      "--surface-2": "color",
+      "--line": "color",
+      "--text": "font",
+      "--muted": "color",
+      "--faint": "color",
+      "--on-gold": "color",
+      "--gold": "color",
+      "--gold-bright": "color",
+      "--gold-press": "color",
+      "--gold-deep": "color",
+      "--gold-glow": "other",
+      "--green": "color",
+      "--green-press": "color",
+      "--red": "color",
+      "--red-press": "color",
+      "--gem": "color",
+      "--gem-glow": "other",
+      "--surface-page": "color",
+      "--surface-card": "color",
+      "--surface-raised": "color",
+      "--border-hairline": "color",
+      "--text-body": "font",
+      "--text-secondary": "font",
+      "--text-tertiary": "font",
+      "--accent": "color",
+      "--accent-hover": "color",
+      "--accent-press": "color",
+      "--text-on-accent": "font",
+      "--status-up": "color",
+      "--status-down": "color",
+      "--focus-ring-color": "color",
+      "--font-head": "font",
+      "--font-body": "font",
+      "--font-label": "font",
+      "--font-display": "font",
+      "--font-num": "font",
+      "--font-scoreboard": "font",
+      "--font-mono": "font",
+      "--text-xs": "font",
+      "--text-sm": "font",
+      "--text-md": "font",
+      "--text-lg": "font",
+      "--text-xl": "font",
+      "--text-2xl": "font",
+      "--text-3xl": "font",
+      "--text-4xl": "font",
+      "--weight-regular": "font",
+      "--weight-medium": "font",
+      "--weight-semibold": "font",
+      "--weight-bold": "font",
+      "--weight-black": "font",
+      "--leading-tight": "font",
+      "--leading-snug": "font",
+      "--leading-normal": "font",
+      "--leading-relaxed": "font",
+      "--tracking-tight": "font",
+      "--tracking-normal": "font",
+      "--tracking-eyebrow": "font",
+      "--tracking-caps": "font",
+      "--text-heading": "font",
+      "--text-base": "font",
+      "--space-1": "spacing",
+      "--space-2": "spacing",
+      "--space-3": "spacing",
+      "--space-4": "spacing",
+      "--space-5": "spacing",
+      "--space-6": "spacing",
+      "--space-7": "spacing",
+      "--space-8": "spacing",
+      "--gap": "spacing",
+      "--radius-sm": "radius",
+      "--radius": "radius",
+      "--radius-lg": "radius",
+      "--radius-pill": "radius",
+      "--content-max": "spacing",
+      "--elev-1": "shadow",
+      "--elev-2": "shadow",
+      "--elev-3": "shadow",
+      "--elev-gold": "shadow",
+      "--sheen": "shadow",
+      "--ring": "color",
+      "--dur-fast": "other",
+      "--dur": "other",
+      "--dur-slow": "other",
+      "--ease-out": "other",
+      "--ease-in": "other",
+      "--ease-spring": "other"
+    },
+    "fontFamilies": [
+      "Barlow",
+      "Barlow Condensed",
+      "Barlow Semi Condensed",
+      "ECWC Standard",
+      "Slight Chance",
+      "Slight Chance Mono"
+    ]
+  }
+}

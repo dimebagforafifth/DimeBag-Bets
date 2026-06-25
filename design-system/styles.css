@@ -1,0 +1,11 @@
+/* ============================================================================
+   PlayStadium.io — Design System · Global entry point
+   "Chip Gold & Carbon" — a points-based casino + sportsbook.
+   Consumers link THIS one file. It only @imports the token + font layers;
+   never add rules here directly.
+   ========================================================================== */
+@import url('./tokens/fonts.css');
+@import url('./tokens/colors.css');
+@import url('./tokens/typography.css');
+@import url('./tokens/spacing.css');
+@import url('./tokens/elevation.css');

@@ -1,8 +1,15 @@
-import { StrictMode, useEffect } from 'react'
+import { StrictMode, useEffect, useSyncExternalStore } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App.js'
 import { ErrorBoundary } from './ErrorBoundary.js'
-import { AuthProvider, Login, useAuth } from '../auth/index.js'
+import { AuthProvider, Login, useAuth, memberForUser } from '../auth/index.js'
+import { getBookVersion, subscribeBook } from './book-store.js'
+import { OnboardingPlayer } from './onboarding/OnboardingPlayer.js'
+import {
+  isPlayerOnboarded,
+  subscribeOnboarding,
+  getOnboardingVersion,
+} from './onboarding/onboarding-store.js'
 import { installAlertTransport } from './alert-transport.js'
 import { armBonusEngine } from '../bonus/index.js'
 import { armBoostEngine } from '../boosts/index.js'
@@ -51,7 +58,38 @@ function Root() {
   // 'first-bet'/'losing-streak' are derivable from core wager events, but auto-firing would grant
   // credit mid-play, which is an operator rule-config decision — hence explicit hooks, not a wire.
   if (status === 'loading') return null
-  return status === 'authenticated' ? <App /> : <Login />
+  return status === 'authenticated' ? <AuthedApp /> : <Login />
+}
+
+/**
+ * Gates the post-sign-up player onboarding (Claude Design flow) in front of the app.
+ * Only FRESH PLAYERS see it — operators (manager / agent / sub-agent) go straight to
+ * the app, where the console's own SetupWizard handles operator onboarding. The flow
+ * is skippable and one-time: completing or skipping it persists, so it never re-shows.
+ */
+function AuthedApp() {
+  const { user } = useAuth()
+  // Re-resolve the member when the book changes, and re-render when onboarding completes.
+  useSyncExternalStore(subscribeBook, getBookVersion)
+  useSyncExternalStore(subscribeOnboarding, getOnboardingVersion)
+  const authMember = memberForUser(user?.id)
+  const role = authMember?.role ?? 'player'
+
+  if (role === 'player' && user && !isPlayerOnboarded(user.id)) {
+    return (
+      <OnboardingPlayer
+        userId={user.id}
+        playerId={authMember?.id ?? null}
+        name={user.displayName}
+        username={user.username}
+        onDone={() => {
+          /* completePlayerOnboarding() already fired the store notify above, which
+             re-renders this gate into <App />. Nothing else to do. */
+        }}
+      />
+    )
+  }
+  return <App />
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -1,0 +1,28 @@
+<!-- @dsCard group="Spacing" viewport="700x140" name="Spacing Scale" subtitle="4px base — space-1 (4) through space-8 (64)" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg); font-family: var(--font-body); color: var(--text); padding: 22px; }
+  .row { display: flex; align-items: flex-end; gap: 14px; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .bar { background: var(--gold); border-radius: 3px; width: 100%; }
+  .tok { font-family: var(--font-num); font-size: 10px; color: var(--faint); }
+  .px { font-family: var(--font-num); font-size: 11px; color: var(--text); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="item" style="width: 4px"><span class="px">4</span><span class="bar" style="height: 4px"></span><span class="tok">1</span></div>
+    <div class="item" style="width: 8px"><span class="px">8</span><span class="bar" style="height: 8px"></span><span class="tok">2</span></div>
+    <div class="item" style="width: 12px"><span class="px">12</span><span class="bar" style="height: 12px"></span><span class="tok">3</span></div>
+    <div class="item" style="width: 16px"><span class="px">16</span><span class="bar" style="height: 16px"></span><span class="tok">4</span></div>
+    <div class="item" style="width: 24px"><span class="px">24</span><span class="bar" style="height: 24px"></span><span class="tok">5</span></div>
+    <div class="item" style="width: 32px"><span class="px">32</span><span class="bar" style="height: 32px"></span><span class="tok">6</span></div>
+    <div class="item" style="width: 48px"><span class="px">48</span><span class="bar" style="height: 48px"></span><span class="tok">7</span></div>
+    <div class="item" style="width: 64px"><span class="px">64</span><span class="bar" style="height: 64px"></span><span class="tok">8</span></div>
+  </div>
+</body>
+</html>

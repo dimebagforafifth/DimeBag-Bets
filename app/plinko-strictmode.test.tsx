@@ -19,7 +19,8 @@ import { formatMoney } from '../games/shared/money.js'
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 function figure(host: HTMLElement): string {
-  return host.querySelector('.figure-value')?.textContent ?? ''
+  // The header wallet is the brand WalletPill; its first value is the headline balance.
+  return host.querySelector('.sds-wallet__value')?.textContent ?? ''
 }
 function click(host: HTMLElement, selector: string, text: RegExp): boolean {
   const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) => text.test(n.textContent ?? ''))
@@ -36,7 +37,7 @@ describe('Plinko under StrictMode (matches the real app shell)', () => {
     act(() => root.render(<StrictMode><App /></StrictMode>))
 
     const acct = getCurrentPlayer()!.account
-    expect(click(host, 'button.game-card', /plinko/i)).toBe(true)
+    expect(click(host, 'button.sds-gamecard', /plinko/i)).toBe(true)
     // The game view is a lazy() chunk: await its dynamic import (the same module
     // promise React.lazy is suspended on) so Plinko mounts (under StrictMode's
     // mount→unmount→mount) before we drive its Play button.

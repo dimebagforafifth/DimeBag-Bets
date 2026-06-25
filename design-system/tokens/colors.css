@@ -1,0 +1,79 @@
+/* ============================================================================
+   COLORS — PlayStadium.io · "Chip Gold & Carbon"
+   The palette is sampled from the pixel poker-chip logo: a cool carbon canvas, a
+   warm-grey surface ramp, crisp chip-white text, and ONE warm chip-gold accent.
+   Green & red are the only non-logo hues — kept narrow for "your figure is up /
+   down" + live status. Gold is a SMALL ACCENT, never a background fill.
+   ========================================================================== */
+:root {
+  /* ---- carbon canvas + surface ramp (sampled from the chip body) ---- */
+  --bg: #101113;        /* the canvas — coolest, deepest carbon */
+  --surface: #161616;   /* cards, panels, inputs */
+  --surface-2: #20201f; /* raised / hovered surfaces, inputs-on-cards */
+  --line: #333332;      /* hairline borders (chip body grey) */
+
+  /* ---- text (the chip's whites + silver) ---- */
+  --text: #fcfcfb;      /* primary — chip white */
+  --muted: #c4c4c2;     /* secondary — chip silver */
+  --faint: #919190;     /* tertiary labels, footer, disabled (>4.5:1 on carbon) */
+  --on-gold: #161616;   /* the chip's dark ink that sits ON the gold accent */
+
+  /* ---- THE accent: chip gold (the rim + .io) — small hits only ---- */
+  --gold: #f0be4a;        /* brand, primary actions, focus, key figures */
+  --gold-bright: #f5c459; /* glints, hover, the lit edge of the chip ring */
+  --gold-press: #c99528;  /* pressed / active CTA */
+  --gold-deep: #744107;   /* the chip's gold-brown shadow — gradient depth */
+  --gold-glow: 240, 190, 74; /* @kind other */ /* RGB channels for translucent gold glows */
+
+  /* ---- account direction + live status (the only non-logo hues) ---- */
+  --green: #46c88a;      /* figure UP / a win / "live" */
+  --green-press: #38ad75;
+  --red: #e0556e;        /* figure DOWN / a loss / stop */
+  --red-press: #cf4661;
+
+  /* ---- the treasure: gems / multipliers / win popups derive from --gem ---- */
+  --gem: #f0be4a;
+  --gem-glow: 240, 190, 74; /* @kind other */
+
+  /* ============================================================
+     SEMANTIC ALIASES — reach for these in components first.
+     ============================================================ */
+  --surface-page: var(--bg);
+  --surface-card: var(--surface);
+  --surface-raised: var(--surface-2);
+  --border-hairline: var(--line);
+  --text-body: var(--text);
+  --text-secondary: var(--muted);
+  --text-tertiary: var(--faint);
+  --accent: var(--gold);
+  --accent-hover: var(--gold-bright);
+  --accent-press: var(--gold-press);
+  --text-on-accent: var(--on-gold);
+  --status-up: var(--green);
+  --status-down: var(--red);
+  --focus-ring-color: var(--gold);
+}
+
+/* ============================================================================
+   ALTERNATE ACCENT THEMES (experimental — from the lobby palette study).
+   Re-point the accent + canvas tint by setting [data-theme] on a wrapper. Gold
+   ("stadium") is the live default above; these are the explored alternatives.
+   ========================================================================== */
+[data-theme='jade'] {
+  --bg: #0b0e0d; --surface: #121614; --surface-2: #1a201d; --line: #28302c;
+  --text: #e9efeb; --muted: #9aa69f; --faint: #6d7a73;
+  --gold: #46c08a; --gold-bright: #6fdba7; --gold-press: #38a576;
+  --gold-glow: 70, 192, 138; /* @kind other */ --on-gold: #07100c; --gem: #46c08a; --gem-glow: 70, 192, 138; /* @kind other */
+}
+[data-theme='ember'] {
+  --bg: #0e0b0a; --surface: #171211; --surface-2: #201917; --line: #322826;
+  --text: #f1eae7; --muted: #ab9d97; --faint: #7c6f69;
+  --gold: #e8704a; --gold-bright: #f48f6f; --gold-press: #cf5c39;
+  --gold-glow: 232, 112, 74; /* @kind other */ --on-gold: #1a0d08; --gem: #e8704a; --gem-glow: 232, 112, 74; /* @kind other */
+}
+[data-theme='ice'] {
+  --bg: #0a0c10; --surface: #111419; --surface-2: #181d24; --line: #262d36;
+  --text: #e8edf3; --muted: #97a2b1; --faint: #6b7685;
+  --gold: #5aa6f0; --gold-bright: #84c0f8; --gold-press: #4790db;
+  --gold-glow: 90, 166, 240; /* @kind other */ --on-gold: #06121f; --gem: #5aa6f0; --gem-glow: 90, 166, 240; /* @kind other */
+}

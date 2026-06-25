@@ -13,7 +13,21 @@ export default tseslint.config(
   // docs/assets is the generated GitHub Pages build (minified bundles) committed
   // by the PAGES_BUILD step — never lint it (it floods CI with thousands of
   // no-unused-expressions/no-this-alias errors from minified code).
-  { ignores: ['dist/**', 'dist-pages/**', 'coverage/**', 'node_modules/**', 'docs/assets/**'] },
+  // design-system/ is the Claude Design reference mirror (handoff docs, the minified
+  // `_ds_bundle.js`, and untyped .js/.jsx kit templates). It's excluded from
+  // tsconfig/build and ships its own oxlint config — never lint it here either; it
+  // is reference material, not shippable source, and floods CI with the same kind of
+  // minified-bundle errors.
+  {
+    ignores: [
+      'dist/**',
+      'dist-pages/**',
+      'coverage/**',
+      'node_modules/**',
+      'docs/assets/**',
+      'design-system/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -1,0 +1,25 @@
+// Stadium lobby — the 21 Originals. Icons live in /assets/game-icons.
+const ICON = '../../assets/game-icons/'
+window.STADIUM_GAMES = [
+  { id: 'crash',          name: 'Crash',            tag: 'Ride the curve. Bank it before it cuts out.', icon: ICON + 'crash.png',          featured: true,  hot: true },
+  { id: 'mines',          name: 'Mines',            tag: 'Uncover gems for a rising multiplier.',       icon: ICON + 'mines.png',          featured: true,  hot: true },
+  { id: 'plinko',         name: 'Plinko',           tag: 'Drop the ball. Watch it find its multiplier.', icon: ICON + 'plinko.png',        featured: true },
+  { id: 'dice',           name: 'Dice',             tag: 'Roll over or under. Set your own edge.',       icon: ICON + 'dice.png',          hot: true },
+  { id: 'limbo',          name: 'Limbo',            tag: 'Pick a target. Beat it for the payout.',       icon: ICON + 'limbo.png' },
+  { id: 'wheel',          name: 'Wheel',            tag: 'Spin the wheel. Land a multiplier.',           icon: ICON + 'wheel.png' },
+  { id: 'keno',           name: 'Keno',             tag: 'Mark your spots. Match the draw.',             icon: ICON + 'keno.png' },
+  { id: 'hilo',           name: 'Hi-Lo',            tag: 'Higher or lower — stack the streak.',          icon: ICON + 'hilo.png' },
+  { id: 'dragon-tower',   name: 'Dragon Tower',     tag: 'Climb the tower. Dodge the dragons.',          icon: ICON + 'dragon-tower.png' },
+  { id: 'pump',           name: 'Pump',             tag: 'Pump it up. Cash out before it pops.',         icon: ICON + 'pump.png', hot: true },
+  { id: 'chickenroad',    name: 'Chicken Road',     tag: 'Cross the road. Bank each step.',              icon: ICON + 'chickenroad.png' },
+  { id: 'coinflip',       name: 'Coin Flip',        tag: 'Heads or tails. Double or nothing.',           icon: ICON + 'coinflip.png' },
+  { id: 'diamonds',       name: 'Diamonds',         tag: 'Match the gems. Hit the combo.',               icon: ICON + 'diamonds.png' },
+  { id: 'cases',          name: 'Cases',            tag: 'Open the case. Reveal the reward.',            icon: ICON + 'cases.png' },
+  { id: 'blackjack',      name: 'Blackjack',        tag: 'Hit 21. Beat the dealer.',                     icon: ICON + 'blackjack.png' },
+  { id: 'roulette',       name: 'Roulette',         tag: 'Pick your number. Let it ride.',               icon: ICON + 'roulette.png' },
+  { id: 'baccarat',       name: 'Baccarat',         tag: 'Player or banker — call the winner.',          icon: ICON + 'baccarat.png' },
+  { id: 'sicbo',          name: 'Sic Bo',           tag: 'Three dice. Call the total.',                  icon: ICON + 'sicbo.png' },
+  { id: 'slots',          name: 'Slots',            tag: 'Spin the reels. Line up the gold.',            icon: ICON + 'slots.png' },
+  { id: 'threecardpoker', name: 'Three Card Poker', tag: 'Three cards. Beat the house hand.',            icon: ICON + 'threecardpoker.png' },
+  { id: 'videopoker',     name: 'Video Poker',      tag: 'Hold, draw, and build your hand.',             icon: ICON + 'videopoker.png' },
+]

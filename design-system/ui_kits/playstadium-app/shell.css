@@ -1,0 +1,93 @@
+/* ============================================================================
+   PlayStadium app shell — sidebar + topbar layout (consumes theme.css tokens)
+   ========================================================================== */
+.psa-shell { display: flex; height: 100dvh; overflow: hidden; background: var(--background); }
+
+/* ---------------- Sidebar ---------------- */
+.psa-sidebar {
+  width: 252px; flex: none; display: flex; flex-direction: column;
+  background: var(--sidebar); border-right: 1px solid var(--sidebar-border); z-index: 50;
+}
+.psa-brand { display: flex; align-items: center; gap: 10px; padding: 18px 18px 14px; background: none; border: 0; cursor: pointer; width: 100%; }
+.psa-brand-mark { height: 60px; width: auto; image-rendering: auto; align-self: center; }
+.psa-brand-name { font-size: 25px; color: var(--foreground); white-space: nowrap; }
+.psa-brand-dot { color: var(--gold); }
+.psa-back { display: inline-flex; align-items: center; gap: 7px; margin: 0 14px 8px; padding: 7px 10px; border-radius: 8px; background: var(--secondary); border: 1px solid var(--border); color: var(--muted-foreground); font-family: var(--font-body); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: color .15s, border-color .15s; }
+.psa-back:hover { color: var(--foreground); border-color: color-mix(in srgb, var(--gold) 40%, var(--border)); }
+.psa-back svg { width: 15px; height: 15px; }
+
+.psa-nav { flex: 1; min-height: 0; padding: 6px 12px 12px; }
+.psa-nav-group { margin-bottom: 14px; }
+.psa-nav-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px; font-weight: 700; color: var(--muted-foreground); padding: 6px 10px; }
+.psa-nav-item {
+  position: relative; display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 9px 11px; border-radius: 9px; background: transparent; border: 0; cursor: pointer;
+  color: var(--muted-foreground); font-family: var(--font-body); font-size: 14px; font-weight: 500; text-align: left;
+  transition: background .14s ease, color .14s ease;
+}
+.psa-nav-item svg { color: currentColor; opacity: 0.9; }
+.psa-nav-item:hover { background: var(--accent); color: var(--foreground); }
+.psa-nav-item.is-active { background: color-mix(in srgb, var(--gold) 13%, transparent); color: var(--gold); font-weight: 600; }
+.psa-nav-item.is-active::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--gold); }
+
+.psa-console-cta {
+  display: flex; align-items: center; gap: 11px; margin: 0 14px 12px; padding: 12px 13px;
+  border-radius: 11px; background: linear-gradient(135deg, var(--surface), var(--surface-2));
+  border: 1px solid var(--border); color: var(--foreground); font-family: var(--font-body); font-size: 13.5px; font-weight: 600;
+  cursor: pointer; box-shadow: var(--sheen); transition: border-color .15s ease, box-shadow .2s ease;
+}
+.psa-console-cta:hover { border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); box-shadow: var(--elev-gold), var(--sheen); }
+.psa-console-cta svg { color: var(--gold); }
+.psa-side-foot { padding: 0 18px 16px; }
+
+/* ---------------- Main + topbar ---------------- */
+.psa-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.psa-topbar {
+  height: 66px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 84%, transparent); backdrop-filter: blur(12px); z-index: 30;
+}
+.psa-topbar-title { display: flex; flex-direction: column; gap: 1px; margin-right: auto; }
+.psa-topbar-title .eyebrow { font-size: 10px; }
+.psa-page-title { font-size: 23px; color: var(--foreground); }
+.psa-topbar-search { width: 250px; }
+.psa-topbar-right { display: flex; align-items: center; gap: 14px; }
+
+.psa-wallet { display: flex; align-items: center; gap: 14px; padding: 7px 8px 7px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--sheen); }
+.psa-wallet-block { display: flex; flex-direction: column; gap: 1px; }
+.psa-wallet-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: 0.07em; font-size: 9.5px; font-weight: 600; color: var(--muted-foreground); }
+.psa-wallet-value { font-family: var(--font-num); font-size: 17px; line-height: 1; color: var(--foreground); }
+.psa-wallet-deposit { margin-left: 2px; }
+
+.psa-acct { display: flex; align-items: center; gap: 9px; padding: 5px 8px 5px 5px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: border-color .15s ease; }
+.psa-acct:hover { border-color: color-mix(in srgb, var(--gold) 40%, var(--border)); }
+.psa-acct-id { display: flex; flex-direction: column; gap: 0; line-height: 1.15; text-align: left; }
+.psa-acct-name { font-size: 13px; font-weight: 600; color: var(--foreground); }
+.psa-acct-role { font-size: 11px; color: var(--muted-foreground); text-transform: capitalize; }
+.psa-acct > svg { color: var(--muted-foreground); }
+.psa-acct-vip { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 13px; }
+
+/* ---------------- Content ---------------- */
+.psa-content { flex: 1; min-height: 0; padding: 26px 30px 0; }
+.psa-footer { margin-top: 40px; padding: 22px 0; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 12.5px; text-align: center; }
+
+/* mobile chrome (hidden on desktop) */
+.psa-burger { display: none; }
+.psa-scrim { display: none; }
+
+@media (max-width: 1280px) {
+  .psa-wallet-deposit span { display: none; }
+}
+@media (max-width: 1040px) {
+  .psa-sidebar { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); transition: transform .24s var(--ease-out); }
+  .psa-shell.is-mobile-open .psa-sidebar { transform: translateX(0); }
+  .psa-shell.is-mobile-open .psa-scrim { display: block; position: fixed; inset: 0; background: rgba(7,9,12,0.6); z-index: 40; }
+  .psa-burger { display: inline-flex; }
+  .psa-topbar-search { display: none; }
+}
+@media (max-width: 760px) {
+  .psa-wallet-block:first-child + .sep-v + .psa-wallet-block { display: none; }
+  .psa-acct-id { display: none; }
+  .psa-content { padding: 20px 16px 0; }
+  .psa-topbar { padding: 0 14px; gap: 10px; }
+}

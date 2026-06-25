@@ -45,14 +45,15 @@ describe('SetupWizard applies presets', () => {
     root = createRoot(host)
     act(() => root.render(<SetupWizard />))
 
-    // Step 1: choose Aggressive (a radio card in the preset grid).
-    const aggressive = [...host.querySelectorAll<HTMLButtonElement>('.con-preset')].find(
-      (b) => b.querySelector('.con-preset-name')?.textContent === 'Aggressive',
+    // Step 1: choose Aggressive (a radio card in the preset grid — now the brand
+    // ob-preset markup from the PlayStadium operator-onboarding flow).
+    const aggressive = [...host.querySelectorAll<HTMLButtonElement>('.ob-preset')].find(
+      (b) => b.querySelector('.ob-preset-name')?.textContent === 'Aggressive',
     )!
     act(() => aggressive.click())
     // Step 2: review.
     act(() => byText(/Review/).click())
-    // Step 3: apply.
+    // Step 3: apply (advances to the Desk step — invite agents).
     act(() => byText(/Apply/).click())
 
     const p = PRESETS.aggressive
@@ -70,9 +71,9 @@ describe('SetupWizard applies presets', () => {
     expect(s.defaultCreditLimit).toBe(p.defaultCreditLimit) // 50_000
     expect(s.settlementPeriodDays).toBe(p.settlementPeriodDays) // 14
 
-    // Setup recorded; the done step shows.
+    // Setup recorded; applying advances to the Desk (invite-agents) step.
     expect(getSetup().completed).toBe(true)
     expect(getSetup().preset).toBe('aggressive')
-    expect(host.textContent).toContain('applied')
+    expect(host.textContent).toContain('Invite your agents')
   })
 })

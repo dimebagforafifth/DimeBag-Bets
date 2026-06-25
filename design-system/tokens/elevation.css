@@ -1,0 +1,27 @@
+/* ============================================================================
+   ELEVATION & MOTION — PlayStadium
+   ONE systematic shadow ramp tuned for a deep graphite canvas — soft, never
+   harsh. -1 resting cards, -2 hover/raised, -3 popovers/modals. A consistent
+   ramp is what reads as "premium" vs. random box-shadows.
+   ========================================================================== */
+:root {
+  /* ---- layered (ambient + key) shadows ---- */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 2px 6px -2px rgba(0, 0, 0, 0.28);
+  --elev-2: 0 2px 4px rgba(0, 0, 0, 0.34), 0 10px 22px -10px rgba(0, 0, 0, 0.5);
+  --elev-3: 0 6px 14px rgba(0, 0, 0, 0.38), 0 22px 48px -16px rgba(0, 0, 0, 0.62);
+  /* a soft gold lift for the hovered primary surface (CTAs, focused tiles) */
+  --elev-gold: 0 8px 24px -10px rgba(var(--gold-glow), 0.55);
+  /* a hairline top-highlight that gives flat dark surfaces a lit edge */
+  --sheen: inset 0 1px 0 rgba(255, 255, 255, 0.05); /* @kind shadow */
+
+  /* ---- focus ring: ONE accessible ring used everywhere ---- */
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px rgba(var(--gold-glow), 0.7);
+
+  /* ---- motion: shared durations + easing so every transition has one rhythm ---- */
+  --dur-fast: 0.13s; /* @kind other */
+  --dur: 0.18s; /* @kind other */
+  --dur-slow: 0.28s; /* @kind other */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1); /* @kind other */   /* entering / hover */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* @kind other */         /* exiting */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */  /* the bento-soft overshoot */
+}

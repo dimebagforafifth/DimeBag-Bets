@@ -1,0 +1,30 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Radii & Elevation" subtitle="Corner radii sm/base/lg and the three-step shadow ramp" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg); font-family: var(--font-body); color: var(--text); padding: 22px; display: flex; gap: 40px; }
+  .group { display: flex; gap: 16px; align-items: center; }
+  .box { width: 70px; height: 70px; background: var(--surface-2); border: 1px solid var(--line); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; }
+  .tok { font-family: var(--font-num); font-size: 10px; color: var(--faint); }
+  .el { width: 70px; height: 70px; background: var(--surface); border-radius: var(--radius); }
+  .sep { width: 1px; background: var(--line); align-self: stretch; }
+</style>
+</head>
+<body>
+  <div class="group">
+    <div class="box" style="border-radius: var(--radius-sm)"><span class="tok">sm · 8</span></div>
+    <div class="box" style="border-radius: var(--radius)"><span class="tok">base · 12</span></div>
+    <div class="box" style="border-radius: var(--radius-lg)"><span class="tok">lg · 18</span></div>
+  </div>
+  <div class="sep"></div>
+  <div class="group">
+    <div class="el" style="box-shadow: var(--elev-1)"></div>
+    <div class="el" style="box-shadow: var(--elev-2)"></div>
+    <div class="el" style="box-shadow: var(--elev-3)"></div>
+    <div class="el" style="box-shadow: var(--elev-gold)"></div>
+  </div>
+</body>
+</html>

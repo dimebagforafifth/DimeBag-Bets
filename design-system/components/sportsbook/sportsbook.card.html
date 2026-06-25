@@ -1,0 +1,50 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Sportsbook · Rows & Bet Slip" subtitle="Tappable odds, event rows, and the live points bet slip" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: var(--font-body); color: var(--text); padding: 20px; }
+  .wrap { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { EventRow, BetSlip } = window.PlayStadiumDesignSystem_e4e367
+    const EVENTS = [
+      { id: 'lac', league: 'NBA', time: '7:30 PM', home: { name: 'Lakers' }, away: { name: 'Celtics' },
+        markets: [{ heading: 'Spread', options: [{ id:'lac-h', label:'LAL -3.5', price:'1.91' }, { id:'lac-a', label:'BOS +3.5', price:'1.91', move:'up' }] },
+                  { heading: 'Moneyline', options: [{ id:'lml-h', label:'LAL', price:'1.74' }, { id:'lml-a', label:'BOS', price:'2.10' }] }] },
+      { id: 'epl', league: 'EPL', time: 'LIVE', live: true, home: { name: 'Arsenal' }, away: { name: 'Chelsea' }, score: { home: 1, away: 0 },
+        markets: [{ heading: '1X2', options: [{ id:'epl-h', label:'ARS', price:'1.55' }, { id:'epl-d', label:'Draw', price:'4.20' }, { id:'epl-a', label:'CHE', price:'5.50', move:'down' }] }] },
+    ]
+    function Demo() {
+      const [sel, setSel] = React.useState([{ id:'lac-h', pick:'Lakers -3.5', event:'Lakers vs Celtics · NBA', price:1.91 }])
+      const [stake, setStake] = React.useState(100)
+      const [mode, setMode] = React.useState('parlay')
+      const pick = (o, ev) => setSel((s) => s.find(x=>x.id===o.id) ? s.filter(x=>x.id!==o.id) : [...s, { id:o.id, pick:o.label, event:ev.heading, price:Number(o.price) }])
+      const ids = sel.map(s=>s.id)
+      return (
+        <div className="wrap">
+          <div className="rows">
+            {EVENTS.map((e) => (
+              <EventRow key={e.id} {...e} selectedId={ids.find(id => e.markets.some(m=>m.options.some(o=>o.id===id)))} onPick={(o)=>pick(o, o)} />
+            ))}
+          </div>
+          <BetSlip selections={sel} stake={stake} mode={mode} onStakeChange={setStake} onModeChange={setMode}
+            onRemove={(s)=>setSel((cur)=>cur.filter(x=>x.id!==s.id))} onPlace={()=>{}} />
+        </div>
+      )
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo />)
+  </script>
+</body>
+</html>

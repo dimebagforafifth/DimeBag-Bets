@@ -1,0 +1,24 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Graphite Surfaces" subtitle="The warm-neutral canvas ramp — bg → surface → surface-2 → line" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg); font-family: var(--font-body); }
+  .wrap { display: flex; gap: 0; padding: 20px; }
+  .sw { flex: 1; height: 110px; border-radius: var(--radius-sm); display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; border: 1px solid var(--line); }
+  .sw + .sw { margin-left: 12px; }
+  .name { font-family: var(--font-label); font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: 0.04em; }
+  .hex { font-family: var(--font-num); font-size: 11px; color: var(--faint); margin-top: 2px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sw" style="background: var(--bg);"><span class="name">--bg</span><span class="hex">#161616</span></div>
+    <div class="sw" style="background: var(--surface);"><span class="name">--surface</span><span class="hex">#20201F</span></div>
+    <div class="sw" style="background: var(--surface-2);"><span class="name">--surface-2</span><span class="hex">#333332</span></div>
+    <div class="sw" style="background: var(--line);"><span class="name">--line</span><span class="hex">#43433F</span></div>
+  </div>
+</body>
+</html>

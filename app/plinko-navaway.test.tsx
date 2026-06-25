@@ -32,7 +32,8 @@ vi.mock('../games/shared/fair.js', async (importOriginal) => {
 })
 
 function figure(host: HTMLElement): string {
-  return host.querySelector('.figure-value')?.textContent ?? ''
+  // The header wallet is the brand WalletPill; its first value is the headline balance.
+  return host.querySelector('.sds-wallet__value')?.textContent ?? ''
 }
 function click(host: HTMLElement, selector: string, text: RegExp): boolean {
   const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) =>
@@ -52,7 +53,7 @@ function clickMore(host: HTMLElement, text: RegExp): boolean {
 async function openPlinkoAndDrop(host: HTMLElement): Promise<void> {
   // From wherever we are, get to the casino lobby, open Plinko, drop a ball.
   click(host, 'button.nav-tab', /^casino$/i)
-  if (!click(host, 'button.game-card', /plinko/i)) throw new Error('no Plinko card')
+  if (!click(host, 'button.sds-gamecard', /plinko/i)) throw new Error('no Plinko card')
   // The game view is a lazy() chunk: await its dynamic import (the same module
   // promise React.lazy is suspended on) so React can commit it, then click Play.
   await act(async () => {
@@ -112,5 +113,10 @@ describe('leaving Plinko by any route keeps the balance change', () => {
 
     act(() => root.unmount())
     host.remove()
-  })
+    // Heavy end-to-end pass: six routes, each doing a full <App/> render, a lazy
+    // PlinkoGame chunk import, and a drop settle. The brand reskin (WalletPill/
+    // GameCard + the new "More" dropdown nav) added render work, tipping the body
+    // past Vitest's 5s default on slower CI/hardware. Give it the same 20s budget
+    // the other app-level integration tests use (player-sections, baccarat engine).
+  }, 20000)
 })
