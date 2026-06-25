@@ -19,7 +19,7 @@
  * the net result — while `results` carries the per-spot breakdown for the UI.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { availableToWager, placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { dealBaccarat, hashServerSeed, type BaccaratDeal } from './fair.js'

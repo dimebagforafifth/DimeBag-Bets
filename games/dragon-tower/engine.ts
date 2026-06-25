@@ -7,7 +7,7 @@
  * NO points of its own (§3); the figure lives entirely in `core`.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { placeWager, resolveWager } from '../../core/index.js'
 import { deriveTower, hashServerSeed, isSkull } from './fair.js'

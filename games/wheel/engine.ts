@@ -6,7 +6,7 @@
  * pocket is a full loss, anything above 1× a win.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { hashServerSeed, spinSegment } from './fair.js'

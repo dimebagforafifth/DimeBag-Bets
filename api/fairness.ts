@@ -274,7 +274,7 @@ const fairnessRequestSchema = z.discriminatedUnion('action', [
     commitId: z.string().min(1),
     clientSeed: z.string(),
     nonce: z.number(),
-    config: z.record(z.unknown()).optional(),
+    config: z.record(z.string(), z.unknown()).optional(),
   }),
   z.object({
     action: z.literal('resolve'),
@@ -282,7 +282,7 @@ const fairnessRequestSchema = z.discriminatedUnion('action', [
     game: z.string().min(1),
     clientSeed: z.string(),
     nonce: z.number(),
-    params: z.record(z.unknown()).optional(),
+    params: z.record(z.string(), z.unknown()).optional(),
   }),
 ])
 

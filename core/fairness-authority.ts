@@ -17,9 +17,9 @@
  * `api/fairness.ts`) — no rewrite when the backend is provisioned.
  */
 
-import { hmac } from '@noble/hashes/hmac'
-import { sha256 } from '@noble/hashes/sha2'
-import { bytesToHex, randomBytes, utf8ToBytes } from '@noble/hashes/utils'
+import { hmac } from '@noble/hashes/hmac.js'
+import { sha256 } from '@noble/hashes/sha2.js'
+import { bytesToHex, randomBytes, utf8ToBytes } from '@noble/hashes/utils.js'
 import { hashServerSeed } from './fair.js'
 
 /** Published BEFORE play: the hash pins the seed without revealing it. */

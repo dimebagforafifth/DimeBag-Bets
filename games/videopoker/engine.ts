@@ -12,7 +12,7 @@
  * fair: HOLD choices only pick which predetermined draws you take.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { dealtDeck, hashServerSeed, type Card } from './fair.js'

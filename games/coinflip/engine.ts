@@ -16,7 +16,7 @@
  * flips (multiplier = 1.96ⁿ), that same 2% edge holds on every flip and every coin.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier, resolveWager } from '../../core/index.js'
 import { coinAt, hashServerSeed, type CoinFace } from './fair.js'

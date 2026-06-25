@@ -112,9 +112,9 @@ export const oddsApiScoreEventsSchema = z.array(oddsApiScoreEventSchema)
 // ── Issue formatting (preserves the legacy `$[0].bookmakers[0]...` path style) ───────────────
 
 /** Render a zod issue path as the `$[0].bookmakers[0].markets[0].outcomes[0].price` style. */
-function pathString(path: ReadonlyArray<string | number>): string {
+function pathString(path: ReadonlyArray<PropertyKey>): string {
   let out = '$'
-  for (const seg of path) out += typeof seg === 'number' ? `[${seg}]` : `.${seg}`
+  for (const seg of path) out += typeof seg === 'number' ? `[${seg}]` : `.${String(seg)}`
   return out
 }
 

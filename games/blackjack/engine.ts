@@ -15,7 +15,7 @@
  *   blackjack → 2.5×, win → 2×, push → 1× (returned), loss → 0×.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { availableToWager, placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { cardValue, handValue, isBlackjack, isBust, type Card } from './cards.js'
