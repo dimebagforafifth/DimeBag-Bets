@@ -283,5 +283,7 @@ describe('realized distribution (deterministic Monte Carlo)', () => {
     expect(bPair / N).toBeCloseTo(0.0747, 1)
     // Banker wins slightly more often than Player (the reason for the commission).
     expect(banker).toBeGreaterThan(player)
-  })
+    // 6000 eight-deck deals runs ~4-5s and brushes vitest's 5s default under full-suite
+    // CPU load, causing a timeout flake. Give this heavy Monte Carlo room.
+  }, 20000)
 })

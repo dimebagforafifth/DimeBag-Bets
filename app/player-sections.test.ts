@@ -134,7 +134,9 @@ describe('prop-aware render path — the registry is the single render path (rou
     // drops its nav tab (visibleSections.includes(key as Section) is false). Fails loudly if a
     // lane registers a section without adding its key to auth/roles ALL_SECTIONS.
     for (const m of getPlayerSections()) expect(ALL_SECTIONS).toContain(m.key)
-  })
+    // The dynamic import pulls in the community/pickem/records module graph; its transform
+    // brushes vitest's 5s default under full-suite load, causing a timeout flake. Give it room.
+  }, 20000)
 })
 
 describe('records module self-registers its Profile section', () => {
