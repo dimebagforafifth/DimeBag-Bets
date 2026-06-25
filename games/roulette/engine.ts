@@ -9,7 +9,7 @@
  * follows the money, the same generic path Wheel and Plinko use.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { hashServerSeed, spinPocket } from './fair.js'

@@ -160,7 +160,7 @@ export function Sportsbook({ account, store }: SportsbookProps) {
   const dockRef = useRef<HTMLDivElement>(null) // the mobile sheet, for focus mgmt
 
   // Odds-format preference, loaded from + saved to localStorage (persistence module).
-  const prefRef = useRef<Doc<OddsFormat>>()
+  const prefRef = useRef<Doc<OddsFormat> | null>(null)
   if (!prefRef.current) {
     prefRef.current = persistedDoc<OddsFormat>(createLocalStore({ namespace: 'dimebag' }), 'oddsFormat', {
       version: 1,

@@ -615,13 +615,12 @@ describe('gradeBet — threecardpoker', () => {
   it('grades ante correctly when playing', () => {
     const bonus = anteBonusOdds(playerValue)
     const qualifies = tcpDealerQualifies(dealerValue)
-    let base = 0
-    if (!qualifies) {
-      base = 2
-    } else {
+    const base = !qualifies
+      ? 2
+      : (() => {
       const cmp = tcpCompare(playerValue, dealerValue)
-      base = cmp > 0 ? 2 : cmp < 0 ? 0 : 1
-    }
+      return cmp > 0 ? 2 : cmp < 0 ? 0 : 1
+    })()
     const r = gradeBet({ ...SEEDS, game: 'threecardpoker', bet: 'ante', decision: 'play' })
     expect(r.multiplier).toBe(base + bonus)
   })

@@ -12,7 +12,7 @@
  * "lower" means ≤ it — an equal rank wins either way, matching Stake.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier, resolveWager } from '../../core/index.js'
 import { cardAt, DECK, hashServerSeed, RANKS, type Card } from './fair.js'

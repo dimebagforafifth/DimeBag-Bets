@@ -12,8 +12,8 @@
  * per-period windows, and a reproducible fingerprint.
  */
 
-import { sha256 } from '@noble/hashes/sha2'
-import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils'
+import { sha256 } from '@noble/hashes/sha2.js'
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js'
 import { byGame, isSportsbook, type BetRow } from '../app/ledger-stats.js'
 import type { RankProgress } from '../vip/index.js'
 import { clvSummary } from './clv.js'

@@ -13,7 +13,7 @@
  * which bets the player backs is purely a wager choice, never an input to the dice.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { placeWagers, resolveAtMultiplier } from '../../core/index.js'
 import { hashServerSeed, rollDice, type Dice } from './fair.js'

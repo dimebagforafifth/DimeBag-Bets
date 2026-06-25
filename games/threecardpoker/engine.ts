@@ -16,7 +16,7 @@
  * fair: the Play/Fold choice never changes the cards — the reveal is cosmetic.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { placeWager, placeWagers, resolveAtMultiplier } from '../../core/index.js'
 import { deal3, hashServerSeed, type Card, type Deal } from './fair.js'

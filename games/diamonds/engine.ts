@@ -6,7 +6,7 @@
  * non-paying hand (0×) is a full loss, anything above 1× a win.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { drawGems, hashServerSeed } from './fair.js'

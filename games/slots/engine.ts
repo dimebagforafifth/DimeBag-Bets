@@ -7,7 +7,7 @@
  * triple a win.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account } from '../../core/index.js'
 import { placeWager, resolveAtMultiplier } from '../../core/index.js'
 import { hashServerSeed, spin } from './fair.js'

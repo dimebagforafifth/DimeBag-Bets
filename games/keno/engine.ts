@@ -3,7 +3,7 @@
  * through the shared core (§3). Holds no points of its own.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account } from '../../core/index.js'
 import { placeWager, resolveWager } from '../../core/index.js'
 import { drawNumbers, GRID_SIZE, hashServerSeed, MAX_PICKS } from './fair.js'

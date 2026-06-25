@@ -10,7 +10,7 @@
  * server-authoritative, never influenced by the player's timing.
  */
 
-import { bytesToHex, randomBytes } from '@noble/hashes/utils'
+import { bytesToHex, randomBytes } from '@noble/hashes/utils.js'
 import type { Account, Wager } from '../../core/index.js'
 import { placeWager, resolveWager } from '../../core/index.js'
 import {
