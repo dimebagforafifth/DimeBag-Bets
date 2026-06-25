@@ -31,6 +31,11 @@
   --accent-bright: #6fdba7;
   --accent-press: #38a576;
   --accent-rgb: 70, 192, 138;
+  /* space-separated triplets for the gradient-beam backdrop (accent / bright /
+     press) — tonal variations of the one accent, per the single-accent rule */
+  --beam-1: 70 192 138;
+  --beam-2: 111 219 167;
+  --beam-3: 56 165 118;
   --ink: #07100c; /* text that sits ON the accent */
 }
 [data-theme='ember'] {
@@ -45,6 +50,9 @@
   --accent-bright: #f48f6f;
   --accent-press: #cf5c39;
   --accent-rgb: 232, 112, 74;
+  --beam-1: 232 112 74;
+  --beam-2: 244 143 111;
+  --beam-3: 207 92 57;
   --ink: #1a0d08;
 }
 [data-theme='ice'] {
@@ -59,6 +67,9 @@
   --accent-bright: #84c0f8;
   --accent-press: #4790db;
   --accent-rgb: 90, 166, 240;
+  --beam-1: 90 166 240;
+  --beam-2: 132 192 248;
+  --beam-3: 71 144 219;
   --ink: #06121f;
 }
 [data-theme='gold'] {
@@ -73,6 +84,9 @@
   --accent-bright: #ecca6e;
   --accent-press: #c39c34;
   --accent-rgb: 214, 177, 74;
+  --beam-1: 214 177 74;
+  --beam-2: 236 202 110;
+  --beam-3: 195 156 52;
   --ink: #14171c;
 }
 
@@ -124,16 +138,80 @@ button {
   z-index: 0;
 }
 
-/* Brand pixel-beam backdrop: pinned to the viewport, behind all page chrome.
-   Non-interactive; softened so it reads as ambient texture, not foreground. */
+/* ── GRADIENT-BEAM BACKDROP ──────────────────────────────────────────────────
+   The pure-CSS animated gradient hero (brand/gradient-beams), ported in behind
+   the page and re-themed live off the palette accent. Pinned to the viewport,
+   non-interactive, its own isolated layer so the blend modes stay contained.
+   Tune: --beam-* colors come from the active [data-theme]; speeds + grain are
+   the magic numbers below. */
 .exp-beams {
   position: fixed;
   inset: 0;
-  width: 100vw !important;
-  height: 100dvh !important;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.55;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg);
+}
+.exp-beam {
+  position: absolute;
+  inset: -20%;
+  background-repeat: no-repeat;
+  background-size: 220% 220%;
+  mix-blend-mode: screen;        /* tones glow against the off-black base */
+  will-change: background-position;
+  transform: translateZ(0);
+  /* edges melt into the solid --bg so the page reads as a clean background */
+  -webkit-mask: radial-gradient(135% 130% at 50% 38%, #000 64%, transparent 96%);
+          mask: radial-gradient(135% 130% at 50% 38%, #000 64%, transparent 96%);
+}
+/* Layer A — vivid tonal base, full-bleed so it never leaves dark gaps */
+.exp-beam--a {
+  background-image: linear-gradient(120deg,
+    rgb(var(--beam-1) / 0.55)   0%,
+    rgb(var(--beam-2) / 0.42)  28%,
+    rgb(var(--beam-3) / 0.48)  55%,
+    rgb(var(--beam-2) / 0.40)  80%,
+    rgb(var(--beam-1) / 0.55) 100%);
+  animation: exp-drift-a 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+/* Layer B — slower organic blobs for depth + cross-flow */
+.exp-beam--b {
+  background-image:
+    radial-gradient(56% 60% at 30% 34%, rgb(var(--beam-2) / 0.45), transparent 60%),
+    radial-gradient(54% 58% at 74% 66%, rgb(var(--beam-3) / 0.42), transparent 62%),
+    radial-gradient(50% 54% at 58% 22%, rgb(var(--beam-1) / 0.34), transparent 64%);
+  background-size: 185% 185%;
+  animation: exp-drift-b 43s cubic-bezier(0.6, 0.02, 0.4, 0.98) infinite;
+}
+/* Subtle inline-SVG grain for premium texture (static = ~0 CPU) */
+.exp-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+@keyframes exp-drift-a {
+  0%   { background-position:  0%  50%; }
+  22%  { background-position: 34%  18%; }
+  46%  { background-position: 72%  64%; }
+  68%  { background-position: 40%  88%; }
+  85%  { background-position: 12%  40%; }
+  100% { background-position:  0%  50%; }
+}
+@keyframes exp-drift-b {
+  0%   { background-position: 100% 50%; }
+  25%  { background-position:  62% 84%; }
+  50%  { background-position:  20% 30%; }
+  74%  { background-position:  58% 70%; }
+  100% { background-position: 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .exp-beam { animation: none; }
+  .exp-beam--a { background-position: 28% 32%; }
+  .exp-beam--b { background-position: 70% 68%; }
 }
 
 /* The page's own chrome stays above the backdrop and carries its own surfaces,
