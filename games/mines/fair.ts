@@ -9,7 +9,7 @@
  * by which tiles the player clicks.
  */
 
-import { floatStream } from '../../core/fair.js'
+import { floatStream, uniformSample } from '../../core/fair.js'
 export { hashServerSeed } from '../../core/fair.js'
 
 /**
@@ -31,9 +31,7 @@ export function deriveMines(
   const mines: number[] = []
   const floats = floatStream(serverSeed, clientSeed, nonce)
   for (let k = 0; k < mineCount; k++) {
-    const float = floats.next().value
-    const index = Math.floor(float * pool.length)
-    mines.push(pool.splice(index, 1)[0])
+    mines.push(pool.splice(uniformSample(floats, pool.length), 1)[0])
   }
   return mines.sort((a, b) => a - b)
 }

@@ -4,7 +4,7 @@
  * (same primitive as Mines). Deterministic in the seeds — provable fairness.
  */
 
-import { floatStream, hashServerSeed } from '../../core/fair.js'
+import { floatStream, hashServerSeed, uniformSample } from '../../core/fair.js'
 
 export { hashServerSeed }
 
@@ -18,8 +18,7 @@ export function drawNumbers(serverSeed: string, clientSeed: string, nonce: numbe
   const drawn: number[] = []
   const floats = floatStream(serverSeed, clientSeed, nonce)
   for (let k = 0; k < DRAW_COUNT; k++) {
-    const index = Math.floor(floats.next().value * pool.length)
-    drawn.push(pool.splice(index, 1)[0])
+    drawn.push(pool.splice(uniformSample(floats, pool.length), 1)[0])
   }
   return drawn.sort((a, b) => a - b)
 }

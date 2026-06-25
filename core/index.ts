@@ -55,3 +55,4 @@ export {
   setLimitsClock,
   __resetLimits,
 } from './limits.js'
+export { floatStream, firstFloat, firstUint32, hashServerSeed, uniformSample } from './fair.js'
