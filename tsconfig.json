@@ -35,6 +35,7 @@
     "console",
     "features",
     "lib",
+    "components",
     "api",
     "scripts",
     "records",
