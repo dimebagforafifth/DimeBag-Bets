@@ -53,6 +53,8 @@
     "boosts",
     "splits",
     "referrals",
-    "worker"
+    "worker",
+    "brand",
+    "experiments"
   ]
 }

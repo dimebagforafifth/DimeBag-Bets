@@ -13,3 +13,6 @@ coverage/
 
 # Dev-only live odds snapshot (real games pulled at runtime — data, not code).
 public/dev-odds.json
+
+# High-res icon source originals (kept locally, not shipped)
+art-src/

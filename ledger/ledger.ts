@@ -56,8 +56,10 @@ export interface Ledger {
   resolve(account: Account, wager: Wager, outcome: Outcome, multiplier?: number, meta?: Meta): void
   /** Settle a wager at an arbitrary return multiplier through core and record it. */
   resolveAt(account: Account, wager: Wager, m: number, meta?: Meta): void
-  /** Square up the week through core and record the reset. */
-  settle(account: Account, meta?: Meta): void
+  /** Square up the week through core and record the reset. The settlement
+   *  direction (paid_in/paid_out/flat), closing figure, and optional week label
+   *  are stamped onto the entry meta so the durable row stays auditable (issue #3). */
+  settle(account: Account, meta?: Meta, opts?: { week?: string; now?: number }): void
   /** Record an arbitrary movement (for callers wiring in other money flows). */
   record(entry: Omit<LedgerEntry, 'seq' | 'at'> & { at?: number }): LedgerEntry
 }
@@ -137,10 +139,10 @@ export function createLedger(
       recordResolve(account, wager, b0, p0, meta)
     },
 
-    settle(account, meta) {
+    settle(account, meta, opts) {
       const b0 = account.balance
       const p0 = account.pending
-      settleWeek(account)
+      const settlement = settleWeek(account, opts)
       record({
         kind: 'settle',
         accountId: account.id,
@@ -148,7 +150,14 @@ export function createLedger(
         pendingDelta: account.pending - p0,
         balanceAfter: account.balance,
         pendingAfter: account.pending,
-        meta,
+        // Fold the settlement semantics into meta so the durable row records WHAT
+        // was squared up (direction + closing figure), not just the balance delta.
+        meta: {
+          ...meta,
+          direction: settlement.direction,
+          closingBalance: settlement.closingBalance,
+          ...(settlement.week != null ? { week: settlement.week } : {}),
+        },
       })
     },
   }

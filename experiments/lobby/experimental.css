@@ -403,6 +403,13 @@ button {
   filter: drop-shadow(0 10px 26px rgba(var(--accent-rgb), 0.55));
   animation: exp-float 6s ease-in-out infinite;
 }
+.exp-featured-art img.exp-art-img {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
+  animation: exp-float 6s ease-in-out infinite;
+}
 .exp-featured-name {
   font-family: var(--font-display);
   font-weight: 700;
@@ -629,6 +636,16 @@ button {
   transition: transform 0.28s var(--ease);
 }
 .exp-card:hover .exp-card-art svg {
+  transform: scale(1.08) rotate(-2deg);
+}
+.exp-card-art img.exp-art-img {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+  transition: transform 0.28s var(--ease);
+}
+.exp-card:hover .exp-card-art img.exp-art-img {
   transform: scale(1.08) rotate(-2deg);
 }
 .exp-card-body {

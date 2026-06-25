@@ -133,6 +133,51 @@ function emitGrant(e: GrantEvent): void {
   }
 }
 
+/* ------------------------- weekly settlement (squaring up) --------------- */
+
+/**
+ * Emitted when an account is squared up at `settleWeek` — BEFORE the figure is
+ * zeroed — so the ledger keeps an auditable record of what was paid in/out each
+ * week instead of the reset silently swallowing it (issue #3). `settleWeek` also
+ * returns this record so a synchronous caller can persist it directly.
+ */
+export interface SettlementRecord {
+  accountId: string
+  /**
+   * The figure squared up, signed as the account carried it: positive = the book
+   * owed the player (paid out), negative = the player owed the book (paid in).
+   */
+  closingBalance: number
+  /** Which way money moved to flatten the book. `flat` = nothing owed either way. */
+  direction: 'paid_in' | 'paid_out' | 'flat'
+  /** Optional caller-supplied label for the cycle being closed (e.g. ISO week). */
+  week?: string
+  /** When the settlement ran (ms since epoch). */
+  timestamp: number
+}
+
+type SettlementListener = (e: SettlementRecord) => void
+const settlementListeners = new Set<SettlementListener>()
+
+/** Subscribe to weekly settlements. Returns an unsubscribe fn. */
+export function onSettlement(listener: SettlementListener): () => void {
+  settlementListeners.add(listener)
+  return () => {
+    settlementListeners.delete(listener)
+  }
+}
+
+function emitSettlement(e: SettlementRecord): void {
+  // A logging listener must never be able to break settlement.
+  for (const l of settlementListeners) {
+    try {
+      l(e)
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 /**
  * How much the player may put at risk right now. Branches on the economy mode (§3):
  *   - credit  (default): creditLimit + balance − pending — the figure may run down to −limit.
@@ -361,12 +406,31 @@ export function grant(account: Account, cents: number, meta?: Record<string, unk
  * Weekly settlement: the account squares up (negative balances pay in, positive
  * balances get paid) and then resets to zero for the new week. Requires no open
  * wagers — settle only after the week's bets are graded.
+ *
+ * Before zeroing, it captures a `SettlementRecord` of what was squared up, emits
+ * it on the settlement channel (so the ledger can persist it), and returns it —
+ * so a weekly reset always leaves an auditable trail instead of silently dropping
+ * the closing figure (issue #3). `opts.week` tags the cycle being closed;
+ * `opts.now` overrides the timestamp (handy for deterministic tests/backfills).
  */
-export function settleWeek(account: Account): void {
+export function settleWeek(
+  account: Account,
+  opts?: { week?: string; now?: number },
+): SettlementRecord {
   if (account.pending !== 0) {
     throw new Error(`cannot settle with ${account.pending} still pending; grade all wagers first`)
   }
+  const closingBalance = account.balance
+  const record: SettlementRecord = {
+    accountId: account.id,
+    closingBalance,
+    direction: closingBalance > 0 ? 'paid_out' : closingBalance < 0 ? 'paid_in' : 'flat',
+    week: opts?.week,
+    timestamp: opts?.now ?? Date.now(),
+  }
   account.balance = 0
+  emitSettlement(record)
+  return record
 }
 
 /**

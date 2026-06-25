@@ -17,8 +17,9 @@ export {
   onWagerResolved,
   onWagerPlaced,
   onGrant,
+  onSettlement,
 } from './core.js'
-export type { ResolveEvent, PlaceEvent, GrantEvent } from './core.js'
+export type { ResolveEvent, PlaceEvent, GrantEvent, SettlementRecord } from './core.js'
 export type { EconomyMode, EconomyPolicy } from './economy.js'
 export {
   DEFAULT_ECONOMY_POLICY,
