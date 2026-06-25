@@ -1,0 +1,47 @@
+# gitleaks configuration for DimeBag-Bets / PlayStadium.io.
+#
+# Strategy: inherit gitleaks' full upstream rule set, then layer a small,
+# repo-specific allowlist on top — so every default detector stays active and we
+# only carve out values that are known-safe in THIS points-only repo.
+#
+# Consumed by .github/workflows/secret-scan.yml (gitleaks/gitleaks-action) and by
+# a local `gitleaks detect` run.
+
+title = "DimeBag-Bets gitleaks config"
+
+[extend]
+# Pull in all of gitleaks' built-in rules; the allowlist below is additive.
+useDefault = true
+
+[allowlist]
+description = "Known false positives specific to this points-only repo"
+
+# Path-based: files that hold placeholder/example values, or high-entropy data
+# that is structurally secret-like but is never an actual credential.
+paths = [
+  # Documented env placeholders (e.g. <anon-key>, your_sgo_api_key) — not real.
+  '''\.env\.example$''',
+  # npm integrity hashes (sha512-…) trip entropy detectors but are not secrets.
+  '''package-lock\.json$''',
+  # Docs reference secret NAMES and rotation steps, never secret VALUES.
+  '''^docs/''',
+]
+
+# Regex-based: deterministic provably-fair TEST VECTORS. The fairness tests use
+# fixed, human-readable seed strings (e.g. 'server-seed-abc123', 'player-seed-xyz')
+# that are public test data, not credentials.
+regexes = [
+  '''(server|player|client)-seed-[a-z0-9-]+''',
+  # The clearly-flagged, non-production dev fallback fairness secret (.env.example).
+  '''dev[-_]fallback[-_a-z0-9]*''',
+]
+
+# Stopwords: a candidate finding containing one of these tokens is treated as a
+# placeholder rather than a live secret.
+stopwords = [
+  "example",
+  "placeholder",
+  "changeme",
+  "your_sgo_api_key",
+  "mock",
+]

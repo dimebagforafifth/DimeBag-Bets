@@ -1,0 +1,47 @@
+name: CodeQL
+
+# Static application security testing. Runs on every push to main, every PR into
+# main, and a weekly schedule so newly-published CodeQL queries still catch issues
+# while the code is idle. Results upload to the Security tab — this repo is public,
+# so GitHub code scanning is available at no cost.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, Sunday 00:00 UTC (Sunday midnight).
+    - cron: "0 0 * * 0"
+
+# Read-only by default; the analyze job opts into the one write scope it needs.
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    permissions:
+      # The only write scope: publishing results to GitHub code scanning.
+      security-events: write
+      # Read scopes the CodeQL Action uses to inspect the run/workflow.
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          languages: javascript-typescript
+          # JS/TS is interpreted — no compilation step needed, so skip autobuild.
+          build-mode: none
+          # Default query suite (always run) plus the security-extended suite for
+          # deeper security coverage.
+          queries: security-extended
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          category: "/language:javascript-typescript"

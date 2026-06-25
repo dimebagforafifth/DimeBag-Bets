@@ -1,0 +1,59 @@
+version: 2
+
+# Keep dependencies and the CI Actions current and patched. Updates target `main`
+# and run weekly. Patch + minor bumps are batched into a single grouped PR to cut
+# review noise; majors are left out of the group so each breaking bump arrives as
+# its own PR for deliberate review. The repo owner is assigned as reviewer.
+updates:
+  # ── npm dependencies (package.json / package-lock.json) ──────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dimebagforafifth"
+    assignees:
+      - "dimebagforafifth"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      # One PR for all non-breaking npm updates; majors fall outside the group and
+      # get their own individual PRs.
+      npm-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ── GitHub Actions (.github/workflows/*.yml — SHA-pinned, bumped here) ────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dimebagforafifth"
+    assignees:
+      - "dimebagforafifth"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
