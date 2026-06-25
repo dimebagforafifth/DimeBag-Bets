@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Animated Gradient Beams — pure CSS</title>
+
+<style>
+/* ============================================================================
+   ANIMATED GRADIENT BEAMS  ·  pure HTML + CSS, zero dependencies
+   ----------------------------------------------------------------------------
+   A premium, slow-flowing mesh-gradient backdrop for landing-page hero
+   sections. Two independently-drifting radial meshes are blended together for
+   organic, non-repeating motion, finished with an inline SVG grain texture and
+   a radial mask so the edges melt into a solid background color.
+
+   ── HOW TO TUNE ────────────────────────────────────────────────────────────
+   • COLORS .......... edit the jewel-tone vars in :root (--c-1 … --c-4 + --bg)
+   • SPEED ........... --speed-a / --speed-b (bigger = slower, calmer flow)
+   • TEXTURE ......... --grain-opacity (0 = off, ~0.12 = gritty)
+   • EDGE FADE ....... --edge-stop (smaller % = more aggressive fade to --bg)
+   • MOTION CURVE .... the cubic-bezier() in the .beam animation shorthands
+   A light-mode palette is provided (commented) at the bottom of :root.
+   ========================================================================== */
+
+:root {
+  /* ---- Palette: deep dark-mode jewel tones (royal indigo → violet →
+         magenta → teal). Keep these in the same luminance family for a
+         sophisticated, non-"rainbow" harmony. -------------------------------*/
+  --bg:  #060713;                 /* solid base the beams fade into          */
+  --c-1: 79  70  229;             /* royal indigo  (#4F46E5)  — RGB triplets */
+  --c-2: 124 58  237;             /* deep violet   (#7C3AED)                 */
+  --c-3: 217 70  239;             /* magenta       (#D946EF)                 */
+  --c-4: 20  184 166;             /* teal          (#14B8A6)                 */
+
+  /* ---- Motion: durations are deliberately co-prime-ish (29s vs 37s) so the
+         two layers drift out of phase and the combined motion never visibly
+         repeats, while each layer still loops perfectly on its own. ---------*/
+  --speed-a: 29s;
+  --speed-b: 37s;
+
+  /* ---- Texture + framing --------------------------------------------------*/
+  --grain-opacity: 0.07;          /* premium tactile grain (0 = clean)       */
+  --edge-stop: 78%;               /* where the mask starts fading to --bg    */
+
+  /* ---- LIGHT-MODE ALTERNATIVE (uncomment to swap) -------------------------
+  --bg:  #f5f5fb;
+  --c-1: 99  102 241;
+  --c-2: 168 85  247;
+  --c-3: 236 72  153;
+  --c-4: 45  212 191;
+  --grain-opacity: 0.05;
+  --------------------------------------------------------------------------- */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: #fff;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system,
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── HERO SECTION ──────────────────────────────────────────────────────────
+   Drop this <section> anywhere; it fills its container and clips the beams. */
+.hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  overflow: hidden;
+  background: var(--bg);
+  isolation: isolate;            /* contain the blend modes to this section  */
+}
+
+/* ── BACKGROUND LAYER ──────────────────────────────────────────────────────
+   A dedicated, non-interactive layer so the animation lives on its own GPU
+   compositing layer and never touches layout. */
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── THE BEAMS ─────────────────────────────────────────────────────────────
+   Each beam is a multi-stop radial *mesh* (several soft blobs in one paint).
+   background-size > 100% gives the blobs room to travel; we then animate only
+   background-position — a compositor-friendly property — for ~0% CPU. */
+.beam {
+  position: absolute;
+  inset: -20%;                   /* overscan so edges never reveal a seam     */
+  background-repeat: no-repeat;
+  background-size: 200% 200%;
+  mix-blend-mode: screen;        /* layers add light → richer interference    */
+
+  /* Performance: promote to its own layer + hint the animated property.      */
+  will-change: background-position;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+
+  /* Elegant edge fade: the mesh dissolves into the solid --bg at the rim,
+     so the section reads as a clean background, not a hard rectangle.        */
+  -webkit-mask: radial-gradient(140% 140% at 50% 45%,
+                #000 var(--edge-stop), transparent 96%);
+          mask: radial-gradient(140% 140% at 50% 45%,
+                #000 var(--edge-stop), transparent 96%);
+}
+
+/* Layer A — the vivid BASE. A full-bleed multi-stop linear gradient cycling
+   through all four jewel tones (no transparent gaps, so it stays saturated
+   everywhere). background-size > 100% gives the wandering room; `screen`
+   makes the tones glow against the dark base. The repeated end-stop (--c-1)
+   keeps the color wheel continuous as it drifts. */
+.beam--a {
+  background-image: linear-gradient(115deg,
+    rgb(var(--c-1) / 0.90)   0%,
+    rgb(var(--c-2) / 0.88)  26%,
+    rgb(var(--c-3) / 0.85)  52%,
+    rgb(var(--c-4) / 0.88)  78%,
+    rgb(var(--c-1) / 0.90) 100%);
+  background-size: 220% 220%;
+  animation: drift-a var(--speed-a) cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Layer B — organic DEPTH. Soft radial blobs that float over the base on a
+   second, slower path, breaking up any rigid "diagonal slide" feel. */
+.beam--b {
+  background-image:
+    radial-gradient(60% 62% at 32% 34%, rgb(var(--c-3) / 0.60), transparent 60%),
+    radial-gradient(58% 60% at 74% 66%, rgb(var(--c-4) / 0.55), transparent 60%),
+    radial-gradient(54% 56% at 60% 22%, rgb(var(--c-1) / 0.45), transparent 62%);
+  background-size: 170% 170%;
+  animation: drift-b var(--speed-b) cubic-bezier(0.6, 0.02, 0.4, 0.98) infinite;
+}
+
+/* Non-linear wander on BOTH axes. First & last keyframes are identical, so the
+   loop is mathematically seamless (no flash, no jump). */
+@keyframes drift-a {
+  0%   { background-position:  0%  50%; }
+  22%  { background-position: 34%  18%; }
+  46%  { background-position: 72%  64%; }
+  68%  { background-position: 40%  88%; }
+  85%  { background-position: 12%  40%; }
+  100% { background-position:  0%  50%; }
+}
+@keyframes drift-b {
+  0%   { background-position: 100% 50%; }
+  25%  { background-position:  62% 84%; }
+  50%  { background-position:  20% 30%; }
+  74%  { background-position:  58% 70%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* ── GRAIN / NOISE OVERLAY ─────────────────────────────────────────────────
+   Inline SVG fractal noise as a data-URI (no external file, no canvas). It's a
+   single static paint blended over the gradient — premium texture at near-zero
+   runtime cost. Tune strength with --grain-opacity. */
+.grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* ── CONTENT ───────────────────────────────────────────────────────────────
+   Sits above the backdrop. A soft radial scrim behind the copy guarantees
+   AA-contrast legibility no matter where the beams happen to drift. */
+.hero__content {
+  position: relative;
+  z-index: 2;
+  max-width: 46rem;
+  text-align: center;
+}
+.hero__content::before {
+  content: "";
+  position: absolute;
+  inset: -55% -30%;
+  z-index: -1;
+  /* soft, wide scrim — just enough to guarantee text contrast without
+     muddying the colors behind it */
+  background: radial-gradient(55% 60% at 50% 50%,
+              rgba(6, 7, 19, 0.42), transparent 72%);
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(6px);
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  background: linear-gradient(180deg, #fff 30%, rgba(255, 255, 255, 0.72));
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.25);
+}
+
+.hero p {
+  margin: 1.4rem auto 0;
+  max-width: 34rem;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  line-height: 1.6;
+  color: rgba(235, 238, 248, 0.82);
+}
+
+.cta {
+  margin-top: 2.25rem;
+  display: inline-flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.85rem 1.5rem;
+  border-radius: 0.7rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.btn--primary {
+  color: #0b0a1f;
+  background: #fff;
+  box-shadow: 0 10px 30px -10px rgba(255, 255, 255, 0.4);
+}
+.btn--primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(255, 255, 255, 0.55); }
+.btn--ghost {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.btn--ghost:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-2px); }
+
+/* ── ACCESSIBILITY: respect reduced-motion → freeze on a pleasant frame ──── */
+@media (prefers-reduced-motion: reduce) {
+  .beam { animation: none; }
+  .beam--a { background-position: 28% 32%; }
+  .beam--b { background-position: 70% 68%; }
+}
+</style>
+</head>
+
+<body>
+  <!-- Reusable hero section: the entire backdrop is decorative (aria-hidden),
+       so screen readers jump straight to the heading + copy. -->
+  <section class="hero">
+    <div class="hero__bg" aria-hidden="true">
+      <div class="beam beam--a"></div>
+      <div class="beam beam--b"></div>
+      <div class="grain"></div>
+    </div>
+
+    <div class="hero__content">
+      <span class="eyebrow">Now in private beta</span>
+      <h1>Build at the speed of thought.</h1>
+      <p>
+        A premium, GPU-accelerated gradient backdrop — pure CSS, zero
+        dependencies, and buttery-smooth on every device. Drop it behind any
+        hero and ship.
+      </p>
+      <div class="cta">
+        <button class="btn btn--primary">Get started</button>
+        <button class="btn btn--ghost">Read the docs</button>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

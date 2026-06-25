@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { handleFairness } from '../../api/fairness.js'
 import { createDerivedVault } from '../../core/fairness-authority.js'
 import { crashPointFromSeeds, DEFAULT_CRASH_CONFIG, verifyCrashPoint } from '../crash/fair.js'
+import { verifyRoll } from '../dice/fair.js'
+import { verifyMines } from '../mines/fair.js'
+import { resolveGameOutcome } from './resolvers.js'
 import { createFairnessClient, verifyServerSeed } from './fair.js'
 
 /** A fake fetch that drives the real endpoint handler over a fixed vault — true client↔server. */
@@ -37,6 +40,21 @@ describe('fairness client — talking to the endpoint', () => {
     ).toBe(true)
   })
 
+  it('resolveGame returns a server-authoritative outcome the player can re-verify (dice)', async () => {
+    const client = createFairnessClient({ fetchImpl: serverFetch() })
+    const { commitId } = await client.commit()
+    const res = await client.resolveGame<number>('dice', commitId, 'my-seed', 9)
+    expect(res.game).toBe('dice')
+    expect(verifyRoll(res.serverSeed, 'my-seed', 9, res.outcome)).toBe(true)
+  })
+
+  it('resolveGame threads round params server-side (mines mineCount)', async () => {
+    const client = createFairnessClient({ fetchImpl: serverFetch() })
+    const { commitId } = await client.commit()
+    const res = await client.resolveGame<number[]>('mines', commitId, 'pc', 1, { mineCount: 5 })
+    expect(verifyMines(res.serverSeed, 'pc', 1, 5, res.outcome)).toBe(true)
+  })
+
   it('mintRound commits then reveals a seed in one call, hash matching (the all-games seam)', async () => {
     const client = createFairnessClient({ fetchImpl: serverFetch() })
     const minted = await client.mintRound()
@@ -69,6 +87,15 @@ describe('fairness client — offline fallback (no server, e.g. local dev / test
     const res = await client.resolveCrash(commitId, 'seed', 2)
     expect(res.crashPoint).toBe(
       crashPointFromSeeds(res.serverSeed, 'seed', 2, DEFAULT_CRASH_CONFIG),
+    )
+  })
+
+  it('resolveGame falls back consistently — outcome matches the registry on the revealed seed', async () => {
+    const client = createFairnessClient({ fetchImpl: offlineFetch })
+    const { commitId } = await client.commit()
+    const res = await client.resolveGame<number[]>('mines', commitId, 'seed', 2, { mineCount: 3 })
+    expect(res.outcome).toEqual(
+      resolveGameOutcome('mines', res.serverSeed, 'seed', 2, { mineCount: 3 }),
     )
   })
 

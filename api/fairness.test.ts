@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_CRASH_CONFIG, verifyCrashPoint } from '../games/crash/fair.js'
+import { verifyRoll } from '../games/dice/fair.js'
+import { verifyMines } from '../games/mines/fair.js'
 import { createDerivedVault, verifyServerSeed } from '../core/fairness-authority.js'
 import {
   createInMemoryRateLimiter,
@@ -166,6 +168,76 @@ describe('fairness endpoint handler', () => {
     // @ts-expect-error — exercising the runtime guard for a bad action
     const { status } = await handleFairness({ action: 'nope' }, createDerivedVault('s'))
     expect(status).toBe(400)
+  })
+
+  it('generic resolve returns a server-derived outcome that re-verifies (dice)', async () => {
+    const vault = createDerivedVault('s')
+    const { commitId } = (await handleFairness({ action: 'commit' }, vault)).body as {
+      commitId: string
+    }
+    const res = (
+      await handleFairness(
+        { action: 'resolve', game: 'dice', commitId, clientSeed: 'player-seed', nonce: 3 },
+        vault,
+      )
+    ).body as { serverSeed: string; outcome: number }
+    // The server-revealed seed re-derives the same roll the server returned — authority, not trust.
+    expect(verifyRoll(res.serverSeed, 'player-seed', 3, res.outcome)).toBe(true)
+  })
+
+  it('generic resolve threads round params (mines mineCount) and re-verifies', async () => {
+    const vault = createDerivedVault('s')
+    const { commitId } = (await handleFairness({ action: 'commit' }, vault)).body as {
+      commitId: string
+    }
+    const res = (
+      await handleFairness(
+        {
+          action: 'resolve',
+          game: 'mines',
+          commitId,
+          clientSeed: 'pc',
+          nonce: 1,
+          params: { mineCount: 5 },
+        },
+        vault,
+      )
+    ).body as { serverSeed: string; outcome: number[] }
+    expect(verifyMines(res.serverSeed, 'pc', 1, 5, res.outcome)).toBe(true)
+  })
+
+  it('resolve with an unknown game is a 400', async () => {
+    const vault = createDerivedVault('s')
+    const { commitId } = (await handleFairness({ action: 'commit' }, vault)).body as {
+      commitId: string
+    }
+    const { status } = await handleFairness(
+      { action: 'resolve', game: 'poker', commitId, clientSeed: 'c', nonce: 1 },
+      vault,
+    )
+    expect(status).toBe(400)
+  })
+
+  it('resolve without clientSeed/nonce is a 400', async () => {
+    const vault = createDerivedVault('s')
+    const { commitId } = (await handleFairness({ action: 'commit' }, vault)).body as {
+      commitId: string
+    }
+    const { status } = await handleFairness({ action: 'resolve', game: 'dice', commitId }, vault)
+    expect(status).toBe(400)
+  })
+
+  it('resolve missing a required round param is a 400 (mines without mineCount)', async () => {
+    const vault = createDerivedVault('s')
+    const { commitId } = (await handleFairness({ action: 'commit' }, vault)).body as {
+      commitId: string
+    }
+    const { status, body } = await handleFairness(
+      { action: 'resolve', game: 'mines', commitId, clientSeed: 'c', nonce: 1 },
+      vault,
+    )
+    expect(status).toBe(400)
+    expect((body as { error: string }).error).toMatch(/mineCount/)
   })
 
   it('defaultVault works straight off the env (dev fallback, no config needed)', async () => {
