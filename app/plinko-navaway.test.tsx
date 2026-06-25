@@ -113,5 +113,10 @@ describe('leaving Plinko by any route keeps the balance change', () => {
 
     act(() => root.unmount())
     host.remove()
-  })
+    // Heavy end-to-end pass: six routes, each doing a full <App/> render, a lazy
+    // PlinkoGame chunk import, and a drop settle. The brand reskin (WalletPill/
+    // GameCard + the new "More" dropdown nav) added render work, tipping the body
+    // past Vitest's 5s default on slower CI/hardware. Give it the same 20s budget
+    // the other app-level integration tests use (player-sections, baccarat engine).
+  }, 20000)
 })

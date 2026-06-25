@@ -41,6 +41,15 @@ jobs:
           # Default query suite (always run) plus the security-extended suite for
           # deeper security coverage.
           queries: security-extended
+          # design-system/ is the Claude Design reference mirror (minified
+          # `_ds_bundle.js` + untyped .js/.jsx kit templates). It's excluded from
+          # tsconfig/build and lint and ships no runnable app code, so scanning it
+          # only surfaces false positives in vendored/minified reference files
+          # (e.g. "incomplete string escaping" in the bundle). Exclude it from
+          # analysis so CodeQL reports only issues in shippable source.
+          config: |
+            paths-ignore:
+              - design-system
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
