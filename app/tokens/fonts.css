@@ -10,10 +10,11 @@
    Vite fingerprints them and rewrites the URL with the deploy base path
    (`/DimeBag-Bets/` on GitHub Pages) — never hand a raw "/fonts" path here.
 
-   FONT LICENSING — action needed before shipping to real traffic: Slight Chance +
-   Slight Chance Mono ship under DJR's Testing License (desktop testing, 0 web
-   visitors). Fine for this system + prototypes; buy a web/app license from
-   djr.com before serving real users.
+   FONT LICENSING — licensed. Slight Chance + Slight Chance Mono are covered by a
+   purchased DJR Mini Combined License (15,000 monthly unique web visitors; see
+   app/fonts/DJR-LICENSE.txt). If monthly uniques outgrow 15k, upgrade the tier with
+   DJR (you pay only the difference). ECWC Standard is open source; Barlow / Barlow
+   Condensed are OFL.
    ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap');
 

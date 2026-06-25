@@ -91,10 +91,11 @@ from `tsconfig.json`). The runtime never imports from it.
 
 ## 7. Caveats
 
-- **Font licensing — action before real traffic.** *Slight Chance* + *Slight Chance Mono*
-  ship under DJR's **Testing License** (desktop testing, 0 web visitors). Fine for this
-  system + prototypes; **buy a web/app license from [djr.com](https://djr.com)** before
-  serving real users. (Barlow / Barlow Condensed are OFL.)
+- **Font licensing — done.** *Slight Chance* + *Slight Chance Mono* are licensed under a
+  purchased DJR **Mini Combined License** (15,000 monthly unique web visitors — see
+  `app/fonts/DJR-LICENSE.txt`). If monthly uniques outgrow 15k, upgrade the tier with DJR
+  (you pay only the difference). ECWC Standard is open source; Barlow / Barlow Condensed
+  are OFL.
 - Alternate `[data-theme]` accents (jade/ember/ice) are experimental; **gold ("stadium")
   is the live default**.
 
