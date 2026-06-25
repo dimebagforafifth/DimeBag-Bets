@@ -24,6 +24,7 @@ import {
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
+import { PixelBeams, PIXEL_BEAMS_DEFAULTS, type PixelBeamsConfig } from '../../brand/pixel-beams/PixelBeams.js'
 import './experimental.css'
 
 // Register once at module load (per the gsap-react skill): useGSAP gives us automatic,
@@ -45,6 +46,36 @@ const PALETTES: Palette[] = [
   { id: 'ice', name: 'Slate / Ice', swatch: '#5aa6f0', note: 'electric blue' },
   { id: 'gold', name: 'Graphite / Gold', swatch: '#d6b14a', note: 'the live theme, refined' },
 ]
+/* Pixel-beam background tuned per palette — the brand asset from brand/pixel-beams,
+   dropped in behind the page and re-themed live alongside the palette toggle. Each
+   variant overrides the base fill + light palette of a shared halftone config. The
+   off-black backgrounds keep the page legible; the colored light reads as ambient
+   beams behind the content. */
+const beamBase: PixelBeamsConfig = {
+  ...PIXEL_BEAMS_DEFAULTS,
+  ambient: 0.08,
+  gradient: 0.7,
+  beamCount: 3,
+  angle: -0.5,
+  beamStrength: 0.5,
+  spread: 0.55,
+  drift: 0.18,
+  pixelDensity: 110,
+  dotScale: 0.55,
+  dotMax: 0.66,
+  intensity: 1.05,
+  contrast: 1.35,
+  bloom: 0.6,
+  vignette: 0.9,
+  grain: 0.04,
+}
+const BEAMS_BY_PALETTE: Record<string, PixelBeamsConfig> = {
+  jade: { ...beamBase, background: '#081410', color0: '#46c08a', color1: '#6fdba7', color2: '#1f7a55', colorCount: 3 },
+  ember: { ...beamBase, background: '#170d0a', color0: '#e8704a', color1: '#f48f6f', color2: '#a23c1f', colorCount: 3 },
+  ice: { ...beamBase, background: '#080d15', color0: '#5aa6f0', color1: '#84c0f8', color2: '#2f6dff', colorCount: 3 },
+  gold: { ...beamBase, background: '#120f08', color0: '#d6b14a', color1: '#ecca6e', color2: '#8c6f1f', colorCount: 3 },
+}
+
 type ArtStyle = 'render' | 'glyph'
 type FontStudy = { id: string; name: string; note: string }
 const FONTS: FontStudy[] = [
@@ -189,6 +220,14 @@ export function ExperimentalLobby() {
 
   return (
     <div className="exp" ref={rootRef}>
+      {/* Brand pixel-beam backdrop — fixed behind the whole page, re-themed with the
+          palette toggle. Honours reduced-motion by freezing rather than animating. */}
+      <PixelBeams
+        className="exp-beams"
+        {...(BEAMS_BY_PALETTE[palette] ?? BEAMS_BY_PALETTE.jade)}
+        paused={prefersReducedMotion()}
+      />
+
       <LabBar
         palette={palette}
         font={font}

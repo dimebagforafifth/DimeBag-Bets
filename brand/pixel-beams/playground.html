@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DimeBag-Bets · Pixel Beams Playground</title>
+<style>
+  :root { --panel: #0d0f14; --line: #1d212b; --txt: #c7cedb; --accent: #25f08a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #05060a; color: var(--txt);
+    font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+  #panel {
+    position: fixed; top: 0; right: 0; width: 320px; height: 100%;
+    background: rgba(13,15,20,0.92); backdrop-filter: blur(8px);
+    border-left: 1px solid var(--line); overflow-y: auto; padding: 12px 14px 40px;
+  }
+  #panel h1 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+    margin: 4px 0 2px; color: #fff; }
+  #panel .sub { color: #6b7384; margin: 0 0 12px; font-size: 11px; }
+  .grp { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0 0 10px; }
+  .grp > .gh { color: var(--accent); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; margin-bottom: 6px; user-select: none; }
+  .row { display: grid; grid-template-columns: 100px 1fr 42px; align-items: center; gap: 8px; margin: 5px 0; }
+  .row label { color: #8b93a6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row input[type=range] { width: 100%; accent-color: var(--accent); }
+  .row .val { text-align: right; color: #e6ebf5; font-variant-numeric: tabular-nums; }
+  .row.color { grid-template-columns: 100px 1fr; }
+  .row input[type=color] { width: 100%; height: 22px; background: none; border: 1px solid var(--line);
+    border-radius: 4px; padding: 0; cursor: pointer; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  button { background: #161a22; color: var(--txt); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 9px; cursor: pointer; font: inherit; }
+  button:hover { border-color: var(--accent); color: #fff; }
+  button.primary { background: var(--accent); color: #04130b; border-color: var(--accent); font-weight: 700; }
+  select { width: 100%; background: #161a22; color: var(--txt); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px; font: inherit; margin-bottom: 8px; }
+  #out { width: 100%; height: 150px; background: #07090d; color: #9fb3c9; border: 1px solid var(--line);
+    border-radius: 6px; padding: 8px; font: 11px/1.45 ui-monospace, monospace; resize: vertical; white-space: pre; }
+  .hint { color: #5a6172; font-size: 11px; margin: 6px 0; }
+  #toggle { position: fixed; top: 10px; left: 10px; z-index: 5; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="gl"></canvas></div>
+<button id="toggle">☰ controls</button>
+<div id="panel">
+  <h1>Pixel Beams</h1>
+  <p class="sub">DimeBag-Bets brand asset · live tuner</p>
+
+  <select id="preset" title="Brand presets"></select>
+  <div class="btns">
+    <button id="randomize">🎲 Randomize</button>
+    <button id="reset">↺ Reset</button>
+    <button id="play" class="primary">⏸ Pause</button>
+  </div>
+
+  <div id="controls"></div>
+
+  <div class="btns">
+    <button id="copy">⧉ Copy config</button>
+    <button id="png">⤓ Save PNG</button>
+  </div>
+  <textarea id="out" readonly spellcheck="false"></textarea>
+  <p class="hint">Config is a plain JS object — paste straight into &lt;PixelBeams&gt; props.</p>
+</div>
+
+<script id="frag" type="x-shader/x-fragment">
+precision highp float;
+uniform vec2 uResolution; uniform float uTime, uSpeed;
+uniform vec3 uBackground, uColor0, uColor1, uColor2, uColor3;
+uniform int uColorCount, uBeamCount;
+uniform float uAmbient, uGradient, uAngle, uBeamWidthMin, uBeamWidthMax, uBeamStrength, uSpread, uDrift;
+uniform float uFlicker, uFlickerSpeed, uGlow, uGlowX, uGlowY, uColorMix;
+uniform float uPixelDensity, uRoundPixels, uDotMin, uDotScale, uDotMax, uDotSoftness;
+uniform float uIntensity, uContrast, uGamma, uBloom, uGrain, uVignette, uMix;
+float hash11(float p){ p=fract(p*0.1031); p*=p+33.33; p*=p+p; return fract(p); }
+float hash21(vec2 p){ vec3 p3=fract(vec3(p.xyx)*0.1031); p3+=dot(p3,p3.yzx+33.33); return fract((p3.x+p3.y)*p3.z); }
+mat2 rot(float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c); }
+vec3 pal(int i){ if(i<=0)return uColor0; if(i==1)return uColor1; if(i==2)return uColor2; return uColor3; }
+vec3 palMix(float s){ float fc=max(float(uColorCount),1.0); if(fc<1.5) return uColor0;
+  float x=clamp(s,0.0,1.0)*(fc-1.0); int idx=int(floor(x)); float fr=fract(x);
+  return mix(pal(idx),pal(idx+1),fr); }
+void main(){
+  vec2 frag=gl_FragCoord.xy; vec2 uv=frag/uResolution; float aspect=uResolution.x/uResolution.y;
+  vec2 c=uv-0.5; c.x*=aspect; vec2 pr=rot(uAngle)*c; float t=uTime*uSpeed;
+  float field=uAmbient;
+  field+=uGradient*clamp(pr.y*0.7+0.5,0.0,1.0);
+  float beamField=0.0; const int MAX_BEAMS=12;
+  for(int i=0;i<MAX_BEAMS;i++){
+    if(i>=uBeamCount) break; float fi=float(i);
+    float r0=hash11(fi+1.0), r1=hash11(fi+7.0), r2=hash11(fi+13.0);
+    float speed=0.25+r0*0.9; float width=mix(uBeamWidthMin,uBeamWidthMax,r1); float phase=r2*6.2831853;
+    float pos=sin(t*speed*uDrift+phase)*uSpread+(r1-0.5)*uSpread;
+    float dd=(pr.x-pos)/max(width,1e-3); float band=exp(-dd*dd);
+    band*=0.7+0.3*sin(pr.y*uFlicker+t*uFlickerSpeed*speed+phase);
+    beamField+=band;
+  }
+  field+=beamField*uBeamStrength;
+  if(uGlow>0.0){ vec2 gp=vec2(uGlowX,uGlowY)-0.5; gp.x*=aspect; float gd=length(c-gp); field+=uGlow*exp(-gd*gd*3.0); }
+  field=pow(clamp(field,0.0,4.0),uContrast);
+  float sel=fract(pr.y*0.35+pr.x*0.25+t*uColorMix);
+  vec3 beamCol=palMix(sel)*uIntensity;
+  vec2 grid=vec2(uPixelDensity*aspect, uPixelDensity);
+  vec2 cellF=fract(uv*grid)-0.5;
+  float distC=(uRoundPixels>0.5)? length(cellF) : max(abs(cellF.x),abs(cellF.y));
+  float radius=clamp(uDotMin+field*uDotScale,0.0,uDotMax);
+  float cov=smoothstep(radius,radius-uDotSoftness,distC);
+  vec3 col=mix(uBackground, beamCol, cov);
+  col=mix(col, beamCol, clamp(field-1.0,0.0,1.0)*uBloom);
+  if(uVignette>0.0){ vec2 vq=uv-0.5; float v=1.0-dot(vq,vq)*uVignette*2.5; col*=clamp(v,0.0,1.0); }
+  if(uGrain>0.0){ float n=hash21(frag+fract(uTime)*113.0)-0.5; col+=n*uGrain; }
+  col=pow(max(col,vec3(0.0)),vec3(1.0/max(uGamma,0.01)));
+  col=mix(uBackground,col,clamp(uMix,0.0,1.0));
+  gl_FragColor=vec4(col,1.0);
+}
+</script>
+
+<script>
+// -------- control schema (label, key, min, max, step) --------
+const SCHEMA = [
+  ["Field", [
+    ["Ambient",      "ambient",      0, 1,    0.01],
+    ["Gradient",     "gradient",     0, 2,    0.01],
+    ["Beam count",   "beamCount",    0, 12,   1   ],
+    ["Angle",        "angle",       -3.14, 3.14, 0.01],
+    ["Beam width-",  "beamWidthMin", 0.02, 0.6, 0.005],
+    ["Beam width+",  "beamWidthMax", 0.05, 1.0, 0.005],
+    ["Beam strength","beamStrength", 0, 1.5,  0.01],
+    ["Spread",       "spread",       0, 1.2,  0.01],
+  ]],
+  ["Glow", [
+    ["Strength",     "glow",         0, 2,    0.01],
+    ["Pos X",        "glowX",        0, 1,    0.01],
+    ["Pos Y",        "glowY",        0, 1,    0.01],
+  ]],
+  ["Animation", [
+    ["Speed",        "speed",        0, 4,    0.01],
+    ["Drift",        "drift",        0, 3,    0.01],
+    ["Flicker freq", "flicker",      0, 40,   0.1 ],
+    ["Flicker speed","flickerSpeed", 0, 6,    0.01],
+    ["Color travel", "colorMix",    -0.3, 0.3, 0.002],
+  ]],
+  ["Halftone", [
+    ["Density",      "pixelDensity", 8, 240,  1   ],
+    ["Round dots",   "roundPixels",  0, 1,    1   ],
+    ["Dot min",      "dotMin",       0, 0.4,  0.005],
+    ["Dot scale",    "dotScale",     0, 1.2,  0.01],
+    ["Dot max",      "dotMax",       0.1, 0.8, 0.005],
+    ["Dot softness", "dotSoftness",  0.005, 0.4, 0.005],
+  ]],
+  ["Look", [
+    ["Intensity",    "intensity",    0, 3,    0.01],
+    ["Contrast",     "contrast",     0.3, 3,  0.01],
+    ["Bloom",        "bloom",        0, 2,    0.01],
+    ["Gamma",        "gamma",        0.3, 3,  0.01],
+    ["Grain",        "grain",        0, 0.3,  0.005],
+    ["Vignette",     "vignette",     0, 2,    0.01],
+    ["Master mix",   "mix",          0, 1,    0.01],
+  ]],
+];
+const COLOR_KEYS = ["background","color0","color1","color2","color3"];
+const COLOR_LABELS = ["Background","Beam 1","Beam 2","Beam 3","Beam 4"];
+
+// -------- presets (mirror Paper's Pixel Beams 1-6, brand-tinted) --------
+const BASE = {
+  speed:1, drift:0.2, flicker:6, flickerSpeed:0.8, colorMix:0,
+  ambient:0.1, gradient:0.6, beamCount:3, angle:-0.5,
+  beamWidthMin:0.12, beamWidthMax:0.4, beamStrength:0.45, spread:0.5,
+  glow:0, glowX:0.5, glowY:0.5,
+  background:"#0a2413", color0:"#39ff7a", color1:"#9dffc0", color2:"#0fbf6a",
+  color3:"#066b3c", colorCount:2,
+  pixelDensity:104, roundPixels:1, dotMin:0.04, dotScale:0.62, dotMax:0.58, dotSoftness:0.1,
+  intensity:1.1, contrast:1.25, gamma:1.0, bloom:0.3, grain:0.03, vignette:0.5, mix:1,
+};
+const PRESETS = {
+  "Money Green": { ...BASE },
+  "Ember Burst": { ...BASE, background:"#e22a17", color0:"#ffd23f", color1:"#fff1b8", color2:"#ff8a3f",
+    colorCount:2, ambient:0, gradient:0, beamCount:0, glow:1.4, glowX:0.18, glowY:0.82,
+    dotMin:0, dotScale:0.85, dotMax:0.62, dotSoftness:0.14, pixelDensity:64,
+    intensity:1.2, contrast:1.1, bloom:0.4, vignette:0 },
+  "Teal Noir": { ...BASE, background:"#06201e", color0:"#2fd0c0", color1:"#1b8a86", color2:"#7df0e4",
+    colorCount:2, ambient:0.05, gradient:0.35, beamCount:4, angle:0.7,
+    beamWidthMin:0.06, beamWidthMax:0.18, beamStrength:0.45, spread:0.6,
+    pixelDensity:120, dotScale:0.5, dotMax:0.6, intensity:0.95, contrast:1.5,
+    bloom:0.3, vignette:0.7, grain:0.05 },
+  "Magenta Flux": { ...BASE, background:"#7d0f6e", color0:"#ff4fd8", color1:"#b06bff", color2:"#ffd0f4",
+    colorCount:3, ambient:0.25, gradient:0.7, beamCount:2, angle:0.9,
+    beamWidthMin:0.2, beamWidthMax:0.5, beamStrength:0.5, spread:0.4,
+    pixelDensity:130, dotScale:0.55, dotMax:0.72, intensity:1.2, contrast:1.1,
+    bloom:0.7, vignette:0.3, colorMix:0.02 },
+  "Indigo": { ...BASE, background:"#160d5e", color0:"#6a3cff", color1:"#b07bff", color2:"#3fa0ff",
+    colorCount:3, ambient:0.18, gradient:0.6, beamCount:2, angle:0.4,
+    beamWidthMin:0.18, beamWidthMax:0.5, beamStrength:0.45, spread:0.5,
+    glow:0.7, glowX:0.25, glowY:0.2, pixelDensity:110, dotScale:0.55,
+    dotMax:0.72, intensity:1.15, contrast:1.15, bloom:0.7, vignette:0.4 },
+  "Crimson": { ...BASE, background:"#6e1322", color0:"#ff3b5c", color1:"#ff8aa0", color2:"#ffd23f",
+    colorCount:2, ambient:0.2, gradient:0.7, beamCount:2, angle:-0.8,
+    beamWidthMin:0.2, beamWidthMax:0.5, beamStrength:0.4, spread:0.5,
+    glow:0.4, glowX:0.8, glowY:0.2, pixelDensity:120, dotScale:0.55,
+    dotMax:0.72, intensity:1.15, contrast:1.15, bloom:0.6, vignette:0.5 },
+};
+const DEFAULT_PRESET = "Money Green";
+
+// -------- state --------
+let state = structuredClone(PRESETS[DEFAULT_PRESET]);
+
+// -------- WebGL --------
+const canvas = document.getElementById("gl");
+const gl = canvas.getContext("webgl", { antialias:false, preserveDrawingBuffer:true });
+if (!gl) { document.body.innerHTML = "<p style='padding:20px'>WebGL not available.</p>"; }
+
+function compile(type, src){
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const VERT = "attribute vec2 a; void main(){ gl_Position = vec4(a,0.0,1.0); }";
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, document.getElementById("frag").textContent));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, "a");
+gl.enableVertexAttribArray(loc);
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+const FLOAT_UNIFORMS = [
+  "uSpeed","uAmbient","uGradient","uAngle","uBeamWidthMin","uBeamWidthMax","uBeamStrength",
+  "uSpread","uDrift","uFlicker","uFlickerSpeed","uGlow","uGlowX","uGlowY","uColorMix",
+  "uPixelDensity","uRoundPixels","uDotMin","uDotScale","uDotMax","uDotSoftness",
+  "uIntensity","uContrast","uGamma","uBloom","uGrain","uVignette","uMix",
+];
+// map state key -> uniform name for the plain float knobs
+const KEY2U = {
+  speed:"uSpeed", ambient:"uAmbient", gradient:"uGradient", angle:"uAngle",
+  beamWidthMin:"uBeamWidthMin", beamWidthMax:"uBeamWidthMax", beamStrength:"uBeamStrength",
+  spread:"uSpread", drift:"uDrift", flicker:"uFlicker", flickerSpeed:"uFlickerSpeed",
+  glow:"uGlow", glowX:"uGlowX", glowY:"uGlowY", colorMix:"uColorMix",
+  pixelDensity:"uPixelDensity", roundPixels:"uRoundPixels", dotMin:"uDotMin",
+  dotScale:"uDotScale", dotMax:"uDotMax", dotSoftness:"uDotSoftness",
+  intensity:"uIntensity", contrast:"uContrast", gamma:"uGamma", bloom:"uBloom",
+  grain:"uGrain", vignette:"uVignette", mix:"uMix",
+};
+const U = {};
+["uResolution","uTime","uColorCount","uBeamCount","uBackground","uColor0","uColor1","uColor2","uColor3"]
+  .concat(FLOAT_UNIFORMS).forEach(n => U[n] = gl.getUniformLocation(prog, n));
+
+function hex2rgb(h){ const n=parseInt(h.slice(1),16); return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]; }
+
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas.width  = Math.floor(canvas.clientWidth  * dpr);
+  canvas.height = Math.floor(canvas.clientHeight * dpr);
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+window.addEventListener("resize", resize);
+
+let playing = true, tAccum = 0, lastTs = performance.now();
+function render(now){
+  if (playing) { tAccum += (now - lastTs) / 1000; }
+  lastTs = now;
+  gl.uniform2f(U.uResolution, canvas.width, canvas.height);
+  gl.uniform1f(U.uTime, tAccum);
+  gl.uniform3fv(U.uBackground, hex2rgb(state.background));
+  gl.uniform3fv(U.uColor0, hex2rgb(state.color0));
+  gl.uniform3fv(U.uColor1, hex2rgb(state.color1));
+  gl.uniform3fv(U.uColor2, hex2rgb(state.color2));
+  gl.uniform3fv(U.uColor3, hex2rgb(state.color3));
+  gl.uniform1i(U.uColorCount, state.colorCount|0);
+  gl.uniform1i(U.uBeamCount, state.beamCount|0);
+  for (const key in KEY2U) gl.uniform1f(U[KEY2U[key]], state[key]);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  requestAnimationFrame(render);
+}
+
+// -------- UI build --------
+const controls = document.getElementById("controls");
+const refs = {};
+
+function buildColorGroup(){
+  const g = document.createElement("div"); g.className="grp";
+  g.innerHTML = `<div class="gh">Colors</div>`;
+  const cc = document.createElement("div");
+  cc.className="row"; cc.innerHTML = `<label>Palette size</label>
+    <input type="range" min="1" max="4" step="1" /><span class="val"></span>`;
+  const [ , range, val] = cc.children;
+  range.value = state.colorCount; val.textContent = state.colorCount;
+  range.oninput = () => { state.colorCount = +range.value; val.textContent = range.value; emit(); };
+  refs.colorCount = () => { range.value = state.colorCount; val.textContent = state.colorCount; };
+  g.appendChild(cc);
+  COLOR_KEYS.forEach((k,i) => {
+    const r = document.createElement("div"); r.className="row color";
+    r.innerHTML = `<label>${COLOR_LABELS[i]}</label><input type="color" />`;
+    const inp = r.querySelector("input");
+    inp.value = state[k];
+    inp.oninput = () => { state[k] = inp.value; emit(); };
+    refs[k] = () => { inp.value = state[k]; };
+    g.appendChild(r);
+  });
+  controls.appendChild(g);
+}
+
+function buildGroups(){
+  SCHEMA.forEach(([title, rows]) => {
+    const g = document.createElement("div"); g.className="grp";
+    g.innerHTML = `<div class="gh">${title}</div>`;
+    rows.forEach(([label,key,min,max,step]) => {
+      const r = document.createElement("div"); r.className="row";
+      r.innerHTML = `<label title="${key}">${label}</label>
+        <input type="range" min="${min}" max="${max}" step="${step}" />
+        <span class="val"></span>`;
+      const range = r.querySelector("input");
+      const val = r.querySelector(".val");
+      const fmt = v => (step < 1 ? (+v).toFixed(step < 0.01 ? 3 : 2) : String(+v));
+      range.value = state[key]; val.textContent = fmt(state[key]);
+      range.oninput = () => { state[key] = +range.value; val.textContent = fmt(range.value); emit(); };
+      refs[key] = () => { range.value = state[key]; val.textContent = fmt(state[key]); };
+      g.appendChild(r);
+    });
+    controls.appendChild(g);
+  });
+}
+
+function syncUI(){ Object.values(refs).forEach(fn => fn()); }
+
+// -------- config output --------
+const out = document.getElementById("out");
+function emit(){
+  const o = {};
+  for (const k in state) o[k] = state[k];
+  out.value = "const config = " + JSON.stringify(o, null, 2)
+    .replace(/"([a-zA-Z0-9]+)":/g, "$1:") + ";";
+}
+
+// -------- presets --------
+const presetSel = document.getElementById("preset");
+Object.keys(PRESETS).forEach(name => {
+  const o = document.createElement("option"); o.value=name; o.textContent="Preset · "+name;
+  presetSel.appendChild(o);
+});
+presetSel.value = DEFAULT_PRESET;
+presetSel.onchange = () => { state = structuredClone(PRESETS[presetSel.value]); syncUI(); emit(); };
+
+document.getElementById("reset").onclick = () => {
+  state = structuredClone(PRESETS[presetSel.value]); syncUI(); emit();
+};
+document.getElementById("randomize").onclick = () => {
+  const rnd = (a,b)=> a + Math.random()*(b-a);
+  const rndHex = ()=> "#"+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0");
+  state.ambient = rnd(0.05,0.3);
+  state.gradient = rnd(0.2,1.0);
+  state.beamCount = Math.floor(rnd(0,5));
+  state.angle = rnd(-1.5,1.5);
+  state.beamWidthMin = rnd(0.08,0.25);
+  state.beamWidthMax = rnd(0.3,0.6);
+  state.beamStrength = rnd(0.3,0.7);
+  state.spread = rnd(0.3,0.7);
+  state.glow = Math.random()<0.5 ? rnd(0.4,1.4) : 0;
+  state.glowX = rnd(0.1,0.9); state.glowY = rnd(0.1,0.9);
+  state.pixelDensity = Math.floor(rnd(60,150));
+  state.roundPixels = Math.random()<0.8 ? 1 : 0;
+  state.dotScale = rnd(0.45,0.8);
+  state.intensity = rnd(1.0,1.4);
+  state.contrast = rnd(1.0,1.6);
+  state.bloom = rnd(0.4,1.0);
+  state.colorCount = Math.floor(rnd(2,5));
+  state.background = rndHex();
+  state.color0 = rndHex(); state.color1 = rndHex(); state.color2 = rndHex(); state.color3 = rndHex();
+  syncUI(); emit();
+};
+document.getElementById("play").onclick = (e) => {
+  playing = !playing; e.target.textContent = playing ? "⏸ Pause" : "▶ Play";
+};
+document.getElementById("copy").onclick = () => {
+  navigator.clipboard?.writeText(out.value);
+  const b = document.getElementById("copy"); const old=b.textContent; b.textContent="✓ copied";
+  setTimeout(()=>b.textContent=old, 1000);
+};
+document.getElementById("png").onclick = () => {
+  const a = document.createElement("a");
+  a.download = "dimebag-pixel-beams.png"; a.href = canvas.toDataURL("image/png"); a.click();
+};
+document.getElementById("toggle").onclick = () => {
+  const p = document.getElementById("panel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
+};
+
+// -------- boot --------
+buildColorGroup();
+buildGroups();
+emit();
+resize();
+requestAnimationFrame((ts)=>{ lastTs=ts; render(ts); });
+</script>
+</body>
+</html>

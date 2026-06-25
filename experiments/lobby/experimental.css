@@ -120,6 +120,30 @@ button {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 0;
+}
+
+/* Brand pixel-beam backdrop: pinned to the viewport, behind all page chrome.
+   Non-interactive; softened so it reads as ambient texture, not foreground. */
+.exp-beams {
+  position: fixed;
+  inset: 0;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* The page's own chrome stays above the backdrop and carries its own surfaces,
+   so the beams only show through the open/dark areas (hero, gutters). */
+.exp-top,
+.exp-main,
+.exp-foot,
+.exp-lab {
+  position: relative;
+  z-index: 1;
 }
 
 /* ---- LAB BAR (the only non-product chrome) -------------------------------- */
