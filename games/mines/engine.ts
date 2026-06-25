@@ -134,6 +134,9 @@ export function revealTile(account: Account, game: MinesGame, tile: number): Rev
     const multiplier = currentMultiplier(game)
     game.payoutMultiplier = multiplier
     game.status = 'cleared'
+    // TODO(server-grade): route through api/resolve-bet.ts (gradeBet 'mines') once the
+    // backend is live, so the platform derives this multiplier from the revealed seed
+    // instead of trusting a client-computed one. See games/grade.ts.
     resolveWager(account, game.wager, 'win', multiplier)
     return { hitMine: false, status: game.status, multiplier }
   }
@@ -155,6 +158,9 @@ export function cashOut(account: Account, game: MinesGame): number {
   const multiplier = currentMultiplier(game)
   game.payoutMultiplier = multiplier
   game.status = 'cashed'
+  // TODO(server-grade): route through api/resolve-bet.ts (gradeBet 'mines') once the
+  // backend is live, so the platform derives this multiplier from the revealed seed
+  // instead of trusting a client-computed one. See games/grade.ts.
   resolveWager(account, game.wager, 'win', multiplier)
   return multiplier
 }

@@ -4,8 +4,9 @@ import { multiplierFor, rollFromSeeds, winChance } from './dice/fair.js'
 import { limboFromSeeds } from './limbo/fair.js'
 import { crashPointFromSeeds } from './crash/fair.js'
 import { dropBall } from './plinko/fair.js'
-import { computePlinkoTable } from './plinko/payouts.js'
+import { computePlinkoTable, payouts, MIN_ROWS, MAX_ROWS } from './plinko/payouts.js'
 import { drawNumbers } from './keno/fair.js'
+import { buildPaytable as buildKenoPaytable } from './keno/paytable.js'
 import { spinSegment } from './wheel/fair.js'
 import { buildWheel } from './wheel/payouts.js'
 import { spin as spinReels } from './slots/fair.js'
@@ -134,6 +135,49 @@ describe('gradeBet — plinko', () => {
     expect(r.multiplier).toBe(table[slot])
     expect(['win', 'loss', 'push']).toContain(r.outcome)
   })
+
+  // Parity at the row-count boundaries, both risk extremes: the grader must agree
+  // with the client's dropBall + canonical Stake table for every supported board.
+  it('matches the client drop + canonical table at MIN_ROWS, low risk', () => {
+    const rows = MIN_ROWS
+    const { slot } = dropBall(SEEDS.serverSeed, SEEDS.clientSeed, SEEDS.nonce, rows)
+    const r = gradeBet({ ...SEEDS, game: 'plinko', rows, risk: 'low' })
+    expect(r.draw).toBe(slot)
+    // No config → grader uses the canonical Stake table (computePlinkoTable at the
+    // 99% base is a no-op scale of `payouts`), so both must read identically.
+    expect(r.multiplier).toBe(payouts(rows, 'low')[slot])
+    expect(r.multiplier).toBe(computePlinkoTable(rows, 'low')[slot])
+  })
+
+  it('matches the client drop + canonical table at MAX_ROWS, high risk', () => {
+    const rows = MAX_ROWS
+    const { slot } = dropBall(SEEDS.serverSeed, SEEDS.clientSeed, SEEDS.nonce, rows)
+    const r = gradeBet({ ...SEEDS, game: 'plinko', rows, risk: 'high' })
+    expect(r.draw).toBe(slot)
+    expect(r.multiplier).toBe(payouts(rows, 'high')[slot])
+  })
+
+  it('applies a manager edge config (scaled table)', () => {
+    const rows = 10
+    const risk = 'medium' as const
+    const config = { edge: 0.05 }
+    const { slot } = dropBall(SEEDS.serverSeed, SEEDS.clientSeed, SEEDS.nonce, rows)
+    const r = gradeBet({ ...SEEDS, game: 'plinko', rows, risk, config })
+    expect(r.multiplier).toBe(computePlinkoTable(rows, risk, config)[slot])
+  })
+
+  it('classifies outcome from the landed multiplier (>1 win, =1 push, <1 loss)', () => {
+    const rows = 12
+    const risk = 'medium' as const
+    const r = gradeBet({ ...SEEDS, game: 'plinko', rows, risk })
+    const expected = r.multiplier > 1 ? 'win' : r.multiplier === 1 ? 'push' : 'loss'
+    expect(r.outcome).toBe(expected)
+  })
+
+  it('rejects a row count outside MIN_ROWS..MAX_ROWS', () => {
+    expect(() => gradeBet({ ...SEEDS, game: 'plinko', rows: MIN_ROWS - 1, risk: 'low' })).toThrow()
+    expect(() => gradeBet({ ...SEEDS, game: 'plinko', rows: MAX_ROWS + 1, risk: 'low' })).toThrow()
+  })
 })
 
 describe('gradeBet — keno', () => {
@@ -167,6 +211,37 @@ describe('gradeBet — keno', () => {
         risk: 'classic',
       }),
     ).toThrow()
+  })
+
+  it('grades a full 10-pick board against the computed paytable', () => {
+    const drawn = drawNumbers(SEEDS.serverSeed, SEEDS.clientSeed, SEEDS.nonce)
+    const picks = [...drawn] // all 10 drawn numbers picked → 10 hits
+    const r = gradeBet({ ...SEEDS, game: 'keno', picks, risk: 'high' })
+    expect(r.draw).toBe(10)
+    expect(r.multiplier).toBe(buildKenoPaytable(10, 'high')[10])
+  })
+
+  it('multiplier matches the computed paytable for the hit count, every risk', () => {
+    const drawn = drawNumbers(SEEDS.serverSeed, SEEDS.clientSeed, SEEDS.nonce)
+    const picks = drawn.slice(0, 4) // 4 picks, all hits
+    for (const risk of ['classic', 'low', 'medium', 'high'] as const) {
+      const r = gradeBet({ ...SEEDS, game: 'keno', picks, risk })
+      expect(r.draw).toBe(4)
+      expect(r.multiplier).toBe(buildKenoPaytable(picks.length, risk)[4])
+    }
+  })
+
+  // Server-authoritative guard: the grader must not trust the request to be clean.
+  it('rejects duplicate picks (would otherwise double-count a match)', () => {
+    expect(() => gradeBet({ ...SEEDS, game: 'keno', picks: [5, 5], risk: 'classic' })).toThrow(
+      /distinct/,
+    )
+  })
+
+  it('rejects out-of-range picks', () => {
+    expect(() => gradeBet({ ...SEEDS, game: 'keno', picks: [0], risk: 'classic' })).toThrow()
+    expect(() => gradeBet({ ...SEEDS, game: 'keno', picks: [41], risk: 'classic' })).toThrow()
+    expect(() => gradeBet({ ...SEEDS, game: 'keno', picks: [1.5], risk: 'classic' })).toThrow()
   })
 })
 
@@ -322,6 +397,37 @@ describe('gradeBet — mines', () => {
     const r = gradeBet({ ...SEEDS, game: 'mines', mineCount: 3, reveals: [] })
     expect(r.outcome).toBe('win')
     expect(r.multiplier).toBeCloseTo(minesMultiplier(3, 0), 6)
+  })
+
+  // Parity across the mine-count range, including a full-board clear at each.
+  it('matches the client layout + multiplier for mineCount 1, 12, 24', () => {
+    for (const mineCount of [1, 12, 24]) {
+      const mines = deriveMines(SEEDS.serverSeed, SEEDS.clientSeed, SEEDS.nonce, mineCount)
+      const safe = Array.from({ length: 25 }, (_, i) => i).filter((i) => !mines.includes(i))
+      const r = gradeBet({ ...SEEDS, game: 'mines', mineCount, reveals: safe })
+      expect(r.outcome).toBe('win')
+      expect(r.draws).toEqual(mines)
+      // A full clear pays (1 − edge) × C(25, mineCount): the top of the board.
+      expect(r.multiplier).toBeCloseTo(minesMultiplier(mineCount, safe.length), 6)
+    }
+  })
+
+  // Server-authoritative guards: a tampered client must not be able to repeat a
+  // safe tile (inflating the multiplier) or send an out-of-range index.
+  it('rejects duplicate reveals (would otherwise inflate the multiplier)', () => {
+    const reveals = [safeTiles[0], safeTiles[0]]
+    expect(() => gradeBet({ ...SEEDS, game: 'mines', mineCount: 3, reveals })).toThrow(/distinct/)
+  })
+
+  it('rejects out-of-range reveal tiles', () => {
+    expect(() => gradeBet({ ...SEEDS, game: 'mines', mineCount: 3, reveals: [25] })).toThrow()
+    expect(() => gradeBet({ ...SEEDS, game: 'mines', mineCount: 3, reveals: [-1] })).toThrow()
+    expect(() => gradeBet({ ...SEEDS, game: 'mines', mineCount: 3, reveals: [2.5] })).toThrow()
+  })
+
+  it('rejects an invalid mine count', () => {
+    expect(() => gradeBet({ ...SEEDS, game: 'mines', mineCount: 0, reveals: [] })).toThrow()
+    expect(() => gradeBet({ ...SEEDS, game: 'mines', mineCount: 25, reveals: [] })).toThrow()
   })
 })
 

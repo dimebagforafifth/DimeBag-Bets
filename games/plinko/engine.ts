@@ -55,6 +55,9 @@ export function playPlinko(account: Account, opts: PlayPlinkoOptions): PlinkoRou
   const wager = placeWager(account, opts.stake)
   const { path, slot } = dropBall(serverSeed, opts.clientSeed, opts.nonce, opts.rows)
   const multiplier = table[slot]
+  // TODO(server-grade): route through api/resolve-bet.ts (gradeBet 'plinko') once the
+  // backend is live, so the platform derives this multiplier from the revealed seed
+  // instead of trusting a client-computed one. See games/grade.ts.
   resolveAtMultiplier(account, wager, multiplier)
 
   return {

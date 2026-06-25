@@ -139,9 +139,17 @@ everywhere, all money through `core`). Findings + this session's work below.
   the outcome + payout multiplier on the SERVER from the revealed seed using each game's
   published math; `api/resolve-bet.ts` (`handleResolveBet`) reveals + grades, edge-portable
   like `api/fairness.ts`; migration `0007`'s service-role `service_resolve_wager` settles it.
-  **Covers dice + limbo; crash via `resolveCrash`.** TODO(api): extend `gradeBet` to the
-  remaining games (mines/plinko/keno/etc.) and wire the client place→resolve to post here
-  instead of calling `resolveWager` with a client multiplier.
+  **Covers all 21 games** (dice, limbo, crash, plinko, keno, wheel, slots, cases, coinflip,
+  diamonds, roulette, sicbo, mines, pump, chickenroad, hilo, dragon-tower, baccarat,
+  videopoker, threecardpoker, blackjack), each tested for parity against the client fair math
+  in `games/grade.test.ts`. **Hardened 2026-06-25:** the `mines` and `keno` cases now reject
+  duplicate / out-of-range reveals & picks (a tampered client could otherwise repeat a safe
+  tile or pick to inflate the payout) — the server enforces the same invariants the client
+  board does. TODO(api): (1) wire the client place→resolve to POST to `api/resolve-bet.ts`
+  instead of calling `resolveWager`/`resolveAtMultiplier` with a client multiplier — each
+  game engine now carries a `TODO(server-grade)` at that call site (mines/plinko/keno done;
+  apply the same to the rest); (2) add request-body schema validation on `api/resolve-bet.ts`
+  (zod) — tracked under gap-analysis G4 / the zod validation work, not this grader task.
 - **Multi-user authorization (migration `0007_member_auth.sql`).** Adds `book_members`
   (auth user → book/role/member) + `_assert_operator`, and re-gates the operator-only money
   RPCs (`grant_bonus`, `adjust_balance`, `settle_week`, `resolve_wager`). **Backward-compatible:**
