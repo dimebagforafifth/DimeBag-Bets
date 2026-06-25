@@ -57,6 +57,9 @@ export function playKeno(account: Account, opts: PlayKenoOptions): KenoRound {
   const hits = picks.filter((n) => drawnSet.has(n)).length
   const multiplier = table[hits]
   const won = multiplier > 1
+  // TODO(server-grade): route through api/resolve-bet.ts (gradeBet 'keno') once the
+  // backend is live, so the platform derives this multiplier from the revealed seed
+  // instead of trusting a client-computed one. See games/grade.ts.
   resolveWager(account, wager, won ? 'win' : 'loss', won ? multiplier : undefined)
 
   return {

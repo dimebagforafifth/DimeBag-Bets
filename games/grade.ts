@@ -51,7 +51,7 @@ import {
 } from './plinko/payouts.js'
 
 // ── keno ──────────────────────────────────────────────────────────────────────
-import { drawNumbers } from './keno/fair.js'
+import { drawNumbers, GRID_SIZE as KENO_GRID_SIZE } from './keno/fair.js'
 import {
   buildPaytable as buildKenoPaytable,
   type KenoRisk,
@@ -97,7 +97,7 @@ import {
 
 // ── mines ─────────────────────────────────────────────────────────────────────
 import { deriveMines } from './mines/fair.js'
-import { minesMultiplier, type MinesHouseConfig } from './mines/multiplier.js'
+import { minesMultiplier, TOTAL_TILES as MINES_TOTAL_TILES, type MinesHouseConfig } from './mines/multiplier.js'
 
 // ── pump ──────────────────────────────────────────────────────────────────────
 import { derivePops } from './pump/fair.js'
@@ -405,6 +405,19 @@ export function gradeBet(req: GradeRequest): GradeResult {
       if (req.picks.length < 1 || req.picks.length > 10) {
         throw new Error(`keno picks must be 1..10, got ${req.picks.length}`)
       }
+      // The server must enforce the same invariants the client board does (engine.ts):
+      // picks are DISTINCT integers in 1..GRID. A repeated pick would otherwise be
+      // counted once per occurrence and inflate the match count (and the payout); an
+      // out-of-range pick can never match but must still be rejected, not silently
+      // ignored — the platform grades the bet, it does not trust the request.
+      const seenPicks = new Set<number>()
+      for (const p of req.picks) {
+        if (!Number.isInteger(p) || p < 1 || p > KENO_GRID_SIZE) {
+          throw new Error(`keno pick must be an integer in 1..${KENO_GRID_SIZE}, got ${p}`)
+        }
+        if (seenPicks.has(p)) throw new Error(`keno picks must be distinct, repeated ${p}`)
+        seenPicks.add(p)
+      }
       const drawn = drawNumbers(req.serverSeed, req.clientSeed, req.nonce)
       const drawnSet = new Set(drawn)
       const matches = req.picks.filter((p) => drawnSet.has(p)).length
@@ -493,6 +506,18 @@ export function gradeBet(req: GradeRequest): GradeResult {
     // ── mines ─────────────────────────────────────────────────────────────────
     case 'mines': {
       const mines = deriveMines(req.serverSeed, req.clientSeed, req.nonce, req.mineCount)
+      // The server must enforce the same invariants the client board does (engine.ts):
+      // each reveal is a DISTINCT tile inside the board. A repeated safe tile would
+      // otherwise inflate the safe-reveal count (and so the cash-out multiplier); an
+      // out-of-range index can never be a mine and would be miscounted as safe.
+      const seenTiles = new Set<number>()
+      for (const tile of req.reveals) {
+        if (!Number.isInteger(tile) || tile < 0 || tile >= MINES_TOTAL_TILES) {
+          throw new Error(`mines reveal must be an integer in 0..${MINES_TOTAL_TILES - 1}, got ${tile}`)
+        }
+        if (seenTiles.has(tile)) throw new Error(`mines reveals must be distinct, repeated ${tile}`)
+        seenTiles.add(tile)
+      }
       const mineSet = new Set(mines)
       let hitTile = -1
       let safeReveals = 0
