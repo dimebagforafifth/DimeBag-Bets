@@ -1,0 +1,32 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Status & Text" subtitle="Narrow up/down semantics + the three text shades on graphite" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg); font-family: var(--font-body); }
+  .wrap { display: flex; gap: 12px; padding: 20px; }
+  .col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; flex: 0 0 auto; }
+  .lbl { font-family: var(--font-num); font-size: 13px; }
+  .meta { font-family: var(--font-label); font-size: 11px; color: var(--faint); margin-left: auto; }
+  .tx { font-size: 15px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="col">
+      <div class="row"><span class="dot" style="background: var(--green)"></span><span class="lbl" style="color: var(--green)">▲ Up · win · live</span><span class="meta">--green</span></div>
+      <div class="row"><span class="dot" style="background: var(--red)"></span><span class="lbl" style="color: var(--red)">▼ Down · loss · stop</span><span class="meta">--red</span></div>
+      <div class="row"><span class="dot" style="background: var(--gem)"></span><span class="lbl" style="color: var(--gem)">14.7× multiplier</span><span class="meta">--gem</span></div>
+    </div>
+    <div class="col">
+      <div class="row"><span class="tx" style="color: var(--text)">Primary text</span><span class="meta">--text</span></div>
+      <div class="row"><span class="tx" style="color: var(--muted)">Secondary text</span><span class="meta">--muted</span></div>
+      <div class="row"><span class="tx" style="color: var(--faint)">Tertiary / faint</span><span class="meta">--faint</span></div>
+    </div>
+  </div>
+</body>
+</html>

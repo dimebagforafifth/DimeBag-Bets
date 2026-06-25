@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Alternate Accent Themes" subtitle="Explored palettes — set [data-theme] to re-point the accent + canvas" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: #07090c; font-family: var(--font-body); }
+  .wrap { display: flex; gap: 12px; padding: 18px; }
+  .tile { flex: 1; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); }
+  .head { height: 64px; display: flex; align-items: center; justify-content: center; }
+  .chip { width: 26px; height: 26px; border-radius: 50%; box-shadow: var(--sheen); }
+  .foot { padding: 8px 10px; }
+  .nm { font-family: var(--font-label); font-size: 12px; font-weight: 600; }
+  .tag { font-family: var(--font-num); font-size: 10px; margin-top: 1px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="tile" style="background: var(--bg)"><div class="head"><span class="chip" style="background: var(--gold)"></span></div><div class="foot"><div class="nm" style="color: var(--text)">Graphite / Gold</div><div class="tag" style="color: var(--faint)">live default</div></div></div>
+    <div class="tile" data-theme="jade" style="background: var(--bg)"><div class="head"><span class="chip" style="background: var(--gold)"></span></div><div class="foot"><div class="nm" style="color: var(--text)">Obsidian / Jade</div><div class="tag" style="color: var(--faint)">money-green</div></div></div>
+    <div class="tile" data-theme="ember" style="background: var(--bg)"><div class="head"><span class="chip" style="background: var(--gold)"></span></div><div class="foot"><div class="nm" style="color: var(--text)">Carbon / Ember</div><div class="tag" style="color: var(--faint)">terracotta</div></div></div>
+    <div class="tile" data-theme="ice" style="background: var(--bg)"><div class="head"><span class="chip" style="background: var(--gold)"></span></div><div class="foot"><div class="nm" style="color: var(--text)">Slate / Ice</div><div class="tag" style="color: var(--faint)">electric blue</div></div></div>
+  </div>
+</body>
+</html>

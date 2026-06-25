@@ -1,198 +1,1081 @@
-.auth-screen {
+/* ============================================================================
+   PlayStadium — Auth + Onboarding (login, sign-up, player + operator onboarding)
+   Ported from the Claude Design system (ui_kits/playstadium-app/auth.css) and
+   wired to the real auth module. Split-screen brand pane + a step/form panel.
+   Consumes the global brand tokens in app/theme.css. The generic `.input` /
+   `.label` controls are scoped under `.auth-root` so they never leak into the app.
+   The header identity chip (.auth-avatar / .auth-id*) is preserved at the bottom.
+   ========================================================================== */
+
+.auth-root {
   min-height: 100dvh;
+  overflow: hidden;
+  color: var(--text);
+}
+.auth-wrap {
+  display: grid;
+  grid-template-columns: 1.04fr 1fr;
+  min-height: 100dvh;
+}
+
+/* ---- base controls (scoped: the kit's .psa .input / .label, on brand tokens) ---- */
+.auth-root .input {
+  height: 38px;
+  width: 100%;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bg) 60%, var(--surface-2));
+  border: 1px solid var(--input);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.auth-root .input::placeholder {
+  color: var(--faint);
+}
+.auth-root .input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(var(--gold-glow), 0.18);
+}
+.auth-root .input.num {
+  font-family: var(--font-num);
+}
+.auth-root .label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--faint);
+}
+
+/* ---------------- Brand pane (left) ---------------- */
+.auth-brandpane {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 46px 52px;
+  background: radial-gradient(120% 90% at 18% 6%, #1b1c1f 0%, #141517 44%, #0d0e10 100%);
+  border-right: 1px solid var(--line);
+}
+.auth-brandpane::before {
+  content: '';
+  position: absolute;
+  left: -10%;
+  top: -16%;
+  width: 760px;
+  height: 760px;
+  background: radial-gradient(
+    circle,
+    rgba(var(--gold-glow), 0.14) 0%,
+    rgba(var(--gold-glow), 0.04) 40%,
+    transparent 66%
+  );
+  pointer-events: none;
+}
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+.auth-brand img {
+  height: 46px;
+  width: auto;
+  image-rendering: pixelated;
+}
+.auth-brand-name {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--text);
+}
+.auth-brand-name .dot {
+  color: var(--gold);
+}
+.auth-brand-mid {
+  position: relative;
+  max-width: 30ch;
+}
+.auth-brand-eyebrow {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.auth-brand-head {
+  font-family: var(--font-display);
+  font-size: 58px;
+  line-height: 0.94;
+  color: #fff;
+  margin: 0 0 18px;
+}
+.auth-brand-sub {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+}
+.auth-brand-feats {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.auth-feat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.auth-feat .ic {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  /* a deep graphite canvas with one soft gold glow rising from below — gives the
-     sign-in real atmosphere instead of a flat fill (brand-forward first impression). */
-  background:
-    radial-gradient(90% 60% at 50% 112%, rgba(var(--gold-glow), 0.16), transparent 70%),
-    radial-gradient(70% 50% at 50% -10%, color-mix(in srgb, var(--surface-2) 80%, transparent), transparent 70%),
-    var(--bg);
-}
-.auth-card {
-  width: 100%;
-  max-width: 372px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--surface) 88%, #000) 100%);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: 30px 26px;
-  /* lifted off the canvas with the shared modal-class elevation + a lit top edge */
-  box-shadow: var(--elev-3), var(--sheen);
-  /* a hairline gold accent across the very top of the card */
-  border-top: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
-}
-.auth-brand {
-  font-family: var(--font-head);
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-.auth-brand-dot {
+  background: color-mix(in srgb, var(--gold) 13%, var(--surface-2));
   color: var(--gold);
-  margin: 0 1px;
+  flex: none;
+}
+.auth-brand-foot {
+  position: relative;
+  font-size: 12.5px;
+  color: var(--faint);
+}
+
+/* ---------------- Main panel (right) ---------------- */
+.auth-main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  overflow-y: auto;
+  background: var(--bg);
+}
+.auth-panel {
+  width: 100%;
+  max-width: 432px;
+}
+.auth-panel.wide {
+  max-width: 560px;
+}
+
+.auth-head {
+  margin-bottom: 22px;
+}
+.auth-kicker {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 8px;
 }
 .auth-title {
-  margin: 4px 0 0;
   font-family: var(--font-head);
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: 0.2px;
+  color: var(--text);
+  margin: 0 0 6px;
 }
 .auth-sub {
-  margin: 0 0 6px;
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
 }
 .auth-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 12.5px;
-  color: var(--muted);
+  gap: 7px;
 }
-.auth-field input {
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  font-size: 14px;
-  transition:
-    border-color var(--dur) ease,
-    box-shadow var(--dur) ease;
-}
-.auth-field input:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--gold) 60%, var(--line));
-  box-shadow: 0 0 0 3px rgba(var(--gold-glow), 0.16);
-}
-.auth-error {
+.auth-field > .label {
   margin: 0;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--red, #e5484d);
 }
-.auth-submit {
-  margin-top: 4px;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.2px;
+.auth-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.auth-input-wrap > svg {
+  position: absolute;
+  left: 12px;
+  color: var(--faint);
+  pointer-events: none;
+}
+.auth-input-wrap .input {
+  padding-left: 38px;
+}
+.auth-input-wrap .input.has-suffix {
+  padding-right: 64px;
+}
+.auth-reveal {
+  position: absolute;
+  right: 8px;
+  height: 28px;
+  padding: 0 9px;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
-  color: #14171c; /* graphite text on gold, matching the in-app CTA */
+  border-radius: 6px;
+}
+.auth-reveal:hover {
+  color: var(--text);
+  background: var(--accent);
+}
+
+.auth-err-text {
+  font-size: 12px;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.auth-hint-text {
+  font-size: 12px;
+  color: var(--faint);
+}
+.auth-strength {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+.auth-strength span {
+  height: 3px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--surface-2);
+  transition: background 0.2s;
+}
+.auth-strength.s1 span:nth-child(-n + 1),
+.auth-strength.s2 span:nth-child(-n + 2),
+.auth-strength.s3 span:nth-child(-n + 3),
+.auth-strength.s4 span:nth-child(-n + 4) {
   background: var(--gold);
-  transition:
-    background var(--dur) ease,
-    box-shadow var(--dur) ease,
-    transform 0.05s ease;
 }
-.auth-submit:hover:not(:disabled) {
-  background: var(--gold-bright);
-  box-shadow: var(--elev-gold);
+.auth-strength.weak span:nth-child(-n + 1) {
+  background: var(--red);
 }
-.auth-submit:active:not(:disabled) {
-  transform: translateY(1px);
+
+.auth-formerr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--red) 38%, transparent);
+  color: var(--red);
+  font-size: 13px;
 }
-.auth-submit:disabled {
-  opacity: 0.55;
-  cursor: default;
+.auth-formerr svg {
+  flex: none;
 }
-/* "or" divider between password and OAuth */
+
+.auth-link {
+  background: none;
+  border: 0;
+  color: var(--gold);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.auth-link:hover {
+  text-decoration: underline;
+}
+
 .auth-or {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: var(--muted);
+  gap: 12px;
+  color: var(--faint);
   font-size: 12px;
-  margin: 2px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 4px 0;
 }
 .auth-or::before,
 .auth-or::after {
   content: '';
-  flex: 1;
   height: 1px;
+  flex: 1;
   background: var(--line);
 }
-/* OAuth (Google) button — neutral surface with the provider mark */
 .auth-oauth {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
   color: var(--text);
-  background: var(--surface-2);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 .auth-oauth:hover {
-  border-color: var(--muted);
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--gold) 36%, var(--line));
 }
 .auth-oauth:disabled {
-  opacity: 0.6;
-  cursor: default;
+  opacity: 0.55;
+  cursor: not-allowed;
 }
-.auth-oauth-ico {
-  flex: 0 0 auto;
-}
+
 .auth-switch {
-  border: none;
-  background: transparent;
+  text-align: center;
+  font-size: 13.5px;
   color: var(--muted);
-  font-size: 12.5px;
-  cursor: pointer;
-  padding: 2px;
+  margin-top: 2px;
 }
-.auth-switch:hover {
-  color: var(--text);
+.auth-foot-note {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--faint);
+  margin-top: 16px;
+  line-height: 1.5;
 }
+
+/* demo logins strip */
 .auth-demo {
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px dashed color-mix(in srgb, var(--gold) 30%, var(--line));
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--gold) 5%, transparent);
+}
+.auth-demo-title {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 10px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.auth-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 .auth-demo-btn {
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 9px 11px;
   border-radius: 9px;
-  padding: 9px;
-  font-size: 13px;
-  font-weight: 700;
+  background: var(--surface);
+  border: 1px solid var(--line);
   cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.14s,
+    transform 0.06s;
 }
 .auth-demo-btn:hover {
-  border-color: var(--muted);
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.auth-demo-btn:active {
+  transform: translateY(1px);
+}
+.auth-demo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.auth-demo-role {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--faint);
+}
+.auth-demo-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
 }
 .auth-demo-hint {
-  margin: 0;
+  margin-top: 9px;
   font-size: 11px;
-  line-height: 1.5;
-  color: var(--muted);
+  color: var(--faint);
 }
 .auth-demo-hint code {
-  background: var(--surface-2);
-  padding: 1px 4px;
-  border-radius: 4px;
+  font-family: var(--font-num);
+  color: var(--muted);
 }
 
-/* Header identity menu (replaces the implicit "operator") */
-/* Compact identity chip in the header. A thin divider sets it apart from the sound/
-   VIP controls to its left, so the top-right reads as grouped, not cluttered. */
+/* verify-email + success states */
+.auth-center-state {
+  text-align: center;
+  padding: 8px 0;
+}
+.auth-state-ic {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  background: color-mix(in srgb, var(--gold) 14%, var(--surface-2));
+  color: var(--gold);
+}
+.auth-state-ic.ok {
+  background: color-mix(in srgb, var(--green) 16%, var(--surface-2));
+  color: var(--green);
+}
+
+/* ============================================================================
+   Onboarding (player + operator) — shared step shell
+   ========================================================================== */
+.ob-shell {
+  width: 100%;
+  max-width: 560px;
+}
+.ob-progress {
+  margin-bottom: 26px;
+}
+.ob-progress-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ob-step-count {
+  font-family: var(--font-num);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.ob-step-count b {
+  color: var(--gold);
+}
+.ob-skip {
+  background: none;
+  border: 0;
+  color: var(--faint);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ob-skip:hover {
+  color: var(--muted);
+}
+.ob-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.ob-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+  transition: width 0.42s var(--ease-spring);
+}
+
+.ob-step {
+  animation: ob-in 0.32s var(--ease-out);
+}
+@keyframes ob-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+.ob-eyebrow {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 9px;
+}
+.ob-title {
+  font-family: var(--font-head);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+.ob-lede {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0 0 22px;
+  max-width: 46ch;
+}
+.ob-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ob-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+.ob-foot .spacer {
+  flex: 1;
+}
+
+/* welcome bullets */
+.ob-points {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ob-point {
+  display: flex;
+  gap: 13px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--sheen);
+}
+.ob-point .ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--gold) 13%, var(--surface-2));
+  color: var(--gold);
+  flex: none;
+}
+.ob-point-t {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ob-point-d {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+/* interests chips (game picks) */
+.ob-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.ob-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 0.14s,
+    background 0.14s,
+    transform 0.06s;
+}
+.ob-chip:hover {
+  border-color: color-mix(in srgb, var(--gold) 42%, var(--line));
+}
+.ob-chip:active {
+  transform: translateY(1px);
+}
+.ob-chip.is-on {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+.ob-chip img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex: none;
+}
+.ob-chip-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ob-chip .tick {
+  margin-left: auto;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity 0.14s;
+}
+.ob-chip.is-on .tick {
+  opacity: 1;
+}
+
+/* limit controls (responsible play) */
+.ob-limit {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.ob-limit + .ob-limit {
+  margin-top: 12px;
+}
+.ob-limit-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.ob-limit-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ob-limit-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.ob-limit-val {
+  font-family: var(--font-num);
+  font-size: 16px;
+  color: var(--gold);
+}
+.ob-limit-val.off {
+  color: var(--faint);
+}
+
+/* account-type segmented (player / operator) */
+.ob-typeseg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ob-type {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.14s,
+    background 0.14s;
+}
+.ob-type:hover {
+  border-color: color-mix(in srgb, var(--gold) 42%, var(--line));
+}
+.ob-type.is-on {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
+}
+.ob-type .ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--gold);
+}
+.ob-type-t {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-head);
+}
+.ob-type-d {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* house preset cards (operator) */
+.ob-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.ob-preset {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.14s,
+    background 0.14s;
+}
+.ob-preset:hover {
+  border-color: color-mix(in srgb, var(--gold) 42%, var(--line));
+}
+.ob-preset.is-on {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
+}
+.ob-preset-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ob-preset.is-on .ob-preset-radio {
+  border-color: var(--gold);
+}
+.ob-preset.is-on .ob-preset-radio::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.ob-preset-name {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.ob-preset-blurb {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.ob-preset-rtp {
+  font-family: var(--font-num);
+  font-size: 19px;
+  color: var(--gold);
+  text-align: right;
+}
+.ob-preset-rtp small {
+  display: block;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+  color: var(--faint);
+}
+
+/* review defs */
+.ob-review {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ob-review-sec {
+  padding: 16px;
+}
+.ob-review-sec + .ob-review-sec {
+  border-top: 1px solid var(--line);
+}
+.ob-review-h {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.ob-def {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13.5px;
+}
+.ob-def dt {
+  color: var(--muted);
+}
+.ob-def dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-num);
+}
+.ob-promo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  font-size: 13.5px;
+}
+.ob-promo .nm {
+  color: var(--text);
+}
+.ob-promo .nm em {
+  font-style: normal;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 9.5px;
+  color: var(--faint);
+  margin-left: 7px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.ob-promo .amt {
+  font-family: var(--font-num);
+  color: var(--gold);
+}
+
+/* invite-desk list */
+.ob-invite-add {
+  display: flex;
+  gap: 8px;
+}
+.ob-invite-add .input {
+  flex: 1;
+}
+.ob-invite-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ob-invite-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.ob-invite-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-family: var(--font-head);
+  font-weight: 700;
+  color: var(--gold);
+}
+.ob-invite-meta {
+  flex: 1;
+  min-width: 0;
+}
+.ob-invite-nm {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ob-invite-un {
+  font-size: 12px;
+  color: var(--faint);
+  font-family: var(--font-num);
+}
+.ob-invite-x {
+  background: none;
+  border: 0;
+  color: var(--faint);
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+  border-radius: 6px;
+}
+.ob-invite-x:hover {
+  color: var(--red);
+  background: var(--accent);
+}
+.ob-invite-empty {
+  padding: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--faint);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}
+
+/* welcome free-play claim */
+.ob-claim {
+  text-align: center;
+  padding: 26px 20px;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, var(--line));
+  border-radius: 16px;
+  background: radial-gradient(
+    120% 120% at 50% 0%,
+    color-mix(in srgb, var(--gold) 14%, var(--surface)) 0%,
+    var(--surface) 64%
+  );
+  box-shadow: var(--sheen);
+}
+.ob-claim-amt {
+  font-family: var(--font-num);
+  font-size: 46px;
+  line-height: 1;
+  color: var(--gold);
+  margin: 10px 0 6px;
+}
+.ob-claim-label {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.ob-claim-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.ob-claimed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--green);
+  font-weight: 700;
+  font-size: 14px;
+  animation: ob-pop 0.4s var(--ease-spring);
+}
+@keyframes ob-pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* done */
+.ob-done-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 20px 0 4px;
+  text-align: left;
+}
+.ob-done-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.ob-done-row svg {
+  color: var(--green);
+  flex: none;
+}
+.ob-done-row b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------------- Responsive ---------------- */
+.auth-mobile-brand {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.auth-mobile-brand img {
+  height: 34px;
+  image-rendering: pixelated;
+}
+.auth-mobile-brand .nm {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--text);
+}
+.auth-mobile-brand .nm .dot {
+  color: var(--gold);
+}
+
+@media (max-width: 940px) {
+  .auth-wrap {
+    grid-template-columns: 1fr;
+  }
+  .auth-brandpane {
+    display: none;
+  }
+  .auth-main {
+    padding: 28px 20px;
+    align-items: flex-start;
+  }
+  .auth-mobile-brand {
+    display: flex;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-demo-grid {
+    grid-template-columns: 1fr;
+  }
+  .ob-typeseg {
+    grid-template-columns: 1fr;
+  }
+  .auth-title {
+    font-size: 26px;
+  }
+}
+
+/* ============================================================================
+   Header identity chip — PRESERVED from the original auth module. Used by the
+   app header's AccountMenu (.auth-avatar / .auth-id*) and the console.
+   ========================================================================== */
 .auth-menu {
   display: flex;
   align-items: center;
@@ -210,7 +1093,7 @@
   font-family: var(--font-head);
   font-size: 14px;
   font-weight: 700;
-  color: #14171c;
+  color: var(--on-gold);
   background: linear-gradient(160deg, var(--gold-bright), var(--gold));
   box-shadow: var(--sheen);
 }
@@ -230,7 +1113,6 @@
   letter-spacing: 0.5px;
   color: var(--muted);
 }
-/* icon-only sign-out — quiet by default, gold on hover (subordinate to the CTA) */
 .auth-signout {
   display: grid;
   place-items: center;

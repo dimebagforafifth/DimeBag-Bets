@@ -32,7 +32,8 @@ vi.mock('../games/shared/fair.js', async (importOriginal) => {
 })
 
 function figure(host: HTMLElement): string {
-  return host.querySelector('.figure-value')?.textContent ?? ''
+  // The header wallet is the brand WalletPill; its first value is the headline balance.
+  return host.querySelector('.sds-wallet__value')?.textContent ?? ''
 }
 function click(host: HTMLElement, selector: string, text: RegExp): boolean {
   const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) =>
@@ -52,7 +53,7 @@ function clickMore(host: HTMLElement, text: RegExp): boolean {
 async function openPlinkoAndDrop(host: HTMLElement): Promise<void> {
   // From wherever we are, get to the casino lobby, open Plinko, drop a ball.
   click(host, 'button.nav-tab', /^casino$/i)
-  if (!click(host, 'button.game-card', /plinko/i)) throw new Error('no Plinko card')
+  if (!click(host, 'button.sds-gamecard', /plinko/i)) throw new Error('no Plinko card')
   // The game view is a lazy() chunk: await its dynamic import (the same module
   // promise React.lazy is suspended on) so React can commit it, then click Play.
   await act(async () => {

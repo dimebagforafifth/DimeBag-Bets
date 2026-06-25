@@ -60,7 +60,9 @@ describe('ManagerConsole', () => {
     act(() => section(host, 'Growth')!.click())
     expect(host.querySelector('.mgr-report-title')?.textContent).toMatch(/Reporting/i)
     act(() => section(host, 'Settings')!.click())
-    expect(host.querySelector('.con-h1')?.textContent).toMatch(/Setup/)
+    // The Settings default tool is the (re-skinned) SetupWizard, which opens on the
+    // house-profile step of the PlayStadium operator-onboarding flow.
+    expect(host.textContent).toContain('Pick a starting profile')
   })
 
   it('progressive disclosure hides advanced tools until revealed', () => {

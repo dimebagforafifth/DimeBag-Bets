@@ -1,0 +1,259 @@
+/* ============================================================================
+   PlayStadium × shadcn/ui — theme + component layer
+   shadcn/ui's New-York component vocabulary, re-skinned onto the PlayStadium
+   "Chip Gold & Carbon" tokens (../../styles.css). shadcn variable names are
+   mapped to brand tokens on `.psa`, so the kit reads as an authentic shadcn app
+   that happens to be PlayStadium. Numerals are Slight Chance Mono; headings are
+   Barlow Condensed; the wordmark is Slight Chance.
+   ========================================================================== */
+
+.psa {
+  /* ---- shadcn token map → brand tokens ---- */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: #1b1b1a;
+  --popover-foreground: var(--text);
+  --primary: var(--gold);
+  --primary-foreground: var(--on-gold);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--faint);
+  --accent: #262625;          /* subtle hover surface (shadcn --accent) */
+  --accent-foreground: var(--text);
+  --destructive: var(--red);
+  --destructive-foreground: #fff;
+  --success: var(--green);
+  --border: var(--line);
+  --input: #3a3a38;
+  --ring: var(--gold);
+  --radius: 12px;
+
+  --sidebar: #0d0e10;
+  --sidebar-border: #242423;
+
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.psa *, .psa *::before, .psa *::after { box-sizing: border-box; }
+/* buttons/inputs must inherit text color, not fall back to the UA black `buttontext`
+   (prevents black-on-dark text on any unstyled control). Classed controls set their
+   own color and win on specificity. */
+.psa button, .psa input, .psa select, .psa textarea { color: inherit; }
+.psa ::selection { background: rgba(var(--gold-glow), 0.28); }
+.psa :focus-visible { outline: none; box-shadow: 0 0 0 2px var(--background), 0 0 0 4px rgba(var(--gold-glow), 0.7); border-radius: 8px; }
+
+/* numerals everywhere money/odds/multipliers appear */
+.psa .num, .psa .tnum { font-family: var(--font-num); font-feature-settings: 'tnum' 1; letter-spacing: 0.01em; }
+.psa .up { color: var(--success); }
+.psa .down { color: var(--destructive); }
+.psa .gold { color: var(--gold); }
+
+/* ---- typographic helpers ---- */
+.psa .eyebrow {
+  font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow);
+  font-size: 11px; font-weight: 600; color: var(--muted-foreground);
+}
+.psa .h-cond { font-family: var(--font-head); font-weight: 700; letter-spacing: 0.2px; line-height: 1.1; }
+.psa .wordmark { font-family: var(--font-display); line-height: 1; }
+
+/* ============================================================================
+   BUTTON
+   ========================================================================== */
+.psa .btn {
+  --btn-h: 38px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: var(--btn-h); padding: 0 16px; border-radius: 10px;
+  font-family: var(--font-body); font-size: 14px; font-weight: 600; letter-spacing: 0.1px;
+  border: 1px solid transparent; cursor: pointer; white-space: nowrap; text-decoration: none;
+  transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .05s ease;
+  user-select: none;
+}
+.psa .btn:active:not(:disabled) { transform: translateY(1px); }
+.psa .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.psa .btn svg { width: 16px; height: 16px; flex: none; }
+.psa .btn-default { background: var(--primary); color: var(--primary-foreground); }
+.psa .btn-default:hover:not(:disabled) { background: var(--gold-bright); box-shadow: var(--elev-gold); }
+.psa .btn-secondary { background: var(--secondary); color: var(--secondary-foreground); border-color: var(--border); }
+.psa .btn-secondary:hover:not(:disabled) { background: var(--accent); border-color: color-mix(in srgb, var(--gold) 42%, var(--border)); }
+.psa .btn-outline { background: transparent; color: var(--foreground); border-color: var(--border); }
+.psa .btn-outline:hover:not(:disabled) { background: var(--accent); border-color: color-mix(in srgb, var(--gold) 42%, var(--border)); }
+.psa .btn-ghost { background: transparent; color: var(--muted-foreground); }
+.psa .btn-ghost:hover:not(:disabled) { background: var(--accent); color: var(--foreground); }
+.psa .btn-destructive { background: var(--destructive); color: #fff; }
+.psa .btn-destructive:hover:not(:disabled) { background: var(--red-press); }
+.psa .btn-link { background: transparent; color: var(--gold); height: auto; padding: 0; }
+.psa .btn-link:hover { text-decoration: underline; }
+.psa .btn-sm { --btn-h: 32px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+.psa .btn-lg { --btn-h: 46px; padding: 0 24px; font-size: 15px; }
+.psa .btn-icon { --btn-h: 38px; width: 38px; padding: 0; }
+.psa .btn-icon.btn-sm { width: 32px; }
+.psa .btn-block { width: 100%; }
+
+/* ============================================================================
+   CARD
+   ========================================================================== */
+.psa .card {
+  background: var(--card); color: var(--card-foreground);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--elev-1), var(--sheen);
+}
+.psa .card-header { display: flex; flex-direction: column; gap: 4px; padding: 18px 20px; }
+.psa .card-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+.psa .card-desc { font-size: 13px; color: var(--muted-foreground); }
+.psa .card-content { padding: 0 20px 20px; }
+.psa .card-footer { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); }
+.psa .card-header + .card-content { padding-top: 0; }
+
+/* ============================================================================
+   BADGE
+   ========================================================================== */
+.psa .badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 9px; border-radius: 7px; font-size: 11.5px; font-weight: 700;
+  letter-spacing: 0.2px; border: 1px solid transparent; white-space: nowrap; line-height: 1.5;
+}
+.psa .badge svg { width: 12px; height: 12px; }
+.psa .badge-default { background: var(--primary); color: var(--primary-foreground); }
+.psa .badge-secondary { background: var(--secondary); color: var(--secondary-foreground); border-color: var(--border); }
+.psa .badge-outline { color: var(--foreground); border-color: var(--border); }
+.psa .badge-success { background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+.psa .badge-destructive { background: color-mix(in srgb, var(--destructive) 16%, transparent); color: var(--destructive); border-color: color-mix(in srgb, var(--destructive) 40%, transparent); }
+.psa .badge-gold { background: color-mix(in srgb, var(--gold) 15%, transparent); color: var(--gold-bright); border-color: color-mix(in srgb, var(--gold) 38%, transparent); }
+.psa .badge-live { background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+.psa .badge-live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 70%, transparent); animation: psa-pulse-dot 1.6s infinite; }
+@keyframes psa-pulse-dot { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 60%, transparent); } 70% { box-shadow: 0 0 0 5px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* ============================================================================
+   TABS (segmented, shadcn muted track)
+   ========================================================================== */
+.psa .tabs-list { display: inline-flex; align-items: center; gap: 2px; padding: 4px; background: var(--muted); border: 1px solid var(--border); border-radius: 10px; }
+.psa .tabs-trigger {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  padding: 6px 14px; border-radius: 7px; font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  color: var(--muted-foreground); transition: background .15s ease, color .15s ease;
+}
+.psa .tabs-trigger:hover { color: var(--foreground); }
+.psa .tabs-trigger[data-active='true'] { background: var(--card); color: var(--foreground); box-shadow: var(--elev-1); }
+.psa .tabs-trigger[data-active='true'].is-gold { color: var(--gold); }
+
+/* ============================================================================
+   TABLE
+   ========================================================================== */
+.psa .table-wrap { width: 100%; overflow-x: auto; }
+.psa table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.psa table.tbl thead th {
+  text-align: left; padding: 10px 14px; font-family: var(--font-label);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
+  color: var(--muted-foreground); border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.psa table.tbl tbody td { padding: 12px 14px; border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent); vertical-align: middle; }
+.psa table.tbl tbody tr { transition: background .14s ease; }
+.psa table.tbl tbody tr:hover { background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.psa table.tbl tbody tr:last-child td { border-bottom: 0; }
+.psa table.tbl .r { text-align: right; }
+.psa table.tbl .c { text-align: center; }
+
+/* ============================================================================
+   INPUT / SELECT / FIELD
+   ========================================================================== */
+.psa .input, .psa .select {
+  height: 38px; width: 100%; padding: 0 12px; border-radius: 9px;
+  background: color-mix(in srgb, var(--background) 60%, var(--secondary));
+  border: 1px solid var(--input); color: var(--foreground); font-family: var(--font-body); font-size: 14px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.psa .input::placeholder { color: var(--muted-foreground); }
+.psa .input:focus, .psa .select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(var(--gold-glow), 0.18); }
+.psa .input.num { font-family: var(--font-num); }
+.psa .label { display: block; font-size: 12px; font-weight: 600; color: var(--muted-foreground); margin-bottom: 6px; }
+.psa .search { position: relative; }
+.psa .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted-foreground); }
+.psa .search .input { padding-left: 34px; }
+
+/* ============================================================================
+   AVATAR
+   ========================================================================== */
+.psa .avatar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--secondary); border: 1px solid var(--border); font-family: var(--font-head); font-weight: 700; font-size: 15px; color: var(--gold); overflow: hidden; flex: none; }
+.psa .avatar.sm { width: 28px; height: 28px; font-size: 12px; }
+.psa .avatar.lg { width: 52px; height: 52px; font-size: 22px; }
+.psa .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ============================================================================
+   PROGRESS / SWITCH / SEPARATOR / SLIDER
+   ========================================================================== */
+.psa .progress { height: 8px; width: 100%; background: var(--secondary); border-radius: 999px; overflow: hidden; }
+.psa .progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); border-radius: 999px; transition: width .4s var(--ease-out); }
+.psa .switch { position: relative; width: 38px; height: 22px; border-radius: 999px; background: var(--secondary); border: 1px solid var(--border); cursor: pointer; transition: background .18s ease; flex: none; }
+.psa .switch[data-on='true'] { background: var(--gold); border-color: var(--gold); }
+.psa .switch > span { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .18s var(--ease-out); }
+.psa .switch[data-on='true'] > span { transform: translateX(16px); }
+.psa .sep { height: 1px; width: 100%; background: var(--border); border: 0; }
+.psa .sep-v { width: 1px; align-self: stretch; background: var(--border); }
+.psa input[type='range'].slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 999px; background: var(--secondary); cursor: pointer; }
+.psa input[type='range'].slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--gold); border: 2px solid var(--bg); box-shadow: var(--elev-1); }
+.psa input[type='range'].slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--gold); border: 2px solid var(--bg); }
+
+/* ============================================================================
+   DROPDOWN MENU / POPOVER
+   ========================================================================== */
+.psa .menu {
+  position: absolute; z-index: 60; min-width: 200px; padding: 6px;
+  background: var(--popover); color: var(--popover-foreground);
+  border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--elev-3);
+  animation: psa-pop .14s var(--ease-out);
+}
+@keyframes psa-pop { from { opacity: 0; transform: translateY(-4px) scale(0.98); } }
+.psa .menu-label { padding: 6px 10px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted-foreground); }
+.psa .menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 8px; background: transparent; border: 0; cursor: pointer; color: var(--foreground); font-family: var(--font-body); font-size: 13.5px; text-align: left; transition: background .12s ease; }
+.psa .menu-item:hover { background: var(--accent); }
+.psa .menu-item[data-active='true'] { color: var(--gold); }
+.psa .menu-item svg { width: 16px; height: 16px; color: var(--muted-foreground); }
+.psa .menu-item .right { margin-left: auto; color: var(--muted-foreground); font-size: 12px; }
+.psa .menu-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+
+/* ============================================================================
+   DIALOG / SHEET
+   ========================================================================== */
+.psa .overlay { position: fixed; inset: 0; background: rgba(7,9,12,0.62); backdrop-filter: blur(3px); z-index: 80; animation: psa-fade .18s ease; }
+@keyframes psa-fade { from { opacity: 0; } }
+.psa .dialog { position: fixed; z-index: 90; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(460px, 92vw); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--elev-3); padding: 22px; animation: psa-zoom .2s var(--ease-spring); }
+@keyframes psa-zoom { from { opacity: 0; transform: translate(-50%,-48%) scale(0.96); } }
+.psa .sheet { position: fixed; z-index: 90; top: 0; right: 0; height: 100dvh; width: min(420px, 94vw); background: var(--card); border-left: 1px solid var(--border); box-shadow: var(--elev-3); display: flex; flex-direction: column; animation: psa-slide .26s var(--ease-out); }
+@keyframes psa-slide { from { transform: translateX(28px); opacity: 0; } }
+
+/* ============================================================================
+   TOOLTIP
+   ========================================================================== */
+.psa .tip { position: relative; display: inline-flex; }
+.psa .tip > .tip-body { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); white-space: nowrap; background: var(--popover); border: 1px solid var(--border); color: var(--foreground); font-size: 12px; padding: 5px 9px; border-radius: 8px; box-shadow: var(--elev-2); opacity: 0; pointer-events: none; transition: opacity .14s ease; z-index: 70; }
+.psa .tip:hover > .tip-body { opacity: 1; }
+
+/* ============================================================================
+   STAT TILE (used across dashboards)
+   ========================================================================== */
+.psa .stat { display: flex; flex-direction: column; gap: 3px; }
+.psa .stat-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: 0.07em; font-size: 11px; font-weight: 600; color: var(--muted-foreground); }
+.psa .stat-value { font-family: var(--font-num); font-size: 26px; font-weight: 400; line-height: 1.05; color: var(--foreground); }
+.psa .stat-delta { font-family: var(--font-num); font-size: 12.5px; display: inline-flex; align-items: center; gap: 3px; }
+
+/* skeleton placeholder (for image slots) */
+.psa .ph {
+  position: relative; overflow: hidden; border-radius: var(--radius);
+  background:
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--gold) 7%, var(--surface-2)) 0 14px, var(--surface-2) 14px 28px);
+  border: 1px dashed color-mix(in srgb, var(--gold) 32%, var(--border));
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+.psa .ph .ph-tag { font-family: var(--font-label); text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; font-weight: 700; color: color-mix(in srgb, var(--gold) 70%, var(--faint)); padding: 4px 8px; background: color-mix(in srgb, var(--bg) 60%, transparent); border-radius: 6px; }
+
+.psa .scroll-y { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.psa .scroll-y::-webkit-scrollbar { width: 8px; height: 8px; }
+.psa .scroll-y::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+.psa .scroll-y::-webkit-scrollbar-track { background: transparent; }

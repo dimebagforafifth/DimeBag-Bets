@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PlayStadium — X Banner (screenshot me)</title>
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0c0e; overflow: hidden; }
+  /* stage centers + scales the banner to fit your screen so you can screenshot the whole thing */
+  .stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+  }
+
+  /* X / Twitter header — exact 1500×500 */
+  .banner {
+    position: relative;
+    width: 1500px;
+    height: 500px;
+    overflow: hidden;
+    background: radial-gradient(120% 150% at 50% 8%, #1b1c1f 0%, #141517 42%, #0e0f11 100%);
+    font-family: 'Slight Chance', cursive;
+    isolation: isolate;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.6);
+  }
+  .banner::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: -36%;
+    width: 1000px; height: 1000px;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(var(--gold-glow), 0.16) 0%, rgba(var(--gold-glow), 0.05) 38%, transparent 64%);
+    pointer-events: none; z-index: 0;
+  }
+  .banner::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(115% 130% at 50% 42%, transparent 52%, rgba(0,0,0,0.42) 100%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .stack {
+    position: absolute; inset: 0; z-index: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+  }
+  .wordmark {
+    font-family: 'Slight Chance', cursive;
+    font-size: 116px; line-height: 0.9;
+    color: #fcfcfb; letter-spacing: 0.5px;
+    text-shadow: 0 6px 30px rgba(0,0,0,0.55);
+    white-space: nowrap;
+  }
+  .wordmark .dot { color: var(--gold); text-shadow: 0 0 26px rgba(var(--gold-glow), 0.55); }
+  .rule { display: flex; align-items: center; gap: 16px; }
+  .rule .line { width: 64px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold)); }
+  .rule .line.r { background: linear-gradient(90deg, var(--gold), transparent); }
+  .rule .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px rgba(var(--gold-glow), 0.7); }
+  .tagline {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.46em; font-size: 24px;
+    color: var(--muted); padding-left: 0.46em; white-space: nowrap;
+  }
+
+  /* tiny hint, OUTSIDE the banner so it's not in your screenshot */
+  .hint {
+    position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+    font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.18em;
+    font-size: 12px; color: #5b5b59; z-index: 5; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="banner" data-screen-label="X banner">
+      <div class="stack">
+        <div class="wordmark">PlayStadium<span class="dot">.</span>io</div>
+        <div class="rule"><span class="line"></span><span class="pip"></span><span class="line r"></span></div>
+        <div class="tagline">Points · Casino · Sportsbook</div>
+      </div>
+    </div>
+  </div>
+  <div class="hint">PlayStadium X banner · 1500 × 500 · screenshot the dark panel</div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    function fit() {
+      const padX = 56, padY = 96;
+      const s = Math.min(1, (window.innerWidth - padX) / 1500, (window.innerHeight - padY) / 500);
+      stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  </script>
+
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" fill="#141517"/>
+      <text x="50" y="60" font-family="cursive" font-size="34" fill="#fcfcfb" text-anchor="middle">P<tspan fill="#f0be4a">.</tspan></text>
+    </svg>
+  </template>
+</body>
+</html>

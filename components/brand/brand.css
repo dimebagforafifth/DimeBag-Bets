@@ -1,0 +1,654 @@
+/* ============================================================================
+   PlayStadium brand components — "Chip Gold & Carbon"
+   Ported verbatim from the Claude Design system (PlayStadium Design System)
+   components/. These molecules hang off the global brand tokens in app/theme.css,
+   so they re-theme with the system (incl. the jade/ember/ice [data-theme]s). The
+   primitives (Button, Dialog, Tabs, …) live in components/ui — these compose them.
+   ========================================================================== */
+
+/* ---- Wordmark + chip logo ------------------------------------------------- */
+.ps-wordmark {
+  font-family: var(--font-display);
+  line-height: 1;
+  letter-spacing: var(--tracking-caps);
+  color: var(--text);
+  white-space: nowrap;
+  text-transform: none; /* Slight Chance is mixed-case — never let an ancestor uppercase it */
+}
+.ps-wordmark__dot {
+  color: var(--gold);
+  margin: 0 1px;
+}
+.ps-chip {
+  image-rendering: pixelated;
+  display: block;
+  flex: none;
+}
+
+/* ---- WalletPill ----------------------------------------------------------- */
+.sds-wallet {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 14px;
+  padding: 6px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--sheen);
+}
+.sds-wallet__block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+.sds-wallet__block + .sds-wallet__block {
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+}
+.sds-wallet__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--faint);
+}
+.sds-wallet__value {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.sds-wallet__block--primary .sds-wallet__value {
+  font-size: 16px;
+  color: var(--gold-bright);
+}
+.sds-wallet__value.is-up {
+  color: var(--green);
+}
+.sds-wallet__value.is-down {
+  color: var(--red);
+}
+.sds-wallet__value.is-even {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ---- GameCard ------------------------------------------------------------- */
+.sds-gamecard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: var(--elev-1), var(--sheen);
+  transition:
+    transform var(--dur) var(--ease-out),
+    border-color var(--dur) ease,
+    box-shadow var(--dur-slow) var(--ease-out);
+}
+.sds-gamecard:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--gold) 50%, var(--line));
+  box-shadow: var(--elev-2), var(--elev-gold), var(--sheen);
+}
+.sds-gamecard:active {
+  transform: translateY(-1px);
+}
+.sds-gamecard:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+.sds-gamecard__art {
+  position: relative;
+  flex: 0 0 116px;
+  min-height: 116px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  background: radial-gradient(
+    125% 100% at 50% 0%,
+    color-mix(in srgb, var(--gold) 28%, var(--surface-2)) 0%,
+    var(--surface-2) 72%
+  );
+}
+.sds-gamecard__art img {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.sds-gamecard:hover .sds-gamecard__art img {
+  transform: scale(1.06);
+}
+.sds-gamecard__body {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 14px 14px;
+  overflow: hidden;
+}
+.sds-gamecard__name {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #fff;
+}
+.sds-gamecard__tag {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.sds-gamecard__play {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gold);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity var(--dur) ease,
+    transform var(--dur) ease;
+}
+.sds-gamecard:hover .sds-gamecard__play {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ---- Stat ----------------------------------------------------------------- */
+.sds-stat {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.sds-stat__label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.sds-stat__value {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.sds-stat__value.is-hot {
+  color: var(--gem);
+}
+
+/* ---- Badge ---------------------------------------------------------------- */
+.sds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+}
+.sds-badge--gold {
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 40%, transparent);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.sds-badge--solid {
+  color: var(--on-gold);
+  background: var(--gold);
+}
+.sds-badge--live {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 40%, transparent);
+}
+.sds-badge--live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 30%, transparent);
+}
+.sds-badge--neutral {
+  color: var(--muted);
+  border-color: var(--line);
+  background: var(--surface-2);
+}
+
+/* ---- Chip ----------------------------------------------------------------- */
+.sds-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    color var(--dur) ease,
+    border-color var(--dur) ease,
+    background var(--dur) ease;
+}
+.sds-chip:hover:not(:disabled) {
+  color: var(--text);
+}
+.sds-chip[aria-pressed='true'],
+.sds-chip.is-on {
+  color: var(--gem);
+  border-color: rgba(var(--gem-glow), 0.4);
+  background: color-mix(in srgb, var(--gem) 8%, var(--surface-2));
+}
+.sds-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.sds-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ---- OddsButton ----------------------------------------------------------- */
+.sds-odds {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color var(--dur) ease,
+    background var(--dur) ease,
+    transform 0.05s ease;
+}
+.sds-odds:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--gold) 50%, var(--line));
+}
+.sds-odds:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.sds-odds:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+.sds-odds:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.sds-odds__label {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sds-odds__price {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  text-align: center;
+}
+.sds-odds__move {
+  font-size: 10px;
+  text-align: center;
+  height: 10px;
+  line-height: 10px;
+}
+.sds-odds__move.up {
+  color: var(--green);
+}
+.sds-odds__move.down {
+  color: var(--red);
+}
+.sds-odds[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--gold) 14%, var(--surface-2));
+  border-color: var(--gold);
+}
+.sds-odds[aria-pressed='true'] .sds-odds__price {
+  color: var(--gold-bright);
+}
+.sds-odds[aria-pressed='true'] .sds-odds__label {
+  color: var(--gold);
+}
+
+/* ---- EventRow ------------------------------------------------------------- */
+.sds-event {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color var(--dur) ease;
+}
+.sds-event:hover {
+  border-color: color-mix(in srgb, var(--line) 60%, var(--gold));
+}
+.sds-event__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.sds-event__league {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.sds-event__time {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.sds-event__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.sds-event__live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 28%, transparent);
+}
+.sds-event__teams {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sds-event__team {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.sds-event__name {
+  font-family: var(--font-head);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+.sds-event__score {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--gold-bright);
+  margin-left: auto;
+}
+.sds-event__markets {
+  display: flex;
+  gap: 8px;
+}
+.sds-event__markets .sds-event__col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sds-event__collabel {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  text-align: center;
+}
+@media (max-width: 560px) {
+  .sds-event {
+    grid-template-columns: 1fr;
+  }
+  .sds-event__markets {
+    justify-content: stretch;
+  }
+  .sds-event__markets .sds-event__col {
+    flex: 1;
+  }
+}
+
+/* ---- BetSlip -------------------------------------------------------------- */
+.sds-slip {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--elev-2);
+  width: 320px;
+  max-width: 100%;
+}
+.sds-slip__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.sds-slip__title {
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.sds-slip__count {
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-gold);
+  background: var(--gold);
+  border-radius: var(--radius-pill);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sds-slip__mode {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+.sds-slip__mode button {
+  font-family: var(--font-label);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.sds-slip__mode button.on {
+  color: var(--on-gold);
+  background: var(--gold);
+}
+.sds-slip__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.sds-slip__empty {
+  padding: 36px 16px;
+  text-align: center;
+  color: var(--faint);
+  font-size: 13px;
+}
+.sds-pick {
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 34px 10px 12px;
+}
+.sds-pick__pick {
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.sds-pick__event {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.sds-pick__price {
+  position: absolute;
+  top: 10px;
+  right: 30px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold-bright);
+}
+.sds-pick__x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: none;
+  color: var(--faint);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: 4px;
+}
+.sds-pick__x:hover {
+  color: var(--red);
+}
+.sds-slip__foot {
+  border-top: 1px solid var(--line);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sds-slip__stake {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  height: 44px;
+}
+.sds-slip__stake:focus-within {
+  border-color: var(--gold);
+}
+.sds-slip__stake label {
+  font-family: var(--font-label);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+.sds-slip__stake input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  text-align: right;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+}
+.sds-slip__stake .unit {
+  font-family: var(--font-num);
+  font-size: 12px;
+  color: var(--muted);
+}
+.sds-slip__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sds-slip__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.sds-slip__row .k {
+  color: var(--muted);
+}
+.sds-slip__row .v {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text);
+}
+.sds-slip__row--return .k {
+  color: var(--text);
+  font-weight: 600;
+}
+.sds-slip__row--return .v {
+  color: var(--gold-bright);
+  font-size: 16px;
+}

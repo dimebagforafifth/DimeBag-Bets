@@ -38,12 +38,14 @@ describe('casino lobby presentation', () => {
     expect(host.querySelector('.lobby-eyebrow')?.textContent).toMatch(/provably fair/i)
     expect(host.querySelector('.lobby-title')?.textContent).toBe('Originals')
 
-    // A card for every registered game (all enabled by default).
-    const cards = host.querySelectorAll('.lobby-grid .game-card')
+    // A card for every registered game (all enabled by default). The lobby tile is
+    // now the brand GameCard (components/brand): button.sds-gamecard, name in
+    // .sds-gamecard__name.
+    const cards = host.querySelectorAll('.lobby-grid .sds-gamecard')
     expect(cards.length).toBe(GAMES.length)
     expect(cards.length).toBeGreaterThan(10)
     // Each card carries a name.
-    expect(host.querySelector('.game-card .card-name')?.textContent).toBeTruthy()
+    expect(host.querySelector('.sds-gamecard .sds-gamecard__name')?.textContent).toBeTruthy()
   })
 
   it('keeps the live-activity strip hidden until there is real play', () => {

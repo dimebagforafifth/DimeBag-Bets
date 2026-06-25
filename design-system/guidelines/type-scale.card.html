@@ -1,0 +1,22 @@
+<!-- @dsCard group="Type" viewport="700x200" name="Type Scale" subtitle="Barlow Condensed headings → Barlow body, 11 → 48px" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg); font-family: var(--font-body); color: var(--text); padding: 20px; }
+  .row { display: flex; align-items: baseline; gap: 16px; padding: 5px 0; }
+  .tok { font-family: var(--font-num); font-size: 11px; color: var(--faint); width: 90px; flex: 0 0 auto; text-align: right; }
+  .spec { font-family: var(--font-head); font-weight: 700; letter-spacing: var(--tracking-tight); line-height: 1; }
+</style>
+</head>
+<body>
+  <div class="row"><span class="tok">--text-3xl</span><span class="spec" style="font-size: var(--text-3xl)">Originals</span></div>
+  <div class="row"><span class="tok">--text-2xl</span><span class="spec" style="font-size: var(--text-2xl)">The floor is open</span></div>
+  <div class="row"><span class="tok">--text-xl</span><span class="spec" style="font-size: var(--text-xl)">Crash · Mines · Dice</span></div>
+  <div class="row"><span class="tok">--text-lg</span><span class="spec" style="font-size: var(--text-lg); font-weight: 600">Live drops</span></div>
+  <div class="row"><span class="tok">--text-md</span><span style="font-size: var(--text-md)">Body copy at fifteen pixels — the base.</span></div>
+  <div class="row"><span class="tok">--text-sm</span><span style="font-size: var(--text-sm); color: var(--muted)">Secondary supporting line.</span></div>
+</body>
+</html>

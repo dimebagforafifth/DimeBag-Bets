@@ -1,7 +1,11 @@
-/* DimeBag-Bets — player-facing design tokens (the single source of truth every
-   game + the sportsbook consume). Saira is loaded here so the shell + lobby get
-   it on first paint, not after a flash. */
-@import url('https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700;800&display=swap');
+/* PlayStadium.io — player-facing design tokens ("Chip Gold & Carbon"), imported
+   from the Claude Design system (PlayStadium Design System) and unified with the
+   operator console. The single source of truth every game + the sportsbook consume.
+   The PlayStadium font stack — Barlow / Barlow Condensed (workhorse), DJR Slight
+   Chance (hero display + wordmark), Slight Chance Mono (every numeral) and ECWC
+   Standard (LED scoreboards) — is loaded FIRST (tokens/fonts.css) so the shell +
+   lobby get it on first paint, not after a flash. */
+@import './tokens/fonts.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
@@ -55,15 +59,17 @@
   --muted: #c4c4c2; /* secondary text from the logo's white inlays */
   --faint: #919190; /* tertiary labels, footer, disabled */
 
-  /* ---- THE accent: DimeBag gold (one confident accent) ---- */
-  --gold: #f0be4a; /* brand, primary actions, focus, treasure */
-  --gold-bright: #f5c459; /* glints, hover, the lit edge of a gradient */
+  /* ---- THE accent: chip gold (the chip rim + the .io) — small hits only ---- */
+  --gold: #f0be4a; /* brand, primary actions, focus, key figures */
+  --gold-bright: #f5c459; /* glints, hover, the lit edge of the chip ring */
   --gold-press: #c99528; /* pressed / active CTA */
+  --gold-deep: #744107; /* the chip's gold-brown shadow — gradient depth */
   --gold-glow: 240, 190, 74; /* RGB channels for translucent gold glows */
+  --on-gold: #161616; /* the chip's dark ink that sits ON the gold accent */
 
-  /* ---- account direction + live status (kept narrow + conventional) ---- */
-  --green: #34d399; /* figure UP / a win / "live" — refined, not neon */
-  --green-press: #25b87f;
+  /* ---- account direction + live status (the only non-logo hues) ---- */
+  --green: #46c88a; /* figure UP / a win / "live" */
+  --green-press: #38ad75;
   --red: #e0556e; /* figure DOWN / a loss / stop */
   --red-press: #cf4661;
 
@@ -77,6 +83,7 @@
   --radius: 12px;
   --radius-sm: 8px;
   --radius-lg: 18px;
+  --radius-pill: 999px;
   --gap: 16px;
 
   /* ---- one shared content width ---- the header bar + the page content both cap to
@@ -100,24 +107,30 @@
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px rgba(var(--gold-glow), 0.7);
   --ring-color: var(--gold);
 
-  /* ---- shadcn/ui aliases, mapped onto PlayStadium tokens ---- */
+  /* ---- shadcn/ui aliases, mapped onto PlayStadium tokens (the `.psa` shadcn→brand
+     map from the Claude Design system, applied at :root so every components/ui/*
+     inherits it). NOTE: --accent is the subtle hover SURFACE here, not the gold
+     accent — gold is a small hit, never a fill, reached via --gold / --accent-gold. ---- */
   --background: var(--bg);
   --foreground: var(--text);
   --card: var(--surface);
   --card-foreground: var(--text);
-  --popover: var(--surface);
+  --popover: #1b1b1a;
   --popover-foreground: var(--text);
   --primary: var(--gold);
-  --primary-foreground: #14171c;
+  --primary-foreground: var(--on-gold);
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text);
   --muted-surface: var(--surface-2);
-  --accent: var(--surface-2);
+  --accent: #262625;
   --accent-foreground: var(--text);
   --destructive: var(--red);
   --destructive-foreground: #ffffff;
+  --success: var(--green);
   --border: var(--line);
-  --input: var(--line);
+  --input: #3a3a38;
+  --sidebar: #0d0e10;
+  --sidebar-border: #242423;
 
   /* ---- motion: shared durations + easing so every transition has one rhythm ---- */
   --dur-fast: 0.13s;
@@ -125,8 +138,9 @@
   --dur-slow: 0.28s;
   --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1); /* entering / hover */
   --ease-in: cubic-bezier(0.4, 0, 1, 1); /* exiting */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1); /* soft overshoot — hero float, bet-result pop */
 
-  /* ---- spacing scale ---- */
+  /* ---- spacing scale (4px base) ---- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -134,16 +148,23 @@
   --space-5: 24px;
   --space-6: 32px;
   --space-7: 48px;
+  --space-8: 64px;
 
-  /* ---- type: Saira (unified with the console), with robust system fallbacks ---- */
-  --font-head: 'Saira Condensed', 'Saira', 'Arial Narrow', system-ui, sans-serif;
-  --font-body: 'Saira', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  /* a soft, ROUNDED numeric font so every figure reads gamey, not statistical
-     (SF Pro Rounded on Apple via ui-rounded; falls back to the normal stack). */
-  --font-num:
-    ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', 'Nunito', system-ui, sans-serif;
+  /* ---- type: the PlayStadium stack. Barlow Condensed leads headings + eyebrows;
+     Barlow carries body + UI; Barlow Semi Condensed for labels. The CHARACTER layer
+     is hand-drawn: Slight Chance for hero display + the wordmark, Slight Chance Mono
+     for EVERY numeral (balances, multipliers, tickers — so figures tabulate by
+     nature). ECWC Standard is the LED-scoreboard face. (Self-hosted in tokens/fonts.css.) ---- */
+  --font-head: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-label: 'Barlow Semi Condensed', 'Barlow Condensed', system-ui, sans-serif;
+  --font-display: 'Slight Chance', 'Barlow Condensed', system-ui, cursive;
+  /* the gamey numeral / live-ticker face — monospaced, so every figure tabulates */
+  --font-num: 'Slight Chance Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-scoreboard: 'ECWC Standard', 'Slight Chance Mono', ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* ---- type scale ---- */
+  /* ---- type scale (px, from the live app) ---- */
   --text-xs: 11px;
   --text-sm: 13px;
   --text-md: 15px;
@@ -151,9 +172,76 @@
   --text-xl: 22px;
   --text-2xl: 28px;
   --text-3xl: 36px;
+  --text-4xl: 48px;
+
+  /* ---- weights ---- */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-black: 800;
+
+  /* ---- line heights ---- */
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.6;
+
+  /* ---- tracking ---- */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0.005em;
+  --tracking-eyebrow: 0.18em; /* uppercase eyebrows / labels */
+  --tracking-caps: 0.4px; /* the brand wordmark */
 
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================================
+   SEMANTIC ALIASES — reach for these in brand components first, so designs
+   re-theme cleanly (from the Claude Design system tokens/colors.css). shadcn's
+   --accent stays the subtle hover SURFACE (above); the gold accent is reached via
+   --accent-gold / --gold (gold is a SMALL hit, never a background fill).
+   ========================================================================== */
+:root {
+  --surface-page: var(--bg);
+  --surface-card: var(--surface);
+  --surface-raised: var(--surface-2);
+  --border-hairline: var(--line);
+  --text-body: var(--text);
+  --text-secondary: var(--muted);
+  --text-tertiary: var(--faint);
+  --accent-gold: var(--gold);
+  --accent-hover: var(--gold-bright);
+  --accent-press: var(--gold-press);
+  --text-on-accent: var(--on-gold);
+  --status-up: var(--green);
+  --status-down: var(--red);
+  --focus-ring-color: var(--gold);
+}
+
+/* ============================================================================
+   ALTERNATE ACCENT THEMES (experimental — from the lobby palette study). Re-point
+   the accent + canvas tint by setting [data-theme] on a wrapper. Gold ("stadium")
+   is the live default; these are the explored alternatives (jade / ember / ice).
+   ========================================================================== */
+[data-theme='jade'] {
+  --bg: #0b0e0d; --surface: #121614; --surface-2: #1a201d; --line: #28302c;
+  --text: #e9efeb; --muted: #9aa69f; --faint: #6d7a73;
+  --gold: #46c08a; --gold-bright: #6fdba7; --gold-press: #38a576;
+  --gold-glow: 70, 192, 138; --on-gold: #07100c; --gem: #46c08a; --gem-glow: 70, 192, 138;
+}
+[data-theme='ember'] {
+  --bg: #0e0b0a; --surface: #171211; --surface-2: #201917; --line: #322826;
+  --text: #f1eae7; --muted: #ab9d97; --faint: #7c6f69;
+  --gold: #e8704a; --gold-bright: #f48f6f; --gold-press: #cf5c39;
+  --gold-glow: 232, 112, 74; --on-gold: #1a0d08; --gem: #e8704a; --gem-glow: 232, 112, 74;
+}
+[data-theme='ice'] {
+  --bg: #0a0c10; --surface: #111419; --surface-2: #181d24; --line: #262d36;
+  --text: #e8edf3; --muted: #97a2b1; --faint: #6b7685;
+  --gold: #5aa6f0; --gold-bright: #84c0f8; --gold-press: #4790db;
+  --gold-glow: 90, 166, 240; --on-gold: #06121f; --gem: #5aa6f0; --gem-glow: 90, 166, 240;
 }
 
 /* Every number across the casino uses the rounded font — chunkier and softer,
@@ -344,7 +432,15 @@ body {
   padding: 0;
   cursor: pointer;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 9px;
+}
+/* the PlayStadium.io wordmark (Slight Chance) sits a touch larger for presence */
+.brand .ps-wordmark {
+  font-size: 23px;
+}
+.brand-chip {
+  margin-top: -1px;
 }
 .brand-dot {
   color: var(--gold);

@@ -1,0 +1,85 @@
+<!-- @dsCard group="Brand" viewport="700x300" name="Logo" subtitle="The PlayStadium.io pixel chip — tweak the background to preview transparency" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: var(--font-body); color: var(--text); display: flex; flex-direction: column; height: 300px; }
+
+  /* ---- preview stage ---- */
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: background var(--dur) ease; }
+  .stage img { image-rendering: pixelated; transition: height var(--dur) ease; }
+  /* transparency checkerboard (default) — proves the bg is see-through */
+  .stage[data-bg="transparent"] {
+    background-color: #3a3a3a;
+    background-image:
+      linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+      linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+    background-size: 22px 22px;
+    background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+  }
+  .stage[data-bg="carbon"]  { background: var(--bg); }
+  .stage[data-bg="surface"] { background: var(--surface-2); }
+  .stage[data-bg="gold"]    { background: var(--gold); }
+  .stage[data-bg="white"]   { background: #ffffff; }
+
+  /* ---- control bar ---- */
+  .controls { display: flex; align-items: center; gap: 16px; padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line); }
+  .group { display: flex; align-items: center; gap: 8px; }
+  .glabel { font-family: var(--font-label); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .swatches { display: flex; gap: 6px; }
+  .sw { width: 24px; height: 24px; border-radius: var(--radius-sm); border: 1px solid var(--line); cursor: pointer; padding: 0; transition: transform var(--dur) ease, box-shadow var(--dur) ease; }
+  .sw:hover { transform: translateY(-1px); }
+  .sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--gold); }
+  .sw--transparent { background-color: #3a3a3a; background-image: linear-gradient(45deg,#1f1f1f 25%,transparent 25%),linear-gradient(-45deg,#1f1f1f 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1f1f1f 75%),linear-gradient(-45deg,transparent 75%,#1f1f1f 75%); background-size: 10px 10px; background-position: 0 0,0 5px,5px -5px,-5px 0; }
+  .sw--carbon { background: var(--bg); }
+  .sw--surface { background: var(--surface-2); }
+  .sw--gold { background: var(--gold); }
+  .sw--white { background: #fff; }
+  input[type="range"] { accent-color: var(--gold); width: 120px; }
+  .size-val { font-family: var(--font-num); font-size: var(--text-sm); color: var(--muted); min-width: 44px; }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage" data-bg="transparent">
+    <img id="logo" src="../assets/logo/playstadium-chip-logo.png" alt="PlayStadium.io logo" style="height: 200px;" />
+  </div>
+  <div class="controls">
+    <div class="group">
+      <span class="glabel">Background</span>
+      <div class="swatches" id="swatches">
+        <button class="sw sw--transparent" data-bg="transparent" aria-pressed="true" title="Transparent"></button>
+        <button class="sw sw--carbon" data-bg="carbon" aria-pressed="false" title="Carbon"></button>
+        <button class="sw sw--surface" data-bg="surface" aria-pressed="false" title="Surface"></button>
+        <button class="sw sw--gold" data-bg="gold" aria-pressed="false" title="Gold"></button>
+        <button class="sw sw--white" data-bg="white" aria-pressed="false" title="White"></button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="glabel">Size</span>
+      <input type="range" id="size" min="80" max="260" value="200" step="4" />
+      <span class="size-val" id="sizeVal">200px</span>
+    </div>
+  </div>
+
+  <script>
+    var stage = document.getElementById('stage');
+    var logo = document.getElementById('logo');
+    var size = document.getElementById('size');
+    var sizeVal = document.getElementById('sizeVal');
+    document.getElementById('swatches').addEventListener('click', function (e) {
+      var btn = e.target.closest('.sw'); if (!btn) return;
+      stage.setAttribute('data-bg', btn.dataset.bg);
+      this.querySelectorAll('.sw').forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+    });
+    size.addEventListener('input', function () {
+      logo.style.height = this.value + 'px';
+      sizeVal.textContent = this.value + 'px';
+    });
+  </script>
+</body>
+</html>

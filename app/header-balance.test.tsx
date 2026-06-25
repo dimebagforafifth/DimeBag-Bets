@@ -24,11 +24,13 @@ function mount() {
   act(() => root.render(<App />))
   return { host, root }
 }
+// The header wallet is now the brand WalletPill (components/brand): same data +
+// ordering, with .sds-wallet__label / .sds-wallet__value class hooks.
 function labels(host: HTMLElement): string[] {
-  return [...host.querySelectorAll('.figure-label')].map((n) => n.textContent ?? '')
+  return [...host.querySelectorAll('.sds-wallet__label')].map((n) => n.textContent ?? '')
 }
 function values(host: HTMLElement): HTMLElement[] {
-  return [...host.querySelectorAll<HTMLElement>('.figure-value')]
+  return [...host.querySelectorAll<HTMLElement>('.sds-wallet__value')]
 }
 
 describe('header wallet', () => {

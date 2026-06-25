@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Sportsbook" description="PlayStadium sportsbook — header with shared points balance, league rail, live event rows, and a docked bet slip with parlay math." -->
+<helmet>
+  <script src="./ds-base.js"></script>
+</helmet>
+<div style="min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font-body);">
+
+  <header style="position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 86%, transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);">
+    <div style="max-width:var(--content-max);margin:0 auto;height:64px;display:flex;align-items:center;gap:24px;padding:0 24px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img src="../../assets/logo/playstadium-chip-logo.png" alt="PlayStadium.io" style="height:44px;width:auto;image-rendering:pixelated;" />
+        <span style="font-family:var(--font-display);font-size:28px;line-height:1;">PlayStadium</span>
+      </div>
+      <nav style="display:flex;gap:4px;">
+        <a href="../casino-lobby/CasinoLobby.dc.html" style="font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:8px;">Casino</a>
+        <a href="#" style="font-size:13px;font-weight:600;color:var(--gold);background:color-mix(in srgb, var(--gold) 10%, transparent);text-decoration:none;padding:8px 14px;border-radius:8px;">Sportsbook</a>
+        <a href="#" style="font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:8px;">My bets</a>
+      </nav>
+      <div style="margin-left:auto;">
+        <x-import component-from-global-scope="PlayStadiumDesignSystem_e4e367.WalletPill" balance="{{ balance }}" week-cents="{{ weekCents }}" hint-size="200px,46px"></x-import>
+      </div>
+    </div>
+  </header>
+
+  <div style="max-width:var(--content-max);margin:0 auto;padding:16px 24px 0;display:flex;gap:8px;overflow-x:auto;">
+    <sc-for list="{{ sports }}" as="s" hint-placeholder-count="6">
+      <x-import component-from-global-scope="PlayStadiumDesignSystem_e4e367.Chip" active="{{ s.active }}" onClick="{{ s.onSelect }}" hint-size="72px,30px">{{ s.label }}</x-import>
+    </sc-for>
+  </div>
+
+  <div style="max-width:var(--content-max);margin:0 auto;padding:20px 24px 64px;display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;">
+    <main>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;">
+        <h1 style="font-family:var(--font-head);text-transform:uppercase;letter-spacing:0.4px;font-size:28px;font-weight:700;margin:0;">Today's board</h1>
+        <span style="font-family:var(--font-num);font-size:13px;color:var(--faint);">Decimal odds · points only</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ events }}" as="e" hint-placeholder-count="4">
+          <x-import component-from-global-scope="PlayStadiumDesignSystem_e4e367.EventRow" league="{{ e.league }}" time="{{ e.time }}" live="{{ e.live }}" home="{{ e.home }}" away="{{ e.away }}" score="{{ e.score }}" markets="{{ e.markets }}" selected-id="{{ e.selId }}" onPick="{{ pick }}" hint-size="100%,120px"></x-import>
+        </sc-for>
+      </div>
+    </main>
+    <div style="position:sticky;top:84px;">
+      <x-import component-from-global-scope="PlayStadiumDesignSystem_e4e367.BetSlip" selections="{{ sel }}" stake="{{ stake }}" mode="{{ mode }}" onStakeChange="{{ setStake }}" onModeChange="{{ setMode }}" onRemove="{{ removePick }}" onPlace="{{ placeBet }}" hint-size="320px,420px"></x-import>
+    </div>
+  </div>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);box-shadow:var(--elev-3);border-radius:999px;padding:10px 18px;font-size:13px;font-weight:600;z-index:60;">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sel: [], stake: 100, mode: 'parlay', sport: 'nba', balanceCents: 842000, toast: null }
+
+  renderVals() {
+    const SPORTS = [
+      { id: 'nba', label: 'NBA' }, { id: 'epl', label: 'Soccer' }, { id: 'nfl', label: 'NFL' },
+      { id: 'ufc', label: 'UFC' }, { id: 'nhl', label: 'NHL' },
+    ]
+    const ALL = [
+      { id: 'e1', sport: 'nba', league: 'NBA', time: 'LIVE', live: true, home: { name: 'Lakers' }, away: { name: 'Celtics' }, score: { home: 58, away: 61 },
+        markets: [
+          { heading: 'Spread', options: [{ id: 'e1-sh', label: 'LAL -3.5', price: '1.91' }, { id: 'e1-sa', label: 'BOS +3.5', price: '1.91', move: 'up' }] },
+          { heading: 'Total', options: [{ id: 'e1-to', label: 'O 218.5', price: '1.87' }, { id: 'e1-tu', label: 'U 218.5', price: '1.95' }] },
+          { heading: 'Money', options: [{ id: 'e1-mh', label: 'LAL', price: '1.74' }, { id: 'e1-ma', label: 'BOS', price: '2.10', move: 'down' }] },
+        ] },
+      { id: 'e2', sport: 'nba', league: 'NBA', time: '9:00 PM', home: { name: 'Warriors' }, away: { name: 'Nuggets' },
+        markets: [
+          { heading: 'Spread', options: [{ id: 'e2-sh', label: 'GSW -1.5', price: '1.95' }, { id: 'e2-sa', label: 'DEN +1.5', price: '1.87' }] },
+          { heading: 'Money', options: [{ id: 'e2-mh', label: 'GSW', price: '1.83' }, { id: 'e2-ma', label: 'DEN', price: '2.00' }] },
+        ] },
+      { id: 'e3', sport: 'epl', league: 'EPL', time: '11:30 AM', home: { name: 'Arsenal' }, away: { name: 'Chelsea' },
+        markets: [{ heading: '1X2', options: [{ id: 'e3-h', label: 'ARS', price: '1.55' }, { id: 'e3-d', label: 'Draw', price: '4.20' }, { id: 'e3-a', label: 'CHE', price: '5.50', move: 'down' }] }] },
+      { id: 'e4', sport: 'nfl', league: 'NFL', time: 'Sun 1:00 PM', home: { name: 'Chiefs' }, away: { name: 'Bills' },
+        markets: [
+          { heading: 'Spread', options: [{ id: 'e4-sh', label: 'KC -2.5', price: '1.91' }, { id: 'e4-sa', label: 'BUF +2.5', price: '1.91' }] },
+          { heading: 'Money', options: [{ id: 'e4-mh', label: 'KC', price: '1.65', move: 'up' }, { id: 'e4-ma', label: 'BUF', price: '2.30' }] },
+        ] },
+      { id: 'e5', sport: 'ufc', league: 'UFC 312', time: 'Sat 10:00 PM', home: { name: 'Adesanya' }, away: { name: 'Pereira' },
+        markets: [{ heading: 'Winner', options: [{ id: 'e5-h', label: 'ADE', price: '2.05' }, { id: 'e5-a', label: 'PER', price: '1.80' }] }] },
+    ]
+    const s = this.state
+    const labelFor = (e) => `${e.home.name} vs ${e.away.name} · ${e.league}`
+    const oddsMap = {}
+    ALL.forEach((e) => e.markets.forEach((m) => m.options.forEach((o) => { oddsMap[o.id] = { event: labelFor(e) } })))
+    const selIds = s.sel.map((x) => x.id)
+    const events = ALL.filter((e) => e.sport === s.sport).map((e) => ({
+      ...e,
+      selId: e.markets.flatMap((m) => m.options).map((o) => o.id).find((id) => selIds.includes(id)) || '',
+    }))
+    const fmt = (c) => '$' + Math.round(c / 100).toLocaleString('en-US')
+
+    return {
+      balance: fmt(s.balanceCents),
+      weekCents: 31200,
+      stake: s.stake,
+      mode: s.mode,
+      sel: s.sel,
+      toast: s.toast,
+      events,
+      sports: SPORTS.map((sp) => ({
+        label: sp.label,
+        active: s.sport === sp.id,
+        onSelect: () => this.setState({ sport: sp.id }),
+      })),
+      pick: (o) => this.setState((st) => st.sel.find((x) => x.id === o.id)
+        ? { sel: st.sel.filter((x) => x.id !== o.id) }
+        : { sel: [...st.sel, { id: o.id, pick: o.label, event: oddsMap[o.id].event, price: Number(o.price) }] }),
+      removePick: (sel) => this.setState((st) => ({ sel: st.sel.filter((x) => x.id !== sel.id) })),
+      setStake: (n) => this.setState({ stake: Number(n) }),
+      setMode: (m) => this.setState({ mode: m }),
+      placeBet: () => {
+        this.setState((st) => ({ balanceCents: Math.max(0, st.balanceCents - st.stake * 100), sel: [], toast: `Bet placed · ${st.stake.toLocaleString()} pts (demo)` }))
+        setTimeout(() => this.setState({ toast: null }), 2600)
+      },
+    }
+  }
+}
+</script>
+</body>
+</html>

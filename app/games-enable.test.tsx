@@ -22,7 +22,8 @@ describe('enable/disable games — lobby', () => {
     const root = createRoot(host)
     act(() => root.render(<App />))
 
-    const names = () => [...host.querySelectorAll('.card-name')].map((n) => n.textContent)
+    // Lobby tiles are the brand GameCard now — names live in .sds-gamecard__name.
+    const names = () => [...host.querySelectorAll('.sds-gamecard__name')].map((n) => n.textContent)
     expect(names()).toContain(g.name)
 
     act(() => setGameEnabled(g.key, false)) // App subscribes to settings → re-renders
