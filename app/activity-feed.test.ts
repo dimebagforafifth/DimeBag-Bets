@@ -63,6 +63,39 @@ describe('toTickerItems', () => {
     expect(toTickerItems(feed, names, { limit: 5 })[0].id).toBe(1) // first five of the newest-first feed
   })
 
+  it('winsOnly drops losses, pushes and voids', () => {
+    const feed: FeedEntry[] = [
+      entry({ id: 4, outcome: 'win', profit: 500, time: 4000 }),
+      entry({ id: 3, outcome: 'loss', profit: -1000, time: 3000 }),
+      entry({ id: 2, outcome: 'push', profit: 0, multiplier: 1, time: 2000 }),
+      entry({ id: 1, outcome: 'void', profit: 0, multiplier: 1, time: 1000 }),
+    ]
+    const items = toTickerItems(feed, names, { winsOnly: true })
+    expect(items.map((i) => i.id)).toEqual([4])
+    expect(items.every((i) => i.outcome === 'win')).toBe(true)
+  })
+
+  it("sort 'largest' orders by biggest profit first, tie-broken by most recent", () => {
+    const feed: FeedEntry[] = [
+      entry({ id: 1, outcome: 'win', profit: 500, time: 1000 }),
+      entry({ id: 2, outcome: 'win', profit: 9000, time: 2000 }),
+      entry({ id: 3, outcome: 'win', profit: 3000, time: 3000 }),
+      entry({ id: 4, outcome: 'win', profit: 9000, time: 4000 }), // ties id 2 on profit, newer
+    ]
+    expect(toTickerItems(feed, names, { sort: 'largest' }).map((i) => i.id)).toEqual([4, 2, 3, 1])
+  })
+
+  it('filters to wins AND orders largest-first, then applies the limit (the rail config)', () => {
+    const feed: FeedEntry[] = [
+      entry({ id: 1, outcome: 'loss', profit: -1000, time: 1000 }),
+      entry({ id: 2, outcome: 'win', profit: 200, time: 2000 }),
+      entry({ id: 3, outcome: 'win', profit: 8000, time: 3000 }),
+      entry({ id: 4, outcome: 'win', profit: 1500, time: 4000 }),
+    ]
+    const items = toTickerItems(feed, names, { winsOnly: true, sort: 'largest', limit: 2 })
+    expect(items.map((i) => i.id)).toEqual([3, 4]) // top two wins by profit; the loss is excluded
+  })
+
   it('handles an empty feed', () => {
     expect(toTickerItems([], names)).toEqual([])
   })

@@ -33,12 +33,16 @@ export interface TickerItem {
 }
 
 export interface TickerOptions {
-  /** Max items to keep (newest first). */
+  /** Max items to keep. */
   limit?: number
   /** A win returning at least this many cents of profit is "big". */
   bigWinCents?: number
   /** ...or a win at or above this multiplier is "big". */
   bigMultiplier?: number
+  /** Keep only winning bets (drop losses, pushes, voids). */
+  winsOnly?: boolean
+  /** Ordering: 'recent' = newest first (default); 'largest' = biggest profit first. */
+  sort?: 'recent' | 'largest'
 }
 
 const DEFAULTS = { limit: 12, bigWinCents: 5_000, bigMultiplier: 10 }
@@ -54,9 +58,11 @@ export function isBigWin(
 }
 
 /**
- * Shape session feed entries into ticker items, newest first. `names` maps an
- * accountId to a display name; unknown accounts fall back to a neutral label.
- * Every feed entry is a graded bet already, so there is nothing to filter out.
+ * Shape session feed entries into ticker items. `names` maps an accountId to a display
+ * name; unknown accounts fall back to a neutral label. With `winsOnly`, losses/pushes/voids
+ * are dropped (filtered BEFORE the limit, so a window of small wins isn't crowded out by
+ * losses). `sort: 'largest'` orders by biggest profit first (tie-break newest); the default
+ * 'recent' preserves the feed's newest-first order. The `limit` is applied last.
  */
 export function toTickerItems(
   feed: readonly FeedEntry[],
@@ -64,10 +70,13 @@ export function toTickerItems(
   opts: TickerOptions = {},
 ): TickerItem[] {
   const limit = opts.limit ?? DEFAULTS.limit
-  const out: TickerItem[] = []
-  // `feed` is newest-first already; stop once we have enough.
+  const winsOnly = opts.winsOnly ?? false
+  const sort = opts.sort ?? 'recent'
+  const items: TickerItem[] = []
+  // `feed` is newest-first already.
   for (const e of feed) {
-    out.push({
+    if (winsOnly && e.outcome !== 'win') continue
+    items.push({
       id: e.id,
       player: names.get(e.accountId) ?? 'A player',
       game: e.game,
@@ -79,7 +88,8 @@ export function toTickerItems(
       big: isBigWin(e, opts),
       at: e.time,
     })
-    if (out.length >= limit) break
   }
-  return out
+  // 'largest' = biggest profit first, ties broken by most recent; 'recent' keeps feed order.
+  if (sort === 'largest') items.sort((a, b) => b.profit - a.profit || b.at - a.at)
+  return items.slice(0, limit)
 }

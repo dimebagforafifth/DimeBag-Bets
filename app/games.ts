@@ -42,13 +42,13 @@ export interface GameProps {
   onBalanceChange: () => void
 }
 
-/** The lobby filter buckets. 'Originals' are the Stake-style RNG games; the rest
- *  group the canonical casino games so a player can narrow the grid by type. */
-export type GameCategory = 'Originals' | 'Table' | 'Cards' | 'Slots'
+/** The lobby filter buckets. 'Instant' is the fast RNG games (crash/mines/plinko style);
+ *  the rest group the canonical casino games so a player can narrow the grid by type. */
+export type GameCategory = 'Instant' | 'Table' | 'Cards' | 'Slots'
 
 /** The category filter order shown in the lobby (an 'All' pill + a 'Hot' pseudo-
  *  filter are added by the lobby itself). */
-export const GAME_CATEGORIES: GameCategory[] = ['Originals', 'Table', 'Cards', 'Slots']
+export const GAME_CATEGORIES: GameCategory[] = ['Instant', 'Table', 'Cards', 'Slots']
 
 export interface GameDef {
   key: string
@@ -73,23 +73,23 @@ export interface GameDef {
 /** Lobby presentation metadata layered onto each game's `*Meta` at registry build:
  *  its filter category and whether it's currently "Hot". Modelled on the design
  *  system's per-game `cat`/`hot` flags (design-system/.../data.js). Games not listed
- *  default to the Originals bucket. */
+ *  default to the Instant bucket. */
 const GAME_TAGS: Record<string, { category: GameCategory; hot?: boolean }> = {
-  // Stake-style Originals
-  crash: { category: 'Originals', hot: true },
-  mines: { category: 'Originals', hot: true },
-  plinko: { category: 'Originals', hot: true },
-  dice: { category: 'Originals', hot: true },
-  pump: { category: 'Originals', hot: true },
-  limbo: { category: 'Originals' },
-  wheel: { category: 'Originals' },
-  keno: { category: 'Originals' },
-  hilo: { category: 'Originals' },
-  'dragon-tower': { category: 'Originals' },
-  chickenroad: { category: 'Originals' },
-  coinflip: { category: 'Originals' },
-  diamonds: { category: 'Originals' },
-  cases: { category: 'Originals' },
+  // Instant games (fast RNG / Stake-style)
+  crash: { category: 'Instant', hot: true },
+  mines: { category: 'Instant', hot: true },
+  plinko: { category: 'Instant', hot: true },
+  dice: { category: 'Instant', hot: true },
+  pump: { category: 'Instant', hot: true },
+  limbo: { category: 'Instant' },
+  wheel: { category: 'Instant' },
+  keno: { category: 'Instant' },
+  hilo: { category: 'Instant' },
+  'dragon-tower': { category: 'Instant' },
+  chickenroad: { category: 'Instant' },
+  coinflip: { category: 'Instant' },
+  diamonds: { category: 'Instant' },
+  cases: { category: 'Instant' },
   // Table games
   roulette: { category: 'Table' },
   sicbo: { category: 'Table' },
@@ -140,10 +140,10 @@ const GAME_CATALOG: Omit<GameDef, 'category' | 'hot'>[] = [
 ]
 
 /** The games registry the lobby + shell render from: the catalog with its lobby
- *  category/hot tags merged in (unlisted games default to the Originals bucket). */
+ *  category/hot tags merged in (unlisted games default to the Instant bucket). */
 export const GAMES: GameDef[] = GAME_CATALOG.map((g) => ({
   ...g,
-  category: GAME_TAGS[g.key]?.category ?? 'Originals',
+  category: GAME_TAGS[g.key]?.category ?? 'Instant',
   hot: GAME_TAGS[g.key]?.hot ?? false,
 }))
 

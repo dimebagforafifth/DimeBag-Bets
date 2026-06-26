@@ -149,7 +149,7 @@ export function OnboardingPlayer({ userId, playerId, name, username, onDone }: O
                   <div className="ob-eyebrow">Welcome, {(name || 'player').split(' ')[0]}</div>
                   <h2 className="ob-title">One figure. Every game.</h2>
                   <p className="ob-lede">
-                    Your points balance works across the casino Originals and the sportsbook. Here&apos;s the
+                    Your points balance works across the casino games and the sportsbook. Here&apos;s the
                     deal before you play.
                   </p>
                   <div className="ob-points">

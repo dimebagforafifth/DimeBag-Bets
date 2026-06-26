@@ -26,7 +26,9 @@ export function ActivityTicker({ limit = 10 }: { limit?: number }) {
       const m = members[id]
       names.set(id, m.profile?.nickname || m.name)
     }
-    return toTickerItems(feed, names, { limit })
+    // The "Live wins" rail shows WINS ONLY, biggest first — a marketing shelf of the book's
+    // best recent hits, not a win/loss log.
+    return toTickerItems(feed, names, { limit, winsOnly: true, sort: 'largest' })
   }, [feed, limit])
 
   // The strip is ALWAYS present (a quiet rail under the hero), even on a fresh book — it
