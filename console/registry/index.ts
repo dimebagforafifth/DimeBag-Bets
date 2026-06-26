@@ -20,6 +20,8 @@ import { settlementRunManifests } from '../../features/settlements/manifest.js'
 import { collectionsManifests } from '../../features/collections/manifest.js'
 import { agentsManifests } from '../../features/agents/manifest.js'
 import { cashierDeskManifests } from '../../features/cashier/manifest.js'
+// Points Requests — the operator side of the player "Get points" flow (approve → core grant).
+import { pointsRequestsManifests } from '../../app/points-requests/manifest.js'
 import { operatorManualManifests } from '../../features/help/manifest.js'
 import { rewardsAdminManifests } from '../../features/rewards/manifest.js'
 // Round-3 lanes ship ready-to-mount manifests; the registry owner spreads them in (the lanes
@@ -68,6 +70,7 @@ export const REGISTRY: FeatureManifest[] = [
   ...playersManifests,
   ...agentsManifests,
   ...cashierDeskManifests,
+  ...pointsRequestsManifests, // Points Requests (player "Get points" → operator approve/deny)
   ...responsiblePlayManifests, // Responsible Play (r3 D — read-only player self-limits view)
   ...splitsManifests, // Public Splits (r4 C — read-only bets%/handle% by market)
   // Catalog

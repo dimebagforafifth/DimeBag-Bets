@@ -37,6 +37,7 @@ export {
 export { clvSummary } from './clv.js'
 export { deriveBadges } from './badges.js'
 export { shareableSummary } from './share.js'
+export { streakLabel, type StreakKind } from './streak-label.js'
 export {
   getRecord,
   listProfilePlayers,

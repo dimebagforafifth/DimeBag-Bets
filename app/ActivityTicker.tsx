@@ -29,30 +29,51 @@ export function ActivityTicker({ limit = 10 }: { limit?: number }) {
     return toTickerItems(feed, names, { limit })
   }, [feed, limit])
 
-  if (items.length === 0) return null
+  // The strip is ALWAYS present (a quiet rail under the hero), even on a fresh book — it
+  // shows a placeholder rather than vanishing, so the lobby keeps its "live wins" shelf.
+  if (items.length === 0) {
+    return (
+      <section className="activity activity--empty" aria-label="Recent betting activity">
+        <header className="activity-head">
+          <span className="activity-live">
+            <span className="activity-dot" aria-hidden="true" />
+            Live wins
+          </span>
+        </header>
+        <p className="activity-empty">Recent wins show up here as the book plays.</p>
+      </section>
+    )
+  }
+  // Auto-scroll as a marquee only once there are enough items to fill the rail; the track is
+  // duplicated so the loop is seamless (the clone is hidden from assistive tech).
+  const scrolling = items.length >= 4
   return (
     <section className="activity" aria-label="Recent betting activity">
       <header className="activity-head">
         <span className="activity-live">
           <span className="activity-dot" aria-hidden="true" />
-          Live activity
+          Live wins
         </span>
       </header>
-      <ul className="activity-list">
-        {items.map((it) => (
-          <ActivityRow key={it.id} item={it} />
-        ))}
-      </ul>
+      <div className="activity-viewport">
+        <div className={`activity-track${scrolling ? ' is-scrolling' : ''}`}>
+          {items.map((it) => (
+            <ActivityRow key={it.id} item={it} />
+          ))}
+          {scrolling &&
+            items.map((it) => <ActivityRow key={`dup-${it.id}`} item={it} ariaHidden />)}
+        </div>
+      </div>
     </section>
   )
 }
 
-function ActivityRow({ item }: { item: TickerItem }) {
+function ActivityRow({ item, ariaHidden = false }: { item: TickerItem; ariaHidden?: boolean }) {
   const won = item.outcome === 'win'
   const returned = item.outcome === 'push' || item.outcome === 'void'
   const tone = won ? (item.big ? 'big' : 'win') : returned ? 'flat' : 'loss'
   return (
-    <li className={`activity-row is-${tone}`}>
+    <div className={`activity-row is-${tone}`} aria-hidden={ariaHidden || undefined}>
       <span className="activity-who">{item.player}</span>
       <span className="activity-what">
         {won ? (
@@ -71,6 +92,6 @@ function ActivityRow({ item }: { item: TickerItem }) {
         )}
       </span>
       <span className="activity-game">{item.game}</span>
-    </li>
+    </div>
   )
 }

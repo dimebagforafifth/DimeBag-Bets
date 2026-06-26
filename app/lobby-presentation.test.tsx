@@ -2,10 +2,10 @@
 /**
  * The casino lobby presentation (UI-polish lane). The lobby leads with the
  * "Originals" collection under a "Provably fair" eyebrow, renders every enabled
- * game as a card, and carries the live-activity strip above the grid — which
- * stays hidden until a real bet resolves, then surfaces the win in-lobby. This
- * locks that structure so the shell stays clean on an empty book and lights up
- * with play.
+ * game as a card, and carries the "Live wins" strip above the grid — which stays
+ * present as a quiet rail on a fresh book (empty state) and fills with real wins
+ * as bets resolve. This locks that structure so the shell stays clean on an empty
+ * book and lights up with play.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
@@ -48,10 +48,14 @@ describe('casino lobby presentation', () => {
     expect(host.querySelector('.sds-gamecard .sds-gamecard__name')?.textContent).toBeTruthy()
   })
 
-  it('keeps the live-activity strip hidden until there is real play', () => {
+  it('keeps the live-wins strip present (empty state) until there is real play', () => {
     act(() => root.render(<App />))
-    // Fresh, cleared feed → the strip renders nothing (no empty rail in the lobby).
-    expect(host.querySelector('.lobby .activity')).toBeNull()
+    // Fresh, cleared feed → the rail stays visible in its empty state (no rows), so the
+    // lobby keeps its "Live wins" shelf rather than the strip disappearing.
+    const strip = host.querySelector('.lobby .activity')
+    expect(strip).not.toBeNull()
+    expect(strip!.classList.contains('activity--empty')).toBe(true)
+    expect(strip!.querySelector('.activity-row')).toBeNull()
   })
 
   it('surfaces a resolved win in the lobby live strip', () => {

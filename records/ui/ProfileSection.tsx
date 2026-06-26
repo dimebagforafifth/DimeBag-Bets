@@ -11,6 +11,7 @@ import { useState, useSyncExternalStore, type CSSProperties, type ReactNode } fr
 import { getCurrentPlayerId } from '../../app/book-store.js'
 import { formatMoney } from '../../games/shared/money.js'
 import { shareableSummary } from '../share.js'
+import { streakLabel } from '../streak-label.js'
 import { getRecord, getRecordsVersion, listProfilePlayers, subscribeRecords } from '../store.js'
 import type { BetHighlight, PeriodStats, RecordBadge, VerifiedRecord } from '../types.js'
 import './records.css'
@@ -206,8 +207,7 @@ function StatCell({
 
 function StreakCard({ record }: { record: VerifiedRecord }) {
   const s = record.streak
-  const live =
-    s.currentKind === 'none' ? '—' : `${s.current} ${s.currentKind}${s.current === 1 ? '' : 's'}`
+  const live = streakLabel(s.current, s.currentKind)
   return (
     <div className="records-card">
       <span className="records-card-label">Current streak</span>

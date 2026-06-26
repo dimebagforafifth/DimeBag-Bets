@@ -12,6 +12,10 @@ export interface GameCardProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconAlt?: string
   /** Optional custom art (used when no `icon` is given). */
   art?: ReactNode
+  /** Show a corner "Hot" flag (trending game). */
+  hot?: boolean
+  /** Show a corner "New" flag — takes precedence over `hot` when both are set. */
+  isNew?: boolean
 }
 
 /**
@@ -25,6 +29,8 @@ export function GameCard({
   icon,
   iconAlt = '',
   art,
+  hot = false,
+  isNew = false,
   className,
   type = 'button',
   ...rest
@@ -34,6 +40,11 @@ export function GameCard({
   return (
     <button type={type} className={cn('sds-gamecard', className)} {...rest}>
       <span className="sds-gamecard__art">
+        {(hot || isNew) && (
+          <span className={cn('sds-gamecard__flag', isNew && 'is-new')}>
+            {isNew ? 'New' : 'Hot'}
+          </span>
+        )}
         {showImg ? (
           <img src={icon} alt={iconAlt} onError={() => setImgFailed(true)} />
         ) : (

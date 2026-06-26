@@ -8,6 +8,7 @@
  */
 
 import { formatMoney } from '../games/shared/money.js'
+import { streakLabel } from './streak-label.js'
 import type { VerifiedRecord } from './types.js'
 
 function signedPct(fraction: number): string {
@@ -35,9 +36,9 @@ export function shareableSummary(r: VerifiedRecord): string {
 
   if (r.streak.current > 0 && r.streak.currentKind !== 'none') {
     lines.push(
-      `Current streak: ${r.streak.current} ${r.streak.currentKind}${
-        r.streak.current === 1 ? '' : 's'
-      } (best ${r.streak.longestWin} W)`,
+      `Current streak: ${streakLabel(r.streak.current, r.streak.currentKind)} (best ${
+        r.streak.longestWin
+      } W)`,
     )
   }
 

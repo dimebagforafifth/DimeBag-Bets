@@ -2,8 +2,9 @@
 /**
  * The ActivityTicker renders recent activity from real resolved-bet events: a
  * winning wager graded through core flows into the session feed and shows up in
- * the ticker. Drives the actual feed (no mocks) with fake timers for the feed's
- * short release delay.
+ * the ticker. On a fresh book it stays present as a quiet "Live wins" rail in its
+ * empty state (no rows) rather than disappearing. Drives the actual feed (no mocks)
+ * with fake timers for the feed's short release delay.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
@@ -32,9 +33,12 @@ afterEach(() => {
 })
 
 describe('ActivityTicker', () => {
-  it('renders nothing when there has been no activity', () => {
+  it('stays present as an empty "Live wins" rail when there has been no activity', () => {
     act(() => root.render(<ActivityTicker />))
-    expect(host.querySelector('.activity')).toBeNull()
+    const ticker = host.querySelector('.activity')
+    expect(ticker).not.toBeNull()
+    expect(ticker?.classList.contains('activity--empty')).toBe(true)
+    expect(host.querySelector('.activity-row')).toBeNull()
   })
 
   it('shows a recent win once a bet resolves through core', () => {

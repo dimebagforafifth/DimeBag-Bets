@@ -46,6 +46,12 @@
   padding-left: 14px;
   border-left: 1px solid var(--line);
 }
+.sds-wallet__action {
+  display: flex;
+  align-items: center;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+}
 .sds-wallet__label {
   font-size: 10px;
   text-transform: uppercase;
@@ -132,6 +138,28 @@
 }
 .sds-gamecard:hover .sds-gamecard__art img {
   transform: scale(1.06);
+}
+/* corner trending flag — gold "Hot" (or a cool "New") pinned to the art's top-left */
+.sds-gamecard__flag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: var(--font-head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1a1305;
+  background: var(--gold);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--gold) 45%, transparent);
+}
+.sds-gamecard__flag.is-new {
+  color: #fff;
+  background: var(--green, #2fbf71);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--green, #2fbf71) 45%, transparent);
 }
 .sds-gamecard__body {
   flex: 1 1 0%;

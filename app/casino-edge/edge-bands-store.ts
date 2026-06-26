@@ -64,6 +64,17 @@ function backedByEdgeStore(gameId: string, betType?: string): boolean {
   return !betType && isAdjustable(gameId)
 }
 
+/**
+ * Whether changing this game/bet-type's edge ACTUALLY moves live payouts today. Adjustable
+ * single-edge games (Dice, Mines, …) are wired through the edge-store so their payout math
+ * follows; per-bet-type edges (sic bo, roulette EU/US) and structural games are recorded as a
+ * policy target but NOT yet read by those games' payout math (the SEAM noted above). The console
+ * surfaces this so an operator isn't misled into thinking a structural edge change took effect.
+ */
+export function isEdgeApplied(gameId: string, betType?: string): boolean {
+  return backedByEdgeStore(gameId, betType)
+}
+
 /** The current edge (bps) for a game / bet type — the live value, falling back to the band default. */
 export function currentEdgeBps(gameId: string, betType?: string): number {
   if (backedByEdgeStore(gameId, betType)) {
