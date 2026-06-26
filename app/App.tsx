@@ -529,13 +529,15 @@ export function App() {
                   weekCents={account ? account.balance : 0}
                   formatWeek={(cents) => formatMoney(Math.abs(cents))}
                   action={
-                    role === 'player' && player && account ? (
+                    player && account ? (
                       <GetPointsButton playerId={player.id} playerName={player.name} />
                     ) : undefined
                   }
                 />
-                {/* The player inbox bell — operator DMs + broadcasts reach the player here. */}
-                {role === 'player' && player && <MessagesBell playerId={player.id} />}
+                {/* The player inbox bell — operator DMs + broadcasts reach the player here.
+                    Shown whenever a player wallet is active (incl. an operator playing-as a
+                    player), so the player-facing header is faithful in the demo too. */}
+                {player && account && <MessagesBell playerId={player.id} />}
                 {/* One avatar menu holds VIP tier + sound toggle + sign-out (declutters the bar). */}
                 <AccountMenu
                   name={user?.displayName ?? 'Guest'}
