@@ -32,7 +32,7 @@ Give both Claude accounts this file first, then ask them to read the linked repo
   - `@/*` path alias in `tsconfig.json` and `vite.config.ts`
 - Updated `app/main.tsx` to wrap the app in `TooltipProvider`.
 - Updated `app/theme.css` with Tailwind/shadcn CSS variable aliases mapped into the existing theme tokens.
-- Added/kept PlayStadium-related brand assets under `brand/`, including logos and pixel-beams work.
+- Added/kept PlayStadium-related brand assets under `brand/`, including logos.
 - Added generic fairness resolver work:
   - `games/shared/resolvers.ts`
   - `games/shared/fair.ts`
@@ -87,12 +87,12 @@ Give both Claude accounts this file first, then ask them to read the linked repo
 
 ## Current Local Caution
 
-At the time this handoff was written, the local worktree had unrelated uncommitted edits:
+At the time this handoff was written, the local worktree had an unrelated uncommitted edit:
 
-- `brand/pixel-beams/_preview_Money_Green.png`
 - `experiments/lobby/ExperimentalLobby.tsx`
 
-Do not revert or overwrite those without asking. They appear to be pixel-beam tuning changes and were intentionally left out of the CI fix commit.
+Do not revert or overwrite it without asking; it was intentionally left out of the CI fix commit.
+(The `brand/pixel-beams/` experiment referenced by the earlier version of this note has since been removed from the repo.)
 
 ## Next Steps
 
