@@ -17,7 +17,8 @@ import { BookView, connectOddsCache } from './book/index.js'
 import { RewardsSection } from '../rewards/index.js'
 import './rewards-accrual.js' // side effect: accrue rewards from real wagers
 import { formatMoney } from '../games/shared/money.js'
-import { WalletPill, Wordmark, ChipLogo, GameCard } from '../components/brand/index.js'
+import { WalletPill, Wordmark, ChipLogo, GameCard, BrandBadge } from '../components/brand/index.js'
+import { Button } from '../components/ui/button.js'
 import { useSoundEnabled, toggleSound } from '../sound/index.js'
 import {
   Menu as DropMenu,
@@ -28,7 +29,36 @@ import {
   type ClickEvent,
 } from '@szhsin/react-menu'
 import '@szhsin/react-menu/dist/core.css'
-import { ChevronDown, Volume2, VolumeX, LogOut, Menu as HamburgerIcon } from 'lucide-react'
+import {
+  ChevronDown,
+  Volume2,
+  VolumeX,
+  LogOut,
+  Menu as HamburgerIcon,
+  Search as SearchIcon,
+  ShieldCheck,
+  Play as PlayIcon,
+  Dice5,
+  Target,
+  ListChecks,
+  Layers,
+  Trophy,
+  Medal,
+  Swords,
+  Sparkles,
+  MessagesSquare,
+  Users,
+  UserPlus,
+  Receipt,
+  Gift,
+  Zap,
+  Split as SplitIcon,
+  User as UserIcon,
+  SlidersHorizontal,
+  LayoutDashboard,
+  Circle,
+  type LucideIcon,
+} from 'lucide-react'
 import './menu.css'
 import { Console } from '../console/shell/index.js'
 // The money-desk lane + member list are now first-class entries in REGISTRY itself
@@ -72,7 +102,11 @@ import {
 } from './player-sections.js'
 import { subscribeEdge, getEdgeVersion, getRtp, hasOverride } from './edge-store.js'
 import { isGameEnabled, subscribeSettings, getSettingsVersion } from './settings-store.js'
-import { getFavourites, subscribeOnboarding, getOnboardingVersion } from './onboarding/onboarding-store.js'
+import {
+  getFavourites,
+  subscribeOnboarding,
+  getOnboardingVersion,
+} from './onboarding/onboarding-store.js'
 import { houseConfigFor, nativeRtp } from './edge-config.js'
 import {
   useAuth,
@@ -94,6 +128,33 @@ const NAV: { key: Section; label: string }[] = [
   { key: 'leaderboard', label: 'Leaderboard' },
   { key: 'management', label: 'Management' },
 ]
+
+// The sidebar groups every reachable section under a labelled heading + a lucide icon —
+// nothing is buried behind a "More" dropdown (the old top-nav model). This is a PRESENTATION
+// map only: which group + glyph a section gets. The set of items still comes from `navTabs`
+// (NAV + the player-section registry, intersected with allowedSections), so visibility +
+// role-gating never drift. A section with no entry here falls into "More" (never dropped).
+const GROUP_ORDER = ['Play', 'Compete', 'Social', 'You', 'Operate'] as const
+const SECTION_META: Record<string, { group: string; Icon: LucideIcon }> = {
+  casino: { group: 'Play', Icon: Dice5 },
+  sportsbook: { group: 'Play', Icon: Target },
+  pickem: { group: 'Compete', Icon: ListChecks },
+  pools: { group: 'Compete', Icon: Layers },
+  competitions: { group: 'Compete', Icon: Trophy },
+  challenges: { group: 'Compete', Icon: Swords },
+  gamification: { group: 'Compete', Icon: Sparkles },
+  community: { group: 'Social', Icon: MessagesSquare },
+  players: { group: 'Social', Icon: Users },
+  referrals: { group: 'Social', Icon: UserPlus },
+  mybets: { group: 'You', Icon: Receipt },
+  rewards: { group: 'You', Icon: Gift },
+  boosts: { group: 'You', Icon: Zap },
+  splits: { group: 'You', Icon: SplitIcon },
+  leaderboard: { group: 'You', Icon: Medal },
+  profile: { group: 'You', Icon: UserIcon },
+  limits: { group: 'You', Icon: SlidersHorizontal },
+  management: { group: 'Operate', Icon: LayoutDashboard },
+}
 
 /**
  * The app shell (CLAUDE.md §5). It owns the one shared account — the single
@@ -122,6 +183,12 @@ export function App() {
   // Which top-level section is showing; within Casino, which game (null = lobby).
   const [section, setSection] = useState<Section>('casino')
   const [route, setRoute] = useState<string | null>(null)
+  // The topbar "Search games…" box, lifted here so it can both drive the topbar input and
+  // filter the lobby grid (it only shows on the casino lobby).
+  const [search, setSearch] = useState('')
+  // Mobile: the sidebar collapses to an off-canvas drawer; the topbar burger opens it and
+  // the scrim closes it.
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   // The book + who we're playing as. Play (casino + sportsbook) wagers against
   // THIS player's core Account, so wins/losses move their figure and roll up the
@@ -194,6 +261,17 @@ export function App() {
   // run; the disposer stops the refresh loop on unmount.
   useEffect(() => connectOddsCache(), [])
 
+  // Esc closes the mobile nav drawer (restores the dismiss-without-navigating behaviour the
+  // old @szhsin dropdown gave for free; the scrim only handles pointer dismiss).
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [mobileOpen])
+
   // Tag new ledger entries with whatever's on screen, so each logged bet shows
   // which game (or the sportsbook) it came from.
   useEffect(() => {
@@ -247,244 +325,302 @@ export function App() {
         onClick: () => setSection(m.key as Section),
       })),
   ]
-  // Keep only the two play modes + My Bets in the always-visible bar; everything else
-  // (Rewards, Leaderboard, Profile, Community, Pick'em, Management) folds into a single
-  // "More" dropdown so the banner never crowds (CLAUDE.md §2 — clean above all).
-  const PRIMARY_KEYS = ['casino', 'sportsbook', 'mybets']
-  const primaryTabs = navTabs.filter((t) => PRIMARY_KEYS.includes(t.key))
-  const moreTabs = navTabs.filter((t) => !PRIMARY_KEYS.includes(t.key))
-  const moreActive = moreTabs.some((t) => t.key === activeSection)
   const currentLabel = navTabs.find((t) => t.key === activeSection)?.label ?? ''
 
-  return (
-    <div className="app">
-      <header className="app-header">
-        <div className="app-header-inner">
-          <div className="header-left">
-            <button className="brand" onClick={openHome} aria-label="PlayStadium.io — home">
-              <ChipLogo size={22} className="brand-chip" aria-hidden="true" />
-              <Wordmark />
-            </button>
-            {/* ≥ tablet: the primary tabs inline, with a single "More" dropdown for the rest. */}
-            <nav className="nav nav-primary" aria-label="Primary">
-              {primaryTabs.map((t) => (
-                <button
-                  key={t.key}
-                  className={`nav-tab ${activeSection === t.key ? 'is-on' : ''}`}
-                  onClick={t.onClick}
-                >
-                  {t.label}
-                </button>
-              ))}
-              {moreTabs.length > 0 && (
-                <DropMenu
-                  transition
-                  align="start"
-                  gap={6}
-                  menuClassName="drop-menu"
-                  menuButton={
-                    <DropButton className={`nav-tab nav-more-btn ${moreActive ? 'is-on' : ''}`}>
-                      More
-                      <ChevronDown size={15} className="drop-caret" aria-hidden="true" />
-                    </DropButton>
-                  }
-                >
-                  {moreTabs.map((t) => (
-                    <DropItem
-                      key={t.key}
-                      className={`drop-item ${activeSection === t.key ? 'is-on' : ''}`}
-                      onClick={t.onClick}
-                    >
-                      {t.label}
-                    </DropItem>
-                  ))}
-                </DropMenu>
-              )}
-            </nav>
-            {/* < tablet: one compact menu holds every section so the bar stays a single row. */}
-            <DropMenu
-              transition
-              align="start"
-              gap={6}
-              menuClassName="drop-menu"
-              menuButton={
-                <DropButton className="nav-compact-btn" aria-label="Open navigation">
-                  <HamburgerIcon size={18} aria-hidden="true" />
-                  {currentLabel && <span className="nav-compact-label">{currentLabel}</span>}
-                  <ChevronDown size={15} className="drop-caret" aria-hidden="true" />
-                </DropButton>
-              }
-            >
-              {navTabs.map((t) => (
-                <DropItem
-                  key={t.key}
-                  className={`drop-item ${activeSection === t.key ? 'is-on' : ''}`}
-                  onClick={t.onClick}
-                >
-                  {t.label}
-                </DropItem>
-              ))}
-            </DropMenu>
-          </div>
-          <div className="header-right">
-            {/* The balance + week standing read as ONE "wallet" unit — the brand
-                WalletPill. Lead with what a player reads as "how much I have": the
-                amount they can bet right now (availableToWager = credit + figure −
-                at-risk). The week's win/loss rides alongside as a plain up/down.
-                formatMoney is threaded through so a book's configured points
-                symbol / decimals / locale still applies. */}
-            <WalletPill
-              className="app-figure"
-              label={economyMode === 'balance' ? 'Available' : 'Balance'}
-              balance={account ? formatMoney(availableToWager(account)) : '—'}
-              weekLabel={economyMode === 'balance' ? 'Wallet' : 'This week'}
-              weekCents={account ? account.balance : 0}
-              formatWeek={(cents) => formatMoney(Math.abs(cents))}
-            />
-            {/* In Management the Console's own TopBar owns operator identity + sign-out, so we
-                drop the app header's account menu there to avoid a duplicate control. The VIP
-                tier + sound toggle now live INSIDE this one avatar menu (declutters the bar). */}
-            {activeSection !== 'management' && (
-              <AccountMenu
-                name={user?.displayName ?? 'Guest'}
-                role={role}
-                playerId={player && account ? player.id : null}
-                onSignOut={signOut}
-              />
-            )}
-          </div>
-        </div>
-      </header>
+  // Bucket the role-gated tabs into the sidebar's labelled groups. PRESENTATION ONLY: the
+  // items still come from `navTabs` (NAV + the registry, intersected with allowedSections),
+  // so what's visible can't drift from what's reachable. A tab with no SECTION_META entry
+  // lands in a trailing "More" group, so a newly-registered section is surfaced rather than
+  // silently dropped — nothing is ever buried (the old "More" dropdown is gone on desktop).
+  const sideGroups = (() => {
+    const byGroup = new Map<string, typeof navTabs>()
+    for (const t of navTabs) {
+      const group = SECTION_META[t.key]?.group ?? 'More'
+      const list = byGroup.get(group)
+      if (list) list.push(t)
+      else byGroup.set(group, [t])
+    }
+    const known = GROUP_ORDER.filter((g) => byGroup.has(g))
+    const extra = [...byGroup.keys()].filter((g) => !(GROUP_ORDER as readonly string[]).includes(g))
+    return [...known, ...extra].map((group) => ({ group, items: byGroup.get(group)! }))
+  })()
 
-      <main className={`app-main${activeSection === 'management' ? ' is-console' : ''}`}>
-        {activeSection === 'management' && canManage(role) ? (
-          (() => {
-            // An agent's figures strip is scoped to their downline (balance = their
-            // subtree net; week/today + active count = their roster only).
-            const roster =
-              (role === 'agent' || role === 'subagent') && authMember
-                ? rosterOf(book, authMember.id)
-                : null
-            const fig = consoleFigures(
-              book,
-              getAnalyticsRecords(),
-              Date.now(),
-              roster ? roster.filter((p) => p.active).length : activePlayers.length,
-              roster
-                ? { scopeId: authMember!.id, accountIds: new Set(roster.map((p) => p.id)) }
-                : {},
-            )
-            return (
-              <Console
-                registry={consoleRegistry}
-                brand="DimeBag-Bets"
-                username={actor}
-                onSignOut={signOut}
-                balance={fig.balance}
-                week={fig.week}
-                weekTrend={fig.weekTrend}
-                today={fig.today}
-                todayTrend={fig.todayTrend}
-                activeAccts={fig.activeAccts}
-              />
-            )
-          })()
-        ) : activeSection === 'leaderboard' ? (
-          <Leaderboard
-            players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
-            currentPlayerId={getCurrentPlayerId()}
+  // The operator console brings its OWN chrome (top bar + section grid + back control), so
+  // when it's active it replaces the topbar+content area entirely (the sidebar persists, so
+  // any other section is one click away — that IS the "back to app" affordance). Built lazily
+  // so its figure aggregation only runs when the console is actually shown.
+  const isConsole = activeSection === 'management' && canManage(role)
+  // The topbar search only makes sense on the casino lobby — it filters the Originals grid.
+  const showSearch = activeSection === 'casino' && !liveGame
+  // The page title leads the topbar: a game's name when one is open, else the section label.
+  const pageTitle = liveGame ? liveGame.name : currentLabel
+
+  const consoleBody = isConsole
+    ? (() => {
+        // An agent's figures strip is scoped to their downline (balance = their
+        // subtree net; week/today + active count = their roster only).
+        const roster =
+          (role === 'agent' || role === 'subagent') && authMember
+            ? rosterOf(book, authMember.id)
+            : null
+        const fig = consoleFigures(
+          book,
+          getAnalyticsRecords(),
+          Date.now(),
+          roster ? roster.filter((p) => p.active).length : activePlayers.length,
+          roster ? { scopeId: authMember!.id, accountIds: new Set(roster.map((p) => p.id)) } : {},
+        )
+        return (
+          <Console
+            registry={consoleRegistry}
+            brand="DimeBag-Bets"
+            username={actor}
+            onSignOut={signOut}
+            balance={fig.balance}
+            week={fig.week}
+            weekTrend={fig.weekTrend}
+            today={fig.today}
+            todayTrend={fig.todayTrend}
+            activeAccts={fig.activeAccts}
           />
-        ) : activeSection === 'rewards' ? (
-          account && player ? (
-            <RewardsSection
-              memberId={player.id}
-              playerName={player.name}
-              balanceCents={account.balance}
-              availableCents={availableToWager(account)}
-            />
-          ) : (
-            <NoPlayer
-              onManage={() => setSection('management')}
-              allSuspended={allSuspended}
-              canManage={canManage(role)}
-            />
-          )
-        ) : activeSection === 'sportsbook' ? (
-          account && player ? (
-            <ResponsiblePlayGate playerId={account.id}>
-              <BookView
-                account={account}
-                playerName={player.name}
-                role={role}
-                viewerId={authMember?.id ?? player.id}
-                isDemo={isDemo}
-                onBalanceChange={refresh}
-              />
-            </ResponsiblePlayGate>
-          ) : (
-            <NoPlayer
-              onManage={() => setSection('management')}
-              allSuspended={allSuspended}
-              canManage={canManage(role)}
-            />
-          )
-        ) : activeSection === 'mybets' ? (
-          account && player ? (
-            <MyBets account={account} player={player} />
-          ) : (
-            <NoPlayer
-              onManage={() => setSection('management')}
-              allSuspended={allSuspended}
-              canManage={canManage(role)}
-            />
-          )
-        ) : activeRegistrySection ? (
-          // ONE render path for every registry section. Prop-taking sections (Community,
-          // Pick'em, …) get the shell context injected; a section that needs an active player
-          // falls back to NoPlayer when there is none. Prop-less self-contained sections
-          // (Profile) ignore the context and render regardless (their own empty state).
-          renderPlayerSection(
-            activeRegistrySection,
-            sectionCtx,
-            <NoPlayer
-              onManage={() => setSection('management')}
-              allSuspended={allSuspended}
-              canManage={canManage(role)}
-            />,
-          )
+        )
+      })()
+    : null
+
+  return (
+    <div className={`psa-shell${mobileOpen ? ' is-mobile-open' : ''}`}>
+      <aside className="psa-sidebar">
+        <button className="psa-brand" onClick={openHome} aria-label="PlayStadium.io — home">
+          <ChipLogo size={30} className="psa-brand-mark" aria-hidden="true" />
+          <span className="psa-brand-name">
+            <Wordmark />
+          </span>
+        </button>
+        {/* The whole reachable section set, in labelled groups — every section is one click
+            away (no "More" dropdown). The list is `navTabs`, so it stays role-gated. */}
+        <nav className="psa-nav" aria-label="Primary">
+          {sideGroups.map(({ group, items }) => (
+            <div className="psa-nav-group" key={group}>
+              <div className="psa-nav-label">{group}</div>
+              {items.map((t) => {
+                const Icon = SECTION_META[t.key]?.Icon ?? Circle
+                return (
+                  <button
+                    key={t.key}
+                    className={`psa-nav-item${activeSection === t.key ? ' is-active' : ''}`}
+                    aria-current={activeSection === t.key ? 'page' : undefined}
+                    onClick={() => {
+                      t.onClick()
+                      setMobileOpen(false)
+                    }}
+                  >
+                    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+                    <span>{t.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+        </nav>
+        <div className="psa-side-foot">
+          <span className="sds-badge sds-badge--neutral psa-fair">
+            <ShieldCheck size={12} strokeWidth={2} aria-hidden="true" />
+            Provably fair
+          </span>
+        </div>
+      </aside>
+      {/* the mobile drawer's tap-to-close backdrop (only painted when is-mobile-open) */}
+      <div className="psa-scrim" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+
+      <div className="psa-main">
+        {isConsole ? (
+          // The operator console brings its own chrome, but on tablet/phone the sidebar is an
+          // off-canvas drawer whose only reveal control lives in the player topbar (not shown
+          // here) — so a slim, mobile-only bar carries the burger + wordmark, keeping the
+          // "back to the app" path reachable on small screens (it's display:none on desktop).
+          <>
+            <div className="psa-console-mobilebar">
+              <button
+                className="psa-burger"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open navigation"
+              >
+                <HamburgerIcon size={20} aria-hidden="true" />
+              </button>
+              <span className="psa-brand-name">
+                <Wordmark />
+              </span>
+            </div>
+            {consoleBody}
+          </>
         ) : (
-          <div className="casino-view">
-            {!account ? (
-              <NoPlayer
-                onManage={() => setSection('management')}
-                allSuspended={allSuspended}
-                canManage={canManage(role)}
-              />
-            ) : liveGame ? (
-              <div className="game-page">
-                <button className="crumb" onClick={() => setRoute(null)}>
-                  ← Casino
-                </button>
-                {/* Each game's view is a lazy chunk (app/games.ts); show a light
+          <>
+            <header className="psa-topbar">
+              <button
+                className="psa-burger"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open navigation"
+              >
+                <HamburgerIcon size={20} aria-hidden="true" />
+              </button>
+              <div className="psa-topbar-title">
+                <span className="psa-topbar-eyebrow">
+                  {canManage(role) ? 'Operator' : 'Player'}
+                </span>
+                <h1 className="psa-page-title">{pageTitle}</h1>
+              </div>
+              {/* Search only shows on the casino lobby (mirrors the artifact's showSearch);
+                  the value is lifted to App and also fed into <Lobby> to filter the grid. */}
+              {showSearch && (
+                <div className="psa-topbar-search">
+                  <SearchIcon size={16} className="psa-search-icon" aria-hidden="true" />
+                  <input
+                    type="search"
+                    className="psa-search-input"
+                    placeholder="Search games…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    aria-label="Search games"
+                  />
+                </div>
+              )}
+              <div className="psa-topbar-right">
+                {/* The balance + week standing read as ONE "wallet" unit — the brand
+                    WalletPill. Lead with what a player reads as "how much I have": the
+                    amount they can bet right now (availableToWager = credit + figure −
+                    at-risk). The week's win/loss rides alongside as a plain up/down.
+                    formatMoney is threaded through so a book's configured points
+                    symbol / decimals / locale still applies. */}
+                <WalletPill
+                  className="app-figure"
+                  label={economyMode === 'balance' ? 'Available' : 'Balance'}
+                  balance={account ? formatMoney(availableToWager(account)) : '—'}
+                  weekLabel={economyMode === 'balance' ? 'Wallet' : 'This week'}
+                  weekCents={account ? account.balance : 0}
+                  formatWeek={(cents) => formatMoney(Math.abs(cents))}
+                />
+                {/* One avatar menu holds VIP tier + sound toggle + sign-out (declutters the bar). */}
+                <AccountMenu
+                  name={user?.displayName ?? 'Guest'}
+                  role={role}
+                  playerId={player && account ? player.id : null}
+                  onSignOut={signOut}
+                />
+              </div>
+            </header>
+
+            <main className="psa-content">
+              {activeSection === 'leaderboard' ? (
+                <Leaderboard
+                  players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
+                  currentPlayerId={getCurrentPlayerId()}
+                />
+              ) : activeSection === 'rewards' ? (
+                account && player ? (
+                  <RewardsSection
+                    memberId={player.id}
+                    playerName={player.name}
+                    balanceCents={account.balance}
+                    availableCents={availableToWager(account)}
+                  />
+                ) : (
+                  <NoPlayer
+                    onManage={() => setSection('management')}
+                    allSuspended={allSuspended}
+                    canManage={canManage(role)}
+                  />
+                )
+              ) : activeSection === 'sportsbook' ? (
+                account && player ? (
+                  <ResponsiblePlayGate playerId={account.id}>
+                    <BookView
+                      account={account}
+                      playerName={player.name}
+                      role={role}
+                      viewerId={authMember?.id ?? player.id}
+                      isDemo={isDemo}
+                      onBalanceChange={refresh}
+                    />
+                  </ResponsiblePlayGate>
+                ) : (
+                  <NoPlayer
+                    onManage={() => setSection('management')}
+                    allSuspended={allSuspended}
+                    canManage={canManage(role)}
+                  />
+                )
+              ) : activeSection === 'mybets' ? (
+                account && player ? (
+                  <MyBets account={account} player={player} />
+                ) : (
+                  <NoPlayer
+                    onManage={() => setSection('management')}
+                    allSuspended={allSuspended}
+                    canManage={canManage(role)}
+                  />
+                )
+              ) : activeRegistrySection ? (
+                // ONE render path for every registry section. Prop-taking sections (Community,
+                // Pick'em, …) get the shell context injected; a section that needs an active player
+                // falls back to NoPlayer when there is none. Prop-less self-contained sections
+                // (Profile) ignore the context and render regardless (their own empty state).
+                renderPlayerSection(
+                  activeRegistrySection,
+                  sectionCtx,
+                  <NoPlayer
+                    onManage={() => setSection('management')}
+                    allSuspended={allSuspended}
+                    canManage={canManage(role)}
+                  />,
+                )
+              ) : (
+                <div className="casino-view">
+                  {!account ? (
+                    <NoPlayer
+                      onManage={() => setSection('management')}
+                      allSuspended={allSuspended}
+                      canManage={canManage(role)}
+                    />
+                  ) : liveGame ? (
+                    <div className="game-page">
+                      <button className="crumb" onClick={() => setRoute(null)}>
+                        ← Casino
+                      </button>
+                      {/* Each game's view is a lazy chunk (app/games.ts); show a light
                     placeholder while it loads on first open. The crumb + Ledger
                     stay outside the boundary so leaving is always instant. */}
-                <ResponsiblePlayGate playerId={account.id}>
-                  <Suspense fallback={<GameLoading />}>
-                    <GameMount game={liveGame} account={account} onBalanceChange={refresh} />
-                  </Suspense>
-                </ResponsiblePlayGate>
-                {/* the ledger lives only inside a game — its own per-game history,
+                      <ResponsiblePlayGate playerId={account.id}>
+                        <Suspense fallback={<GameLoading />}>
+                          <GameMount game={liveGame} account={account} onBalanceChange={refresh} />
+                        </Suspense>
+                      </ResponsiblePlayGate>
+                      {/* the ledger lives only inside a game — its own per-game history,
                     scoped to the player you're currently playing as. */}
-                <Ledger gameKey={liveGame.key} gameName={liveGame.name} accountId={account.id} />
-              </div>
-            ) : (
-              <Lobby onPlay={setRoute} favourites={lobbyFavourites} />
-            )}
-          </div>
+                      <Ledger
+                        gameKey={liveGame.key}
+                        gameName={liveGame.name}
+                        accountId={account.id}
+                      />
+                    </div>
+                  ) : (
+                    <Lobby
+                      onPlay={setRoute}
+                      favourites={lobbyFavourites}
+                      search={search}
+                      onBrowseAll={() => setSearch('')}
+                      onSeeLeaderboard={() => setSection('leaderboard')}
+                      playersOnline={activePlayers.length}
+                    />
+                  )}
+                </div>
+              )}
+              <footer className="psa-footer">
+                Play money — points for fun, no buy-in, no cash-out. PlayStadium.io
+              </footer>
+            </main>
+          </>
         )}
-      </main>
-
-      <footer className="app-footer">Play money — dollars for fun, no buy-in, no cash-out.</footer>
+      </div>
     </div>
   )
 }
@@ -672,46 +808,150 @@ function gameIconUrl(key: string): string {
   return import.meta.env.BASE_URL.replace(/\/$/, '') + '/game-icons/' + key + '.png'
 }
 
-/** The Casino hub: every registered game as a card. One tap opens its page.
- *  `favourites` (from player onboarding) float to the front of the grid. */
+/** The Casino hub: a "Stack your week." hero over the Originals grid. One tap opens a
+ *  game's page. `favourites` (from player onboarding) float to the front; the topbar
+ *  `search` filters the grid by game name. The hero stats are wired to REAL counts only
+ *  (enabled games, active players) — no invented "wagered today" precision. */
 function Lobby({
   onPlay,
   favourites,
+  search,
+  onBrowseAll,
+  onSeeLeaderboard,
+  playersOnline,
 }: {
   onPlay: (key: string) => void
   favourites: Set<string>
+  search: string
+  onBrowseAll: () => void
+  onSeeLeaderboard: () => void
+  playersOnline: number
 }) {
   const enabled = GAMES.filter((g) => isGameEnabled(g.key))
+  // The topbar search filters by name; an empty query shows everything (so the default
+  // lobby is the full collection).
+  const q = search.trim().toLowerCase()
+  const matched = q ? enabled.filter((g) => g.name.toLowerCase().includes(q)) : enabled
   // Stable partition: the player's pinned favourites first, everything else after,
   // each keeping the registry's original order.
   const ordered = [
-    ...enabled.filter((g) => favourites.has(g.key)),
-    ...enabled.filter((g) => !favourites.has(g.key)),
+    ...matched.filter((g) => favourites.has(g.key)),
+    ...matched.filter((g) => !favourites.has(g.key)),
   ]
+  // The hero's primary CTA opens Crash (the headline game) — or the first enabled game if a
+  // manager has disabled it; hidden entirely if the whole casino is off.
+  const featured = enabled.find((g) => g.key === 'crash') ?? enabled[0]
   return (
     <div className="lobby">
-      <div className="lobby-head">
-        <span className="lobby-eyebrow">Provably fair</span>
-        <h1 className="lobby-title">Originals</h1>
-      </div>
+      {/* ---- hero: the post-login landing pitch ---- */}
+      <section className="lobby-hero">
+        <div className="lobby-hero-copy">
+          <div className="lobby-hero-eyebrows">
+            <BrandBadge variant="gold">{enabled.length} Originals</BrandBadge>
+            <BrandBadge variant="neutral">
+              <ShieldCheck size={12} strokeWidth={2} aria-hidden="true" />
+              Provably fair
+            </BrandBadge>
+          </div>
+          <h2 className="lobby-hero-title">Stack your week.</h2>
+          <p className="lobby-hero-tag">
+            One points balance across every game and the book. No buy-in, no cash-out — just the
+            action.
+          </p>
+          <div className="lobby-hero-cta">
+            {featured && (
+              <Button variant="default" size="lg" onClick={() => onPlay(featured.key)}>
+                <PlayIcon size={16} strokeWidth={2} aria-hidden="true" />
+                Play {featured.name}
+              </Button>
+            )}
+            <Button variant="outline" size="lg" onClick={onBrowseAll}>
+              Browse all
+            </Button>
+          </div>
+          <div className="lobby-hero-stats">
+            <div className="lobby-hero-stat">
+              <span className="lobby-hero-stat-label">Originals</span>
+              <span className="lobby-hero-stat-value">{enabled.length}</span>
+            </div>
+            <span className="lobby-hero-sep" aria-hidden="true" />
+            <div className="lobby-hero-stat">
+              <span className="lobby-hero-stat-label">Players online</span>
+              <span className="lobby-hero-stat-value">{playersOnline}</span>
+            </div>
+          </div>
+        </div>
+        <div className="lobby-hero-art" aria-hidden="true">
+          <div className="lobby-hero-glow" />
+          {featured && (
+            <img
+              src={gameIconUrl(featured.key)}
+              alt=""
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          )}
+        </div>
+      </section>
+
       {/* the live wins strip — a quiet, read-only feed of recent bets across the
           book; renders nothing until there's activity, so a fresh book stays clean */}
       <ActivityTicker />
-      <div className="lobby-grid">
-        {ordered.map((g) => (
-          // The brand GameCard (Claude Design system): the real 3D game-icon PNG over
-          // a gold-tinted art zone, with the inline GameIcon SVG kept as a graceful
-          // fallback. One graphite-and-gold system — gold is the only accent.
-          <GameCard
-            key={g.key}
-            name={g.name}
-            tag={STAKE_DESC[g.key]}
-            icon={gameIconUrl(g.key)}
-            iconAlt={g.name}
-            art={<GameIcon kind={g.key} />}
-            onClick={() => onPlay(g.key)}
-          />
-        ))}
+
+      {/* ---- Originals collection ---- */}
+      <div className="lobby-head">
+        <span className="lobby-eyebrow">Provably fair</span>
+        <div className="lobby-head-row">
+          {/* h3: subordinate to the topbar's page <h1> and the hero's <h2> (one h1 per view) */}
+          <h3 className="lobby-title">Originals</h3>
+          <span className="lobby-count">{ordered.length}</span>
+        </div>
+      </div>
+      {ordered.length > 0 ? (
+        <div className="lobby-grid">
+          {ordered.map((g) => (
+            // The brand GameCard (Claude Design system): the real 3D game-icon PNG over
+            // a gold-tinted art zone, with the inline GameIcon SVG kept as a graceful
+            // fallback. One graphite-and-gold system — gold is the only accent.
+            <GameCard
+              key={g.key}
+              name={g.name}
+              tag={STAKE_DESC[g.key]}
+              icon={gameIconUrl(g.key)}
+              iconAlt={g.name}
+              art={<GameIcon kind={g.key} />}
+              onClick={() => onPlay(g.key)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="lobby-empty">No games match “{search}”.</p>
+      )}
+
+      {/* ---- promotions: one live card + marketing-art slots (real art TBD) ---- */}
+      <div className="lobby-head lobby-head--promo">
+        <h3 className="lobby-subtitle">Promotions</h3>
+      </div>
+      <div className="promo-row">
+        <div className="promo-card promo-live">
+          <div className="promo-text">
+            <BrandBadge variant="gold">Weekly</BrandBadge>
+            <h4 className="promo-title">Top the leaderboard</h4>
+            <p className="promo-sub">
+              The week’s biggest figures top the standings. Rack up the action to climb.
+            </p>
+            <Button variant="secondary" size="sm" onClick={onSeeLeaderboard}>
+              See standings
+            </Button>
+          </div>
+        </div>
+        <div className="promo-ph">
+          <span className="promo-ph-tag">Promo banner · 720×260</span>
+        </div>
+        <div className="promo-ph">
+          <span className="promo-ph-tag">Promo banner · 720×260</span>
+        </div>
       </div>
     </div>
   )

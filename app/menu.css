@@ -17,47 +17,9 @@
   cursor: pointer;
 }
 
-/* The "More" overflow button reads as one more nav tab, with a caret. (.nav-tab in
-   theme.css supplies the resting/hover/active look; this only adds the caret row.) */
-.nav-more-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-/* The caret flips when its menu is open — a small, honest "this is expanded" cue. */
-.drop-caret {
-  transition: transform var(--dur) var(--ease-out);
-}
-.szh-menu-button[aria-expanded='true'] .drop-caret {
-  transform: rotate(180deg);
-}
-
-/* Mobile: a single compact button collapses the WHOLE nav into one menu so the bar
-   stays a tidy single row on phones. Hidden on tablet/desktop (the inline tabs show). */
-.nav-compact-btn {
-  display: none; /* shown < 760px via the media query below */
-  align-items: center;
-  gap: 7px;
-  padding: 7px 11px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: var(--sheen);
-  transition:
-    border-color var(--dur) ease,
-    background var(--dur) ease;
-}
-.nav-compact-btn:hover {
-  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
-}
-.nav-compact-label {
-  font-family: var(--font-head);
-  letter-spacing: 0.2px;
-}
+/* (The old top-nav "More" overflow + the mobile compact-nav button were removed with the
+   top nav — every section is now a first-class sidebar item. This file now dresses only
+   the account menu, which still uses @szhsin/react-menu.) */
 
 /* The account trigger: avatar + name/role chip + caret, as ONE control. Reuses the
    .auth-avatar / .auth-id type styles from auth.css. */
@@ -191,16 +153,4 @@
 .szh-menu--state-open {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* ---------------------------------------------------------------------------
-   Responsive switch: inline tabs (tablet/desktop) ⇄ one compact menu (phone)
-   --------------------------------------------------------------------------- */
-@media (max-width: 759px) {
-  .nav-primary {
-    display: none;
-  }
-  .nav-compact-btn {
-    display: inline-flex;
-  }
 }

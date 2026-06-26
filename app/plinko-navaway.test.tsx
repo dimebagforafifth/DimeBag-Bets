@@ -43,16 +43,10 @@ function click(host: HTMLElement, selector: string, text: RegExp): boolean {
   act(() => el.click())
   return true
 }
-// Secondary sections (Leaderboard, Management, …) now live in the header's "More"
-// dropdown rather than as inline tabs, so leaving Plinko that way means opening the
-// menu first, then clicking the section inside it.
-function clickMore(host: HTMLElement, text: RegExp): boolean {
-  click(host, 'button.nav-more-btn', /more/i)
-  return click(host, '.drop-item', text)
-}
 async function openPlinkoAndDrop(host: HTMLElement): Promise<void> {
-  // From wherever we are, get to the casino lobby, open Plinko, drop a ball.
-  click(host, 'button.nav-tab', /^casino$/i)
+  // From wherever we are, get to the casino lobby, open Plinko, drop a ball. Every section
+  // is a first-class sidebar item now (no "More" dropdown), so leaving is one click.
+  click(host, 'button.psa-nav-item', /^casino$/i)
   if (!click(host, 'button.sds-gamecard', /plinko/i)) throw new Error('no Plinko card')
   // The game view is a lazy() chunk: await its dynamic import (the same module
   // promise React.lazy is suspended on) so React can commit it, then click Play.
@@ -78,21 +72,31 @@ describe('leaving Plinko by any route keeps the balance change', () => {
 
     // Each row: leave Plinko via this route, then assert the figure still reflects
     // the freshly dropped bet and the underlying balance didn't revert.
-    const routes: Array<{ name: string; go: () => void }> = [
+    const routes: Array<{ name: string; go: () => void; console?: boolean }> = [
       { name: '← Casino crumb', go: () => void click(host, 'button.crumb', /casino/i) },
-      { name: 'My Bets tab', go: () => void click(host, 'button.nav-tab', /my bets/i) },
-      { name: 'Sportsbook tab', go: () => void click(host, 'button.nav-tab', /sportsbook/i) },
-      { name: 'Leaderboard tab', go: () => void clickMore(host, /leaderboard/i) },
-      { name: 'Management tab', go: () => void clickMore(host, /management/i) },
-      { name: 'Casino tab', go: () => void click(host, 'button.nav-tab', /^casino$/i) },
+      { name: 'My Bets tab', go: () => void click(host, 'button.psa-nav-item', /my bets/i) },
+      {
+        name: 'Sportsbook tab',
+        go: () => void click(host, 'button.psa-nav-item', /sportsbook/i),
+      },
+      {
+        name: 'Leaderboard tab',
+        go: () => void click(host, 'button.psa-nav-item', /leaderboard/i),
+      },
+      {
+        name: 'Management tab',
+        go: () => void click(host, 'button.psa-nav-item', /management/i),
+        console: true,
+      },
+      { name: 'Casino tab', go: () => void click(host, 'button.psa-nav-item', /^casino$/i) },
     ]
 
     for (const route of routes) {
       await openPlinkoAndDrop(host)
       const balanceAfterDrop = acct.balance
-      // The header now leads with Balance (what you can bet = availableToWager),
-      // which moves with the figure since a Plinko drop settles immediately
-      // (pending stays 0). Sanity: it already shows the new balance in-game.
+      // The topbar leads with Balance (what you can bet = availableToWager), which moves
+      // with the figure since a Plinko drop settles immediately (pending stays 0). Sanity:
+      // it already shows the new balance in-game (the plinko page keeps the player topbar).
       expect(figure(host), `in-game Balance before leaving via ${route.name}`).toBe(
         formatMoney(availableToWager(acct)),
       )
@@ -101,9 +105,16 @@ describe('leaving Plinko by any route keeps the balance change', () => {
 
       // The change must still be reflected after leaving this way.
       expect(acct.balance, `balance reverted after ${route.name}`).toBe(balanceAfterDrop)
-      expect(figure(host), `Balance after leaving via ${route.name}`).toBe(
-        formatMoney(availableToWager(acct)),
-      )
+      if (route.console) {
+        // The operator console replaces the player topbar with its OWN chrome (it shows
+        // aggregate operator figures, not the player WalletPill) — assert we actually
+        // landed there; the balance + persistence checks still guard the change.
+        expect(host.querySelector('.console'), `console after ${route.name}`).not.toBeNull()
+      } else {
+        expect(figure(host), `Balance after leaving via ${route.name}`).toBe(
+          formatMoney(availableToWager(acct)),
+        )
+      }
 
       // And it must be PERSISTED — a reload reads this back, so it can't "un-register".
       const saved = JSON.parse(localStorage.getItem('dimebag:book.org') ?? '{}')
