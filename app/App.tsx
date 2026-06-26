@@ -821,12 +821,16 @@ function AccountMenu({
 }
 
 /**
- * Short descriptions modelled on how Stake describes each game on its own game
- * page. Only games Stake actually carries get one; anything else (e.g. Chicken
- * Road, which isn't a Stake Original) is intentionally omitted, so its card just
- * shows the art + name.
+ * A one-line description for every game in the registry, shown under the name on
+ * its lobby card. The Originals are modelled on how Stake describes each game on
+ * its own game page; the table/card/slots and house games get an equivalent
+ * one-liner. There's an entry per game in GAME_CATALOG (games.ts) — keep them in
+ * sync — and the lobby additionally falls back to a game's own `tagline`, so a
+ * card can never render without a description even if this map ever drifts.
+ * Order mirrors the registry so a missing game is easy to spot.
  */
-const STAKE_DESC: Record<string, string> = {
+const GAME_DESC: Record<string, string> = {
+  // Originals
   mines:
     'A fresh take on Minesweeper — uncover gems for a rising multiplier while dodging the hidden mines.',
   crash: 'Watch the multiplier climb and cash out before the rocket crashes.',
@@ -836,10 +840,25 @@ const STAKE_DESC: Record<string, string> = {
   plinko: 'Drop a ball down the pin pyramid and ride it to a multiplier — the edges pay biggest.',
   wheel: 'Spin the wheel and land a multiplier — set your risk and the number of segments.',
   hilo: 'Call the next card higher or lower and ride the streak as your multiplier grows.',
+  chickenroad:
+    'Guide the chicken across lane after lane for a rising multiplier — cash out before it gets caught in traffic.',
   'dragon-tower': 'Climb the tower row by row, picking eggs and dodging the hidden skulls.',
   pump: 'Inflate the balloon for a bigger multiplier — bank it before it pops.',
-  blackjack: 'Beat the dealer to 21 without going over.',
+  coinflip: 'Call heads or tails and ride the streak — every correct call grows your multiplier.',
+  diamonds:
+    'Reveal a hand of gems and get paid for matches — the more of a colour you hit, the bigger the multiplier.',
+  cases: 'Open a case and win whatever multiplier it lands on — pick a higher risk for bigger rewards.',
+  // Table
   roulette: 'Place your chips on the single-zero European wheel and watch the ball land.',
+  sicbo: 'Bet on the roll of three dice — back totals, combos, or exact numbers before they tumble.',
+  // Cards
+  blackjack: 'Beat the dealer to 21 without going over.',
+  baccarat: 'Back the Player or the Banker — whichever hand lands closest to nine takes it.',
+  videopoker:
+    'Jacks or Better — hold the cards you want, draw the rest, and get paid for the best poker hand.',
+  threecardpoker: 'Make the strongest three-card hand and beat the dealer to win.',
+  // Slots
+  slots: 'Spin the reels and line up matching symbols across the paylines to win.',
 }
 
 /** Base-aware URL for a game's 3D icon PNG in /public/game-icons (the real product
@@ -1001,7 +1020,7 @@ function Lobby({
             <GameCard
               key={g.key}
               name={g.name}
-              tag={STAKE_DESC[g.key]}
+              tag={GAME_DESC[g.key] ?? g.tagline}
               icon={gameIconUrl(g.key)}
               iconAlt={g.name}
               hot={g.hot}
