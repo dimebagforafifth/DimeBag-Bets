@@ -22,6 +22,7 @@ import {
   expireDue,
   grantsForPlayer,
   eligibilityContext,
+  signupGrantPreviewCents,
   __resetBonusEngine,
 } from './engine.js'
 import type { BonusRule } from './rules.js'
@@ -66,6 +67,37 @@ const credit = (over: Partial<BonusRule> = {}): BonusRule => ({
   expiryMs: 7 * DAY,
   maxWinCents: null,
   ...over,
+})
+
+describe('signupGrantPreviewCents (the honest onboarding welcome figure)', () => {
+  it('sums the enabled, new-player-eligible signup credit rules, max-win capped', () => {
+    // valueCents 800_00 but capped at 600_00, eligibility = new players → preview is the cap.
+    upsertBonusRule(
+      credit({
+        id: 'welcome-test',
+        trigger: 'signup',
+        reward: { kind: 'credit', valueCents: 800_00 },
+        eligibility: { segments: ['new'] },
+        maxWinCents: 600_00,
+      }),
+    )
+    expect(signupGrantPreviewCents()).toBe(600_00)
+  })
+
+  it('ignores disabled signup rules and rules a new player cannot qualify for', () => {
+    upsertBonusRule(
+      credit({ id: 'off', trigger: 'signup', enabled: false, reward: { kind: 'credit', valueCents: 100_00 } }),
+    )
+    upsertBonusRule(
+      credit({
+        id: 'vip-only',
+        trigger: 'signup',
+        reward: { kind: 'credit', valueCents: 100_00 },
+        eligibility: { segments: ['vip'] }, // a fresh player is 'new', never 'vip'
+      }),
+    )
+    expect(signupGrantPreviewCents()).toBe(0)
+  })
 })
 
 describe('eligibilityContext (derived from the book + rewards state)', () => {

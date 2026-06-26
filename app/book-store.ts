@@ -199,6 +199,32 @@ export function getCurrentPlayer(): Member | null {
   return isPlayable(currentPlayerId) ? getMember(org, currentPlayerId as string) : null
 }
 
+/**
+ * Ensure the signed-in auth user has a PLAYER account in the book, creating one under the
+ * manager when they don't — a fresh self-signup has no book node yet (auth/demoAdapter
+ * leaves them unlinked until an operator recruits them), which is what left onboarding's
+ * limits + welcome grant with no figure to apply to. Idempotent: if a member already
+ * resolves for this id it's returned untouched. The new player is created with id ≡ userId
+ * so accountLink resolves them automatically (demo: user id ≡ member id), seeded active with
+ * a standard player credit line, and made the current player so the lobby renders against
+ * their figure straight away. Returns the resolved player id.
+ *
+ * // TODO(api): real mode links via the accounts.user_id column, not by matching member id —
+ * this same seam then inserts the accounts row instead of an org member.
+ */
+export function ensurePlayerAccount(userId: string, displayName: string): string {
+  if (org.members[userId]) return userId
+  mutateBook((o) => {
+    addPlayer(o, o.managerId, {
+      id: userId,
+      name: displayName?.trim() || userId,
+      creditLimit: 200_000,
+    })
+  })
+  setCurrentPlayer(userId)
+  return userId
+}
+
 /** Switch who you're playing as. Must be an active player. Persists + notifies. */
 export function setCurrentPlayer(id: string): void {
   const m = org.members[id]

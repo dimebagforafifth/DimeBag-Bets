@@ -258,6 +258,29 @@ export function eligibilityContext(org: Org, playerId: string): EligibilityConte
   }
 }
 
+/**
+ * The credit a brand-new player would receive from the LIVE signup rules, in cents — the
+ * honest "welcome free play" figure the onboarding screen shows. Sums every enabled `signup`
+ * credit rule a fresh player (segment 'new', active, no tier/figure history) qualifies for,
+ * each max-win capped via the same `rewardGrantCents` the grant path uses — so editing the
+ * Welcome Bonus in the console moves the onboarding amount with it, and the two can never
+ * drift. Reads rules only; moves no money and creates no grant.
+ */
+export function signupGrantPreviewCents(): number {
+  const ctx: EligibilityContext = {
+    playerId: '__preview__',
+    tierId: tierForStatus(getRewardsConfig().tiers, 0).id,
+    segment: 'new',
+    agentChain: [],
+    balanceCents: 0,
+    active: true,
+  }
+  return rules
+    .filter((r) => r.enabled && r.trigger === 'signup' && r.reward.kind !== 'free-spins')
+    .filter((r) => isEligible(r, ctx))
+    .reduce((sum, r) => sum + rewardGrantCents(r), 0)
+}
+
 /* --------------------------------- firing a trigger ------------------------ */
 
 /** What a trigger carries: the player(s) it concerns + any amounts a reward is sized on. */
