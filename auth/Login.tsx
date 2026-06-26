@@ -283,7 +283,7 @@ function BrandPane() {
       </div>
       <div className="auth-brand-mid">
         <div className="auth-brand-eyebrow">Stack your week</div>
-        <h2 className="auth-brand-head">21 Originals, one figure.</h2>
+        <h2 className="auth-brand-head">21 games, one figure.</h2>
         <p className="auth-brand-sub">
           A points-based casino + sportsbook. Play the climb, chase the streak, top the weekly board — no
           buy-in, no cash-out, just the game.
@@ -300,7 +300,7 @@ function BrandPane() {
           <span className="ic">
             <Dice5 size={16} />
           </span>
-          21 in-house Originals + a full sportsbook
+          21 casino games + a full sportsbook
         </div>
         <div className="auth-feat">
           <span className="ic">

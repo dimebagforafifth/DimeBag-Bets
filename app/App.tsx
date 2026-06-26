@@ -206,7 +206,7 @@ export function App() {
   const book = getBook()
   const { user, signOut, isDemo } = useAuth()
   // Re-render when the player's onboarding favourites change, so the lobby re-orders
-  // live; the picks the player made at onboarding surface first in the Originals grid.
+  // live; the picks the player made at onboarding surface first in the Arcade grid.
   const onboardingVersion = useSyncExternalStore(subscribeOnboarding, getOnboardingVersion)
   const lobbyFavourites = useMemo(
     () => new Set(getFavourites(user?.id)),
@@ -364,7 +364,7 @@ export function App() {
   // any other section is one click away — that IS the "back to app" affordance). Built lazily
   // so its figure aggregation only runs when the console is actually shown.
   const isConsole = activeSection === 'management' && canManage(role)
-  // The topbar search only makes sense on the casino lobby — it filters the Originals grid.
+  // The topbar search only makes sense on the casino lobby — it filters the Arcade grid.
   const showSearch = activeSection === 'casino' && !liveGame
   // The page title leads the topbar: a game's name when one is open, else the section label.
   const pageTitle = liveGame ? liveGame.name : currentLabel
@@ -824,15 +824,15 @@ function AccountMenu({
 
 /**
  * A one-line description for every game in the registry, shown under the name on
- * its lobby card. The Originals are modelled on how Stake describes each game on
- * its own game page; the table/card/slots and house games get an equivalent
+ * its lobby card. The instant games' descriptions are modelled on how Stake describes
+ * each game on its own game page; the table/card/slots and house games get an equivalent
  * one-liner. There's an entry per game in GAME_CATALOG (games.ts) — keep them in
  * sync — and the lobby additionally falls back to a game's own `tagline`, so a
  * card can never render without a description even if this map ever drifts.
  * Order mirrors the registry so a missing game is easy to spot.
  */
 const GAME_DESC: Record<string, string> = {
-  // Originals
+  // Instant games
   mines:
     'A fresh take on Minesweeper — uncover gems for a rising multiplier while dodging the hidden mines.',
   crash: 'Watch the multiplier climb and cash out before the rocket crashes.',
@@ -872,7 +872,7 @@ function gameIconUrl(key: string): string {
 /** The lobby grid filter: 'All', the 'Hot' trending pseudo-filter, or one game category. */
 type LobbyFilter = 'All' | 'Hot' | GameCategory
 
-/** The Casino hub: a "Stack your week." hero over the Originals grid. One tap opens a
+/** The Casino hub: a "Stack your week." hero over the Arcade grid. One tap opens a
  *  game's page. `favourites` (from player onboarding) float to the front; the topbar
  *  `search` filters the grid by game name. The hero stats are wired to REAL counts only
  *  (enabled games, active players) — no invented "wagered today" precision. */
@@ -935,7 +935,7 @@ function Lobby({
       <section className="lobby-hero">
         <div className="lobby-hero-copy">
           <div className="lobby-hero-eyebrows">
-            <BrandBadge variant="gold">{enabled.length} Originals</BrandBadge>
+            <BrandBadge variant="gold">{enabled.length} Games</BrandBadge>
             <BrandBadge variant="neutral">
               <ShieldCheck size={12} strokeWidth={2} aria-hidden="true" />
               Provably fair
@@ -959,7 +959,7 @@ function Lobby({
           </div>
           <div className="lobby-hero-stats">
             <div className="lobby-hero-stat">
-              <span className="lobby-hero-stat-label">Originals</span>
+              <span className="lobby-hero-stat-label">Games</span>
               <span className="lobby-hero-stat-value">{enabled.length}</span>
             </div>
             <span className="lobby-hero-sep" aria-hidden="true" />
@@ -987,12 +987,12 @@ function Lobby({
           book; renders nothing until there's activity, so a fresh book stays clean */}
       <ActivityTicker />
 
-      {/* ---- Originals collection ---- */}
+      {/* ---- Arcade collection ---- */}
       <div className="lobby-head">
         <span className="lobby-eyebrow">Provably fair</span>
         <div className="lobby-head-row">
           {/* h3: subordinate to the topbar's page <h1> and the hero's <h2> (one h1 per view) */}
-          <h3 className="lobby-title">Originals</h3>
+          <h3 className="lobby-title">Arcade</h3>
           <span className="lobby-count">{ordered.length}</span>
         </div>
         {/* category / Hot filter — narrows the grid by type; composes with the topbar search */}

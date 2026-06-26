@@ -1412,7 +1412,7 @@ input[type='number']::-webkit-inner-spin-button {
 
 /* ============================================================================
    CASINO LOBBY — "Stack your week." hero + promotions strip (added above the grid).
-   The Originals head (.lobby-head / .lobby-eyebrow / .lobby-title) + .lobby-grid are
+   The Arcade head (.lobby-head / .lobby-eyebrow / .lobby-title) + .lobby-grid are
    reused from the block above; these are the new hero + promo pieces.
    ========================================================================== */
 .lobby-hero {
@@ -1533,7 +1533,7 @@ input[type='number']::-webkit-inner-spin-button {
   }
 }
 
-/* Originals head: the eyebrow stays; the title sits beside a live count */
+/* Arcade head: the eyebrow stays; the title sits beside a live count */
 .lobby-head-row {
   display: flex;
   align-items: baseline;
@@ -1545,7 +1545,7 @@ input[type='number']::-webkit-inner-spin-button {
   font-variant-numeric: tabular-nums;
   color: var(--faint);
 }
-/* category / Hot filter pills under the Originals head */
+/* category / Hot filter pills under the Arcade head */
 .lobby-filters {
   display: flex;
   flex-wrap: wrap;

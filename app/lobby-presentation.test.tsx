@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 /**
  * The casino lobby presentation (UI-polish lane). The lobby leads with the
- * "Originals" collection under a "Provably fair" eyebrow, renders every enabled
+ * "Arcade" collection under a "Provably fair" eyebrow, renders every enabled
  * game as a card, and carries the "Live wins" strip above the grid — which stays
  * present as a quiet rail on a fresh book (empty state) and fills with real wins
  * as bets resolve. This locks that structure so the shell stays clean on an empty
@@ -32,11 +32,11 @@ afterEach(() => {
 })
 
 describe('casino lobby presentation', () => {
-  it('leads with the Originals collection and a card per enabled game', () => {
+  it('leads with the Arcade collection and a card per enabled game', () => {
     act(() => root.render(<App />))
 
     expect(host.querySelector('.lobby-eyebrow')?.textContent).toMatch(/provably fair/i)
-    expect(host.querySelector('.lobby-title')?.textContent).toBe('Originals')
+    expect(host.querySelector('.lobby-title')?.textContent).toBe('Arcade')
 
     // A card for every registered game (all enabled by default). The lobby tile is
     // now the brand GameCard (components/brand): button.sds-gamecard, name in
