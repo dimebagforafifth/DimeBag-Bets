@@ -33,6 +33,14 @@ import './dragon-tower.css'
 /** Let the climb/settle read on the board before the win card appears. */
 const POPUP_DELAY_MS = 220
 
+/** Base-aware URLs for the in-game tile art — the realistic 3D PNGs in
+ *  /public/game-tiles, rendered to match the casino lobby's icon style. The
+ *  safe pick reveals a golden dragon egg; the bad pick (the engine's "skull"
+ *  token) reveals a fierce dragon that ends the climb. */
+const TILE_ART_BASE = import.meta.env.BASE_URL.replace(/\/$/, '') + '/game-tiles/'
+const EGG_ART = `${TILE_ART_BASE}dragon-egg.png`
+const DRAGON_ART = `${TILE_ART_BASE}dragon.png`
+
 const TOWER_RULES: ReactNode[] = [
   <>
     <u>Set your bet, pick a difficulty, and hit Bet</u> to start a climb.
@@ -42,16 +50,16 @@ const TOWER_RULES: ReactNode[] = [
     harder modes are riskier but pay much more each row.
   </>,
   <>
-    The tower is 9 rows tall. In each row, <u>tap one tile</u>: find an egg 🥚 to move up, but avoid
-    the skull 💀.
+    The tower is 9 rows tall. In each row, <u>tap one tile</u>: find an egg 🥚 to climb, but wake
+    the dragon 🐉 and your run ends.
   </>,
   <>
     <u>Every egg climbs you one row and raises your multiplier.</u> Each row up is worth more than
     the last.
   </>,
   <>
-    <u>Hit a skull and the climb ends — you lose your bet.</u> So the higher you go, the more you’re
-    risking.
+    <u>Wake the dragon and the climb ends — you lose your bet.</u> So the higher you go, the more
+    you’re risking.
   </>,
   <>
     <u>Press Cash Out after any row to bank your winnings.</u> Reach the top row and it auto-pays
@@ -291,7 +299,7 @@ function Readout({
   const cur = currentMultiplier(game)
   const nxt = nextMultiplier(game)
   if (game.status === 'busted') {
-    return <p className="readout-result is-loss">Hit a skull — lost {formatMoney(bet)}.</p>
+    return <p className="readout-result is-loss">Woke the dragon — lost {formatMoney(bet)}.</p>
   }
   if (game.status === 'cashed' || game.status === 'cleared') {
     return (
@@ -377,9 +385,23 @@ function Tower({
                     onClick={() => interactive && onPick(tile)}
                     aria-label={`row ${row + 1} tile ${tile + 1}`}
                   >
-                    {(kind === 'egg-up' || kind === 'egg-dim') && <Egg />}
+                    {(kind === 'egg-up' || kind === 'egg-dim') && (
+                      <img
+                        className="icon egg"
+                        src={EGG_ART}
+                        alt=""
+                        aria-hidden
+                        draggable={false}
+                      />
+                    )}
                     {(kind === 'skull' || kind === 'skull-hit') && (
-                      <Skull hit={kind === 'skull-hit'} />
+                      <img
+                        className={`icon skull ${kind === 'skull-hit' ? 'skull-boom' : ''}`}
+                        src={DRAGON_ART}
+                        alt=""
+                        aria-hidden
+                        draggable={false}
+                      />
                     )}
                   </button>
                 )
@@ -461,74 +483,5 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
       <span className="fair-label">{label}</span>
       <span className="fair-value">{children}</span>
     </div>
-  )
-}
-
-/** A glowing dragon egg — the safe pick. A jewel-bright golden shell with scale
- *  ridges, a hot specular highlight, and a twinkle. */
-function Egg() {
-  return (
-    <svg viewBox="0 0 24 24" className="icon egg" aria-hidden="true">
-      <defs>
-        <radialGradient id="eggBody" cx="36%" cy="26%" r="85%">
-          <stop offset="0%" stopColor="#fff6d8" />
-          <stop offset="28%" stopColor="#ffd84d" />
-          <stop offset="64%" stopColor="#ff9f2e" />
-          <stop offset="100%" stopColor="#b5530c" />
-        </radialGradient>
-      </defs>
-      <path
-        className="egg-shell"
-        d="M12 2.3 C 16.6 2.3, 19.7 9, 19.7 14 C 19.7 18.6, 16.3 21.7, 12 21.7 C 7.7 21.7, 4.3 18.6, 4.3 14 C 4.3 9, 7.4 2.3, 12 2.3 Z"
-        fill="url(#eggBody)"
-      />
-      {/* scale ridges across the shell */}
-      <g fill="#9c4a08" opacity="0.32">
-        <path d="M7.6 11.8 q4.4 -3 8.8 0 q-4.4 2.1 -8.8 0Z" />
-        <path d="M7.1 15.4 q4.9 -3 9.8 0 q-4.9 2.2 -9.8 0Z" />
-      </g>
-      {/* hot specular highlight + a sparkle twinkle */}
-      <ellipse cx="9.2" cy="7.4" rx="2.5" ry="1.6" fill="#fff8e6" opacity="0.85" />
-      <path
-        className="egg-glint"
-        d="M14.8 8.4 l0.6 1.6 1.6 0.6 -1.6 0.6 -0.6 1.6 -0.6 -1.6 -1.6 -0.6 1.6 -0.6 Z"
-        fill="#fffbe9"
-      />
-    </svg>
-  )
-}
-
-/** A horned beast-skull with burning eyes — the bad pick that ends the climb.
- *  On-theme for the dragon's tower; the eyes blaze and flare on a hit. */
-function Skull({ hit = false }: { hit?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" className={`icon skull ${hit ? 'skull-boom' : ''}`} aria-hidden="true">
-      <defs>
-        <radialGradient id="skullEye" cx="50%" cy="42%" r="60%">
-          <stop offset="0%" stopColor="#fff1b0" />
-          <stop offset="38%" stopColor="#ff7a18" />
-          <stop offset="100%" stopColor="#b00018" />
-        </radialGradient>
-      </defs>
-      {/* curved horns */}
-      <path d="M7 5.4 C 5.2 3.9, 4.5 2.4, 5 1.3 C 6.4 2.2, 7.5 3.6, 7.9 5.3 Z" fill="#cdd6df" />
-      <path
-        d="M17 5.4 C 18.8 3.9, 19.5 2.4, 19 1.3 C 17.6 2.2, 16.5 3.6, 16.1 5.3 Z"
-        fill="#cdd6df"
-      />
-      {/* cranium + jaw */}
-      <path
-        d="M12 3 C 7.3 3, 4 6.3, 4 10.6 C 4 13.2, 5.2 15, 6.8 16 L 6.8 18.4 C 6.8 19.3, 7.5 20, 8.4 20 L 15.6 20 C 16.5 20, 17.2 19.3, 17.2 18.4 L 17.2 16 C 18.8 15, 20 13.2, 20 10.6 C 20 6.3, 16.7 3, 12 3 Z"
-        fill="#eef3f7"
-      />
-      {/* burning eye sockets */}
-      <circle className="skull-eye" cx="9" cy="11" r="2.4" fill="url(#skullEye)" />
-      <circle className="skull-eye" cx="15" cy="11" r="2.4" fill="url(#skullEye)" />
-      {/* nose + teeth */}
-      <path d="M12 13.3 l1.4 2.4 -2.8 0 Z" fill="#1b2733" />
-      <rect x="9.2" y="17.6" width="1.2" height="2.4" rx="0.4" fill="#c2ccd6" />
-      <rect x="11.4" y="17.6" width="1.2" height="2.4" rx="0.4" fill="#c2ccd6" />
-      <rect x="13.6" y="17.6" width="1.2" height="2.4" rx="0.4" fill="#c2ccd6" />
-    </svg>
   )
 }

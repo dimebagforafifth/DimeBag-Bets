@@ -125,8 +125,9 @@
     box-shadow 0.12s ease;
 }
 .ttile .icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
   overflow: visible;
 }
 
@@ -219,55 +220,15 @@
   }
 }
 
-/* ---- egg + skull art ---- */
+/* ---- egg + dragon art (realistic 3D PNG tiles in /public/game-tiles) ---- */
+/* the safe egg pops in with a warm golden glow */
 .ttile-egg-up .egg {
   filter: drop-shadow(0 0 9px rgba(var(--accent-glow), 0.8));
   animation: egg-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-/* the egg's sparkle keeps twinkling */
-.egg-glint {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.ttile-egg-up .egg-glint {
-  animation: egg-twinkle 1.8s ease-in-out infinite;
-}
-@keyframes egg-twinkle {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: scale(0.7);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-}
+/* the dragon (bad pick) sits on a soft grounding shadow */
 .skull {
-  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.45));
-}
-/* burning eyes glow and flicker like embers */
-.skull-eye {
-  filter: drop-shadow(0 0 2.5px #ff7a18);
-}
-.ttile-skull .skull-eye,
-.ttile-skull-hit .skull-eye {
-  animation: eye-flicker 2.2s ease-in-out infinite;
-}
-.ttile-skull-hit .skull-eye {
-  filter: drop-shadow(0 0 5px #ff5a18);
-}
-@keyframes eye-flicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  42% {
-    opacity: 0.72;
-  }
-  55% {
-    opacity: 1;
-  }
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 .skull-boom {
   animation: skull-shake 0.4s ease-in-out;
@@ -311,10 +272,7 @@
 /* respect reduced-motion: drop the looping ambience (the game still plays the
    same, just without the breathe / twinkle / flicker loops) */
 @media (prefers-reduced-motion: reduce) {
-  .tower-row.is-target .ttile-hidden,
-  .ttile-egg-up .egg-glint,
-  .ttile-skull .skull-eye,
-  .ttile-skull-hit .skull-eye {
+  .tower-row.is-target .ttile-hidden {
     animation: none;
   }
 }
