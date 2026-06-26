@@ -226,22 +226,52 @@
    is the live default; these are the explored alternatives (jade / ember / ice).
    ========================================================================== */
 [data-theme='jade'] {
-  --bg: #0b0e0d; --surface: #121614; --surface-2: #1a201d; --line: #28302c;
-  --text: #e9efeb; --muted: #9aa69f; --faint: #6d7a73;
-  --gold: #46c08a; --gold-bright: #6fdba7; --gold-press: #38a576;
-  --gold-glow: 70, 192, 138; --on-gold: #07100c; --gem: #46c08a; --gem-glow: 70, 192, 138;
+  --bg: #0b0e0d;
+  --surface: #121614;
+  --surface-2: #1a201d;
+  --line: #28302c;
+  --text: #e9efeb;
+  --muted: #9aa69f;
+  --faint: #6d7a73;
+  --gold: #46c08a;
+  --gold-bright: #6fdba7;
+  --gold-press: #38a576;
+  --gold-glow: 70, 192, 138;
+  --on-gold: #07100c;
+  --gem: #46c08a;
+  --gem-glow: 70, 192, 138;
 }
 [data-theme='ember'] {
-  --bg: #0e0b0a; --surface: #171211; --surface-2: #201917; --line: #322826;
-  --text: #f1eae7; --muted: #ab9d97; --faint: #7c6f69;
-  --gold: #e8704a; --gold-bright: #f48f6f; --gold-press: #cf5c39;
-  --gold-glow: 232, 112, 74; --on-gold: #1a0d08; --gem: #e8704a; --gem-glow: 232, 112, 74;
+  --bg: #0e0b0a;
+  --surface: #171211;
+  --surface-2: #201917;
+  --line: #322826;
+  --text: #f1eae7;
+  --muted: #ab9d97;
+  --faint: #7c6f69;
+  --gold: #e8704a;
+  --gold-bright: #f48f6f;
+  --gold-press: #cf5c39;
+  --gold-glow: 232, 112, 74;
+  --on-gold: #1a0d08;
+  --gem: #e8704a;
+  --gem-glow: 232, 112, 74;
 }
 [data-theme='ice'] {
-  --bg: #0a0c10; --surface: #111419; --surface-2: #181d24; --line: #262d36;
-  --text: #e8edf3; --muted: #97a2b1; --faint: #6b7685;
-  --gold: #5aa6f0; --gold-bright: #84c0f8; --gold-press: #4790db;
-  --gold-glow: 90, 166, 240; --on-gold: #06121f; --gem: #5aa6f0; --gem-glow: 90, 166, 240;
+  --bg: #0a0c10;
+  --surface: #111419;
+  --surface-2: #181d24;
+  --line: #262d36;
+  --text: #e8edf3;
+  --muted: #97a2b1;
+  --faint: #6b7685;
+  --gold: #5aa6f0;
+  --gold-bright: #84c0f8;
+  --gold-press: #4790db;
+  --gold-glow: 90, 166, 240;
+  --on-gold: #06121f;
+  --gem: #5aa6f0;
+  --gem-glow: 90, 166, 240;
 }
 
 /* Every number across the casino uses the rounded font — chunkier and softer,
@@ -388,107 +418,8 @@ body {
   }
 }
 
-.app {
-  /* dvh tracks the real viewport as mobile browser chrome shows/hides (vs 100vh, which
-     jumps); 100% stays a fallback for engines without dvh. */
-  min-height: 100%;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-header {
-  padding: 14px 24px;
-  border-bottom: 1px solid var(--line);
-  /* a quiet sticky glass header — content blurs softly under it on scroll */
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(12px) saturate(1.1);
-  -webkit-backdrop-filter: blur(12px) saturate(1.1);
-}
-/* The bar's content caps to the shared width and centres, so on wide screens the brand
-   and account controls line up with the page content below instead of hugging the edges. */
-.app-header-inner {
-  width: 100%;
-  max-width: var(--content-max);
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.brand {
-  font-family: var(--font-head);
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  font-size: 20px;
-  color: var(--text);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-}
-/* the PlayStadium.io wordmark (Slight Chance) sits a touch larger for presence */
-.brand .ps-wordmark {
-  font-size: 23px;
-}
-.brand-chip {
-  margin-top: -1px;
-}
-.brand-dot {
-  color: var(--gold);
-  margin: 0 1px;
-}
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-/* top-level section switch: Casino / Sportsbook */
-.nav {
-  display: flex;
-  gap: 4px;
-}
-.nav-tab {
-  position: relative;
-  background: none;
-  border: none;
-  border-radius: 9px;
-  padding: 8px 14px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background 0.15s ease;
-}
-.nav-tab:hover {
-  color: var(--text);
-  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
-}
-.nav-tab.is-on {
-  color: var(--text);
-  background: var(--surface-2);
-}
-/* a slim gold underline marks the live section */
-.nav-tab.is-on::after {
-  content: '';
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 2px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--gold);
-}
+/* The old top-nav shell (.app / .app-header / .brand / .nav / .nav-tab) was replaced by the
+   left-sidebar shell (.psa-* below). Its styles were removed with it. */
 
 /* ---- Casino lobby ---- */
 .lobby {
@@ -679,80 +610,8 @@ body {
   color: var(--text);
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-/* The balance + week standing read as ONE "wallet" unit: a contained pill, set off
-   from the account controls (sound / VIP / identity) instead of floating loose. */
-.figure {
-  display: flex;
-  align-items: stretch;
-  gap: 14px;
-  padding: 6px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--sheen);
-}
-.figure-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  line-height: 1.2;
-}
-/* a hairline between the two figures so they read as paired, not crowded */
-.figure-block + .figure-block {
-  padding-left: 14px;
-  border-left: 1px solid var(--line);
-}
-.figure-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--faint);
-}
-.figure-value {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  font-size: 13px;
-}
-.figure-value.is-down {
-  color: var(--red);
-}
-.figure-value.is-up {
-  color: var(--green);
-}
-.figure-value.is-even {
-  color: var(--muted);
-  font-weight: 600;
-}
-/* The headline number — the gold a player has to bet right now — leads the pair. */
-.figure-block.is-primary .figure-value {
-  font-size: 16px;
-  color: var(--gold-bright);
-}
-
-.app-main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 40px 24px;
-}
-/* The Management/operator console fills the whole region below the site nav: full
-   width + full height, scrolling internally instead of being a centered box. Every
-   other section keeps the centered, top-aligned game layout above. */
-.app-main.is-console {
-  display: flex;
-  flex-direction: column;
-  justify-content: stretch;
-  align-items: stretch;
-  padding: 0;
-  min-height: 0; /* let the child be bounded so it can scroll internally */
-  overflow: hidden;
-}
+/* The header wallet (.header-right / .figure) is now the brand WalletPill in the topbar,
+   and .app-main became .psa-content / .psa-main (the sidebar shell below) — old styles removed. */
 
 /* shown when there's no player to play as */
 .no-player {
@@ -782,13 +641,7 @@ body {
   padding: 10px 20px;
 }
 
-.app-footer {
-  text-align: center;
-  color: var(--faint);
-  font-size: 12px;
-  padding: 20px;
-  border-top: 1px solid var(--line);
-}
+/* (the page footer is now .psa-footer in the sidebar shell below) */
 
 /* ===== shared game UI primitives (every game view uses these) ===== */
 
@@ -1230,47 +1083,575 @@ input[type='number']::-webkit-inner-spin-button {
   }
 }
 
-/* ===== responsive: keep the shell clean on smaller screens (CLAUDE.md §2) =====
-   The bar now stays a single, non-wrapping row at every size: below 760px the inline
-   tabs + "More" overflow collapse into one compact nav menu (see menu.css), so the
-   header never has to wrap. These breakpoints just tighten spacing and the hub grid. */
-@media (max-width: 759px) {
-  .app-header {
-    padding: 12px 16px;
-  }
-  .app-header-inner {
-    gap: 12px;
-  }
-  .header-left {
-    gap: 12px;
-  }
-  .header-right {
-    gap: 10px;
-  }
-  .app-main {
-    padding: 24px 16px;
-  }
-}
+/* ===== responsive: tighten the lobby grid on the smallest phones (CLAUDE.md §2).
+   The shell's own responsive behaviour (sidebar → drawer, etc.) lives with the .psa-*
+   rules below. ===== */
 @media (max-width: 460px) {
-  .app-header {
-    padding: 11px 12px;
-  }
-  .app-main {
-    padding: 20px 12px;
-  }
-  .figure {
-    gap: 10px;
-    padding: 5px 10px;
-  }
-  /* drop the name/role text on the tightest phones — the avatar + caret still opens
-     the same account menu, so nothing is lost while the bar stays uncrowded. */
-  .account-trigger .auth-id {
-    display: none;
-  }
   .lobby-title {
     font-size: 26px;
   }
   .lobby-grid {
     gap: 12px;
+  }
+}
+
+/* ============================================================================
+   APP SHELL — persistent left sidebar + topbar (PlayStadium "Chip Gold & Carbon").
+   Ported from the design system's playstadium-app Shell.jsx/shell.css onto the real
+   brand tokens above. This REPLACES the old top-nav header: every reachable section is
+   a first-class, grouped sidebar item, so nothing is buried behind a "More" dropdown
+   (CLAUDE.md §2 — clean, one click to anywhere). The operator console keeps its own
+   chrome and fills the main column; the persistent sidebar IS the "back to app" path.
+   ========================================================================== */
+.psa-shell {
+  display: flex;
+  height: 100dvh;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ---- sidebar ---- */
+.psa-sidebar {
+  width: 252px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar);
+  border-right: 1px solid var(--sidebar-border);
+  z-index: 50;
+}
+.psa-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 18px 14px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  width: 100%;
+}
+.psa-brand-mark {
+  flex: none;
+}
+.psa-brand-name {
+  display: inline-flex;
+  align-items: center;
+}
+.psa-brand-name .ps-wordmark {
+  font-size: 24px;
+}
+
+.psa-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 12px 12px;
+  scrollbar-gutter: stable;
+}
+.psa-nav-group {
+  margin-bottom: 14px;
+}
+.psa-nav-label {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--faint);
+  padding: 6px 10px;
+}
+.psa-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+.psa-nav-item svg {
+  flex: none;
+  opacity: 0.9;
+}
+.psa-nav-item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+/* active = warmed gold text + a slim gold marker, NOT a heavy fill (brand rule). */
+.psa-nav-item.is-active {
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  color: var(--gold);
+  font-weight: 600;
+}
+.psa-nav-item.is-active::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--gold);
+}
+
+.psa-side-foot {
+  padding: 12px 18px 16px;
+}
+.psa-fair {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* the mobile drawer's tap-to-close backdrop — only painted when open (media query below) */
+.psa-scrim {
+  display: none;
+}
+
+/* ---- main column: topbar + scrolling content ---- */
+.psa-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* the operator console brings its own chrome; let it fill the column + scroll itself */
+.psa-main > .console {
+  flex: 1;
+  min-height: 0;
+}
+/* The console's own scroller (.console-main) used to get its overflow from a rule scoped to
+   the old `.app-main.is-console` host (console/shell/console.css), which this shell removed.
+   Re-supply it here so the console body scrolls while its top bar stays pinned — otherwise a
+   tall operator console overflows the bounded column and is clipped by .psa-shell. */
+.psa-main > .console > .console-main {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+/* slim, mobile-only bar above the console carrying the drawer burger (desktop: hidden — the
+   console fills the whole column as before). Shown at the drawer breakpoint via @media below. */
+.psa-console-mobilebar {
+  display: none;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sidebar);
+}
+.psa-console-mobilebar .psa-brand-name {
+  display: inline-flex;
+  align-items: center;
+}
+.psa-console-mobilebar .ps-wordmark {
+  font-size: 22px;
+}
+
+.psa-topbar {
+  height: 66px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line);
+  /* a quiet sticky glass bar — content blurs softly under it on scroll */
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  z-index: 30;
+}
+.psa-burger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.psa-topbar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: auto;
+  min-width: 0;
+}
+.psa-topbar-eyebrow {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--faint);
+}
+.psa-page-title {
+  margin: 0;
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.psa-topbar-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 250px;
+  flex: none;
+}
+.psa-search-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--faint);
+  pointer-events: none;
+}
+.psa-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px 0 34px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.psa-search-input::placeholder {
+  color: var(--faint);
+}
+.psa-search-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+}
+.psa-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.psa-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 30px 0;
+}
+/* each section centres in one fitted column (mirrors the old centred .app-main) */
+.psa-content > * {
+  width: 100%;
+  max-width: var(--content-max);
+}
+.psa-footer {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-top: 40px;
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* ============================================================================
+   CASINO LOBBY — "Stack your week." hero + promotions strip (added above the grid).
+   The Originals head (.lobby-head / .lobby-eyebrow / .lobby-title) + .lobby-grid are
+   reused from the block above; these are the new hero + promo pieces.
+   ========================================================================== */
+.lobby-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 24px;
+  align-items: center;
+  overflow: hidden;
+  margin-bottom: 18px;
+  padding: 36px 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+  box-shadow: var(--elev-2), var(--sheen);
+}
+/* a soft gold bloom rising from the art side — gold as light, never a fill */
+.lobby-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(70% 120% at 86% 50%, rgba(var(--gold-glow), 0.15), transparent 62%);
+  pointer-events: none;
+}
+.lobby-hero-copy {
+  position: relative;
+}
+.lobby-hero-eyebrows {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.lobby-hero-title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 58px;
+  line-height: 0.92;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+.lobby-hero-tag {
+  margin: 0 0 22px;
+  max-width: 44ch;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.lobby-hero-cta {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+}
+.lobby-hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.lobby-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lobby-hero-stat-label {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--faint);
+}
+.lobby-hero-stat-value {
+  font-family: var(--font-num);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.lobby-hero-sep {
+  width: 1px;
+  height: 34px;
+  background: var(--line);
+}
+.lobby-hero-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lobby-hero-glow {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--gold-glow), 0.3), transparent 64%);
+}
+.lobby-hero-art img {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.55));
+  animation: psa-float 5s var(--ease-spring) infinite;
+}
+@keyframes psa-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lobby-hero-art img {
+    animation: none;
+  }
+}
+
+/* Originals head: the eyebrow stays; the title sits beside a live count */
+.lobby-head-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.lobby-count {
+  font-family: var(--font-num);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+}
+.lobby-empty {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 8px 0 24px;
+}
+
+/* a quieter section heading for "Promotions" */
+.lobby-subtitle {
+  margin: 0;
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+}
+.lobby-head--promo {
+  margin-top: 34px;
+}
+
+/* promotions strip — one live card + dashed marketing-art slots (real art TBD) */
+.promo-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.promo-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, var(--surface), var(--surface-2));
+  box-shadow: var(--sheen);
+}
+.promo-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.promo-title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--text);
+}
+.promo-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.promo-ph {
+  min-height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed color-mix(in srgb, var(--gold) 45%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--gold) 4%, var(--surface));
+}
+.promo-ph-tag {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--faint);
+}
+
+/* ---- responsive: collapse the sidebar to a drawer on tablet/phone ---- */
+@media (max-width: 1040px) {
+  .psa-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    transform: translateX(-100%);
+    /* hide the closed off-canvas drawer from the tab order + AT (not just visually), so a
+       keyboard/screen-reader user can't land on the off-screen nav. visibility flips to hidden
+       only AFTER the slide-out finishes, so the close animation still plays. */
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      transform var(--dur-slow) var(--ease-out),
+      visibility 0s linear var(--dur-slow);
+  }
+  .psa-shell.is-mobile-open .psa-sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .psa-shell.is-mobile-open .psa-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 9, 12, 0.6);
+    z-index: 40;
+  }
+  .psa-burger {
+    display: inline-flex;
+  }
+  .psa-console-mobilebar {
+    display: flex;
+  }
+  .psa-topbar-search {
+    display: none;
+  }
+  .lobby-hero {
+    grid-template-columns: 1fr;
+  }
+  .lobby-hero-art {
+    display: none;
+  }
+  .lobby-hero-title {
+    font-size: 46px;
+  }
+  .promo-row {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .psa-content {
+    padding: 20px 16px 0;
+  }
+  .psa-topbar {
+    padding: 0 14px;
+    gap: 10px;
+  }
+  .psa-page-title {
+    font-size: 20px;
+  }
+  /* drop the name/role text on tight phones — the avatar still opens the account menu */
+  .account-trigger .auth-id {
+    display: none;
   }
 }

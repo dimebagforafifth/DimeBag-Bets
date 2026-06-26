@@ -28,19 +28,11 @@ async function mountApp() {
   return { host, root }
 }
 
-// Secondary sections now fold into the header's "More" dropdown, so the full set of
-// sections a role can reach = the inline primary tabs + the dropdown items. Open the
-// "More" menu (if present) so its items are in the DOM, then read both (minus the
-// "More" button's own label).
-const navLabels = (host: HTMLElement) => {
-  const more = host.querySelector<HTMLButtonElement>('button.nav-more-btn')
-  if (more) act(() => more.click())
-  const inline = [...host.querySelectorAll('.nav-primary .nav-tab')]
-    .map((t) => t.textContent ?? '')
-    .filter((label) => !/^more/i.test(label))
-  const dropped = [...host.querySelectorAll('.drop-item')].map((t) => t.textContent)
-  return [...inline, ...dropped]
-}
+// Every reachable section is now a first-class item in the persistent left sidebar
+// (the "More" dropdown is gone), so the full set a role can reach = the grouped
+// sidebar nav items. Each item is an icon + a text label, so its textContent is the label.
+const navLabels = (host: HTMLElement) =>
+  [...host.querySelectorAll('.psa-nav-item')].map((t) => (t.textContent ?? '').trim())
 
 describe('route role-gating', () => {
   beforeEach(() => __resetDemoAuth())

@@ -15,7 +15,6 @@ import { availableToWager } from '../core/index.js'
 import { App } from './App.js'
 import { getCurrentPlayer } from './book-store.js'
 import { formatMoney } from '../games/shared/money.js'
-
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 function figure(host: HTMLElement): string {
@@ -23,7 +22,9 @@ function figure(host: HTMLElement): string {
   return host.querySelector('.sds-wallet__value')?.textContent ?? ''
 }
 function click(host: HTMLElement, selector: string, text: RegExp): boolean {
-  const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) => text.test(n.textContent ?? ''))
+  const el = [...host.querySelectorAll<HTMLElement>(selector)].find((n) =>
+    text.test(n.textContent ?? ''),
+  )
   if (!el) return false
   act(() => el.click())
   return true
@@ -34,7 +35,13 @@ describe('Plinko under StrictMode (matches the real app shell)', () => {
     const host = document.createElement('div')
     document.body.appendChild(host)
     const root = createRoot(host)
-    act(() => root.render(<StrictMode><App /></StrictMode>))
+    act(() =>
+      root.render(
+        <StrictMode>
+          <App />
+        </StrictMode>,
+      ),
+    )
 
     const acct = getCurrentPlayer()!.account
     expect(click(host, 'button.sds-gamecard', /plinko/i)).toBe(true)
@@ -53,8 +60,8 @@ describe('Plinko under StrictMode (matches the real app shell)', () => {
     }
     const balanceInGame = acct.balance
 
-    // Click OUTSIDE Plinko (a nav tab) — mid-fall, no ball has "landed".
-    expect(click(host, 'button.nav-tab', /my bets/i)).toBe(true)
+    // Click OUTSIDE Plinko (a sidebar nav item) — mid-fall, no ball has "landed".
+    expect(click(host, 'button.psa-nav-item', /my bets/i)).toBe(true)
 
     // The balance change is not lost: still the true balance, still shown.
     expect(acct.balance).toBe(balanceInGame)
