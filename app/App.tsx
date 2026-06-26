@@ -3,6 +3,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   useSyncExternalStore,
   type ComponentType,
@@ -929,6 +930,15 @@ function Lobby({
   // The hero's primary CTA opens Crash (the headline game) — or the first enabled game if a
   // manager has disabled it; hidden entirely if the whole casino is off.
   const featured = enabled.find((g) => g.key === 'crash') ?? enabled[0]
+  // "Browse all" jumps to the full collection: drop any active category filter, clear the
+  // topbar search (via the parent), and scroll the grid into view — so the button always
+  // does something visible, even on a fresh lobby where the filters are already at defaults.
+  const collectionRef = useRef<HTMLDivElement>(null)
+  const browseAll = () => {
+    setFilter('All')
+    onBrowseAll()
+    collectionRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+  }
   return (
     <div className="lobby">
       {/* ---- hero: the post-login landing pitch ---- */}
@@ -953,7 +963,7 @@ function Lobby({
                 Play {featured.name}
               </Button>
             )}
-            <Button variant="outline" size="lg" onClick={onBrowseAll}>
+            <Button variant="outline" size="lg" onClick={browseAll}>
               Browse all
             </Button>
           </div>
@@ -988,7 +998,7 @@ function Lobby({
       <ActivityTicker />
 
       {/* ---- Arcade collection ---- */}
-      <div className="lobby-head">
+      <div className="lobby-head" ref={collectionRef}>
         <span className="lobby-eyebrow">Provably fair</span>
         <div className="lobby-head-row">
           {/* h3: subordinate to the topbar's page <h1> and the hero's <h2> (one h1 per view) */}
