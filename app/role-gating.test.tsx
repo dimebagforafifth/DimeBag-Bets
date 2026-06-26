@@ -28,6 +28,18 @@ async function mountApp() {
   return { host, root }
 }
 
+/** Flush act() repeatedly until `pred` holds — used to settle the lazy operator console
+ *  (App lazy-loads `Console`, so its tiles arrive a Suspense boundary later than the shell). */
+async function flushUntil(pred: () => boolean, tries = 50) {
+  for (let i = 0; i < tries && !pred(); i++) {
+    // setTimeout (a macrotask) gives the lazy chunk's dynamic import real time to resolve;
+    // a bare microtask flush isn't enough for React.lazy in jsdom/happy-dom.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 5))
+    })
+  }
+}
+
 // Every reachable section is a first-class item in the persistent left sidebar (the
 // "More" dropdown is gone). The grouped nav holds the player sections; Management is
 // pulled out and pinned at the bottom as the gold console-entry CTA — so the full set a
@@ -63,6 +75,8 @@ describe('route role-gating', () => {
     await createDemoAdapter().signIn('agent', 'demo') // East Desk agent session
     const { host, root } = await mountApp()
     expect(navLabels(host)).toContain('Management')
+    // The console is a lazy chunk — settle its Suspense boundary before reading tiles.
+    await flushUntil(() => (host.textContent ?? '').includes('Customer Admin'))
     // granted-by-default agent tiles show…
     expect(host.textContent).toContain('Customer Admin')
     expect(host.textContent).toContain('Collections')

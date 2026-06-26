@@ -183,12 +183,28 @@ Backend-first, modular, ~3 months, two people. **Points-based throughout.**
 - **Roll up incrementally**, never one big merge.
 - **Two people, one repo:** use branches / pull requests, especially around `core`.
 - **Clean UI from the first slice** — follow the principles in Section 2 from day one.
+- **Skeleton loaders are required** — every main section and every lazy/async surface gets a content-shaped skeleton (Section 11); never ship a spinner-on-blank or a loading flash. Enforced by `app/skeletons/coverage.test.ts`.
 
 ---
 
 ## 10. Out of Scope (for now)
 
 Real money, payments, KYC, licensing; native mobile apps; social features (leaderboards, group play) — all deferred to post-MVP. Don't build these unless asked.
+
+---
+
+## 11. UI Loading States — Skeleton Loaders (required)
+
+Every main UI piece must show a **skeleton loader** — a content-shaped placeholder — while a real load is in flight (a lazy chunk now; async data, e.g. Supabase, later). Never a spinner-on-blank, never a layout-shifting flash. This is **enforced by `app/skeletons/coverage.test.ts`** (it fails CI if a section has no skeleton).
+
+- **Primitives:** `components/brand/Skeleton.tsx` — `<Skeleton>`, `<SkeletonText>`, `<SkeletonCircle>`, `<SkeletonRegion>`. The brand gold-on-carbon shimmer; respects `prefers-reduced-motion`. Never hand-roll a loading box.
+- **Section shapes + mapper:** `app/skeletons/` holds one content-shaped archetype per surface and a `sectionSkeleton(key)` mapper. The shell wraps the active section in `<Suspense fallback={sectionSkeleton(activeSection)}>`, so a section's skeleton engages automatically the moment its render suspends — present today, auto-active when a section's data goes async.
+
+**Whenever you add or edit UI, incorporate this:**
+- **New top-level section?** Add a `sectionSkeleton` mapping shaped like it (the coverage test fails until you do). `GenericSectionSkeleton` is a stopgap, not the goal.
+- **New lazy/async surface** (a `React.lazy` view, a suspending data hook)? Wrap it in `<Suspense>` with a content-shaped skeleton — not a spinner, not blank.
+- **Match the real layout's footprint** so content landing causes no layout shift (CLS). Keep the loading state distinct from the empty state (no data) and the error state.
+- **Only on real loads** — never add an artificial delay to make instant, in-memory content flash a skeleton.
 
 ---
 

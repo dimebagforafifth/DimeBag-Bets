@@ -1,0 +1,66 @@
+/* Skeleton-loading primitives — see components/brand/Skeleton.tsx.
+   One gold-tinted sweep over a carbon surface; gold stays the only accent. The
+   block reserves the real element's footprint so content landing causes no layout
+   shift. Honours prefers-reduced-motion (static block, no sweep). */
+
+.sk {
+  display: inline-block;
+  width: 100%;
+  height: 1em;
+  vertical-align: middle;
+  border-radius: var(--radius-sm, 8px);
+  background-color: var(--surface-2, #1a1c1e);
+  /* a translucent gold band that sweeps across the muted base */
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--gold-glow, 240, 190, 74), 0.07) 25%,
+    rgba(var(--gold-glow, 240, 190, 74), 0.14) 50%,
+    rgba(var(--gold-glow, 240, 190, 74), 0.07) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: sk-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes sk-sweep {
+  0% {
+    background-position: -120% 0;
+  }
+  100% {
+    background-position: 220% 0;
+  }
+}
+
+/* paragraph of lines */
+.sk-text {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* a loading region wrapper — owns the accessible "Loading…" status */
+.sk-region {
+  width: 100%;
+}
+
+/* visually-hidden screen-reader label (the shimmer blocks are aria-hidden) */
+.sk-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk {
+    animation: none;
+    background-image: none;
+  }
+}

@@ -1,0 +1,152 @@
+/* Layout for the section-shaped skeletons (app/skeletons/sections.tsx). Shapes only —
+   the shimmer + colour come from the brand <Skeleton> primitive. Each archetype is a
+   vertical-rhythm column; the inner grids/rows mirror the real section's footprint so
+   content landing causes no layout shift. */
+
+.skel-lobby,
+.skel-game,
+.skel-table,
+.skel-bets,
+.skel-feed,
+.skel-form,
+.skel-book,
+.skel-dash,
+.skel-console,
+.skel-generic {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0 1.25rem;
+}
+
+/* card / tile grids */
+.skel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+.skel-tiles,
+.skel-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.6rem;
+}
+
+/* My Bets: the 4-figure strip + the 2-up "By side" cards */
+.skel-figure-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+.skel-sides {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+/* lobby hero */
+.skel-hero {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+.skel-hero-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.skel-hero-art {
+  width: 240px;
+  flex: none;
+}
+.skel-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* game page */
+.skel-game-body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1rem;
+}
+.skel-game-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.skel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* rows / tables */
+.skel-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.skel-table-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.skel-cell-end {
+  margin-left: auto;
+}
+
+/* social feed */
+.skel-feed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.skel-feed-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* sportsbook event rows */
+.skel-event {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.skel-event-teams {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.skel-odds {
+  display: flex;
+  gap: 0.5rem;
+}
+.skel-odd {
+  width: 64px;
+}
+
+@media (max-width: 760px) {
+  .skel-hero-art {
+    display: none;
+  }
+}
+
+/* My Bets figure strip collapses to 2-up on narrower screens (mirrors .mybets-figure). */
+@media (max-width: 720px) {
+  .skel-figure-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* The game panel stacks under the board at 640px, matching most games' own breakpoint. */
+@media (max-width: 640px) {
+  .skel-game-body {
+    grid-template-columns: 1fr;
+  }
+}
