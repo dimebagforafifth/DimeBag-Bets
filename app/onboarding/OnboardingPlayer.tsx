@@ -2,14 +2,19 @@
  * Player onboarding — the post-sign-up flow, ported from the Claude Design system
  * (ui_kits/playstadium-app/OnboardingPlayer.jsx) and wired to the real backend:
  *
- *   • Interests  → setFavourites(userId, picks)  → the lobby surfaces them first.
- *   • Limits     → setLimits(playerId, …)        → real responsible-play guardrails.
- *   • Free play  → fireTrigger('signup', …)      → the documented welcome-bonus seam
- *                                                  (oncePerPlayer, so claiming twice is safe).
+ *   • Account    → ensurePlayerAccount(userId, …) → a fresh self-signup has NO book node
+ *                                                   yet, so we create their player figure
+ *                                                   here — without it the choices below had
+ *                                                   nothing to apply to (the bug this fixes).
+ *   • Interests  → setFavourites(userId, picks)   → the lobby surfaces them first.
+ *   • Limits     → setLimits(playerId, …)         → real responsible-play guardrails.
+ *   • Free play  → fireTrigger('signup', …)       → the documented welcome-bonus seam
+ *                                                   (oncePerPlayer, so claiming twice is safe);
+ *                                                   the shown amount is the live rule's grant.
  *
- * It's additive and skippable: skipping marks onboarding done with nothing applied;
- * finishing applies the player's choices. onDone() hands control back to the app,
- * which lands the player on defaultSection('player') (the casino lobby).
+ * It's additive and skippable: skipping still creates the figure (so the lobby renders) but
+ * applies no limits or bonus; finishing applies the player's choices. onDone() hands control
+ * back to the app, which lands the player on defaultSection('player') (the casino lobby).
  */
 
 import { useState } from 'react'
@@ -29,15 +34,14 @@ import { Slider } from '../../components/ui/slider.js'
 import { Wordmark, ChipLogo } from '../../components/brand/index.js'
 import { GAMES } from '../games.js'
 import { setLimits } from '../responsible-play.js'
-import { fireTrigger } from '../../bonus/index.js'
+import { fireTrigger, signupGrantPreviewCents } from '../../bonus/index.js'
+import { ensurePlayerAccount } from '../book-store.js'
 import { setFavourites, completePlayerOnboarding } from './onboarding-store.js'
 import '../../auth/auth.css'
 
 const fmtCents = (c: number) =>
   '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 })
 const fmtMin = (m: number) => (m >= 60 ? (m % 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m / 60}h`) : `${m}m`)
-
-const WELCOME_FREE_PLAY_CENTS = 2500
 
 function gameIconUrl(key: string): string {
   return import.meta.env.BASE_URL.replace(/\/$/, '') + '/game-icons/' + key + '.png'
@@ -74,6 +78,11 @@ export function OnboardingPlayer({ userId, playerId, name, username, onDone }: O
     time: { on: false, val: 90 },
   })
   const [claimed, setClaimed] = useState(false)
+  // The welcome free play is whatever the LIVE signup rules grant a fresh player — read once
+  // so the screen never drifts from what the claim actually credits. `granted` captures the
+  // real amount returned by fireTrigger so the "claimed" copy shows the true figure.
+  const [welcomeCents] = useState(() => signupGrantPreviewCents())
+  const [grantedCents, setGrantedCents] = useState(0)
 
   const last = STEPS.length - 1
   const pct = Math.round((step / last) * 100)
@@ -90,30 +99,38 @@ export function OnboardingPlayer({ userId, playerId, name, username, onDone }: O
   const setLim = (key: keyof Limits, patch: Partial<LimitState>) =>
     setLimitsState((l) => ({ ...l, [key]: { ...l[key], ...patch } }))
 
+  /** The player's book figure — the linked member if they have one, otherwise a freshly
+   *  created player account (a self-signup arrives here unlinked). Idempotent. */
+  function resolvePlayerId(): string {
+    return playerId ?? ensurePlayerAccount(userId, name)
+  }
+
   function claimFreePlay() {
-    if (!claimed && playerId) {
-      // The documented welcome seam (main.tsx). oncePerPlayer guards a double-grant.
-      fireTrigger('signup', { playerId })
-    }
+    if (claimed) return
+    // The documented welcome seam (main.tsx). oncePerPlayer guards a double-grant, and the
+    // credit lands in the figure we just ensured exists — so it actually moves the balance.
+    const { granted } = fireTrigger('signup', { playerId: resolvePlayerId() })
+    setGrantedCents(granted.reduce((sum, g) => sum + g.grantedCents, 0))
     setClaimed(true)
   }
 
-  /** Apply the player's choices, then hand control back to the app. */
+  /** Apply the player's choices to their figure, then hand control back to the app. */
   function commitAndEnter() {
+    const pid = resolvePlayerId()
     setFavourites(userId, [...picks])
-    if (playerId) {
-      setLimits(playerId, {
-        perBetMax: limits.perBet.on ? limits.perBet.val : undefined,
-        sessionLossLimit: limits.loss.on ? limits.loss.val : undefined,
-        sessionMinutes: limits.time.on ? limits.time.val : undefined,
-      })
-    }
+    setLimits(pid, {
+      perBetMax: limits.perBet.on ? limits.perBet.val : undefined,
+      sessionLossLimit: limits.loss.on ? limits.loss.val : undefined,
+      sessionMinutes: limits.time.on ? limits.time.val : undefined,
+    })
     completePlayerOnboarding(userId)
     onDone()
   }
 
-  /** Skip the rest — mark done with nothing applied (clean defaults, no limits set). */
+  /** Skip the rest — still create the figure so the lobby renders, but apply no limits or
+   *  bonus (clean defaults). Favourites stay whatever the player had already picked. */
   function skipAll() {
+    resolvePlayerId()
     completePlayerOnboarding(userId)
     onDone()
   }
@@ -256,7 +273,7 @@ export function OnboardingPlayer({ userId, playerId, name, username, onDone }: O
                   </p>
                   <div className="ob-claim">
                     <div className="ob-claim-label">Welcome free play</div>
-                    <div className="ob-claim-amt">{fmtCents(WELCOME_FREE_PLAY_CENTS)}</div>
+                    <div className="ob-claim-amt">{fmtCents(claimed ? grantedCents : welcomeCents)}</div>
                     {!claimed ? (
                       <Button size="lg" onClick={claimFreePlay}>
                         <Gift size={17} />
@@ -294,8 +311,8 @@ export function OnboardingPlayer({ userId, playerId, name, username, onDone }: O
                     </div>
                     <div className="ob-done-row">
                       <Check size={16} />
-                      <b>{fmtCents(WELCOME_FREE_PLAY_CENTS)}</b> free play{' '}
-                      {claimed ? 'claimed' : 'waiting in Rewards'}
+                      <b>{fmtCents(claimed ? grantedCents : welcomeCents)}</b> free play{' '}
+                      {claimed ? 'in your balance' : 'waiting in Rewards'}
                     </div>
                   </div>
                 </>

@@ -39,6 +39,7 @@ export {
   fireTrigger,
   grantRuleTo,
   recordTurnover,
+  signupGrantPreviewCents,
   expireDue,
   armBonusEngine,
   seedBonusDemo,

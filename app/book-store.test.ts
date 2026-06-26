@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { placeWager, resolveWager, resolveAtMultiplier } from '../core/index.js'
 import { bookFigure, getMember, setActive } from '../org/index.js'
 import {
+  ensurePlayerAccount,
   getBook,
   getBookVersion,
   getCurrentPlayer,
@@ -157,5 +158,36 @@ describe('book store — play ↔ org integration', () => {
     })
     expect(getMember(getBook(), 'p-lena').account.creditLimit).toBe(before + 1000)
     expect(getBookVersion()).toBeGreaterThan(v0)
+  })
+})
+
+describe('book store — ensurePlayerAccount (self-signup gets a figure)', () => {
+  it('creates an active player under the manager and links it by id', () => {
+    const id = 'user-newbie'
+    expect(getBook().members[id]).toBeUndefined()
+    const resolved = ensurePlayerAccount(id, 'Newbie')
+    expect(resolved).toBe(id)
+    const m = getMember(getBook(), id)
+    expect(m.role).toBe('player')
+    expect(m.active).toBe(true)
+    expect(m.parentId).toBe(getBook().managerId)
+    expect(m.account.id).toBe(id) // figure id ≡ user id so accountLink resolves it
+  })
+
+  it('makes the new player the current player so the lobby renders against their figure', () => {
+    const id = 'user-newbie-2'
+    ensurePlayerAccount(id, 'Newbie Two')
+    expect(getCurrentPlayerId()).toBe(id)
+    expect(getCurrentPlayer()?.id).toBe(id)
+  })
+
+  it('is idempotent — an already-linked user is returned untouched', () => {
+    const id = 'user-newbie-3'
+    ensurePlayerAccount(id, 'Newbie Three')
+    const v0 = getBookVersion()
+    const again = ensurePlayerAccount(id, 'Different Name')
+    expect(again).toBe(id)
+    expect(getMember(getBook(), id).name).toBe('Newbie Three') // not overwritten
+    expect(getBookVersion()).toBe(v0) // no mutation, no notify
   })
 })
