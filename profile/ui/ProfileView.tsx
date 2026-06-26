@@ -23,6 +23,7 @@ import {
   type Visibility,
 } from '../privacy.js'
 import { follow, isFollowing, unfollow, followCounts } from '../follow-graph.js'
+import { streakLabel } from '../../records/streak-label.js'
 import { formatMoney } from '../../games/shared/money.js'
 import { PnlChart } from './PnlChart.js'
 // Round-4 C: the CLV-beat credibility card (closing-line beat + value-vs-taken). Imported from
@@ -337,8 +338,7 @@ function TailCard({ stats }: { stats: ReturnType<typeof profileStats> }): ReactN
 
 function StreakCard({ stats }: { stats: ReturnType<typeof profileStats> }): ReactNode {
   const s = stats.streak
-  const live =
-    s.currentKind === 'none' ? '—' : `${s.current} ${s.currentKind}${s.current === 1 ? '' : 's'}`
+  const live = streakLabel(s.current, s.currentKind)
   return (
     <div className="prof-card">
       <span className="prof-card-label">Current streak</span>

@@ -1,0 +1,196 @@
+/* "Get points" wallet button + the request modal. Graphite-and-gold, matching the shell. */
+
+.pr-get-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  background: color-mix(in srgb, var(--gold) 14%, transparent);
+  color: var(--gold-bright, var(--gold));
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out);
+}
+.pr-get-btn:hover {
+  background: color-mix(in srgb, var(--gold) 22%, transparent);
+  border-color: var(--gold);
+}
+.pr-get-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #1a1305;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- modal ---- */
+.pr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+.pr-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 14px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+}
+.pr-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.pr-modal-title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.pr-modal-x {
+  display: inline-flex;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 8px;
+}
+.pr-modal-x:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.pr-modal-sub {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.pr-field {
+  display: block;
+  margin-bottom: 12px;
+}
+.pr-field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--faint);
+}
+.pr-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+}
+.pr-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+}
+.pr-submit {
+  width: 100%;
+  margin-top: 4px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid var(--gold);
+  background: var(--gold);
+  color: #1a1305;
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pr-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pr-flag {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--red, #e5534b);
+}
+.pr-sent {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--green, #2fbf71);
+}
+.pr-history {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.pr-history-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--faint);
+}
+.pr-history-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pr-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.pr-history-amt {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.pr-history-status {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pr-history-status.is-pending {
+  color: var(--gold);
+}
+.pr-history-status.is-approved {
+  color: var(--green, #2fbf71);
+}
+.pr-history-status.is-denied {
+  color: var(--red, #e5534b);
+}
+
+/* hide the wallet button's text label on a phone, keep the + icon */
+@media (max-width: 560px) {
+  .pr-get-label {
+    display: none;
+  }
+}

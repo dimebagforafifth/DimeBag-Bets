@@ -52,9 +52,29 @@
   gap: var(--space-3);
 }
 .ced-bt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   color: var(--muted);
   font-size: var(--text-xs);
   font-weight: 600;
+}
+/* a small badge flagging an edge that's recorded as policy but not yet wired into payouts */
+.ced-note {
+  align-self: flex-start;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--amber, #e0a93b);
+  border: 1px solid color-mix(in srgb, var(--amber, #e0a93b) 45%, var(--line));
+  border-radius: 999px;
+  padding: 1px 6px;
+  cursor: help;
+  white-space: nowrap;
+}
+.ced-control.is-policy-only .ced-range {
+  opacity: 0.85;
 }
 .ced-range {
   width: 100%;

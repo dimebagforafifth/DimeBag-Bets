@@ -13,6 +13,7 @@ import {
   currentEdgeBps,
   getEdgeBandsVersion,
   hasEdgeOverride,
+  isEdgeApplied,
   resetEdgeBps,
   setEdgeBps,
   subscribeEdgeBands,
@@ -77,11 +78,22 @@ function EdgeControl({
   const bounds = bandOf(gameId, betType)
   const current = currentEdgeBps(gameId, betType)
   const overridden = hasEdgeOverride(gameId, betType)
+  const applied = isEdgeApplied(gameId, betType)
   const rtpPct = (bpsToRtp(current) * 100).toFixed(2)
 
   return (
-    <div className="ced-control">
-      <span className="ced-bt">{label}</span>
+    <div className={`ced-control${applied ? '' : ' is-policy-only'}`}>
+      <span className="ced-bt">
+        {label}
+        {!applied && (
+          <span
+            className="ced-note"
+            title="Recorded as a policy target — this game's payout math doesn't read it yet, so changing it won't move live payouts."
+          >
+            Policy only
+          </span>
+        )}
+      </span>
       <input
         className="ced-range"
         type="range"

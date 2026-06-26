@@ -50,19 +50,46 @@
   }
 }
 
-/* the recent items, laid out in one horizontal row that fades at the right edge */
-.activity-list {
+/* the marquee viewport — the recent items scroll past inside it and fade at the right edge */
+.activity-viewport {
   flex: 1;
   min-width: 0;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8px;
   overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, #000 84%, transparent);
   mask-image: linear-gradient(90deg, #000 84%, transparent);
+}
+.activity-track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: max-content;
+}
+/* once there's enough to fill the rail, the duplicated track loops continuously; the
+   translate(-50%) lands exactly on the second copy for a seamless wrap */
+.activity-track.is-scrolling {
+  animation: activity-marquee 34s linear infinite;
+}
+.activity:hover .activity-track.is-scrolling {
+  animation-play-state: paused;
+}
+@keyframes activity-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+/* a fresh book has no wins yet — keep the rail visible with a quiet line */
+.activity-empty {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .activity-row {
   flex: none;
@@ -121,20 +148,29 @@
 
 /* on a phone the strip would crush the pills — let it scroll horizontally
    instead, and drop the fade so a touch-scroll edge isn't hidden. */
+/* on a phone the marquee would crush the pills — drop the auto-scroll and let the row
+   touch-scroll horizontally instead, and remove the fade so an edge isn't hidden. */
 @media (max-width: 560px) {
-  .activity-list {
+  .activity-viewport {
     overflow-x: auto;
     -webkit-mask-image: none;
     mask-image: none;
     scrollbar-width: none;
   }
-  .activity-list::-webkit-scrollbar {
+  .activity-viewport::-webkit-scrollbar {
     display: none;
+  }
+  .activity-track.is-scrolling {
+    animation: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .activity-dot {
+    animation: none;
+  }
+  /* honour reduced-motion: no auto-scroll (the items remain readable, fading at the edge) */
+  .activity-track.is-scrolling {
     animation: none;
   }
 }

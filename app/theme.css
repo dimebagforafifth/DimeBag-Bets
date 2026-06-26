@@ -1206,6 +1206,39 @@ input[type='number']::-webkit-inner-spin-button {
   background: var(--gold);
 }
 
+/* The pinned operator-console entry: sits below the scrolling nav, gold-bordered so it
+   stands apart from the player nav items as the gateway into Management. */
+.psa-console-cta {
+  flex: none;
+  margin: 4px 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  background: color-mix(in srgb, var(--gold) 10%, var(--sidebar));
+  color: var(--gold-bright, var(--gold));
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+.psa-console-cta:hover {
+  background: color-mix(in srgb, var(--gold) 16%, var(--sidebar));
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 30%, transparent);
+}
+.psa-console-cta.is-active {
+  background: color-mix(in srgb, var(--gold) 20%, var(--sidebar));
+  border-color: var(--gold);
+}
+
 .psa-side-foot {
   padding: 12px 18px 16px;
 }
@@ -1511,6 +1544,53 @@ input[type='number']::-webkit-inner-spin-button {
   font-size: 15px;
   font-variant-numeric: tabular-nums;
   color: var(--faint);
+}
+/* category / Hot filter pills under the Originals head */
+.lobby-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.lobby-filter {
+  appearance: none;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-head);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition:
+    color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    background var(--dur) var(--ease-out);
+}
+.lobby-filter:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--gold) 35%, var(--line));
+}
+.lobby-filter.is-active {
+  color: #1a1305;
+  background: var(--gold);
+  border-color: var(--gold);
+}
+/* the Hot pill carries a small flame dot so it reads as "trending" even when inactive */
+.lobby-filter.is-hot::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  vertical-align: middle;
+}
+.lobby-filter.is-hot.is-active::before {
+  background: #1a1305;
 }
 .lobby-empty {
   color: var(--muted);

@@ -8,7 +8,14 @@ import {
   type ComponentType,
 } from 'react'
 import { availableToWager, type Account } from '../core/index.js'
-import { GAMES, findGame, type GameDef, type GameProps } from './games.js'
+import {
+  GAMES,
+  GAME_CATEGORIES,
+  findGame,
+  type GameCategory,
+  type GameDef,
+  type GameProps,
+} from './games.js'
 // The sportsbook section renders the SGO contract-native book (app/book): it consumes
 // the odds CONTRACT via the cache hook (mock until connectOddsCache flips it to the live
 // Supabase cache) and places through `core`. The legacy `sportsbook/` module stays in the
@@ -81,6 +88,9 @@ import {
 } from './book-store.js'
 import { Ledger } from './Ledger.js'
 import { MyBets } from './MyBets.js'
+import { GetPointsButton } from './points-requests/GetPointsButton.js'
+import { AnnouncementsBanner } from './notifications/AnnouncementsBanner.js'
+import { MessagesBell } from './notifications/MessagesBell.js'
 import { useEconomyMode } from './economy-mode.js'
 import { ActivityTicker } from './ActivityTicker.js'
 import { setActiveGame } from './ledger-store.js'
@@ -332,9 +342,13 @@ export function App() {
   // so what's visible can't drift from what's reachable. A tab with no SECTION_META entry
   // lands in a trailing "More" group, so a newly-registered section is surfaced rather than
   // silently dropped — nothing is ever buried (the old "More" dropdown is gone on desktop).
+  // Management is pulled OUT of the grouped nav and pinned at the bottom as a distinct
+  // console-entry CTA (operator gateway), so it never reads as just another player tab.
+  const managementTab = navTabs.find((t) => t.key === 'management')
   const sideGroups = (() => {
     const byGroup = new Map<string, typeof navTabs>()
     for (const t of navTabs) {
+      if (t.key === 'management') continue // pinned separately below the nav
       const group = SECTION_META[t.key]?.group ?? 'More'
       const list = byGroup.get(group)
       if (list) list.push(t)
@@ -422,6 +436,22 @@ export function App() {
             </div>
           ))}
         </nav>
+        {/* The operator gateway: pinned below the nav, gold-bordered and visually distinct,
+            so Management reads as the console entry rather than one more player tab. Only
+            users who can actually manage see it. */}
+        {managementTab && canManage(role) && (
+          <button
+            className={`psa-console-cta${activeSection === 'management' ? ' is-active' : ''}`}
+            aria-current={activeSection === 'management' ? 'page' : undefined}
+            onClick={() => {
+              managementTab.onClick()
+              setMobileOpen(false)
+            }}
+          >
+            <LayoutDashboard size={18} strokeWidth={1.9} aria-hidden="true" />
+            <span>{managementTab.label}</span>
+          </button>
+        )}
         <div className="psa-side-foot">
           <span className="sds-badge sds-badge--neutral psa-fair">
             <ShieldCheck size={12} strokeWidth={2} aria-hidden="true" />
@@ -498,7 +528,14 @@ export function App() {
                   weekLabel={economyMode === 'balance' ? 'Wallet' : 'This week'}
                   weekCents={account ? account.balance : 0}
                   formatWeek={(cents) => formatMoney(Math.abs(cents))}
+                  action={
+                    role === 'player' && player && account ? (
+                      <GetPointsButton playerId={player.id} playerName={player.name} />
+                    ) : undefined
+                  }
                 />
+                {/* The player inbox bell — operator DMs + broadcasts reach the player here. */}
+                {role === 'player' && player && <MessagesBell playerId={player.id} />}
                 {/* One avatar menu holds VIP tier + sound toggle + sign-out (declutters the bar). */}
                 <AccountMenu
                   name={user?.displayName ?? 'Guest'}
@@ -510,6 +547,9 @@ export function App() {
             </header>
 
             <main className="psa-content">
+              {/* Operator announcements reach the player here (the manager Communication
+                  binding) — book-wide notices show above whatever section is active. */}
+              <AnnouncementsBanner />
               {activeSection === 'leaderboard' ? (
                 <Leaderboard
                   players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
@@ -808,6 +848,9 @@ function gameIconUrl(key: string): string {
   return import.meta.env.BASE_URL.replace(/\/$/, '') + '/game-icons/' + key + '.png'
 }
 
+/** The lobby grid filter: 'All', the 'Hot' trending pseudo-filter, or one game category. */
+type LobbyFilter = 'All' | 'Hot' | GameCategory
+
 /** The Casino hub: a "Stack your week." hero over the Originals grid. One tap opens a
  *  game's page. `favourites` (from player onboarding) float to the front; the topbar
  *  `search` filters the grid by game name. The hero stats are wired to REAL counts only
@@ -828,10 +871,34 @@ function Lobby({
   playersOnline: number
 }) {
   const enabled = GAMES.filter((g) => isGameEnabled(g.key))
+  // The category / "Hot" filter (segmented control under the hero) composes with the
+  // topbar name-search. 'All' shows everything, 'Hot' the trending games, the rest narrow
+  // by type. Only categories with at least one enabled game get a pill (no empty buckets).
+  const [filter, setFilter] = useState<LobbyFilter>('All')
+  const availableCats = GAME_CATEGORIES.filter((c) => enabled.some((g) => g.category === c))
+  const hasHot = enabled.some((g) => g.hot)
+  // If the active filter's games all got disabled by a manager, fall back to 'All' so the
+  // grid never strands the player on an empty filter.
+  const activeFilter: LobbyFilter =
+    filter === 'Hot'
+      ? hasHot
+        ? 'Hot'
+        : 'All'
+      : filter === 'All' || availableCats.includes(filter)
+        ? filter
+        : 'All'
+  const filterPills: { key: LobbyFilter; label: string }[] = [
+    { key: 'All', label: 'All' },
+    ...(hasHot ? [{ key: 'Hot' as LobbyFilter, label: 'Hot' }] : []),
+    ...availableCats.map((c) => ({ key: c as LobbyFilter, label: c })),
+  ]
   // The topbar search filters by name; an empty query shows everything (so the default
   // lobby is the full collection).
   const q = search.trim().toLowerCase()
-  const matched = q ? enabled.filter((g) => g.name.toLowerCase().includes(q)) : enabled
+  const byName = q ? enabled.filter((g) => g.name.toLowerCase().includes(q)) : enabled
+  const matched = byName.filter((g) =>
+    activeFilter === 'All' ? true : activeFilter === 'Hot' ? !!g.hot : g.category === activeFilter,
+  )
   // Stable partition: the player's pinned favourites first, everything else after,
   // each keeping the registry's original order.
   const ordered = [
@@ -907,6 +974,23 @@ function Lobby({
           <h3 className="lobby-title">Originals</h3>
           <span className="lobby-count">{ordered.length}</span>
         </div>
+        {/* category / Hot filter — narrows the grid by type; composes with the topbar search */}
+        <div className="lobby-filters" role="tablist" aria-label="Filter games">
+          {filterPills.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              role="tab"
+              aria-selected={activeFilter === f.key}
+              className={`lobby-filter${activeFilter === f.key ? ' is-active' : ''}${
+                f.key === 'Hot' ? ' is-hot' : ''
+              }`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
       {ordered.length > 0 ? (
         <div className="lobby-grid">
@@ -920,13 +1004,16 @@ function Lobby({
               tag={STAKE_DESC[g.key]}
               icon={gameIconUrl(g.key)}
               iconAlt={g.name}
+              hot={g.hot}
               art={<GameIcon kind={g.key} />}
               onClick={() => onPlay(g.key)}
             />
           ))}
         </div>
       ) : (
-        <p className="lobby-empty">No games match “{search}”.</p>
+        <p className="lobby-empty">
+          {q ? `No games match “${search}”.` : 'No games in this filter.'}
+        </p>
       )}
 
       {/* ---- promotions: one live card + marketing-art slots (real art TBD) ---- */}

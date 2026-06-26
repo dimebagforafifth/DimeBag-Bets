@@ -28,11 +28,14 @@ async function mountApp() {
   return { host, root }
 }
 
-// Every reachable section is now a first-class item in the persistent left sidebar
-// (the "More" dropdown is gone), so the full set a role can reach = the grouped
-// sidebar nav items. Each item is an icon + a text label, so its textContent is the label.
+// Every reachable section is a first-class item in the persistent left sidebar (the
+// "More" dropdown is gone). The grouped nav holds the player sections; Management is
+// pulled out and pinned at the bottom as the gold console-entry CTA — so the full set a
+// role can reach = the grouped nav items PLUS the console CTA. Each carries a text label.
 const navLabels = (host: HTMLElement) =>
-  [...host.querySelectorAll('.psa-nav-item')].map((t) => (t.textContent ?? '').trim())
+  [...host.querySelectorAll('.psa-nav-item, .psa-console-cta')].map((t) =>
+    (t.textContent ?? '').trim(),
+  )
 
 describe('route role-gating', () => {
   beforeEach(() => __resetDemoAuth())

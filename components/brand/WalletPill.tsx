@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import './brand.css'
 
@@ -16,6 +17,8 @@ export interface WalletPillProps {
    * book's configured money display (symbol / decimals / locale). Defaults to "$X.XX".
    */
   formatWeek?: (cents: number) => string
+  /** Optional trailing action rendered inside the wallet unit (e.g. a "Get points" button). */
+  action?: ReactNode
   className?: string
 }
 
@@ -40,6 +43,7 @@ export function WalletPill({
   weekLabel = 'This week',
   weekCents,
   formatWeek,
+  action,
   className,
 }: WalletPillProps) {
   const tone = weekCents > 0 ? 'is-up' : weekCents < 0 ? 'is-down' : 'is-even'
@@ -57,6 +61,7 @@ export function WalletPill({
           {weekCents === 0 ? 'Even' : `${arrow}${format(weekCents)}`}
         </span>
       </div>
+      {action ? <div className="sds-wallet__action">{action}</div> : null}
     </div>
   )
 }

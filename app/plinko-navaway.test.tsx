@@ -84,8 +84,9 @@ describe('leaving Plinko by any route keeps the balance change', () => {
         go: () => void click(host, 'button.psa-nav-item', /leaderboard/i),
       },
       {
+        // Management is now the pinned gold console-entry CTA, not a grouped nav item.
         name: 'Management tab',
-        go: () => void click(host, 'button.psa-nav-item', /management/i),
+        go: () => void click(host, 'button.psa-console-cta', /management/i),
         console: true,
       },
       { name: 'Casino tab', go: () => void click(host, 'button.psa-nav-item', /^casino$/i) },

@@ -42,11 +42,23 @@ export interface GameProps {
   onBalanceChange: () => void
 }
 
+/** The lobby filter buckets. 'Originals' are the Stake-style RNG games; the rest
+ *  group the canonical casino games so a player can narrow the grid by type. */
+export type GameCategory = 'Originals' | 'Table' | 'Cards' | 'Slots'
+
+/** The category filter order shown in the lobby (an 'All' pill + a 'Hot' pseudo-
+ *  filter are added by the lobby itself). */
+export const GAME_CATEGORIES: GameCategory[] = ['Originals', 'Table', 'Cards', 'Slots']
+
 export interface GameDef {
   key: string
   name: string
   tagline: string
   accent: string
+  /** Which lobby filter bucket this game falls in (drives the category tabs). */
+  category: GameCategory
+  /** Trending flag — surfaces a "Hot" badge on the card and a "Hot" lobby filter. */
+  hot?: boolean
   /** Whether a manager can tune this game's house edge via a single RTP (§4).
    *  True only for RNG house-banked games whose payouts derive from one edge
    *  value; false for structural/canonical or skill games where one RTP doesn't
@@ -56,6 +68,38 @@ export interface GameDef {
    *  (games/shared/edge.ts) when omitted. */
   rtpBounds?: { min: number; max: number }
   Component: ComponentType<GameProps>
+}
+
+/** Lobby presentation metadata layered onto each game's `*Meta` at registry build:
+ *  its filter category and whether it's currently "Hot". Modelled on the design
+ *  system's per-game `cat`/`hot` flags (design-system/.../data.js). Games not listed
+ *  default to the Originals bucket. */
+const GAME_TAGS: Record<string, { category: GameCategory; hot?: boolean }> = {
+  // Stake-style Originals
+  crash: { category: 'Originals', hot: true },
+  mines: { category: 'Originals', hot: true },
+  plinko: { category: 'Originals', hot: true },
+  dice: { category: 'Originals', hot: true },
+  pump: { category: 'Originals', hot: true },
+  limbo: { category: 'Originals' },
+  wheel: { category: 'Originals' },
+  keno: { category: 'Originals' },
+  hilo: { category: 'Originals' },
+  'dragon-tower': { category: 'Originals' },
+  chickenroad: { category: 'Originals' },
+  coinflip: { category: 'Originals' },
+  diamonds: { category: 'Originals' },
+  cases: { category: 'Originals' },
+  // Table games
+  roulette: { category: 'Table' },
+  sicbo: { category: 'Table' },
+  // Card games
+  blackjack: { category: 'Cards' },
+  baccarat: { category: 'Cards' },
+  videopoker: { category: 'Cards' },
+  threecardpoker: { category: 'Cards' },
+  // Reels
+  slots: { category: 'Slots' },
 }
 
 /**
@@ -69,7 +113,9 @@ function lazyView(load: () => Promise<{ default: ComponentType<GameProps> }>): C
   return lazy(load) as unknown as ComponentType<GameProps>
 }
 
-export const GAMES: GameDef[] = [
+/** The raw catalog: each game's static `*Meta` + its lazy view, before the lobby
+ *  category/hot tags are merged in (see GAMES below). */
+const GAME_CATALOG: Omit<GameDef, 'category' | 'hot'>[] = [
   { ...minesMeta, Component: lazyView(() => import('../games/mines/ui/MinesGame.js').then((m) => ({ default: m.MinesGame }))) },
   { ...crashMeta, Component: lazyView(() => import('../games/crash/ui/CrashGame.js').then((m) => ({ default: m.CrashGame }))) },
   { ...diceMeta, Component: lazyView(() => import('../games/dice/ui/DiceGame.js').then((m) => ({ default: m.DiceGame }))) },
@@ -92,6 +138,14 @@ export const GAMES: GameDef[] = [
   { ...threeCardPokerMeta, Component: lazyView(() => import('../games/threecardpoker/ui/ThreeCardPokerGame.js').then((m) => ({ default: m.ThreeCardPokerGame }))) },
   { ...slotsMeta, Component: lazyView(() => import('../games/slots/ui/SlotsGame.js').then((m) => ({ default: m.SlotsGame }))) },
 ]
+
+/** The games registry the lobby + shell render from: the catalog with its lobby
+ *  category/hot tags merged in (unlisted games default to the Originals bucket). */
+export const GAMES: GameDef[] = GAME_CATALOG.map((g) => ({
+  ...g,
+  category: GAME_TAGS[g.key]?.category ?? 'Originals',
+  hot: GAME_TAGS[g.key]?.hot ?? false,
+}))
 
 /** Look up a game by its key (used for routing to a game page). */
 export function findGame(key: string | null): GameDef | null {
