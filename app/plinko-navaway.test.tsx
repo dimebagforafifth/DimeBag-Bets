@@ -107,6 +107,13 @@ describe('leaving Plinko by any route keeps the balance change', () => {
       // The change must still be reflected after leaving this way.
       expect(acct.balance, `balance reverted after ${route.name}`).toBe(balanceAfterDrop)
       if (route.console) {
+        // The operator console is a lazy() chunk — await its dynamic import (the same module
+        // promise React.lazy is suspended on) and flush so React commits it past the
+        // ConsoleSkeleton fallback before we assert (the resolve loop drains lazy's .then chain).
+        await act(async () => {
+          await import('../console/shell/index.js')
+          for (let i = 0; i < 3; i++) await Promise.resolve()
+        })
         // The operator console replaces the player topbar with its OWN chrome (it shows
         // aggregate operator figures, not the player WalletPill) — assert we actually
         // landed there; the balance + persistence checks still guard the change.
