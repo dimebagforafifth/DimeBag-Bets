@@ -380,6 +380,37 @@ function Balloon({
             />
           </g>
 
+          {/* the air hose: runs from the pump's coil outlet (bottom-right) up to the
+              balloon's neck, so the pump visibly feeds the balloon. Drawn as a glossy
+              rubber tube (dark body + sheen) capped by a red coupling at the neck. */}
+          <g className="pump-hose" aria-hidden="true">
+            <path
+              d="M 74 314 C 118 309, 136 278, 138 218"
+              fill="none"
+              stroke="#28303a"
+              strokeWidth="12"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 74 314 C 118 309, 136 278, 138 218"
+              fill="none"
+              stroke="#4b5868"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 74 314 C 118 309, 136 278, 138 218"
+              fill="none"
+              stroke="rgba(255,255,255,0.25)"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            {/* red coupling seating the hose into the balloon's neck */}
+            <rect x="130" y="206" width="16" height="14" rx="4" fill="#cf3038" stroke="#8c171f" strokeWidth="1" />
+            {/* grommet where the hose leaves the pump */}
+            <circle cx="74" cy="314" r="5.5" fill="#1c222a" stroke="#c8a24a" strokeWidth="1.5" />
+          </g>
+
           {popped ? (
             <BurstScene />
           ) : (
