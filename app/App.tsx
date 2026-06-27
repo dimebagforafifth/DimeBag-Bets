@@ -135,7 +135,9 @@ import '../auth/auth.css' // header identity menu styles (also used by the Login
 
 // The operator console is a heavy, staff-only chunk — lazy-load it so it's fetched only
 // when Management is opened (real load → ConsoleSkeleton), not in the player bundle.
-const Console = lazy(() => import('../console/shell/index.js').then((m) => ({ default: m.Console })))
+const Console = lazy(() =>
+  import('../console/shell/index.js').then((m) => ({ default: m.Console })),
+)
 
 // The top-level sections (the `Section` type) and the role→section access rules live
 // in auth/roles — one source of truth for both the visible nav and the render guard.
@@ -398,7 +400,7 @@ export function App() {
           <Suspense fallback={<ConsoleSkeleton />}>
             <Console
               registry={consoleRegistry}
-              brand="DimeBag-Bets"
+              brand="PlayStadium.io"
               username={actor}
               onSignOut={signOut}
               balance={fig.balance}

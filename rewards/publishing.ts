@@ -90,7 +90,14 @@ async function relay(
   const cfg = commsStore.webhooks()
   const channels = configuredChannels(cfg)
   if (channels.length === 0) {
-    append({ at: now, kind, name, status: 'skipped', channels: [], detail: 'No Discord/Telegram webhook configured.' })
+    append({
+      at: now,
+      kind,
+      name,
+      status: 'skipped',
+      channels: [],
+      detail: 'No Discord/Telegram webhook configured.',
+    })
     return { channels: [], results: [], status: 'skipped' }
   }
   const results = await dispatch(cfg, announcementText(title, body), sender)
@@ -99,18 +106,37 @@ async function relay(
   const detail =
     status === 'sent'
       ? `Relayed to ${channels.join(' + ')}.`
-      : results.filter((r) => !r.ok).map((r) => `${r.channel}: ${r.error ?? 'failed'}`).join('; ')
+      : results
+          .filter((r) => !r.ok)
+          .map((r) => `${r.channel}: ${r.error ?? 'failed'}`)
+          .join('; ')
   append({ at: now, kind, name, status, channels, detail })
   return { channels, results, status }
 }
 
 /** Announce a feature going live (Rakeback / Daily / Free Spins). */
-export function announceFeature(label: string, now: number, sender: typeof fetch = fetch): Promise<RelayOutcome> {
-  return relay('feature', label, `🎁 ${label} is live`, `${label} is now available in Rewards.`, now, sender)
+export function announceFeature(
+  label: string,
+  now: number,
+  sender: typeof fetch = fetch,
+): Promise<RelayOutcome> {
+  return relay(
+    'feature',
+    label,
+    `🎁 ${label} is live`,
+    `${label} is now available in Rewards.`,
+    now,
+    sender,
+  )
 }
 
 /** Announce a promo (e.g. a profit boost). */
-export function announcePromo(name: string, detail: string, now: number, sender: typeof fetch = fetch): Promise<RelayOutcome> {
+export function announcePromo(
+  name: string,
+  detail: string,
+  now: number,
+  sender: typeof fetch = fetch,
+): Promise<RelayOutcome> {
   return relay('promo', name, `🔥 ${name}`, detail, now, sender)
 }
 
@@ -120,7 +146,7 @@ export function relayTest(now: number, sender: typeof fetch = fetch): Promise<Re
     'test',
     'Webhook test',
     'Webhook test',
-    'DimeBag-Bets rewards alerts are wired up. You’ll get a ping here when you publish a feature or run a promo.',
+    'PlayStadium.io rewards alerts are wired up. You’ll get a ping here when you publish a feature or run a promo.',
     now,
     sender,
   )

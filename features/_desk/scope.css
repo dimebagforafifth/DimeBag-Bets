@@ -6,37 +6,37 @@
   margin-bottom: 4px;
 }
 .scope-bar-label {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, #c4c4c2);
 }
 .scope-bar-select {
-  background: var(--c-panel-2, #20252e);
-  border: 1px solid var(--c-border, #2a2f39);
+  background: var(--c-panel-2, #20201f);
+  border: 1px solid var(--c-border, #333332);
   border-radius: 8px;
   color: var(--c-text, #e7e9ee);
   padding: 7px 10px;
   font-size: 13px;
-  font-family: 'Saira', system-ui, sans-serif;
+  font-family: var(--font-body);
   min-width: 180px;
 }
 .scope-bar-select:focus {
   outline: none;
-  border-color: var(--c-gold, #d6b14a);
+  border-color: var(--c-gold, #f0be4a);
 }
 /* Locked scope for an agent — their book only, no choice. */
 .scope-bar-locked {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--c-panel-2, #20252e);
-  border: 1px dashed var(--c-border, #2a2f39);
+  background: var(--c-panel-2, #20201f);
+  border: 1px dashed var(--c-border, #333332);
   border-radius: 8px;
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, #c4c4c2);
   padding: 7px 10px;
   font-size: 12.5px;
-  font-family: 'Saira', system-ui, sans-serif;
+  font-family: var(--font-body);
 }

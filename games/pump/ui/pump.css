@@ -1,7 +1,11 @@
 /* Pump view — one card, one primary action, lots of air (CLAUDE.md §2).
    Shared controls/fairness styles live in app/theme.css. */
 .pump {
-  --accent: #ff3b4e;
+  --accent: var(--gold);
+  /* the balloon keeps its own candy-apple red as a scoped, decorative object color —
+     it is the game's prop, not the UI accent (which is gold above) */
+  --balloon-color: #ff3b4e;
+  --balloon-glow: 255, 59, 78;
   --accent-glow: 255, 59, 78;
   width: 100%;
   max-width: 760px;
@@ -89,7 +93,7 @@
   filter: none;
 }
 .balloon.is-live:hover .balloon-scale {
-  filter: drop-shadow(0 0 18px rgba(var(--accent-glow), 0.65));
+  filter: drop-shadow(0 0 18px rgba(var(--balloon-glow), 0.65));
 }
 /* as the balloon fills it runs HOT — a pulsing red glow on the BODY that quickens
    near the top, warning you it's about to blow (the pump stays un-glowed) */
@@ -102,10 +106,10 @@
 @keyframes balloon-heat {
   0%,
   100% {
-    filter: drop-shadow(0 0 13px rgba(var(--accent-glow), 0.5));
+    filter: drop-shadow(0 0 13px rgba(var(--balloon-glow), 0.5));
   }
   50% {
-    filter: drop-shadow(0 0 28px rgba(var(--accent-glow), 0.95));
+    filter: drop-shadow(0 0 28px rgba(var(--balloon-glow), 0.95));
   }
 }
 .pump-scene {
@@ -121,7 +125,7 @@
   transform-origin: 128px 232px; /* grow from the flat base seated on the red connector — the fixed connection point */
   transition: transform 0.4s cubic-bezier(0.34, 1.85, 0.42, 1); /* a big springy puff */
   /* the balloon's own red glow — kept on the body so the pump isn't haloed */
-  filter: drop-shadow(0 0 11px rgba(var(--accent-glow), 0.4));
+  filter: drop-shadow(0 0 11px rgba(var(--balloon-glow), 0.4));
 }
 .balloon-skin {
   animation: balloon-breathe 2.4s ease-in-out infinite;
@@ -287,7 +291,7 @@
 .balloon-pop-label {
   font-size: 26px;
   font-weight: 900;
-  fill: var(--accent);
+  fill: var(--balloon-color);
   letter-spacing: 1px;
   transform-box: fill-box;
   transform-origin: center;
@@ -374,7 +378,7 @@
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 0.2px;
-  color: #14171c; /* graphite text reads crisp on gold */
+  color: var(--on-gold); /* graphite text reads crisp on gold */
   background: var(--gold);
   cursor: pointer;
   box-shadow:

@@ -1,31 +1,31 @@
 /* Console panel tokens (self-contained so the Catalog lane needs no sibling import). */
 .feat {
-  --c-bg: #14171c;
-  --c-panel: #1b1f26;
-  --c-panel-2: #20252e;
-  --c-border: #2a2f39;
-  --c-gold: #d6b14a;
-  --c-up: #5bb98b;
-  --c-down: #d27068;
-  --c-text: #e7e9ee;
-  --c-muted: #aab2c0; /* brighter secondary text */
+  --c-bg: var(--bg);
+  --c-panel: var(--surface);
+  --c-panel-2: var(--surface-2);
+  --c-border: var(--line);
+  --c-gold: var(--gold);
+  --c-up: var(--green);
+  --c-down: var(--red);
+  --c-text: var(--text);
+  --c-muted: var(--muted);
   color: var(--c-text);
   display: flex;
   flex-direction: column;
   gap: 14px;
-  font-family: 'Saira', system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 .feat-stack {
   gap: 16px;
 }
 .feat-h {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head);
   font-size: 16px;
   font-weight: 700;
   margin: 0 0 8px;
 }
 .feat-note {
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
   font-weight: 400;
   font-size: 12.5px;
   color: var(--c-muted);
@@ -54,7 +54,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -67,7 +67,7 @@
   color: var(--c-text);
   padding: 9px 11px;
   font-size: 14px;
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
 }
 .feat-input:focus {
   outline: none;
@@ -86,7 +86,7 @@
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .feat-btn:hover {
   border-color: var(--c-muted);
@@ -94,7 +94,7 @@
 .feat-btn.is-primary {
   background: var(--c-gold);
   border-color: var(--c-gold);
-  color: #1a1404;
+  color: var(--on-gold);
 }
 .feat-ok {
   color: var(--c-up);
@@ -131,7 +131,7 @@
 .cat-score-row.is-head {
   border-top: none;
   color: var(--c-muted);
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -153,7 +153,7 @@
 }
 .cat-stat {
   text-align: right;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -191,7 +191,7 @@
   font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .cat-grade-toggle:hover {
   border-color: var(--c-muted);
@@ -201,7 +201,7 @@
   color: var(--c-gold);
 }
 .cat-score-block.is-managed .cat-score-row {
-  background: rgba(214, 177, 74, 0.06);
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
 }
 .cat-grade {
   display: flex;
@@ -237,7 +237,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -251,7 +251,7 @@
   padding: 8px 10px;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
 }
 .cat-grade-input:focus {
   outline: none;
@@ -271,7 +271,7 @@
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .cat-grade-btn:hover {
   border-color: var(--c-muted);
@@ -279,12 +279,12 @@
 .cat-grade-btn.is-primary {
   background: var(--c-gold);
   border-color: var(--c-gold);
-  color: #1a1404;
+  color: var(--on-gold);
 }
 .cat-grade-btn.is-danger {
   background: var(--c-down);
   border-color: var(--c-down);
-  color: #1a0606;
+  color: var(--text);
 }
 .cat-grade-btn.is-ghost {
   color: var(--c-muted);

@@ -9,7 +9,7 @@ export const dragonTowerMeta = {
   supportsAdjustableEdge: true,
   name: 'Dragon Tower',
   tagline: 'Climb the tower, dodge the skulls.',
-  accent: '#f6c350',
+  accent: '#f0be4a',
 } as const
 
 export {
@@ -42,10 +42,4 @@ export {
   nextMultiplier,
   revealProof,
 } from './engine.js'
-export type {
-  TowerGame,
-  TowerStatus,
-  CreateTowerOptions,
-  PickResult,
-  FairProof,
-} from './engine.js'
+export type { TowerGame, TowerStatus, CreateTowerOptions, PickResult, FairProof } from './engine.js'

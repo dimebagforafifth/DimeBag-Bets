@@ -44,7 +44,7 @@
 .gam-xpfill {
   display: block;
   height: 100%;
-  background: var(--accent, #3fb98a);
+  background: var(--gold-bright);
 }
 .gam-xp {
   font-size: 11px;
@@ -61,7 +61,7 @@
 .gam-pool {
   text-transform: none;
   letter-spacing: 0;
-  color: var(--accent, #3fb98a);
+  color: var(--gold);
   font-weight: 700;
 }
 
@@ -78,7 +78,7 @@
   background: var(--surface-2);
 }
 .gam-mission.is-done {
-  border-color: var(--accent, #3fb98a);
+  border-color: var(--gold);
 }
 .gam-mission-top {
   display: flex;
@@ -92,7 +92,7 @@
 .gam-mission-reward {
   font-size: 12px;
   font-weight: 700;
-  color: var(--accent, #3fb98a);
+  color: var(--gold);
 }
 .gam-mission-desc {
   margin: 3px 0 8px;
@@ -108,7 +108,7 @@
 .gam-bar-fill {
   display: block;
   height: 100%;
-  background: var(--accent, #3fb98a);
+  background: var(--gold);
 }
 .gam-mission-prog {
   display: block;
@@ -142,7 +142,7 @@
 }
 .gam-badge.is-earned {
   opacity: 1;
-  border-color: var(--accent, #3fb98a);
+  border-color: var(--gold);
 }
 .gam-badge-glyph {
   font-size: 22px;
@@ -198,8 +198,8 @@
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
-  color: #06150f;
-  background: var(--accent, #3fb98a);
+  color: var(--on-gold);
+  background: var(--gold-bright);
 }
 .gam-spin:disabled {
   opacity: 0.5;
@@ -253,7 +253,7 @@
 .gam-prize {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  color: var(--accent, #3fb98a);
+  color: var(--gold);
 }
 .gam-empty {
   font-size: 12px;

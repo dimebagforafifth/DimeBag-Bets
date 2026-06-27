@@ -24,7 +24,7 @@ function signedMoney(cents: number): string {
 /** Build the multi-line shareable summary for a record. */
 export function shareableSummary(r: VerifiedRecord): string {
   const lines: string[] = []
-  lines.push(`${r.name} — DimeBag-Bets verified record`)
+  lines.push(`${r.name} — PlayStadium.io verified record`)
 
   const tierLabel = r.tier.current.id === 'none' ? 'Unranked' : `${r.tier.current.name} tier`
   lines.push(`${tierLabel} · ${r.lifetime.bets} bets · ${r.lifetime.winRate.toFixed(0)}% win rate`)

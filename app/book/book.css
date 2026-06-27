@@ -2,7 +2,6 @@
    accents/active only, all labels/values high-contrast near-white (#F4F5F7). Scoped
    under .bk so it sits cleanly alongside the app theme. Reuses the app's graphite
    surface/line tokens; adds the gold accent + near-white text + condensed type. */
-@import url('https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;500;600;700&display=swap');
 
 .bk {
   /* Every --bk-* alias now repoints to the global graphite-and-gold tokens

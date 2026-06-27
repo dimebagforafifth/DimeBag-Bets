@@ -1,23 +1,23 @@
 /* Console panel tokens (per the shell's design language). Scoped to .feat so adapted
    and new panels share one look; matches the shell's dark/gold theme. */
 .feat {
-  --c-bg: #14171c;
-  --c-panel: #1b1f26;
-  --c-panel-2: #20252e;
-  --c-border: #2a2f39;
-  --c-gold: #d6b14a;
-  --c-up: #5bb98b;
-  --c-down: #d27068;
-  --c-text: #e7e9ee;
-  --c-muted: #aab2c0; /* brighter secondary text */
+  --c-bg: var(--bg);
+  --c-panel: var(--surface);
+  --c-panel-2: var(--surface-2);
+  --c-border: var(--line);
+  --c-gold: var(--gold);
+  --c-up: var(--green);
+  --c-down: var(--red);
+  --c-text: var(--text);
+  --c-muted: var(--muted);
   color: var(--c-text);
   display: flex;
   flex-direction: column;
   gap: 14px;
-  font-family: 'Saira', system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 .feat-h {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head);
   font-size: 16px;
   font-weight: 700;
   margin: 0 0 8px;
@@ -60,7 +60,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -73,7 +73,7 @@
   color: var(--c-text);
   padding: 9px 11px;
   font-size: 14px;
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
 }
 .feat-input:focus {
   outline: none;
@@ -92,7 +92,7 @@
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .feat-btn:hover {
   border-color: var(--c-muted);
@@ -100,7 +100,7 @@
 .feat-btn.is-primary {
   background: var(--c-gold);
   border-color: var(--c-gold);
-  color: #1a1404;
+  color: var(--on-gold);
 }
 .feat-ok {
   color: var(--c-up);
@@ -205,7 +205,7 @@
   font-weight: 800;
   font-size: 12.5px;
   color: var(--c-gold);
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .custadm-bulk-grp {
   display: inline-flex;
@@ -241,7 +241,7 @@
 .custadm thead th {
   text-align: left;
   padding: 10px 12px;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -285,7 +285,7 @@
   color: var(--c-text);
   padding: 5px 8px;
   font-size: 12.5px;
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
   max-width: 170px;
 }
 .custadm-move:focus {
@@ -313,7 +313,7 @@
   font-size: 13px;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
 }
 .custadm-money-input:focus {
   outline: none;
@@ -335,7 +335,7 @@
   padding: 2px 7px;
   border-radius: 999px;
   border: 1px solid var(--c-border);
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .custadm-badge.is-ok {
   color: var(--c-up);
@@ -355,7 +355,7 @@
   font-size: 12px;
   cursor: pointer;
   text-decoration: underline;
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
 }
 .custadm-reset:disabled {
   color: var(--c-muted);
@@ -372,7 +372,7 @@
   font-weight: 700;
   cursor: pointer;
   background: var(--c-panel-2);
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .custadm-status.is-on {
   color: var(--c-up);

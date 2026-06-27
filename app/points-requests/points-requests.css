@@ -31,7 +31,7 @@
   padding: 0 4px;
   border-radius: 999px;
   background: var(--gold);
-  color: #1a1305;
+  color: var(--on-gold);
   font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -123,7 +123,7 @@
   border-radius: var(--radius-sm, 10px);
   border: 1px solid var(--gold);
   background: var(--gold);
-  color: #1a1305;
+  color: var(--on-gold);
   font-family: var(--font-head);
   font-size: 14px;
   font-weight: 700;
@@ -136,12 +136,12 @@
 .pr-flag {
   margin: 0 0 12px;
   font-size: 13px;
-  color: var(--red, #e5534b);
+  color: var(--red);
 }
 .pr-sent {
   margin: 0 0 12px;
   font-size: 13px;
-  color: var(--green, #2fbf71);
+  color: var(--green);
 }
 .pr-history {
   margin-top: 18px;
@@ -182,10 +182,10 @@
   color: var(--gold);
 }
 .pr-history-status.is-approved {
-  color: var(--green, #2fbf71);
+  color: var(--green);
 }
 .pr-history-status.is-denied {
-  color: var(--red, #e5534b);
+  color: var(--red);
 }
 
 /* hide the wallet button's text label on a phone, keep the + icon */

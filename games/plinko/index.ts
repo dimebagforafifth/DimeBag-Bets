@@ -8,7 +8,7 @@ export const plinkoMeta = {
   supportsAdjustableEdge: true,
   name: 'Plinko',
   tagline: 'Drop the ball — ride it down the pegs.',
-  accent: '#ff4d6d',
+  accent: '#f0be4a',
 } as const
 
 export {

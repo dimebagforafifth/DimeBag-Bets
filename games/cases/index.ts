@@ -8,16 +8,10 @@ export const casesMeta = {
   supportsAdjustableEdge: true,
   name: 'Cases',
   tagline: 'Open the case — slide to your multiplier.',
-  accent: '#ffb84d',
+  accent: '#f0be4a',
 } as const
 
-export {
-  RISKS,
-  DEFAULT_CASES_CONFIG,
-  buildTiers,
-  rtpOf,
-  cumulativeWeights,
-} from './payouts.js'
+export { RISKS, DEFAULT_CASES_CONFIG, buildTiers, rtpOf, cumulativeWeights } from './payouts.js'
 export type { CasesRisk, CasesHouseConfig, Tier } from './payouts.js'
 
 export { openCase, verifyCase, hashServerSeed } from './fair.js'

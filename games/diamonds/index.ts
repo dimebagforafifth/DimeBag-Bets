@@ -8,7 +8,7 @@ export const diamondsMeta = {
   supportsAdjustableEdge: true,
   name: 'Diamonds',
   tagline: 'Reveal five gems — match colours to win.',
-  accent: '#5ad1ff',
+  accent: '#f0be4a',
 } as const
 
 export { COLOURS, GEMS, drawGems, verifyGems, hashServerSeed } from './fair.js'

@@ -13,7 +13,7 @@
 .crm-chip {
   display: inline-flex;
   align-items: center;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 11px;
   letter-spacing: 0.03em;
   padding: 2px 8px;
@@ -27,7 +27,7 @@
 .crm-pill {
   display: inline-flex;
   align-items: center;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 10px;
@@ -56,7 +56,7 @@
   background: color-mix(in srgb, var(--down) 14%, transparent);
 }
 .crm-band-flagged {
-  color: #14171c;
+  color: var(--on-gold);
   border-color: var(--down);
   background: var(--down);
 }
@@ -73,7 +73,7 @@
   background: color-mix(in srgb, var(--gold) 12%, transparent);
 }
 .crm-sev-high {
-  color: #14171c;
+  color: var(--on-gold);
   border-color: var(--down);
   background: var(--down);
 }
@@ -92,7 +92,7 @@
   font-size: 13px;
 }
 .crm-bar-label {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   text-transform: capitalize;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -142,7 +142,7 @@
   gap: 2px;
 }
 .crm-mix-cell strong {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head);
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;

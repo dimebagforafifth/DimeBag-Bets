@@ -8,7 +8,7 @@ export const hiloMeta = {
   supportsAdjustableEdge: true,
   name: 'HiLo',
   tagline: 'Higher or lower — ride the streak.',
-  accent: '#f7c948',
+  accent: '#f0be4a',
 } as const
 
 export { RANKS, SUITS, DECK, cardAt, cardsUpTo, verifyHilo, hashServerSeed } from './fair.js'

@@ -8,7 +8,7 @@ export const baccaratMeta = {
   supportsAdjustableEdge: false,
   name: 'Baccarat',
   tagline: 'Player or Banker — closest to nine.',
-  accent: '#e0b64a',
+  accent: '#f0be4a',
 } as const
 
 export {
@@ -25,7 +25,14 @@ export {
 } from './fair.js'
 export type { BaccaratCard, BaccaratDeal, BaccaratWinner } from './fair.js'
 
-export { PAYOUTS, ODDS_LABEL, BET_ORDER, spotOutcome, randomServerSeed, playBaccarat } from './engine.js'
+export {
+  PAYOUTS,
+  ODDS_LABEL,
+  BET_ORDER,
+  spotOutcome,
+  randomServerSeed,
+  playBaccarat,
+} from './engine.js'
 export type {
   BaccaratBet,
   BaccaratRound,

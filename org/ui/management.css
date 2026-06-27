@@ -92,8 +92,8 @@
   font-size: 12.5px;
   font-weight: 600;
   color: var(--red);
-  background: rgba(237, 65, 99, 0.1);
-  border: 1px solid rgba(237, 65, 99, 0.35);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--red) 35%, transparent);
   border-radius: 8px;
   padding: 9px 12px;
 }
@@ -209,9 +209,9 @@
   font-size: 11px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: #ffcaca;
-  background: rgba(237, 65, 99, 0.18);
-  border: 1px solid rgba(237, 65, 99, 0.5);
+  color: color-mix(in srgb, var(--red) 55%, #ffffff);
+  background: color-mix(in srgb, var(--red) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--red) 50%, transparent);
   border-radius: 999px;
   padding: 2px 8px;
   white-space: nowrap;
@@ -219,7 +219,9 @@
 /* the player you're currently playing as — highlighted in the tree */
 .org-row.is-current-player {
   border-color: rgba(var(--gem-glow), 0.6);
-  box-shadow: 0 0 0 1px rgba(var(--gem-glow), 0.4), 0 0 14px rgba(var(--gem-glow), 0.15);
+  box-shadow:
+    0 0 0 1px rgba(var(--gem-glow), 0.4),
+    0 0 14px rgba(var(--gem-glow), 0.15);
 }
 .org-playing-tag {
   margin-left: 8px;
@@ -269,7 +271,7 @@
 }
 .org-badge.is-subagent {
   color: #0c1116;
-  background: #e0b64a;
+  background: var(--gold);
 }
 .org-badge.is-agent {
   color: var(--text);
@@ -371,10 +373,10 @@
   font-weight: 800;
 }
 .org-figure.is-up {
-  color: #6dffa6;
+  color: var(--green);
 }
 .org-figure.is-down {
-  color: #ff8197;
+  color: var(--red);
 }
 .org-figure.is-even {
   color: var(--muted);
@@ -390,7 +392,9 @@
   border-radius: 6px;
   padding: 4px 9px;
   cursor: pointer;
-  transition: border-color 0.12s ease, color 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
   white-space: nowrap;
 }
 .org-toggle:hover {
@@ -426,8 +430,8 @@
 
 /* remove action — reads as destructive on hover */
 .org-toggle.is-remove:hover {
-  color: #ffb4c0;
-  border-color: rgba(237, 65, 99, 0.6);
+  color: color-mix(in srgb, var(--red) 45%, #ffffff);
+  border-color: color-mix(in srgb, var(--red) 60%, transparent);
 }
 
 /* the report table */
@@ -447,7 +451,7 @@
   color: var(--muted);
 }
 .org-risk-cell {
-  color: #ffb4c0;
+  color: color-mix(in srgb, var(--red) 45%, #ffffff);
   font-weight: 800;
 }
 .org-sort {
@@ -535,12 +539,12 @@
   border-color: rgba(var(--gem-glow), 0.5);
 }
 .org-toggle.is-freeze:hover {
-  color: #ffd27a;
-  border-color: rgba(255, 196, 84, 0.55);
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
 }
 .org-toggle.is-locked {
-  color: #ffd27a;
-  border-color: rgba(255, 196, 84, 0.5);
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 50%, transparent);
 }
 
 /* a "locked" pill beside a player's name (mirrors .org-playing-tag) */
@@ -551,7 +555,7 @@
   text-transform: uppercase;
   letter-spacing: 0.7px;
   color: #0c1116;
-  background: #ffc454;
+  background: var(--gold);
   border-radius: 999px;
   padding: 2px 7px;
   vertical-align: middle;
@@ -566,7 +570,7 @@
   color: var(--muted);
 }
 .org-status.is-locked {
-  color: #ffc454;
+  color: var(--gold);
 }
 .org-status.is-suspended {
   color: var(--red);
@@ -690,9 +694,9 @@
 }
 /* a destructive action awaiting its second tap */
 .org-toggle.is-confirm {
-  color: #ffb4c0;
-  border-color: rgba(237, 65, 99, 0.6);
-  background: rgba(237, 65, 99, 0.12);
+  color: color-mix(in srgb, var(--red) 45%, #ffffff);
+  border-color: color-mix(in srgb, var(--red) 60%, transparent);
+  background: color-mix(in srgb, var(--red) 12%, transparent);
 }
 
 /* dashboard headline — the one primary figure */
@@ -775,9 +779,9 @@
 .org-adjust-apply {
   font-size: 11px;
   font-weight: 700;
-  color: #2a2105;
-  background: linear-gradient(180deg, #f7d164, #e7ac24);
-  border: 1px solid #c8901a;
+  color: var(--on-gold);
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border: 1px solid var(--gold-press);
   border-radius: 6px;
   padding: 4px 12px;
   cursor: pointer;

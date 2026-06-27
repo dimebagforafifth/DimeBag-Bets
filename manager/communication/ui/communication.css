@@ -98,7 +98,7 @@
 }
 .mgr-toggle button.is-on {
   background: var(--gem);
-  color: #fff;
+  color: var(--on-gold);
 }
 
 /* banner preview + severity */
@@ -120,7 +120,7 @@
   --c: var(--green);
 }
 .mgr-banner.is-warning {
-  --c: #e0b64a;
+  --c: var(--gold);
 }
 .mgr-banner strong {
   font-size: 13.5px;
@@ -185,7 +185,7 @@
   background: var(--green);
 }
 .mgr-ann-dot.is-warning {
-  background: #e0b64a;
+  background: var(--gold);
 }
 .mgr-ann-body {
   display: flex;
@@ -213,7 +213,7 @@
 .mgr-send {
   font-size: 14px;
   font-weight: 800;
-  color: #fff;
+  color: var(--on-gold);
   background: var(--gem);
   border: none;
   border-radius: 10px;

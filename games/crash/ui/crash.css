@@ -1,6 +1,6 @@
 /* Crash view — Stake-style two-input panel + a cinematic rocket stage
-   (CLAUDE.md §2, §7). Our identity: clean, green/teal neon, sleek skyline.
-   Shared controls/fairness live in app/theme.css. */
+   (CLAUDE.md §2, §7). Our identity: clean graphite night sky, a gold-trail rocket,
+   sleek skyline. Shared controls/fairness live in app/theme.css. */
 .crash {
   width: 100%;
   max-width: 820px;
@@ -47,7 +47,7 @@
   min-height: 380px;
   border-radius: var(--radius);
   overflow: hidden;
-  background: linear-gradient(180deg, #0a1622 0%, #0e2433 58%, #0a1420 100%);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface-2) 58%, var(--bg) 100%);
   border: 1px solid var(--line);
   transition: border-color 0.25s ease;
 }
@@ -103,13 +103,13 @@
   }
 }
 .ridge-back {
-  fill: #13313d;
+  fill: #26262a;
 }
 .ridge-front {
-  fill: #0b212a;
+  fill: #1b1b1e;
 }
 .skyline rect {
-  fill: #081820;
+  fill: #141416;
 }
 
 /* ---- multiplier axis ---- */
@@ -174,10 +174,10 @@
   fill: var(--gem);
 }
 .rocket-port-glow {
-  fill: #d7fff0;
+  fill: var(--gold-bright);
 }
 .rocket-flame {
-  fill: #ffb020;
+  fill: var(--gold);
   /* flicker quickens with playback speed (set per-flight on .crash-stage) */
   animation: flicker var(--flame-flicker, 0.18s) ease-in-out infinite alternate;
 }
@@ -226,8 +226,8 @@
   backdrop-filter: blur(2px);
 }
 .pill-hot {
-  color: #ffb020;
-  border-color: rgba(255, 176, 32, 0.4);
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 40%, transparent);
 }
 .pill-win {
   color: var(--gem);
@@ -269,7 +269,7 @@
 .crash-stage.is-busted .crash-multiplier {
   color: var(--red);
   text-shadow:
-    0 0 30px rgba(237, 65, 99, 0.5),
+    0 0 30px color-mix(in srgb, var(--red) 50%, transparent),
     0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .crash-caption {

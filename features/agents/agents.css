@@ -3,7 +3,10 @@
 /* ---- add member ---- */
 .agt-add-grid {
   display: grid;
-  grid-template-columns: minmax(130px, 160px) minmax(180px, 1fr) minmax(140px, 1fr) minmax(150px, 180px) auto;
+  grid-template-columns: minmax(130px, 160px) minmax(180px, 1fr) minmax(140px, 1fr) minmax(
+      150px,
+      180px
+    ) auto;
   gap: 12px;
   align-items: end;
   margin-top: 10px;
@@ -100,7 +103,7 @@
 }
 .agt-tag {
   margin-left: 7px;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 9px;
@@ -118,7 +121,7 @@
 /* ---- role badge ---- */
 .agt-badge {
   flex: none;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 9.5px;
@@ -135,10 +138,10 @@
   --c: var(--gem);
 }
 .agt-badge.is-subagent {
-  --c: #5a8dee;
+  --c: var(--muted);
 }
 .agt-badge.is-agent {
-  --c: #b07cf0;
+  --c: var(--faint);
 }
 .agt-badge.is-player {
   --c: var(--up);
@@ -184,19 +187,19 @@
 .agtbl th,
 .agtbl td {
   padding: 8px 10px;
-  border-bottom: 1px solid var(--c-border, #2a2f39);
+  border-bottom: 1px solid var(--c-border, var(--line));
   text-align: left;
   white-space: nowrap;
 }
 .agtbl th {
   position: sticky;
   top: 0;
-  background: var(--c-panel, #1b1f26);
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  background: var(--c-panel, var(--surface));
+  font-family: var(--font-label);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, var(--muted));
 }
 .agtbl .num {
   text-align: right;
@@ -212,17 +215,17 @@
   font-weight: 600;
 }
 .agtbl .is-up {
-  color: var(--c-up, #5bb98b);
+  color: var(--c-up, var(--green));
 }
 .agtbl .is-down {
-  color: var(--c-down, #d27068);
+  color: var(--c-down, var(--red));
 }
 .agtbl-input {
   width: 84px;
-  background: var(--c-panel-2, #20252e);
-  border: 1px solid var(--c-border, #2a2f39);
+  background: var(--c-panel-2, var(--surface-2));
+  border: 1px solid var(--c-border, var(--line));
   border-radius: 6px;
-  color: var(--c-text, #e7e9ee);
+  color: var(--c-text, var(--text));
   padding: 4px 7px;
   font-size: 13px;
   text-align: right;
@@ -230,53 +233,53 @@
 }
 .agtbl-input:focus {
   outline: none;
-  border-color: var(--c-gold, #d6b14a);
+  border-color: var(--c-gold, var(--gold));
 }
 .agtbl-pct {
   white-space: nowrap;
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, var(--muted));
 }
 .agtbl-pct .agtbl-input {
   width: 52px;
 }
 .agtbl-btn {
-  border: 1px solid var(--c-up, #5bb98b);
+  border: 1px solid var(--c-up, var(--green));
   background: transparent;
-  color: var(--c-up, #5bb98b);
+  color: var(--c-up, var(--green));
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
 }
 .agtbl-btn.is-off {
-  border-color: var(--c-down, #d27068);
-  color: var(--c-down, #d27068);
+  border-color: var(--c-down, var(--red));
+  color: var(--c-down, var(--red));
 }
 .agtbl-err {
-  color: var(--c-down, #d27068);
+  color: var(--c-down, var(--red));
   font-size: 12px;
   padding-top: 2px;
 }
 .agtbl-comm {
-  color: var(--c-gold, #d6b14a);
+  color: var(--c-gold, var(--gold));
 }
 .agtbl-commpct {
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, var(--muted));
   font-size: 11px;
 }
 .agtbl-foot td {
-  border-top: 2px solid var(--c-border, #2a2f39);
+  border-top: 2px solid var(--c-border, var(--line));
   border-bottom: none;
   font-weight: 700;
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, var(--muted));
 }
 
 /* Console access — the manager's per-agent tool grant grid (in the member editor). */
 .agt-access {
   margin-top: 6px;
-  border-top: 1px solid var(--c-border, #2a2f39);
+  border-top: 1px solid var(--c-border, var(--line));
   padding-top: 12px;
 }
 .agt-access-head {

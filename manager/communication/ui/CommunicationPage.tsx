@@ -53,7 +53,10 @@ export function CommunicationPage() {
   function sendMessage() {
     setMsgStatus(null)
     try {
-      const name = msgTarget === ALL_PLAYERS ? 'All players' : getBook().members[msgTarget]?.name ?? msgTarget
+      const name =
+        msgTarget === ALL_PLAYERS
+          ? 'All players'
+          : (getBook().members[msgTarget]?.name ?? msgTarget)
       messagesStore.send(msgTarget, name, msgTitle, msgBody)
       setMsgBody('')
       setMsgTitle('')
@@ -64,7 +67,9 @@ export function CommunicationPage() {
   }
 
   const fmtResults = (res: { channel: string; ok: boolean; error?: string }[]): string =>
-    res.length ? res.map((r) => `${r.channel}: ${r.ok ? 'sent ✓' : r.error}`).join(' · ') : 'no channels configured'
+    res.length
+      ? res.map((r) => `${r.channel}: ${r.ok ? 'sent ✓' : r.error}`).join(' · ')
+      : 'no channels configured'
 
   async function publish() {
     setStatus(null)
@@ -91,7 +96,7 @@ export function CommunicationPage() {
     setSending(true)
     setStatus(null)
     try {
-      const res = await dispatch(webhooks, 'Test message from your DimeBag book ✔')
+      const res = await dispatch(webhooks, 'Test message from your PlayStadium book ✔')
       setStatus(`Test — ${fmtResults(res)}.`)
     } finally {
       setSending(false)
@@ -102,7 +107,9 @@ export function CommunicationPage() {
     <div className="mgr-comms">
       <header className="mgr-comms-head">
         <h1 className="mgr-comms-title">Communication</h1>
-        <p className="mgr-comms-sub">Post announcements to your players and push them to Discord / Telegram.</p>
+        <p className="mgr-comms-sub">
+          Post announcements to your players and push them to Discord / Telegram.
+        </p>
       </header>
 
       <section className="mgr-comms-card" aria-label="New announcement">
@@ -125,12 +132,20 @@ export function CommunicationPage() {
         <div className="mgr-comms-row">
           <div className="mgr-toggle">
             {SEVERITIES.map((s) => (
-              <button key={s.id} className={severity === s.id ? 'is-on' : ''} onClick={() => setSeverity(s.id)}>
+              <button
+                key={s.id}
+                className={severity === s.id ? 'is-on' : ''}
+                onClick={() => setSeverity(s.id)}
+              >
                 {s.label}
               </button>
             ))}
           </div>
-          <select className="mgr-select mgr-select-auto" value={ttl} onChange={(e) => setTtl(Number(e.target.value))}>
+          <select
+            className="mgr-select mgr-select-auto"
+            value={ttl}
+            onChange={(e) => setTtl(Number(e.target.value))}
+          >
             {TTLS.map((t) => (
               <option key={t.ms} value={t.ms}>
                 {t.label}
@@ -177,7 +192,10 @@ export function CommunicationPage() {
                   {an.title && <strong>{an.title}</strong>}
                   <span>{an.body}</span>
                 </div>
-                <button className="mgr-mini" onClick={() => commsStore.setActive(an.id, !an.active)}>
+                <button
+                  className="mgr-mini"
+                  onClick={() => commsStore.setActive(an.id, !an.active)}
+                >
                   {an.active ? 'Deactivate' : 'Reactivate'}
                 </button>
               </li>
@@ -188,9 +206,16 @@ export function CommunicationPage() {
 
       <section className="mgr-comms-card" aria-label="Message a player">
         <h2 className="mgr-h2">Message a player</h2>
-        <p className="mgr-hint">A direct in-app message to one player, or a notification to everyone. Players see it in their inbox.</p>
+        <p className="mgr-hint">
+          A direct in-app message to one player, or a notification to everyone. Players see it in
+          their inbox.
+        </p>
         <div className="mgr-comms-row">
-          <select className="mgr-select" value={msgTarget} onChange={(e) => setMsgTarget(e.target.value)}>
+          <select
+            className="mgr-select"
+            value={msgTarget}
+            onChange={(e) => setMsgTarget(e.target.value)}
+          >
             <option value={ALL_PLAYERS}>All players (notification)</option>
             {players.map((p) => (
               <option key={p.id} value={p.id}>
@@ -268,7 +293,9 @@ export function CommunicationPage() {
           </label>
         </div>
         <div className="mgr-comms-foot">
-          <span className="mgr-hint">{channels.length ? `Configured: ${channels.join(', ')}` : 'No channels configured yet.'}</span>
+          <span className="mgr-hint">
+            {channels.length ? `Configured: ${channels.join(', ')}` : 'No channels configured yet.'}
+          </span>
           <button className="mgr-mini" onClick={sendTest} disabled={!channels.length || sending}>
             Send test
           </button>

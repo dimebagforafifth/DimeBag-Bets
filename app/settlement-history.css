@@ -48,7 +48,7 @@
   font-variant-numeric: tabular-nums;
 }
 .sh-net.is-up {
-  color: #3fb98a;
+  color: var(--green);
 }
 .sh-net.is-down {
   color: var(--red);
@@ -64,7 +64,7 @@
   color: var(--muted);
 }
 .sh-status.is-collected {
-  color: #3fb98a;
+  color: var(--green);
 }
 .sh-actions {
   display: flex;

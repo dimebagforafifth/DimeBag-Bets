@@ -8,7 +8,7 @@ export const slotsMeta = {
   supportsAdjustableEdge: true,
   name: 'Slots',
   tagline: 'Spin the reels — line up three.',
-  accent: '#ff5b8a',
+  accent: '#f0be4a',
 } as const
 
 export {

@@ -34,7 +34,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gem);
   border-radius: 999px;
   padding: 2px 8px;

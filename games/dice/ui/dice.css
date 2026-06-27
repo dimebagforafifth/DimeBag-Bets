@@ -1,4 +1,4 @@
-/* Dice view — Stake-style: a blue handle rides the red/green bar (CLAUDE.md §2).
+/* Dice view — Stake-style: a gold handle rides the red/green bar (CLAUDE.md §2).
    Shared controls/fairness live in app/theme.css. */
 .dice {
   width: 100%;
@@ -88,8 +88,8 @@
 /* push pill (exact tie — stake returned); pairs with the shared .pill/.pill-win/
    .pill-loss. Neutral amber: neither a win (green) nor a loss (red). */
 .pill-push {
-  color: var(--accent, #f5a524);
-  border-color: rgba(245, 165, 36, 0.4);
+  color: var(--muted);
+  border-color: color-mix(in srgb, var(--muted) 40%, transparent);
 }
 
 .dice-board {
@@ -134,15 +134,15 @@
   background: var(--red);
 }
 
-/* the blue handle (Stake-style square) */
+/* the gold handle (Stake-style square) */
 .dice-handle {
   position: absolute;
   top: 50%;
   width: 22px;
   height: 30px;
   border-radius: 6px;
-  background: linear-gradient(180deg, #4a9bff, #2f7fe6);
-  border: 2px solid #cfe4ff;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border: 2px solid var(--gold-bright);
   transform: translate(-50%, -50%);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
   pointer-events: none;
@@ -207,9 +207,13 @@
   letter-spacing: -0.2px;
   color: #fff;
   background: var(--rollc, #6b7a89);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.28),
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
     0 0 20px var(--rollglow, transparent);
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
   animation: roll-flag-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 /* a colour-matched caret pointing straight down to the exact spot on the bar */
@@ -230,12 +234,12 @@
 }
 .roll-flag.is-loss {
   --rollc: var(--red);
-  --rollglow: rgba(237, 65, 99, 0.45);
+  --rollglow: color-mix(in srgb, var(--red) 45%, transparent);
 }
-/* a push (exact tie) returns the stake — neutral amber, neither win nor loss */
+/* a push (exact tie) returns the stake — neutral, neither win nor loss */
 .roll-flag.is-push {
-  --rollc: var(--accent, #f5a524);
-  --rollglow: rgba(245, 165, 36, 0.45);
+  --rollc: var(--muted);
+  --rollglow: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 @keyframes roll-flag-in {
   0% {

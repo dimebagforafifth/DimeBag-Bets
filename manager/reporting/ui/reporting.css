@@ -58,14 +58,16 @@
   padding: 6px 12px;
   border-radius: 7px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 .mgr-range-btn:hover {
   color: var(--text);
 }
 .mgr-range-btn.is-on {
   background: var(--gem);
-  color: #fff;
+  color: var(--on-gold);
 }
 
 /* KPI cards */

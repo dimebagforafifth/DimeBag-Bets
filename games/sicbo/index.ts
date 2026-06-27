@@ -8,7 +8,7 @@ export const sicBoMeta = {
   supportsAdjustableEdge: false,
   name: 'Sic Bo',
   tagline: 'Three dice — call the roll.',
-  accent: '#46c2a8',
+  accent: '#f0be4a',
 } as const
 
 export {
@@ -31,9 +31,4 @@ export { rollDice, verifyRoll, hashServerSeed } from './fair.js'
 export type { Dice } from './fair.js'
 
 export { randomServerSeed, playSicBo } from './engine.js'
-export type {
-  SicBoBet,
-  SicBoBetResult,
-  SicBoRound,
-  PlaySicBoOptions,
-} from './engine.js'
+export type { SicBoBet, SicBoBetResult, SicBoRound, PlaySicBoOptions } from './engine.js'

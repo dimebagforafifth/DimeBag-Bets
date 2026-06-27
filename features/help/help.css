@@ -21,7 +21,7 @@
   border-left: 2px solid transparent;
   padding: 7px 12px;
   color: var(--muted);
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   cursor: pointer;
   border-radius: 0 6px 6px 0;

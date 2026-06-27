@@ -58,16 +58,16 @@
   border-left: 3px solid color-mix(in srgb, var(--gold) 70%, var(--line));
 }
 .pa-banner--success {
-  border-left: 3px solid var(--green, #2fbf71);
+  border-left: 3px solid var(--green);
 }
 .pa-banner--success .pa-banner-icon {
-  color: var(--green, #2fbf71);
+  color: var(--green);
 }
 .pa-banner--warning {
-  border-left: 3px solid var(--amber, #e0a93b);
+  border-left: 3px solid var(--gold);
 }
 .pa-banner--warning .pa-banner-icon {
-  color: var(--amber, #e0a93b);
+  color: var(--gold);
 }
 
 /* ---- inbox bell ---- */
@@ -103,7 +103,7 @@
   justify-content: center;
   border-radius: 999px;
   background: var(--gold);
-  color: #1a1305;
+  color: var(--on-gold);
   font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;

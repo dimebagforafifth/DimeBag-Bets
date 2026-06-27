@@ -7,10 +7,10 @@
   max-width: 1180px;
 }
 .threecardpoker {
-  --accent: #6ea8ff;
+  --accent: var(--gold);
   /* warm cream "ink" printed onto the felt; gold for win/hit highlights */
   --ink: #ecd9a6;
-  --felt-gold: #ffd97a;
+  --felt-gold: var(--gold);
   width: 100%;
   max-width: 1180px;
   display: grid;
@@ -322,7 +322,7 @@ button.threecardpoker-clay:disabled {
   animation: tcp-chip-drop 0.28s cubic-bezier(0.2, 0.8, 0.3, 1.15);
 }
 .threecardpoker-clay.is-d1 {
-  background: radial-gradient(circle at 50% 34%, #5fb6c9, #2c8aa0 72%);
+  background: radial-gradient(circle at 50% 34%, #8a929c, #565d66 72%);
 }
 .threecardpoker-clay.is-d5 {
   background: radial-gradient(circle at 50% 34%, #e0566a, #c01f33 72%);
@@ -334,7 +334,7 @@ button.threecardpoker-clay:disabled {
   background: radial-gradient(circle at 50% 34%, #465663, #161f27 72%);
 }
 .threecardpoker-clay.is-d500 {
-  background: radial-gradient(circle at 50% 34%, #b07bf0, #7b40c8 72%);
+  background: radial-gradient(circle at 50% 34%, var(--gold-bright), var(--gold-press) 72%);
 }
 @keyframes tcp-chip-drop {
   0% {
@@ -458,7 +458,7 @@ button.threecardpoker-clay:disabled {
   align-items: center;
   line-height: 0.9;
   font-weight: 800;
-  font-family: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-family: var(--font-head);
 }
 .tcp-idx-tl {
   top: 7px;

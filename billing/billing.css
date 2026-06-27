@@ -33,7 +33,7 @@
 /* status pill */
 .bil-pill {
   display: inline-block;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 10px;

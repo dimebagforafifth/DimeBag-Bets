@@ -8,7 +8,7 @@ export const wheelMeta = {
   supportsAdjustableEdge: true,
   name: 'Wheel',
   tagline: 'Spin the wheel, chase the multiplier.',
-  accent: '#3aa0ff',
+  accent: '#f0be4a',
 } as const
 
 export {

@@ -51,7 +51,7 @@
   letter-spacing: 0.4px;
 }
 .gp-state.is-on {
-  color: #3fb98a;
+  color: var(--green);
 }
 .gp-state.is-off {
   color: var(--muted);

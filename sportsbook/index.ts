@@ -9,7 +9,7 @@ export const sportsbookMeta = {
   key: 'sportsbook',
   name: 'Sportsbook',
   tagline: 'Moneyline, spreads, totals & parlays — one balance.',
-  accent: '#3aa0ff',
+  accent: '#f0be4a',
 } as const
 
 export {
@@ -22,14 +22,7 @@ export {
   potentialReturn,
 } from './odds.js'
 
-export {
-  EVENTS,
-  LEAGUES,
-  SPORTS,
-  leaguesInSport,
-  findEvent,
-  gradeSelection,
-} from './markets.js'
+export { EVENTS, LEAGUES, SPORTS, leaguesInSport, findEvent, gradeSelection } from './markets.js'
 export type { MarketKind, Pick, Selection, MatchResult, GameEvent, EventStatus } from './markets.js'
 
 export {

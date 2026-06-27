@@ -43,7 +43,7 @@
   cursor: pointer;
 }
 .pf-win.is-on {
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gold);
 }
 
