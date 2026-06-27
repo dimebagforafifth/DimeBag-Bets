@@ -30,7 +30,7 @@
   gap: 6px;
 }
 .mdsk-chip {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 11px;
@@ -51,7 +51,7 @@
   border-color: color-mix(in srgb, var(--gem) 50%, var(--line));
 }
 .mdsk-chip.is-on {
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gem);
   border-color: var(--gem);
 }
@@ -68,7 +68,7 @@
   overflow: hidden;
 }
 .mdsk-tab {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   font-size: 12px;
   font-weight: 700;
   color: var(--muted);
@@ -88,7 +88,7 @@
   color: var(--text);
 }
 .mdsk-tab.is-on {
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gem);
 }
 .mdsk-tab:focus-visible {
@@ -122,7 +122,7 @@
 /* ---- ledger type pill ---- */
 .mdsk-pill {
   display: inline-block;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 10px;
@@ -222,7 +222,7 @@
   border: 1px solid var(--line);
   background: var(--surface-2);
   color: var(--muted);
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 700;
   font-style: italic;
@@ -274,7 +274,7 @@
   border: 1px solid var(--line);
   box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.6);
   color: var(--text);
-  font-family: 'Saira', sans-serif;
+  font-family: var(--font-body);
   font-size: 12.5px;
   font-weight: 400;
   line-height: 1.45;
@@ -345,16 +345,16 @@
 /* Weekly sheet — per-agent grouping rows */
 .mdsk-group td {
   background: rgba(214, 177, 74, 0.07);
-  border-top: 1px solid var(--c-border, #2a2f39);
+  border-top: 1px solid var(--c-border, #333332);
   font-weight: 700;
 }
 .mdsk-group-n {
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, #c4c4c2);
   font-weight: 500;
   font-size: 12px;
 }
 .mdsk-player td.mdsk-player,
 td.mdsk-player {
   padding-left: 22px;
-  color: var(--c-muted, #aab2c0);
+  color: var(--c-muted, #c4c4c2);
 }

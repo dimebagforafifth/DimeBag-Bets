@@ -613,7 +613,7 @@
 }
 .bj-insure-yes {
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: #14171c;
+  color: var(--on-gold);
   border: 1px solid var(--gold-press);
   font-weight: 800;
 }

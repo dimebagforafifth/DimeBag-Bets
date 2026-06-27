@@ -8,18 +8,19 @@ export const kenoMeta = {
   supportsAdjustableEdge: true,
   name: 'Keno',
   tagline: 'Pick your numbers, watch the draw.',
-  accent: '#22d3ee',
+  accent: '#f0be4a',
 } as const
 
-export { GRID_SIZE, DRAW_COUNT, MAX_PICKS, drawNumbers, verifyDraw, hashServerSeed } from './fair.js'
-
 export {
-  RISKS,
-  DEFAULT_KENO_CONFIG,
-  hitProbabilities,
-  buildPaytable,
-  rtpOf,
-} from './paytable.js'
+  GRID_SIZE,
+  DRAW_COUNT,
+  MAX_PICKS,
+  drawNumbers,
+  verifyDraw,
+  hashServerSeed,
+} from './fair.js'
+
+export { RISKS, DEFAULT_KENO_CONFIG, hitProbabilities, buildPaytable, rtpOf } from './paytable.js'
 export type { KenoRisk, KenoHouseConfig } from './paytable.js'
 
 export type { KenoRound, PlayKenoOptions } from './engine.js'

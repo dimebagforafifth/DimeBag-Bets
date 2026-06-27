@@ -68,7 +68,7 @@ function sampleRecord() {
 describe('shareableSummary — exportable but anchored to the platform', () => {
   it('names the platform, the player, and the record headline', () => {
     const text = shareableSummary(sampleRecord())
-    expect(text).toContain('DimeBag-Bets')
+    expect(text).toContain('PlayStadium.io')
     expect(text).toContain('Dana')
     expect(text).toMatch(/Gold tier/)
     expect(text).toMatch(/Net/)

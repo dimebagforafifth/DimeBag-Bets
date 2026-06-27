@@ -8,7 +8,7 @@ export const chickenRoadMeta = {
   supportsAdjustableEdge: true,
   name: 'Chicken Road',
   tagline: 'Cross the road — cash out before the splat.',
-  accent: '#ffb23a',
+  accent: '#f0be4a',
 } as const
 
 export {

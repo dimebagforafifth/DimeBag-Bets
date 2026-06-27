@@ -2,15 +2,10 @@
    premium loyalty layer distinct from the casino's teal. Gold is for accents +
    active/selected states ONLY; every label/value is high-contrast near-white. */
 .rewards {
-  --bg: #14171c;
-  --panel: #1b1f26;
-  --panel-2: #20252e;
-  --line: #2a2f39;
-  --gold: #d6b14a;
-  --up: #5bb98b;
-  --down: #d27068;
-  --text: #f4f5f7;
-  --muted: #c2c8d2;
+  --panel: var(--surface);
+  --panel-2: var(--surface-2);
+  --up: var(--green);
+  --down: var(--red);
   --radius: 12px;
 
   width: 100%;
@@ -20,20 +15,26 @@
   flex-direction: column;
   gap: 22px;
   color: var(--text);
-  font-family: 'Saira', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    var(--font-body),
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 /* ---- headings / text ---- */
 .rw-h1 {
   margin: 0;
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head), sans-serif;
   font-size: 30px;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 .rw-h2 {
   margin: 0 0 12px;
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head), sans-serif;
   font-size: 19px;
   font-weight: 700;
 }
@@ -43,7 +44,7 @@
   color: var(--muted);
 }
 .rw-label {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 11px;
@@ -51,7 +52,7 @@
   color: var(--text);
 }
 .rw-value {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head), sans-serif;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -94,7 +95,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label), sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--muted);
@@ -116,7 +117,7 @@
   background: var(--panel-2);
 }
 .rw-tab.is-on {
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gold);
 }
 .rw-tab:focus-visible {
@@ -176,7 +177,7 @@
   outline-offset: 2px;
 }
 .rw-tile-name {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head), sans-serif;
   font-size: 17px;
   font-weight: 700;
 }
@@ -219,7 +220,11 @@
   gap: 20px;
   padding: 22px;
   background:
-    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 60%),
+    radial-gradient(
+      120% 140% at 0% 0%,
+      color-mix(in srgb, var(--gold) 14%, transparent),
+      transparent 60%
+    ),
     var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -259,7 +264,11 @@
 .rw-progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 70%, #b8923a), var(--gold));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--gold) 70%, var(--gold-press)),
+    var(--gold)
+  );
 }
 .rw-progress-meta {
   display: flex;
@@ -284,7 +293,7 @@
   gap: 3px;
 }
 .rw-kpi strong {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head), sans-serif;
   font-size: 23px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -292,7 +301,7 @@
 
 /* ---- buttons ---- */
 .rw-btn {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label), sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: var(--text);
@@ -311,7 +320,7 @@
   cursor: default;
 }
 .rw-btn-primary {
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gold);
   border-color: var(--gold);
 }
@@ -327,7 +336,7 @@
   gap: 6px;
 }
 .rw-chip {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 11px;
@@ -348,7 +357,7 @@
   border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
 }
 .rw-chip.is-on {
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gold);
   border-color: var(--gold);
 }
@@ -370,7 +379,7 @@
   border-bottom: 1px solid var(--line);
 }
 .rw-table th {
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 11px;
@@ -387,7 +396,7 @@
   border-color: color-mix(in srgb, var(--gold) 35%, var(--line));
 }
 .rw-rankno {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head), sans-serif;
   font-weight: 700;
   color: var(--muted);
   width: 2.5em;
@@ -401,7 +410,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-family: 'Saira Semi Condensed', 'Saira', sans-serif;
+  font-family: var(--font-label), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 10px;
@@ -480,7 +489,7 @@
   --accent: var(--muted);
 }
 .rw-badge-name {
-  font-family: 'Saira Condensed', 'Saira', sans-serif;
+  font-family: var(--font-head), sans-serif;
   font-weight: 700;
   font-size: 15px;
 }
@@ -529,10 +538,10 @@
   flex-wrap: wrap;
 }
 .rw-dim {
-  color: var(--muted, #aab2c0);
+  color: var(--muted, #c4c4c2);
 }
 .rw-empty {
-  color: var(--muted, #aab2c0);
+  color: var(--muted, #c4c4c2);
   font-size: 14px;
   padding: 24px 0;
 }
@@ -545,8 +554,8 @@
 }
 .rw-lock-note {
   font-size: 11.5px;
-  color: var(--accent-2, #d6b14a);
-  background: color-mix(in srgb, var(--accent-2, #d6b14a) 12%, transparent);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
   border-radius: 6px;
   padding: 3px 8px;
   align-self: flex-start;
@@ -571,24 +580,24 @@
   gap: 12px;
   flex-wrap: wrap;
   font-size: 12.5px;
-  color: var(--muted, #aab2c0);
+  color: var(--muted, #c4c4c2);
 }
 .rw-prize b {
-  color: var(--text, #f4f5f7);
+  color: var(--text, #fcfcfb);
 }
 .rw-you-rank {
   font-size: 13.5px;
   margin: 6px 0;
 }
 .rw-in-money {
-  color: var(--up, #5bb98b);
+  color: var(--up, #46c88a);
 }
 .rw-status-running {
-  color: #04121f;
-  background: var(--up, #5bb98b);
+  color: var(--on-gold);
+  background: var(--up, #46c88a);
 }
 .rw-status-scheduled {
-  color: var(--muted, #aab2c0);
+  color: var(--muted, #c4c4c2);
 }
 .rw-board-table {
   width: 100%;
@@ -601,20 +610,20 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--muted, #aab2c0);
+  color: var(--muted, #c4c4c2);
   padding: 6px 8px;
-  border-bottom: 1px solid var(--line, #2a2f39);
+  border-bottom: 1px solid var(--line, #333332);
 }
 .rw-board-table td {
   padding: 7px 8px;
-  border-bottom: 1px solid var(--line, #2a2f39);
+  border-bottom: 1px solid var(--line, #333332);
 }
 .rw-board-table .rw-num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 .rw-board-table tr.is-you {
-  background: color-mix(in srgb, var(--accent-2, #d6b14a) 14%, transparent);
+  background: color-mix(in srgb, var(--gold) 14%, transparent);
 }
 .rw-board-table tr.is-you td {
   font-weight: 700;
@@ -645,7 +654,7 @@
 }
 .rw-demo {
   border-color: var(--gold);
-  background: linear-gradient(180deg, rgba(214, 177, 74, 0.06), transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 6%, transparent), transparent);
 }
 .rw-demo-btns {
   display: flex;
@@ -662,7 +671,11 @@
   padding: 12px 16px;
   border: 1px solid var(--gold);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, rgba(214, 177, 74, 0.12), rgba(214, 177, 74, 0.03));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gold) 12%, transparent),
+    color-mix(in srgb, var(--gold) 3%, transparent)
+  );
 }
 .rw-boost-tag {
   font-weight: 800;

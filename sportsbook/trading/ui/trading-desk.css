@@ -363,7 +363,7 @@
 /* ===================== Lines tab — live line management ===================== */
 .td-lines,
 .td-futures {
-  --td-accent: #3aa0ff;
+  --td-accent: var(--gold);
 }
 .td-card-hint {
   margin: -4px 0 0;
@@ -546,7 +546,7 @@
 .td-vigbtn.is-on {
   background: var(--td-accent);
   border-color: var(--td-accent);
-  color: #07121d;
+  color: var(--on-gold);
 }
 .td-vigbtn:disabled {
   opacity: 0.4;
@@ -645,14 +645,14 @@
 }
 .td-settle-btn:hover {
   background: var(--td-accent);
-  color: #07121d;
+  color: var(--on-gold);
 }
 .td-future-won {
   font-size: 12px;
   font-weight: 800;
-  color: var(--gem, #0a9d5a);
-  background: color-mix(in srgb, var(--gem, #0a9d5a) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gem, #0a9d5a) 45%, transparent);
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--green) 45%, transparent);
   padding: 3px 10px;
   border-radius: 999px;
 }

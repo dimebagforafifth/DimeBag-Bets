@@ -9,7 +9,7 @@ export const pumpMeta = {
   supportsAdjustableEdge: true,
   name: 'Pump',
   tagline: 'Inflate the balloon, bank it before it pops.',
-  accent: '#ff5c7a',
+  accent: '#f0be4a',
 } as const
 
 export {

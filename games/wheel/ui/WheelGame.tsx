@@ -272,22 +272,24 @@ export function WheelGame({
   )
 }
 
-/** Losing pockets are a faint grey — a touch lighter than the wheel body (--bg),
- *  so a 0× is its own subtle marker and doesn't disappear into the dark centre. */
-const LOSE_COLOR = '#1d2a34'
+/** Losing pockets are a faint graphite — a touch lighter than the wheel body
+ *  (--bg), so a 0× is its own subtle marker and doesn't disappear into the dark
+ *  centre. */
+const LOSE_COLOR = '#26262a'
 
-/** A spread of vivid, clearly-distinct hues. Each winning multiplier tier gets
- *  its own colour from this (low → high), so neighbouring tiers never blur into
- *  one ramp — green, teal, blue, purple, pink, orange, red, gold. */
+/** A gold-anchored ramp (the only accent), spread low → high so neighbouring
+ *  multiplier tiers stay distinct without introducing competing accents: calm
+ *  green for the common low wins, climbing through amber/deep gold to the brand
+ *  gold, and a hot red at the rare top tier. */
 const WIN_PALETTE = [
-  '#2bd576', // green
-  '#1fc2c2', // teal
-  '#3b9bff', // blue
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#f7931a', // orange
-  '#ef4444', // red
-  '#ffd23f', // gold
+  '#46c88a', // green (calm, common low win)
+  '#7a9a5e', // green→gold transition
+  '#b89a3e', // deep amber
+  '#d4a83f', // amber
+  '#f0be4a', // brand gold
+  '#f5c459', // bright gold glint
+  '#e89a3a', // hot amber
+  '#e0556e', // red (hottest top tier)
 ]
 
 /** Map every distinct winning multiplier to its own palette colour. Tiers are
@@ -316,7 +318,7 @@ function colorFor(multiplier: number, colors: Map<number, string>): string {
 function conicGradient(table: number[], colors: Map<number, string>): string {
   const n = table.length
   const gap = 0.7 // deg of dark gap between neighbouring segments
-  const sep = '#0b141c'
+  const sep = '#101113'
   const stops = table
     .map((m, i) => {
       const a = (i / n) * 360

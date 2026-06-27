@@ -83,7 +83,7 @@
   cursor: default;
 }
 .con-btn-primary {
-  color: #fff;
+  color: var(--on-gold);
   background: var(--gem);
   border-color: var(--gem);
 }
@@ -219,13 +219,13 @@
   color: var(--muted);
 }
 .con-kpi.is-good .con-kpi-value {
-  color: var(--green, #3fb950);
+  color: var(--green);
 }
 .con-kpi.is-bad .con-kpi-value {
   color: var(--red);
 }
 .con-kpi.is-warn .con-kpi-value {
-  color: var(--gold, #e3b341);
+  color: var(--gold);
 }
 .con-dash-grid {
   display: grid;
@@ -495,10 +495,10 @@
   font-size: 12px;
 }
 .con-seg-pnet.pos {
-  color: #3fb950;
+  color: var(--green);
 }
 .con-seg-pnet.neg {
-  color: #f0796a;
+  color: var(--red);
 }
 .con-pill {
   font-size: 11px;
@@ -508,10 +508,10 @@
   background: var(--surface-2);
 }
 .seg-new {
-  color: #3fb950;
+  color: var(--green);
 }
 .seg-vip {
-  color: #e3b341;
+  color: var(--gold);
 }
 .seg-dormant {
   color: var(--muted);

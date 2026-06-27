@@ -8,7 +8,7 @@ export const coinFlipMeta = {
   supportsAdjustableEdge: true,
   name: 'Coin Flip',
   tagline: 'Call it in the air — ride the streak.',
-  accent: '#f5c451',
+  accent: '#f0be4a',
 } as const
 
 export { coinAt, coinsUpTo, verifyCoinFlips, hashServerSeed } from './fair.js'

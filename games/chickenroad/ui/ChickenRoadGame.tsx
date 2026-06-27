@@ -885,7 +885,7 @@ function IceCreamBody() {
           width="2.6"
           height="1.4"
           rx="0.7"
-          fill="#9b8cff"
+          fill="#f0be4a"
           transform="rotate(-10 16 56)"
         />
         <rect

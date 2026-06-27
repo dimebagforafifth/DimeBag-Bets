@@ -43,7 +43,7 @@ function inviteLink(code: string): string {
   const origin =
     typeof window !== 'undefined' && window.location
       ? window.location.origin
-      : 'https://dimebag.bet'
+      : 'https://playstadium.io'
   return `${origin}/join?ref=${code}`
 }
 

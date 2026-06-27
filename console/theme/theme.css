@@ -1,42 +1,47 @@
 /**
- * Manager console design tokens — ONE source of truth (console/theme).
+ * Manager console design tokens — now mapped onto the PlayStadium "Chip Gold &
+ * Carbon" design system (app/theme.css) so the operator console matches the
+ * player-facing app instead of its old standalone blue/Saira skin.
  *
- * The console has its own serious-bettor, data-dense skin, distinct from the
- * player-facing casino theme. Scoped to `.console` so it never leaks into the
- * rest of the app. Tailwind wasn't adopted in this Vite codebase, so the spec's
- * tokens live here as CSS custom properties (the brief allows "CSS vars").
- *
- * Fonts: Saira family (Google Fonts), with narrow/condensed fallbacks so the
- * layout holds even if the webfont is blocked.
+ * The `--c-*` indirection is KEPT (every console component + console.css reads
+ * these), but the VALUES now reference the global brand tokens — so the console
+ * inherits the gold-on-carbon palette + Barlow / Slight Chance fonts and stays in
+ * sync with the design system (incl. theme variants). Scoped to `.console`; the
+ * fallbacks keep it on-brand even if the global theme isn't present (e.g. an
+ * isolated console render/snapshot).
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&family=Saira+Condensed:wght@500;600;700&family=Saira+Semi+Condensed:wght@500;600;700&display=swap');
-
 .console {
-  /* ---- surfaces (per spec) ---- */
-  --c-bg: #14171c;
-  --c-panel: #1b1f26;
-  --c-panel-2: #20252e;
-  --c-line: #2a2f39;
+  /* ---- surfaces ---- */
+  --c-bg: var(--bg, #101113);
+  --c-panel: var(--surface, #161616);
+  --c-panel-2: var(--surface-2, #20201f);
+  --c-line: var(--line, #333332);
 
-  /* ---- accent + semantics (per spec) ---- */
-  --c-gold: #d6b14a;
-  --c-up: #5bb98b;
-  --c-down: #d27068;
+  /* ---- accent + semantics ---- */
+  --c-gold: var(--gold, #f0be4a);
+  --c-up: var(--green, #46c88a);
+  --c-down: var(--red, #e0556e);
 
-  /* ---- text (derived to read on the dark surfaces; not in the spec) ---- */
-  --c-text: #e9ecf1;
-  --c-muted: #aab2c0; /* brighter secondary text */
-  --c-faint: #8b94a3; /* was #5c6573 — too dark to read; lifted to the old muted level */
+  /* ---- text ---- */
+  --c-text: var(--text, #fcfcfb);
+  --c-muted: var(--muted, #c4c4c2);
+  --c-faint: var(--faint, #919190);
 
-  /* ---- type ---- */
-  --c-font-head: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;
-  --c-font-label: 'Saira Semi Condensed', 'Saira Condensed', system-ui, sans-serif;
-  --c-font-body: 'Saira', system-ui, -apple-system, sans-serif;
+  /* ---- type (the brand Barlow / Slight Chance families) ---- */
+  --c-font-head: var(--font-head, 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif);
+  --c-font-label: var(
+    --font-label,
+    'Barlow Semi Condensed',
+    'Barlow Condensed',
+    system-ui,
+    sans-serif
+  );
+  --c-font-body: var(--font-body, 'Barlow', system-ui, -apple-system, sans-serif);
 
   /* ---- shape + motion ---- */
-  --c-radius: 10px;
-  --c-radius-sm: 7px;
+  --c-radius: var(--radius, 10px);
+  --c-radius-sm: var(--radius-sm, 8px);
   --c-gap: 14px;
   --c-lift: -2px; /* hover translateY for tiles */
 

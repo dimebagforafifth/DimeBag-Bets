@@ -73,21 +73,21 @@
   --ink: #06121f;
 }
 [data-theme='gold'] {
-  --bg: #0f1217;
-  --surface: #161a21;
-  --surface-2: #1d222b;
-  --line: #2a2f3a;
-  --text: #eaedf2;
-  --muted: #97a2b2;
-  --faint: #7c89a3;
-  --accent: #d6b14a;
-  --accent-bright: #ecca6e;
-  --accent-press: #c39c34;
-  --accent-rgb: 214, 177, 74;
-  --beam-1: 214 177 74;
-  --beam-2: 236 202 110;
-  --beam-3: 195 156 52;
-  --ink: #14171c;
+  --bg: #101113;
+  --surface: #161616;
+  --surface-2: #20201f;
+  --line: #333332;
+  --text: #fcfcfb;
+  --muted: #c4c4c2;
+  --faint: #919190;
+  --accent: #f0be4a;
+  --accent-bright: #f5c459;
+  --accent-press: #c99528;
+  --accent-rgb: 240, 190, 74;
+  --beam-1: 240 190 74;
+  --beam-2: 245 196 89;
+  --beam-3: 201 149 40;
+  --ink: #161616;
 }
 
 :root {
@@ -158,21 +158,23 @@ button {
   inset: -20%;
   background-repeat: no-repeat;
   background-size: 220% 220%;
-  mix-blend-mode: screen;        /* tones glow against the off-black base */
+  mix-blend-mode: screen; /* tones glow against the off-black base */
   will-change: background-position;
   transform: translateZ(0);
   /* edges melt into the solid --bg so the page reads as a clean background */
   -webkit-mask: radial-gradient(135% 130% at 50% 38%, #000 64%, transparent 96%);
-          mask: radial-gradient(135% 130% at 50% 38%, #000 64%, transparent 96%);
+  mask: radial-gradient(135% 130% at 50% 38%, #000 64%, transparent 96%);
 }
 /* Layer A — vivid tonal base, full-bleed so it never leaves dark gaps */
 .exp-beam--a {
-  background-image: linear-gradient(120deg,
-    rgb(var(--beam-1) / 0.55)   0%,
-    rgb(var(--beam-2) / 0.42)  28%,
-    rgb(var(--beam-3) / 0.48)  55%,
-    rgb(var(--beam-2) / 0.40)  80%,
-    rgb(var(--beam-1) / 0.55) 100%);
+  background-image: linear-gradient(
+    120deg,
+    rgb(var(--beam-1) / 0.55) 0%,
+    rgb(var(--beam-2) / 0.42) 28%,
+    rgb(var(--beam-3) / 0.48) 55%,
+    rgb(var(--beam-2) / 0.4) 80%,
+    rgb(var(--beam-1) / 0.55) 100%
+  );
   animation: exp-drift-a 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 /* Layer B — slower organic blobs for depth + cross-flow */
@@ -194,24 +196,52 @@ button {
   background-size: 180px 180px;
 }
 @keyframes exp-drift-a {
-  0%   { background-position:  0%  50%; }
-  22%  { background-position: 34%  18%; }
-  46%  { background-position: 72%  64%; }
-  68%  { background-position: 40%  88%; }
-  85%  { background-position: 12%  40%; }
-  100% { background-position:  0%  50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  22% {
+    background-position: 34% 18%;
+  }
+  46% {
+    background-position: 72% 64%;
+  }
+  68% {
+    background-position: 40% 88%;
+  }
+  85% {
+    background-position: 12% 40%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 @keyframes exp-drift-b {
-  0%   { background-position: 100% 50%; }
-  25%  { background-position:  62% 84%; }
-  50%  { background-position:  20% 30%; }
-  74%  { background-position:  58% 70%; }
-  100% { background-position: 100% 50%; }
+  0% {
+    background-position: 100% 50%;
+  }
+  25% {
+    background-position: 62% 84%;
+  }
+  50% {
+    background-position: 20% 30%;
+  }
+  74% {
+    background-position: 58% 70%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .exp-beam { animation: none; }
-  .exp-beam--a { background-position: 28% 32%; }
-  .exp-beam--b { background-position: 70% 68%; }
+  .exp-beam {
+    animation: none;
+  }
+  .exp-beam--a {
+    background-position: 28% 32%;
+  }
+  .exp-beam--b {
+    background-position: 70% 68%;
+  }
 }
 
 /* The page's own chrome stays above the backdrop and carries its own surfaces,

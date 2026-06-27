@@ -9,7 +9,7 @@
   height: 1em;
   vertical-align: middle;
   border-radius: var(--radius-sm, 8px);
-  background-color: var(--surface-2, #1a1c1e);
+  background-color: var(--surface-2, #20201f);
   /* a translucent gold band that sweeps across the muted base */
   background-image: linear-gradient(
     90deg,

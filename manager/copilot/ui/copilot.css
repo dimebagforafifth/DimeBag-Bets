@@ -30,8 +30,8 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #1d1500;
-  background: #e0b64a;
+  color: var(--on-gold);
+  background: var(--gold);
   border-radius: 999px;
   padding: 3px 8px;
 }
@@ -60,7 +60,7 @@
 }
 .mgr-cop-range button.is-on {
   background: var(--gem);
-  color: #fff;
+  color: var(--on-gold);
 }
 
 /* snapshot figures */
@@ -135,7 +135,7 @@
   --c: var(--red);
 }
 .mgr-rec.is-medium {
-  --c: #e0b64a;
+  --c: var(--gold);
 }
 .mgr-rec.is-low {
   --c: var(--muted);

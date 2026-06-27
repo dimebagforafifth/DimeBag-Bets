@@ -65,7 +65,7 @@
   inset: -10% -6% -6%;
   background:
     radial-gradient(58% 40% at 50% 100%, rgba(255, 138, 30, 0.18), transparent 72%),
-    radial-gradient(55% 48% at 50% 4%, rgba(124, 92, 255, 0.1), transparent 72%);
+    radial-gradient(55% 48% at 50% 4%, rgba(var(--gold-glow), 0.08), transparent 72%);
   pointer-events: none;
   z-index: 0;
 }
@@ -197,7 +197,7 @@
 .ttile-skull-hit {
   background: radial-gradient(120% 120% at 50% 40%, #5a182a, #2a0e18);
   border-color: var(--red);
-  box-shadow: 0 0 18px rgba(237, 65, 99, 0.5);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--red) 50%, transparent);
 }
 /* a shockwave ring bursts out of the fatal tile */
 .ttile-skull-hit::after {
@@ -205,7 +205,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  border: 2px solid rgba(255, 90, 95, 0.85);
+  border: 2px solid color-mix(in srgb, var(--red) 85%, transparent);
   animation: skull-burst 0.55s ease-out forwards;
   pointer-events: none;
 }

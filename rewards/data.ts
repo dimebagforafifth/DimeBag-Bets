@@ -4,7 +4,22 @@
  * the same way the rest of the app shows the figure (operator money display).
  */
 import type { LucideIcon } from 'lucide-react'
-import { Sprout, Medal, Shield, Crown, Gem, Diamond, Wallet, Gauge, Rocket, BadgeCheck, Ticket, Gift, Sparkles, Trophy } from 'lucide-react'
+import {
+  Sprout,
+  Medal,
+  Shield,
+  Crown,
+  Gem,
+  Diamond,
+  Wallet,
+  Gauge,
+  Rocket,
+  BadgeCheck,
+  Ticket,
+  Gift,
+  Sparkles,
+  Trophy,
+} from 'lucide-react'
 import { formatMoney } from '../games/shared/money.js'
 
 // ── formatting (credits, shown like the rest of the app) ──────────────────────
@@ -33,26 +48,73 @@ export interface Tier {
 }
 
 export const TIERS: Tier[] = [
-  { id: 'rookie', name: 'Rookie', icon: Sprout, color: '#8b94a3', minWagered: 0, unlocks: [{ icon: Gift, label: 'Daily login bonus' }] },
   {
-    id: 'bronze', name: 'Bronze', icon: Medal, color: '#b9824a', minWagered: 1_000,
-    unlocks: [{ icon: Wallet, label: '500 balance welcome bonus' }, { icon: BadgeCheck, label: 'Bronze profile badge' }],
+    id: 'rookie',
+    name: 'Rookie',
+    icon: Sprout,
+    color: '#8b94a3',
+    minWagered: 0,
+    unlocks: [{ icon: Gift, label: 'Daily login bonus' }],
   },
   {
-    id: 'silver', name: 'Silver', icon: Shield, color: '#c2c8d2', minWagered: 10_000,
-    unlocks: [{ icon: Wallet, label: '2,000 balance rank bonus' }, { icon: Rocket, label: '1 free play on Crash' }, { icon: BadgeCheck, label: 'Silver profile badge' }],
+    id: 'bronze',
+    name: 'Bronze',
+    icon: Medal,
+    color: '#b9824a',
+    minWagered: 1_000,
+    unlocks: [
+      { icon: Wallet, label: '500 balance welcome bonus' },
+      { icon: BadgeCheck, label: 'Bronze profile badge' },
+    ],
   },
   {
-    id: 'gold', name: 'Gold', icon: Crown, color: '#d6b14a', minWagered: 50_000,
-    unlocks: [{ icon: Wallet, label: '7,500 balance rank bonus' }, { icon: Gauge, label: '+50% max-bet limit boost' }, { icon: BadgeCheck, label: 'Gold profile badge' }],
+    id: 'silver',
+    name: 'Silver',
+    icon: Shield,
+    color: '#c2c8d2',
+    minWagered: 10_000,
+    unlocks: [
+      { icon: Wallet, label: '2,000 balance rank bonus' },
+      { icon: Rocket, label: '1 free play on Crash' },
+      { icon: BadgeCheck, label: 'Silver profile badge' },
+    ],
   },
   {
-    id: 'platinum', name: 'Platinum', icon: Gem, color: '#7fc7d9', minWagered: 250_000,
-    unlocks: [{ icon: Wallet, label: '25,000 balance rank bonus' }, { icon: Gauge, label: '+100% max-bet limit boost' }, { icon: Ticket, label: 'Monthly contest auto-entry' }],
+    id: 'gold',
+    name: 'Gold',
+    icon: Crown,
+    color: '#f0be4a',
+    minWagered: 50_000,
+    unlocks: [
+      { icon: Wallet, label: '7,500 balance rank bonus' },
+      { icon: Gauge, label: '+50% max-bet limit boost' },
+      { icon: BadgeCheck, label: 'Gold profile badge' },
+    ],
   },
   {
-    id: 'diamond', name: 'Diamond', icon: Diamond, color: '#9ad1ff', minWagered: 1_000_000,
-    unlocks: [{ icon: Wallet, label: '100,000 balance rank bonus' }, { icon: Gauge, label: 'Top-tier limits' }, { icon: Sparkles, label: 'Animated Diamond name flair' }, { icon: Trophy, label: 'All-time leaderboard eligibility' }],
+    id: 'platinum',
+    name: 'Platinum',
+    icon: Gem,
+    color: '#7fc7d9',
+    minWagered: 250_000,
+    unlocks: [
+      { icon: Wallet, label: '25,000 balance rank bonus' },
+      { icon: Gauge, label: '+100% max-bet limit boost' },
+      { icon: Ticket, label: 'Monthly contest auto-entry' },
+    ],
+  },
+  {
+    id: 'diamond',
+    name: 'Diamond',
+    icon: Diamond,
+    color: '#9ad1ff',
+    minWagered: 1_000_000,
+    unlocks: [
+      { icon: Wallet, label: '100,000 balance rank bonus' },
+      { icon: Gauge, label: 'Top-tier limits' },
+      { icon: Sparkles, label: 'Animated Diamond name flair' },
+      { icon: Trophy, label: 'All-time leaderboard eligibility' },
+    ],
   },
 ]
 
@@ -100,5 +162,10 @@ export function tierProgressFor(tiers: TierConfig[], wageredCredits: number): St
   if (!next) return { tier, next: null, pct: 1, toNext: 0 }
   const span = next.threshold - tier.threshold
   const into = wageredCredits - tier.threshold
-  return { tier, next, pct: Math.max(0, Math.min(1, into / span)), toNext: next.threshold - wageredCredits }
+  return {
+    tier,
+    next,
+    pct: Math.max(0, Math.min(1, into / span)),
+    toNext: next.threshold - wageredCredits,
+  }
 }

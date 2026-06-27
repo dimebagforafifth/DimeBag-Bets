@@ -9,7 +9,7 @@ export const minesMeta = {
   supportsAdjustableEdge: true,
   name: 'Mines',
   tagline: 'Uncover gems, dodge the mines.',
-  accent: '#10b46d',
+  accent: '#f0be4a',
 } as const
 
 export {

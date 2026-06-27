@@ -116,7 +116,7 @@
 }
 .mgr-toggle button.is-on {
   background: var(--gem);
-  color: #fff;
+  color: var(--on-gold);
 }
 
 .mgr-promo-foot {
@@ -143,7 +143,7 @@
 .mgr-send {
   font-size: 14px;
   font-weight: 800;
-  color: #fff;
+  color: var(--on-gold);
   background: var(--gem);
   border: none;
   border-radius: 10px;

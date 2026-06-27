@@ -66,8 +66,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--amber, #e0a93b);
-  border: 1px solid color-mix(in srgb, var(--amber, #e0a93b) 45%, var(--line));
+  color: var(--gold);
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
   border-radius: 999px;
   padding: 1px 6px;
   cursor: help;

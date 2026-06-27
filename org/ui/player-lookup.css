@@ -116,16 +116,16 @@
   border: 1px solid var(--line);
 }
 .pl-statuspill.is-active {
-  color: #4fd18a;
-  border-color: rgba(79, 209, 138, 0.5);
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 50%, transparent);
 }
 .pl-statuspill.is-locked {
-  color: #ffc454;
-  border-color: rgba(255, 196, 84, 0.5);
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 50%, transparent);
 }
 .pl-statuspill.is-suspended {
-  color: #ff6b81;
-  border-color: rgba(255, 107, 129, 0.5);
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 50%, transparent);
 }
 .pl-head-actions {
   display: flex;
@@ -181,10 +181,10 @@
   font-size: 26px;
 }
 .pl-fig-value.is-win {
-  color: #4fd18a;
+  color: var(--green);
 }
 .pl-fig-value.is-loss {
-  color: #ff6b81;
+  color: var(--red);
 }
 .pl-fig-hint {
   font-size: 11px;
@@ -222,10 +222,10 @@
   font-variant-numeric: tabular-nums;
 }
 .pl-side-net.is-win {
-  color: #4fd18a;
+  color: var(--green);
 }
 .pl-side-net.is-loss {
-  color: #ff6b81;
+  color: var(--red);
 }
 .pl-side-meta {
   font-size: 11.5px;
@@ -273,11 +273,11 @@
   text-align: right;
 }
 .pl-num.is-win {
-  color: #4fd18a;
+  color: var(--green);
   font-weight: 800;
 }
 .pl-num.is-loss {
-  color: #ff6b81;
+  color: var(--red);
   font-weight: 800;
 }
 .pl-result {
@@ -285,10 +285,10 @@
   font-weight: 700;
 }
 .pl-feed-row.is-win .pl-result {
-  color: #4fd18a;
+  color: var(--green);
 }
 .pl-feed-row.is-loss .pl-result {
-  color: #ff6b81;
+  color: var(--red);
 }
 .pl-feed-row.is-push .pl-result {
   color: var(--muted);

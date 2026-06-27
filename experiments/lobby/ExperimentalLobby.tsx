@@ -43,7 +43,7 @@ const PALETTES: Palette[] = [
   { id: 'jade', name: 'Obsidian / Jade', swatch: '#46c08a', note: 'money-green, desaturated' },
   { id: 'ember', name: 'Carbon / Ember', swatch: '#e8704a', note: 'warm terracotta' },
   { id: 'ice', name: 'Slate / Ice', swatch: '#5aa6f0', note: 'electric blue' },
-  { id: 'gold', name: 'Graphite / Gold', swatch: '#d6b14a', note: 'the live theme, refined' },
+  { id: 'gold', name: 'Graphite / Gold', swatch: '#f0be4a', note: 'the live theme, refined' },
 ]
 type ArtStyle = 'render' | 'glyph'
 type FontStudy = { id: string; name: string; note: string }
@@ -209,7 +209,7 @@ export function ExperimentalLobby() {
 
       <header className="exp-top">
         <a className="exp-brand" href="#">
-          DimeBag<span className="exp-brand-dot">·</span>Bets
+          PlayStadium<span className="exp-brand-dot">.</span>io
         </a>
         <nav className="exp-nav" aria-label="Primary">
           <a className="exp-nav-link is-on" href="#">

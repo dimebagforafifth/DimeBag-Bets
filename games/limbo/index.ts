@@ -8,7 +8,7 @@ export const limboMeta = {
   supportsAdjustableEdge: true,
   name: 'Limbo',
   tagline: 'Set a target — will the multiplier clear it?',
-  accent: '#a78bfa',
+  accent: '#f0be4a',
 } as const
 
 export {

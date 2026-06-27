@@ -61,10 +61,10 @@
   letter-spacing: -0.5px;
 }
 .mybets-fig-value.is-win {
-  color: #4fd18a;
+  color: var(--green);
 }
 .mybets-fig-value.is-loss {
-  color: #ff6b81;
+  color: var(--red);
 }
 .mybets-fig-hint {
   font-size: 11px;
@@ -109,11 +109,11 @@
   font-weight: 700;
 }
 .mybets-net.is-win {
-  color: #4fd18a;
+  color: var(--green);
   font-weight: 800;
 }
 .mybets-net.is-loss {
-  color: #ff6b81;
+  color: var(--red);
   font-weight: 800;
 }
 
@@ -153,10 +153,10 @@
   letter-spacing: -0.5px;
 }
 .mybets-side-net.is-win {
-  color: #4fd18a;
+  color: var(--green);
 }
 .mybets-side-net.is-loss {
-  color: #ff6b81;
+  color: var(--red);
 }
 .mybets-side-meta {
   font-size: 11.5px;

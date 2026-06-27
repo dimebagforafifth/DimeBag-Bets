@@ -115,9 +115,9 @@ export function RulesPanel({ onBack }: { onBack: () => void }) {
       </div>
 
       <p className="feat-sub">
-        These are DimeBag house rules, modelled on what major regulated books publish. Points are
-        for play only — no buy-in and no cash-out — so a figure is a running standing, never real
-        money.
+        These are PlayStadium house rules, modelled on what major regulated books publish. Points
+        are for play only — no buy-in and no cash-out — so a figure is a running standing, never
+        real money.
       </p>
     </PanelShell>
   )

@@ -229,7 +229,7 @@
   align-items: center;
   line-height: 0.9;
   font-weight: 800;
-  font-family: 'Saira Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-family: var(--font-head);
 }
 .vp-idx-tl {
   top: 7px;

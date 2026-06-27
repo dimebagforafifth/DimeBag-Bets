@@ -8,15 +8,15 @@
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  background: var(--surface-2, #1d222b);
-  border: 1px solid var(--line, #2a2f3a);
+  background: var(--surface-2, #20201f);
+  border: 1px solid var(--line, #333332);
   border-radius: var(--radius-sm, 8px);
 }
 .sp-pill {
   appearance: none;
   border: 0;
   background: transparent;
-  color: var(--muted, #97a2b2);
+  color: var(--muted, #c4c4c2);
   font: inherit;
   font-size: var(--text-sm, 13px);
   padding: 4px 10px;
@@ -24,12 +24,12 @@
   cursor: pointer;
 }
 .sp-pill:hover {
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
 }
 .sp-pill.is-on {
-  background: color-mix(in srgb, var(--gold, #d6b14a) 18%, var(--surface, #161a21));
-  color: var(--gold-bright, #ecca6e);
-  box-shadow: inset 0 0 0 1px var(--gold, #d6b14a);
+  background: color-mix(in srgb, var(--gold, #f0be4a) 18%, var(--surface, #161616));
+  color: var(--gold-bright, #f5c459);
+  box-shadow: inset 0 0 0 1px var(--gold, #f0be4a);
 }
 
 /* ------------------------------- split bar -------------------------------- */
@@ -39,7 +39,7 @@
   gap: 6px;
 }
 .sp-bar-empty {
-  color: var(--faint, #7c89a3);
+  color: var(--faint, #919190);
   font-size: var(--text-xs, 11px);
   margin: 0;
 }
@@ -49,21 +49,21 @@
   height: 8px;
   border-radius: 999px;
   overflow: hidden;
-  background: var(--surface-2, #1d222b);
-  border: 1px solid var(--line, #2a2f3a);
+  background: var(--surface-2, #20201f);
+  border: 1px solid var(--line, #333332);
 }
 .sp-bar-seg {
   height: 100%;
   min-width: 2px;
 }
 .sp-bar-seg:nth-child(odd) {
-  background: linear-gradient(180deg, var(--gold-bright, #ecca6e), var(--gold, #d6b14a));
+  background: linear-gradient(180deg, var(--gold-bright, #f5c459), var(--gold, #f0be4a));
 }
 .sp-bar-seg:nth-child(even) {
-  background: color-mix(in srgb, var(--muted, #97a2b2) 55%, var(--surface, #161a21));
+  background: color-mix(in srgb, var(--muted, #c4c4c2) 55%, var(--surface, #161616));
 }
 .sp-bar-seg:nth-child(n + 3):nth-child(odd) {
-  background: color-mix(in srgb, var(--green, #34d399) 60%, var(--surface, #161a21));
+  background: color-mix(in srgb, var(--green, #46c88a) 60%, var(--surface, #161616));
 }
 .sp-bar-legend {
   list-style: none;
@@ -83,24 +83,24 @@
 }
 .sp-bar-pick,
 .sp-side-pick {
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
 }
 .sp-bar-nums,
 .sp-side-nums {
   display: inline-flex;
   gap: 10px;
-  color: var(--muted, #97a2b2);
+  color: var(--muted, #c4c4c2);
   font-variant-numeric: tabular-nums;
 }
 .sp-bar-tickets,
 .sp-side-bets {
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
 }
 
 /* ------------------------------- CLV card --------------------------------- */
 .sp-clv {
-  background: var(--surface, #161a21);
-  border: 1px solid var(--line, #2a2f3a);
+  background: var(--surface, #161616);
+  border: 1px solid var(--line, #333332);
   border-radius: var(--radius, 12px);
   padding: var(--space-4, 16px);
 }
@@ -113,14 +113,14 @@
 .sp-clv-title {
   font-family: var(--font-head, inherit);
   font-size: var(--text-lg, 18px);
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
 }
 .sp-clv-tag {
   font-size: var(--text-xs, 11px);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--gold, #d6b14a);
-  border: 1px solid color-mix(in srgb, var(--gold, #d6b14a) 50%, transparent);
+  color: var(--gold, #f0be4a);
+  border: 1px solid color-mix(in srgb, var(--gold, #f0be4a) 50%, transparent);
   border-radius: 999px;
   padding: 2px 8px;
 }
@@ -134,13 +134,13 @@
   flex-direction: column;
   gap: 2px;
   padding: var(--space-3, 12px);
-  background: var(--surface-2, #1d222b);
-  border: 1px solid var(--line, #2a2f3a);
+  background: var(--surface-2, #20201f);
+  border: 1px solid var(--line, #333332);
   border-radius: var(--radius-sm, 8px);
 }
 .sp-clv-label {
   font-size: var(--text-xs, 11px);
-  color: var(--muted, #97a2b2);
+  color: var(--muted, #c4c4c2);
 }
 .sp-clv-value {
   font-family: var(--font-num, inherit);
@@ -148,22 +148,22 @@
   font-variant-numeric: tabular-nums;
 }
 .sp-clv-value.is-up {
-  color: var(--green, #34d399);
+  color: var(--green, #46c88a);
 }
 .sp-clv-value.is-down {
   color: var(--red, #e0556e);
 }
 .sp-clv-value.is-even {
-  color: var(--faint, #7c89a3);
+  color: var(--faint, #919190);
 }
 .sp-clv-sub {
   font-size: var(--text-xs, 11px);
-  color: var(--faint, #7c89a3);
+  color: var(--faint, #919190);
 }
 .sp-clv-foot {
   margin: var(--space-3, 12px) 0 0;
   font-size: var(--text-xs, 11px);
-  color: var(--faint, #7c89a3);
+  color: var(--faint, #919190);
   line-height: 1.4;
 }
 
@@ -185,11 +185,11 @@
   font-family: var(--font-head, inherit);
   font-size: var(--text-xl, 22px);
   margin: 0;
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
 }
 .sp-sub {
   margin: 2px 0 0;
-  color: var(--muted, #97a2b2);
+  color: var(--muted, #c4c4c2);
   font-size: var(--text-sm, 13px);
 }
 .sp-controls {
@@ -201,11 +201,11 @@
   font-family: var(--font-head, inherit);
   font-size: var(--text-md, 15px);
   margin: 0 0 var(--space-2, 8px);
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
 }
 .sp-empty,
 .sp-foot {
-  color: var(--faint, #7c89a3);
+  color: var(--faint, #919190);
   font-size: var(--text-sm, 13px);
 }
 .sp-list {
@@ -217,8 +217,8 @@
   gap: var(--space-3, 12px);
 }
 .sp-card {
-  background: var(--surface, #161a21);
-  border: 1px solid var(--line, #2a2f3a);
+  background: var(--surface, #161616);
+  border: 1px solid var(--line, #333332);
   border-radius: var(--radius, 12px);
   padding: var(--space-3, 12px);
   display: flex;
@@ -232,7 +232,7 @@
 }
 .sp-rank {
   font-family: var(--font-num, inherit);
-  color: var(--gold, #d6b14a);
+  color: var(--gold, #f0be4a);
   font-size: var(--text-sm, 13px);
   min-width: 28px;
 }
@@ -244,14 +244,14 @@
   min-width: 0;
 }
 .sp-event {
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
   font-size: var(--text-sm, 13px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .sp-market {
-  color: var(--faint, #7c89a3);
+  color: var(--faint, #919190);
   font-size: var(--text-xs, 11px);
 }
 .sp-card-totals {
@@ -261,11 +261,11 @@
   font-variant-numeric: tabular-nums;
 }
 .sp-total-tix {
-  color: var(--text, #eaedf2);
+  color: var(--text, #fcfcfb);
   font-size: var(--text-sm, 13px);
 }
 .sp-total-handle {
-  color: var(--muted, #97a2b2);
+  color: var(--muted, #c4c4c2);
   font-size: var(--text-xs, 11px);
 }
 .sp-sides {
@@ -277,10 +277,10 @@
   gap: 2px;
 }
 .sp-side.is-lean .sp-side-pick {
-  color: var(--gold-bright, #ecca6e);
+  color: var(--gold-bright, #f5c459);
 }
 .sp-side-handle {
-  color: var(--muted, #97a2b2);
+  color: var(--muted, #c4c4c2);
 }
 .sp-clv-wrap {
   margin: 0;

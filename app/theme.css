@@ -745,7 +745,7 @@ body {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: #14171c; /* graphite text reads crisp on gold */
+  color: var(--on-gold); /* graphite text reads crisp on gold */
   cursor: pointer;
   transition:
     transform 0.05s ease,

@@ -77,7 +77,7 @@
   border-color: var(--gem);
 }
 .bn-chip.is-on {
-  color: #14171c;
+  color: var(--on-gold);
   background: var(--gem);
   border-color: var(--gem);
   font-weight: 700;

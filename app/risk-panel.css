@@ -38,9 +38,9 @@
   border-radius: 8px;
 }
 .risk-alert.is-warn {
-  color: #f5c451;
-  background: rgba(245, 196, 81, 0.12);
-  border: 1px solid rgba(245, 196, 81, 0.3);
+  color: var(--gold-bright);
+  background: color-mix(in srgb, var(--gold-bright) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold-bright) 30%, transparent);
 }
 .risk-alert.is-info {
   color: var(--text);
@@ -71,7 +71,7 @@
   font-variant-numeric: tabular-nums;
 }
 .risk-stat-value.is-up {
-  color: #3fb98a;
+  color: var(--green);
 }
 .risk-stat-value.is-down {
   color: var(--red);
@@ -105,7 +105,7 @@
   font-variant-numeric: tabular-nums;
 }
 .risk-num.is-up {
-  color: #3fb98a;
+  color: var(--green);
 }
 .risk-num.is-down {
   color: var(--red);

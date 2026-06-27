@@ -1,11 +1,11 @@
 /* Sportsbook view — its own section, clean two-column board + sticky bet slip
    (CLAUDE.md §2, §4). Shared controls (.field, .chip, .action) live in app/theme.css. */
 .sb {
-  --sb: #3aa0ff;
-  --sb-loss: #ff5a5f;
-  --sb-loss-2: #ff7a7e;
-  --sb-win: #4ade80;
-  --sb-gold: #f6c350;
+  --sb: var(--gold);
+  --sb-loss: var(--red);
+  --sb-loss-2: color-mix(in srgb, var(--red) 70%, #fff);
+  --sb-win: var(--green);
+  --sb-gold: var(--gold);
   width: 100%;
   max-width: 1040px;
   display: grid;
@@ -274,7 +274,9 @@
   border: 1px solid var(--line);
   color: var(--text);
   cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 }
 .sb-price:hover {
   border-color: color-mix(in srgb, var(--sb) 50%, var(--line));
@@ -782,14 +784,18 @@
        the slide-out so the close animation still plays. */
     visibility: hidden;
     transform: translateY(110%);
-    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.28s;
+    transition:
+      transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+      visibility 0s linear 0.28s;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
   }
   .sb-aside.is-slip-open .sb-slip-dock {
     visibility: visible;
     transform: translateY(0);
-    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s;
+    transition:
+      transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+      visibility 0s;
   }
   .sb-slip-dock .sb-slip {
     margin: 0;
@@ -812,7 +818,7 @@
     border: none;
     border-radius: 12px;
     background: var(--sb);
-    color: #04121f;
+    color: var(--on-gold);
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
@@ -937,16 +943,19 @@
   color: var(--text);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.12s ease, transform 0.1s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    transform 0.1s ease,
+    background 0.12s ease;
 }
 .sb-fut-out:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--sb, #3aa0ff) 55%, var(--line));
+  border-color: color-mix(in srgb, var(--sb) 55%, var(--line));
   transform: translateY(-1px);
 }
 .sb-fut-out.is-on {
-  border-color: var(--sb, #3aa0ff);
-  background: color-mix(in srgb, var(--sb, #3aa0ff) 16%, var(--surface-2));
-  box-shadow: inset 0 0 0 1px var(--sb, #3aa0ff);
+  border-color: var(--sb);
+  background: color-mix(in srgb, var(--sb) 16%, var(--surface-2));
+  box-shadow: inset 0 0 0 1px var(--sb);
 }
 .sb-fut-out.is-winner {
   border-color: color-mix(in srgb, var(--green) 55%, var(--line));
@@ -971,7 +980,7 @@
   padding: 12px 14px;
   border-radius: 12px;
   background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--sb, #3aa0ff) 45%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--sb) 45%, var(--line));
   box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
 }
 .sb-futbar-pick {
@@ -1060,7 +1069,7 @@
 }
 .action-accept {
   background: var(--sb-gold);
-  color: #07121d;
+  color: var(--on-gold);
 }
 .action-accept:hover:not(:disabled) {
   filter: brightness(1.06);

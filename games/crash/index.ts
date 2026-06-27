@@ -9,7 +9,7 @@ export const crashMeta = {
   supportsAdjustableEdge: true,
   name: 'Crash',
   tagline: 'Cash out before the rocket crashes.',
-  accent: '#46c3ff',
+  accent: '#f0be4a',
 } as const
 
 export {

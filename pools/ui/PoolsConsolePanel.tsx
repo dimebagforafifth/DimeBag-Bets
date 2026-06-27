@@ -170,7 +170,7 @@ function PolicyCard({ canEdit }: { canEdit: boolean }) {
             Save caps
           </button>
           {saved && <span className="feat-saved">Saved</span>}
-          {err && <span style={{ color: 'var(--down)', fontSize: 12 }}>{err}</span>}
+          {err && <span style={{ color: 'var(--red)', fontSize: 12 }}>{err}</span>}
         </div>
       )}
     </section>
@@ -192,7 +192,7 @@ function PoolsTable({ canEdit }: { canEdit: boolean }) {
   return (
     <section className="feat-card">
       <h2 className="feat-h2">Pools</h2>
-      {err && <p style={{ color: 'var(--down)', fontSize: 12 }}>{err}</p>}
+      {err && <p style={{ color: 'var(--red)', fontSize: 12 }}>{err}</p>}
       {pools.length === 0 ? (
         <p className="feat-empty">No live pools yet.</p>
       ) : (

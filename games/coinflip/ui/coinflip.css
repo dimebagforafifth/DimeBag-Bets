@@ -67,9 +67,9 @@
   font-weight: 800;
 }
 .coinflip-sidetabs .chip.is-heads.is-on {
-  color: #f3c948;
-  border-color: rgba(243, 201, 72, 0.6);
-  background: rgba(243, 201, 72, 0.14);
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 60%, transparent);
+  background: color-mix(in srgb, var(--gold) 14%, transparent);
 }
 .coinflip-sidetabs .chip.is-tails.is-on {
   color: #d7dee6;
@@ -77,9 +77,9 @@
   background: rgba(197, 207, 217, 0.14);
 }
 .coinflip-sidetabs .chip.is-random.is-on {
-  color: #b4a8ff;
-  border-color: rgba(155, 140, 255, 0.6);
-  background: rgba(155, 140, 255, 0.14);
+  color: var(--muted);
+  border-color: color-mix(in srgb, var(--muted) 55%, transparent);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
 }
 .coinflip-autorow {
   display: flex;
@@ -248,18 +248,22 @@
 }
 /* gold Heads */
 .coinflip-call.is-heads {
-  border-color: rgba(243, 201, 72, 0.45);
-  background: linear-gradient(180deg, rgba(243, 201, 72, 0.16), var(--surface-2));
+  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gold) 16%, transparent),
+    var(--surface-2)
+  );
 }
 .coinflip-call.is-heads:hover {
-  border-color: #f3c948;
+  border-color: var(--gold);
 }
 .coinflip-call.is-heads .coinflip-call-main::before {
   content: '● ';
-  color: #f3c948;
+  color: var(--gold);
 }
 .coinflip-call.is-heads .coinflip-call-mult {
-  color: #f3c948;
+  color: var(--gold);
 }
 /* silver Tails */
 .coinflip-call.is-tails {
@@ -276,20 +280,24 @@
 .coinflip-call.is-tails .coinflip-call-mult {
   color: #d7dee6;
 }
-/* violet Random — picks a fresh side each flip */
+/* neutral Random — picks a fresh side each flip */
 .coinflip-call.is-random {
-  border-color: rgba(155, 140, 255, 0.45);
-  background: linear-gradient(180deg, rgba(155, 140, 255, 0.16), var(--surface-2));
+  border-color: color-mix(in srgb, var(--muted) 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--muted) 14%, transparent),
+    var(--surface-2)
+  );
 }
 .coinflip-call.is-random:hover {
-  border-color: #9b8cff;
+  border-color: var(--muted);
 }
 .coinflip-call.is-random .coinflip-call-main::before {
   content: '⇄ ';
-  color: #9b8cff;
+  color: var(--muted);
 }
 .coinflip-call.is-random .coinflip-call-mult {
-  color: #b4a8ff;
+  color: var(--muted);
 }
 
 /* history pill bar */
@@ -353,11 +361,11 @@
   color: var(--muted);
 }
 .coinflip-called.is-heads {
-  border-color: rgba(243, 201, 72, 0.5);
+  border-color: color-mix(in srgb, var(--gold) 50%, transparent);
 }
 .coinflip-called.is-heads::before,
 .coinflip-called.is-heads strong {
-  color: #f3c948;
+  color: var(--gold);
 }
 .coinflip-called.is-tails {
   border-color: rgba(197, 207, 217, 0.5);

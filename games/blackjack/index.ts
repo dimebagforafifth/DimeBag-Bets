@@ -8,7 +8,7 @@ export const blackjackMeta = {
   supportsAdjustableEdge: false,
   name: 'Blackjack',
   tagline: 'Beat the dealer to 21.',
-  accent: '#3fb98a',
+  accent: '#f0be4a',
 } as const
 
 export {

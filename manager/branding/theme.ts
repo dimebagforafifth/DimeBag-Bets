@@ -13,5 +13,5 @@ export function applyBranding(cfg: BookConfig): void {
   const root = document.documentElement
   if (cfg.accent) root.style.setProperty('--gem', cfg.accent)
   else root.style.removeProperty('--gem') // fall back to theme.css default
-  document.title = cfg.name || 'DimeBag-Bets'
+  document.title = cfg.name || 'PlayStadium.io'
 }

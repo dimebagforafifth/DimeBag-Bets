@@ -1,11 +1,11 @@
-/* Baccarat — a full punto-banco table (CLAUDE.md §2, §7). Player = blue, Banker =
-   red, Tie = gold carry through the felt spots, the hands, the totals and the
-   roadmaps so the table reads at a glance. Shared controls/fairness live in
+/* Baccarat — a full punto-banco table (CLAUDE.md §2, §7). Player = neutral steel,
+   Banker = red, Tie = gold carry through the felt spots, the hands, the totals and
+   the roadmaps so the table reads at a glance. Shared controls/fairness live in
    app/theme.css; everything here is scoped under .baccarat. */
 .baccarat {
-  --bac-player: #4f9bff;
-  --bac-banker: #ef4566;
-  --bac-tie: #e6b94d;
+  --bac-player: var(--muted);
+  --bac-banker: var(--red);
+  --bac-tie: var(--gold);
   width: 100%;
   max-width: 940px;
   display: grid;
@@ -106,8 +106,8 @@
   --face: #fff;
 }
 .baccarat .tone-blue {
-  --body: #2f6fe0;
-  --edge: #cfe0ff;
+  --body: #5a6470;
+  --edge: #c2c8d0;
   --face: #fff;
 }
 .baccarat .tone-green {
@@ -117,7 +117,7 @@
 }
 .baccarat .tone-black {
   --body: #283341;
-  --edge: #f6c350;
+  --edge: var(--gold);
   --face: #fff;
 }
 
@@ -183,7 +183,7 @@
 }
 .baccarat-tally-pill.is-tie {
   --c: var(--bac-tie);
-  color: #1d1500;
+  color: var(--on-gold);
 }
 .baccarat-roads {
   display: grid;
@@ -227,7 +227,7 @@
 }
 .baccarat-bead-cell.is-tie {
   background: var(--bac-tie);
-  color: #1d1500;
+  color: var(--on-gold);
 }
 .baccarat-bead-pp,
 .baccarat-bead-bp {
@@ -340,7 +340,7 @@
   font-weight: 800;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: #1d1500;
+  color: var(--on-gold);
   background: var(--bac-tie);
   border-radius: 999px;
   padding: 2px 7px;
@@ -367,7 +367,7 @@
   font-weight: 800;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: #1d1500;
+  color: var(--on-gold);
   background: var(--bac-tie);
   border-radius: 999px;
   padding: 3px 8px;
@@ -419,7 +419,7 @@
 }
 .baccarat-winner.is-tie {
   --c: var(--bac-tie);
-  color: #1d1500;
+  color: var(--on-gold);
 }
 
 /* ---- card faces: corner index (rank over suit) + big centre pip ---- */

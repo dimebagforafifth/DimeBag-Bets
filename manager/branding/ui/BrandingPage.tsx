@@ -35,7 +35,8 @@ export function BrandingPage() {
   const [draft, setDraft] = useState<BookConfig>(saved)
 
   const set = (patch: Partial<BookConfig>) => setDraft((d) => ({ ...d, ...patch }))
-  const setMoney = (patch: Partial<MoneyDisplay>) => setDraft((d) => ({ ...d, money: { ...d.money, ...patch } }))
+  const setMoney = (patch: Partial<MoneyDisplay>) =>
+    setDraft((d) => ({ ...d, money: { ...d.money, ...patch } }))
 
   const tzOk = isValidTimezone(draft.timezone)
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved)
@@ -52,7 +53,7 @@ export function BrandingPage() {
   const sampleMoney = formatMoneyWith(123456, draft.money)
   const sampleNeg = formatMoneyWith(-923, draft.money)
   const sampleTime = formatInZone(Date.now(), draft.timezone)
-  const accent = draft.accent || '#5b8cff'
+  const accent = draft.accent || '#f0be4a'
 
   return (
     <div className="mgr-brand">
@@ -62,7 +63,11 @@ export function BrandingPage() {
       </header>
 
       {/* live preview */}
-      <section className="mgr-preview" aria-label="Preview" style={{ ['--accent' as string]: accent }}>
+      <section
+        className="mgr-preview"
+        aria-label="Preview"
+        style={{ ['--accent' as string]: accent }}
+      >
         <div className="mgr-preview-bar">
           {draft.logoUrl ? (
             <img className="mgr-preview-logo" src={draft.logoUrl} alt="" />
@@ -72,7 +77,7 @@ export function BrandingPage() {
             </span>
           )}
           <div className="mgr-preview-name">
-            <strong>{draft.name || 'DimeBag-Bets'}</strong>
+            <strong>{draft.name || 'PlayStadium.io'}</strong>
             <span>{draft.tagline}</span>
           </div>
           <button className="mgr-preview-cta" type="button">
@@ -96,10 +101,20 @@ export function BrandingPage() {
         <section className="mgr-brand-card" aria-label="Branding">
           <h2 className="mgr-h2">Branding</h2>
           <Field label="Book name">
-            <input className="mgr-input" maxLength={40} value={draft.name} onChange={(e) => set({ name: e.target.value })} />
+            <input
+              className="mgr-input"
+              maxLength={40}
+              value={draft.name}
+              onChange={(e) => set({ name: e.target.value })}
+            />
           </Field>
           <Field label="Tagline">
-            <input className="mgr-input" maxLength={80} value={draft.tagline} onChange={(e) => set({ tagline: e.target.value })} />
+            <input
+              className="mgr-input"
+              maxLength={80}
+              value={draft.tagline}
+              onChange={(e) => set({ tagline: e.target.value })}
+            />
           </Field>
           <Field label="Logo URL">
             <input
@@ -111,7 +126,11 @@ export function BrandingPage() {
           </Field>
           <Field label="Accent colour">
             <div className="mgr-accent">
-              <input type="color" value={accent} onChange={(e) => set({ accent: e.target.value })} />
+              <input
+                type="color"
+                value={accent}
+                onChange={(e) => set({ accent: e.target.value })}
+              />
               <code className="mgr-accent-hex">{draft.accent || 'theme default'}</code>
               {draft.accent && (
                 <button className="mgr-mini" type="button" onClick={() => set({ accent: '' })}>
@@ -127,7 +146,9 @@ export function BrandingPage() {
               value={draft.domain}
               onChange={(e) => set({ domain: e.target.value })}
             />
-            <span className="mgr-hint">Point this host at the deployment in Vercel; saved here for reference.</span>
+            <span className="mgr-hint">
+              Point this host at the deployment in Vercel; saved here for reference.
+            </span>
           </Field>
         </section>
 
@@ -143,23 +164,37 @@ export function BrandingPage() {
           </Field>
           <Field label="Symbol position">
             <div className="mgr-toggle">
-              <button className={draft.money.symbolPosition === 'before' ? 'is-on' : ''} onClick={() => setMoney({ symbolPosition: 'before' })}>
+              <button
+                className={draft.money.symbolPosition === 'before' ? 'is-on' : ''}
+                onClick={() => setMoney({ symbolPosition: 'before' })}
+              >
                 Before ({draft.money.symbol}10)
               </button>
-              <button className={draft.money.symbolPosition === 'after' ? 'is-on' : ''} onClick={() => setMoney({ symbolPosition: 'after' })}>
+              <button
+                className={draft.money.symbolPosition === 'after' ? 'is-on' : ''}
+                onClick={() => setMoney({ symbolPosition: 'after' })}
+              >
                 After (10 {draft.money.symbol})
               </button>
             </div>
           </Field>
           <Field label="Decimals">
-            <select className="mgr-select" value={draft.money.decimals} onChange={(e) => setMoney({ decimals: Number(e.target.value) })}>
+            <select
+              className="mgr-select"
+              value={draft.money.decimals}
+              onChange={(e) => setMoney({ decimals: Number(e.target.value) })}
+            >
               <option value={0}>0 — 1,235</option>
               <option value={1}>1 — 1,234.6</option>
               <option value={2}>2 — 1,234.56</option>
             </select>
           </Field>
           <Field label="Number format">
-            <select className="mgr-select" value={draft.money.locale} onChange={(e) => setMoney({ locale: e.target.value })}>
+            <select
+              className="mgr-select"
+              value={draft.money.locale}
+              onChange={(e) => setMoney({ locale: e.target.value })}
+            >
               {LOCALES.map((l) => (
                 <option key={l.id} value={l.id}>
                   {l.label}
@@ -168,7 +203,11 @@ export function BrandingPage() {
             </select>
           </Field>
           <Field label="Timezone">
-            <select className="mgr-select" value={draft.timezone} onChange={(e) => set({ timezone: e.target.value })}>
+            <select
+              className="mgr-select"
+              value={draft.timezone}
+              onChange={(e) => set({ timezone: e.target.value })}
+            >
               {ZONES.map((z) => (
                 <option key={z} value={z}>
                   {z || 'Local (device)'}

@@ -33,8 +33,8 @@
   cursor: pointer;
 }
 .tdx-mode-btn.is-on {
-  background: var(--td-accent, #3aa0ff);
-  color: #04121f;
+  background: var(--td-accent, var(--gold));
+  color: var(--on-gold);
 }
 .tdx-modebar-hint {
   color: var(--muted);
@@ -59,7 +59,7 @@
 .tdx-edge-btn {
   border: 1px solid var(--line);
   background: var(--surface-2);
-  color: var(--text, #e7e9ee);
+  color: var(--text, #fcfcfb);
   border-radius: 8px;
   padding: 8px 14px;
   font-weight: 700;
@@ -67,20 +67,20 @@
   cursor: pointer;
 }
 .tdx-edge-btn.is-on {
-  background: var(--td-accent, #3aa0ff);
-  border-color: var(--td-accent, #3aa0ff);
-  color: #04121f;
+  background: var(--td-accent, var(--gold));
+  border-color: var(--td-accent, var(--gold));
+  color: var(--on-gold);
 }
 .tdx-preview {
   margin: 8px 0 0;
   font-size: 12.5px;
-  color: var(--accent, #7fd1b9);
+  color: var(--muted);
 }
 .tdx-preview .is-up {
-  color: var(--up, #5bb98b);
+  color: var(--green);
 }
 .tdx-preview .is-down {
-  color: var(--down, #d27068);
+  color: var(--red);
 }
 
 /* per-league quick variants */
@@ -130,7 +130,7 @@
 }
 .tdx-explain-q {
   cursor: pointer;
-  color: var(--td-accent, #3aa0ff);
+  color: var(--td-accent, var(--gold));
   font-size: 12.5px;
   font-weight: 700;
 }
@@ -195,9 +195,9 @@
   white-space: nowrap;
 }
 .tdx-follow.is-frozen {
-  color: #04121f;
-  background: var(--gold, #d6b14a);
-  border-color: var(--gold, #d6b14a);
+  color: var(--on-gold);
+  background: var(--gold, #f0be4a);
+  border-color: var(--gold, #f0be4a);
 }
 
 /* override editor */
@@ -208,12 +208,12 @@
 .tdx-override-wrap {
   margin: 2px 0 8px;
   padding-left: 8px;
-  border-left: 2px solid var(--td-accent, #3aa0ff);
+  border-left: 2px solid var(--td-accent, var(--gold));
 }
 .tdx-override-sum {
   cursor: pointer;
   font-size: 12px;
-  color: var(--td-accent, #3aa0ff);
+  color: var(--td-accent, var(--gold));
   font-weight: 700;
 }
 .tdx-override {
@@ -234,7 +234,7 @@
 .tdx-btn {
   border: 1px solid var(--line);
   background: var(--surface-2);
-  color: var(--text, #e7e9ee);
+  color: var(--text, #fcfcfb);
   border-radius: 7px;
   padding: 6px 12px;
   font-size: 12.5px;
@@ -242,9 +242,9 @@
   cursor: pointer;
 }
 .tdx-btn.is-primary {
-  background: var(--td-accent, #3aa0ff);
-  border-color: var(--td-accent, #3aa0ff);
-  color: #04121f;
+  background: var(--td-accent, var(--gold));
+  border-color: var(--td-accent, var(--gold));
+  color: var(--on-gold);
 }
 
 /* auto-rules */
@@ -264,8 +264,8 @@
 
 /* guided tour */
 .tdx-tour {
-  border: 1px solid var(--td-accent, #3aa0ff);
-  background: color-mix(in srgb, var(--td-accent, #3aa0ff) 8%, var(--surface));
+  border: 1px solid var(--td-accent, var(--gold));
+  background: color-mix(in srgb, var(--td-accent, var(--gold)) 8%, var(--surface));
   border-radius: 12px;
   padding: 14px 16px;
 }
@@ -275,8 +275,8 @@
   gap: 8px;
 }
 .tdx-tour-chip {
-  background: var(--td-accent, #3aa0ff);
-  color: #04121f;
+  background: var(--td-accent, var(--gold));
+  color: var(--on-gold);
   font-weight: 800;
   font-size: 11px;
   border-radius: 999px;
@@ -297,7 +297,7 @@
   color: var(--muted);
 }
 .tdx-tour-stage.is-on {
-  color: var(--td-accent, #3aa0ff);
+  color: var(--td-accent, var(--gold));
   font-weight: 800;
 }
 .tdx-tour-body {

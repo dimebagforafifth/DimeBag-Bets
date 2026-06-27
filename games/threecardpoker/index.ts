@@ -8,18 +8,10 @@ export const threeCardPokerMeta = {
   supportsAdjustableEdge: false,
   name: 'Three Card Poker',
   tagline: 'Beat the dealer with three cards.',
-  accent: '#6ea8ff',
+  accent: '#f0be4a',
 } as const
 
-export {
-  RANKS,
-  SUITS,
-  DECK,
-  dealtDeck,
-  deal3,
-  verify,
-  hashServerSeed,
-} from './fair.js'
+export { RANKS, SUITS, DECK, dealtDeck, deal3, verify, hashServerSeed } from './fair.js'
 export type { Card, Deal } from './fair.js'
 
 export {

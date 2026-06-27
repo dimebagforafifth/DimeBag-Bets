@@ -28,7 +28,7 @@
 
 /* live preview */
 .mgr-preview {
-  --accent: #5b8cff;
+  --accent: var(--gold);
   border: 1px solid var(--line);
   border-radius: 14px;
   overflow: hidden;
@@ -39,7 +39,11 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, var(--surface)) 0%, var(--surface) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 16%, var(--surface)) 0%,
+    var(--surface) 100%
+  );
   border-bottom: 1px solid var(--line);
 }
 .mgr-preview-logo {
@@ -55,7 +59,7 @@
   place-items: center;
   border-radius: 9px;
   font-weight: 800;
-  color: #fff;
+  color: var(--on-gold);
   background: var(--accent);
 }
 .mgr-preview-name {
@@ -74,7 +78,7 @@
 .mgr-preview-cta {
   font-size: 12.5px;
   font-weight: 800;
-  color: #fff;
+  color: var(--on-gold);
   background: var(--accent);
   border: none;
   border-radius: 8px;
@@ -181,7 +185,7 @@
 }
 .mgr-toggle button.is-on {
   background: var(--gem);
-  color: #fff;
+  color: var(--on-gold);
 }
 .mgr-hint {
   font-size: 11px;
@@ -213,7 +217,7 @@
 .mgr-send {
   font-size: 14px;
   font-weight: 800;
-  color: #fff;
+  color: var(--on-gold);
   background: var(--gem);
   border: none;
   border-radius: 10px;

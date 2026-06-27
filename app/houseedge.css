@@ -70,7 +70,7 @@
 .houseedge-range {
   flex: 1 1 auto;
   min-width: 80px;
-  accent-color: var(--accent, #ffb84d);
+  accent-color: var(--gold);
   cursor: pointer;
 }
 .houseedge-input {
@@ -102,7 +102,7 @@
   font-variant-numeric: tabular-nums;
 }
 .houseedge-rtp.is-warn {
-  color: var(--red, #ec4863);
+  color: var(--red);
 }
 .houseedge-edge {
   font-size: 10.5px;
@@ -115,7 +115,7 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--muted);
-  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  background: var(--surface-2, #20201f);
   border: 1px solid var(--line);
   border-radius: 8px;
   cursor: pointer;
@@ -136,7 +136,7 @@
   font-weight: 600;
 }
 .houseedge-warn-line {
-  color: var(--red, #ec4863);
+  color: var(--red);
 }
 .houseedge-hint-line {
   color: var(--muted);

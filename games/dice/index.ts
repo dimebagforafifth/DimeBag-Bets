@@ -8,7 +8,7 @@ export const diceMeta = {
   supportsAdjustableEdge: true,
   name: 'Dice',
   tagline: 'Roll over or under — set your own odds.',
-  accent: '#f5a524',
+  accent: '#f0be4a',
 } as const
 
 export {

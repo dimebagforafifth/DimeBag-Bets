@@ -79,10 +79,10 @@
   font-variant-numeric: tabular-nums;
 }
 .ledger-stat-value.is-win {
-  color: #4fd18a;
+  color: var(--green);
 }
 .ledger-stat-value.is-loss {
-  color: #ff6b81;
+  color: var(--red);
 }
 
 .ledger-empty {
@@ -137,11 +137,11 @@
   text-overflow: ellipsis;
 }
 .ledger-profit.is-win {
-  color: #4fd18a;
+  color: var(--green);
   font-weight: 800;
 }
 .ledger-profit.is-loss {
-  color: #ff6b81;
+  color: var(--red);
   font-weight: 800;
 }
 .ledger-profit.is-push {
@@ -165,12 +165,12 @@
   letter-spacing: 0.6px;
 }
 .ledger-result.is-win {
-  color: #4fd18a;
-  background: rgba(79, 209, 138, 0.14);
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
 }
 .ledger-result.is-loss {
-  color: #ff6b81;
-  background: rgba(255, 107, 129, 0.14);
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 14%, transparent);
 }
 .ledger-result.is-push {
   color: var(--muted);

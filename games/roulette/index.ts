@@ -8,7 +8,7 @@ export const rouletteMeta = {
   supportsAdjustableEdge: false,
   name: 'Roulette',
   tagline: 'Single-zero European wheel.',
-  accent: '#e0444d',
+  accent: '#f0be4a',
 } as const
 
 export {
