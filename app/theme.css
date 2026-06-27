@@ -1380,6 +1380,7 @@ input[type='number']::-webkit-inner-spin-button {
 }
 .psa-topbar-right {
   display: flex;
+  flex: none; /* never shrink/clip the wallet + bell + profile cluster; the title absorbs squeeze */
   align-items: center;
   gap: 12px;
 }
@@ -1733,5 +1734,42 @@ input[type='number']::-webkit-inner-spin-button {
   /* drop the name/role text on tight phones — the avatar still opens the account menu */
   .account-trigger .auth-id {
     display: none;
+  }
+}
+
+/* Phones / compact width (<600px, the Material "compact" breakpoint). The header right
+   cluster is the squeeze point: the full wallet (balance + This week + Get points) pushes
+   the profile avatar off-screen and crushes the title. Compact the wallet to just the
+   headline balance and collapse Get points to its + icon, so the balance, message bell, and
+   profile avatar all stay fully visible and the page title keeps room to truncate. */
+@media (max-width: 600px) {
+  .psa-topbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .psa-topbar-right {
+    gap: 8px;
+  }
+  .psa-page-title {
+    font-size: 17px;
+  }
+  .app-figure {
+    padding: 5px 10px;
+    gap: 8px;
+  }
+  /* the "This week" standing is secondary on a phone — it lives in My Bets */
+  .app-figure .sds-wallet__block + .sds-wallet__block {
+    display: none;
+  }
+  /* Get points collapses to its + icon (the button keeps its aria-label) */
+  .app-figure .sds-wallet__action {
+    padding-left: 8px;
+  }
+  .app-figure .pr-get-label {
+    display: none;
+  }
+  .app-figure .pr-get-btn {
+    padding: 6px;
+    gap: 0;
   }
 }
