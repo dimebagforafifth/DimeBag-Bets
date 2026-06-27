@@ -225,32 +225,26 @@
   color: var(--face);
   cursor: pointer;
   position: relative;
-  background: repeating-conic-gradient(from -12deg, var(--body) 0 42deg, var(--edge) 42deg 60deg);
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5);
+  background-color: transparent;
+  background-image: var(--chip-img);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.5));
   transition:
     transform 0.1s ease,
     box-shadow 0.12s ease,
     filter 0.12s ease;
 }
-.sicbo-chipbtn::before {
-  content: '';
-  position: absolute;
-  inset: 21%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 34%,
-    color-mix(in srgb, var(--body) 78%, #fff),
-    var(--body) 78%
-  );
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--body) 55%, #000);
-}
 .sicbo-chipbtn-val {
   position: relative;
   z-index: 1;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.45),
+    0 0 2px rgba(0, 0, 0, 0.4);
 }
 .sicbo-chipbtn:hover:not(:disabled) {
-  filter: brightness(1.08);
+  filter: drop-shadow(0 4px 9px rgba(0, 0, 0, 0.5)) brightness(1.08);
   transform: translateY(-2px);
 }
 .sicbo-chipbtn:disabled {
@@ -259,38 +253,33 @@
 }
 .sicbo-chipbtn.is-on {
   transform: translateY(-3px) scale(1.08);
-  box-shadow:
-    0 0 0 3px var(--sicbo-accent),
-    0 7px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px var(--sicbo-accent);
+  border-radius: 50%;
+  filter: drop-shadow(0 7px 12px rgba(0, 0, 0, 0.5));
 }
 .sicbo-chipbtn.tone-white,
 .sicbo-chip-token.tone-white {
-  --body: #e9edf2;
-  --edge: #b6bdc6;
+  --chip-img: url('/chips/white-1.png');
   --face: #1b2733;
 }
 .sicbo-chipbtn.tone-red,
 .sicbo-chip-token.tone-red {
-  --body: #d8323f;
-  --edge: #ffd9dd;
+  --chip-img: url('/chips/red-5.png');
   --face: #fff;
 }
 .sicbo-chipbtn.tone-blue,
 .sicbo-chip-token.tone-blue {
-  --body: #2f6fe0;
-  --edge: #cfe0ff;
+  --chip-img: url('/chips/blue-10.png');
   --face: #fff;
 }
 .sicbo-chipbtn.tone-green,
 .sicbo-chip-token.tone-green {
-  --body: #1f9d4d;
-  --edge: #c9f4d8;
+  --chip-img: url('/chips/green-25.png');
   --face: #fff;
 }
 .sicbo-chipbtn.tone-black,
 .sicbo-chip-token.tone-black {
-  --body: #283341;
-  --edge: #f6c350;
+  --chip-img: url('/chips/black-100.png');
   --face: #fff;
 }
 
@@ -573,8 +562,12 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-  background: repeating-conic-gradient(from -10deg, var(--body) 0 44deg, var(--edge) 44deg 60deg);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+  background-color: transparent;
+  background-image: var(--chip-img);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
   animation: sicbo-chip-pop 0.18s ease;
 }
 @keyframes sicbo-chip-pop {
@@ -590,20 +583,6 @@
     opacity: 1;
   }
 }
-.sicbo-chip-token::before {
-  content: '';
-  position: absolute;
-  inset: 15%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 32%,
-    color-mix(in srgb, var(--body) 80%, #fff),
-    var(--body) 76%
-  );
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--body) 58%, #000),
-    inset 0 0 0 2.5px color-mix(in srgb, var(--edge) 55%, transparent);
-}
 .sicbo-chip-token-val {
   position: relative;
   z-index: 1;
@@ -612,7 +591,9 @@
   letter-spacing: -0.3px;
   font-variant-numeric: tabular-nums;
   color: var(--face);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.4),
+    0 0 2px rgba(0, 0, 0, 0.35);
 }
 
 /* ============================ responsive ============================== */

@@ -325,8 +325,17 @@ function PlayingCard({
 }) {
   const red = card.suit === 1 || card.suit === 2
   if (faceDown) {
-    // before the deal: a plain red card back, nothing to read or click
-    return <span className="videopoker-card is-back" aria-hidden="true" />
+    // before the deal: an ornate gold-filigree card back, nothing to read or click
+    return (
+      <span className="videopoker-card is-back" aria-hidden="true">
+        <img
+          className="videopoker-card-back-img"
+          src="/game-assets/cards/card-back.png"
+          alt=""
+          draggable={false}
+        />
+      </span>
+    )
   }
   const rank = RANK_LABELS_SHORT[card.rank]
   const suit = SUIT_SYMBOLS[card.suit]

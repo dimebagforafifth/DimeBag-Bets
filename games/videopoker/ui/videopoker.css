@@ -173,19 +173,20 @@
 .videopoker-card:hover {
   transform: translateY(-2px);
 }
-/* face-down card back shown before the deal — classic red lattice with a white inner frame */
+/* face-down card back shown before the deal — ornate gold-filigree card-back image */
 .videopoker-card.is-back {
   cursor: default;
-  border-color: #fff;
-  background-color: #c01b27;
-  background-image:
-    repeating-linear-gradient(45deg, transparent 0 8px, rgba(255, 255, 255, 0.1) 8px 9px),
-    repeating-linear-gradient(-45deg, transparent 0 8px, rgba(255, 255, 255, 0.1) 8px 9px),
-    linear-gradient(160deg, #d8202f, #9c1019);
-  box-shadow:
-    inset 0 0 0 3px rgba(255, 255, 255, 0.55),
-    inset 0 0 0 5px #b0141f,
-    0 2px 6px rgba(0, 0, 0, 0.25);
+  border-color: transparent;
+  background: none;
+  box-shadow: 0 4px 11px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.videopoker-card-back-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 .videopoker-card.is-back:hover {
   transform: none;

@@ -407,19 +407,60 @@
 .card-black {
   color: #1b2733;
 }
-/* A classic playing-card back: a deep-red diamond lattice inside a white margin
-   with a thin inner frame line and a faint centre medallion — reads like a real
-   card instead of a flat fill. */
+/* The card back is an ornate gold-filigree PNG that fills the card footprint. */
 .card-back {
-  background-color: #be1430;
-  background-image:
-    radial-gradient(ellipse 58% 66% at 50% 50%, rgba(255, 255, 255, 0.18) 0 36%, transparent 42%),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px);
-  border: 3px solid #f6f7f9;
-  box-shadow:
-    inset 0 0 0 1.5px rgba(0, 0, 0, 0.35),
-    0 4px 10px rgba(0, 0, 0, 0.35);
+  background: transparent;
+  box-shadow: -4px 7px 16px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.card-back-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 11px;
+  pointer-events: none;
+}
+
+/* ---- the dealer's hole card: a 3D Y-axis flip from back to face ---- */
+.bj-flip {
+  width: var(--card-w);
+  height: var(--card-h);
+  perspective: 900px;
+  /* the inner card already carries the deal-in glide; the flip wrapper just
+     provides the 3D stage, so the card-in animation still fires underneath */
+  animation: card-in 0.3s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+.bj-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+/* face down → showing the back; face up → rotated over to the front */
+.bj-flip.is-down .bj-flip-inner {
+  transform: rotateY(180deg);
+}
+.bj-flip.is-up .bj-flip-inner {
+  transform: rotateY(0deg);
+}
+.bj-flip-front,
+.bj-flip-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.bj-flip-back {
+  transform: rotateY(180deg);
+}
+/* the inner card fills the flip face; its own deal-in animation is redundant here
+   (the flip wrapper handles entry/reveal), so suppress it to avoid a double move */
+.bj-flip .card {
+  animation: none;
 }
 /* a card pitched off the dealer's shoe and across the felt — it flies in from
    the upper right with a flick of spin, skids, then settles square in the hand */
@@ -485,33 +526,28 @@
   position: relative;
   width: 46px;
 }
-/* a clean clay poker chip: a solid body with discrete edge dashes round the rim
-   and a flat inner disc — readable and tactile without the glossy "video-game"
-   plastic dome. Drops in when it's stacked. Piled face-on by absolute `bottom`. */
+/* a real clay poker chip rendered from a transparent PNG, piled face-on by
+   absolute `bottom`. Drops in when it's stacked. The denomination still reads on
+   the chip's clean centre. */
 .bj-chip {
   position: absolute;
   left: 0;
   width: 46px;
   height: 46px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    repeating-conic-gradient(from 0deg, var(--edge) 0deg 7deg, transparent 7deg 45deg), var(--body);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
   animation: bj-chip-drop 0.26s cubic-bezier(0.22, 1.4, 0.5, 1) backwards;
 }
-.bj-chip::before {
-  content: '';
+.bj-chip-img {
   position: absolute;
-  inset: 19%; /* a flat inner disc, leaving the dashed rim showing */
-  border-radius: 50%;
-  background: var(--body);
-  box-shadow:
-    inset 0 0 0 1.5px color-mix(in srgb, var(--edge) 70%, transparent),
-    inset 0 1px 1px rgba(255, 255, 255, 0.22),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.16); /* minimal top-light / bottom-shadow, not glossy */
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
 @keyframes bj-chip-drop {
   from {
@@ -534,7 +570,10 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.3px;
   color: var(--face);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  /* legible on the chip's clean centre regardless of its colour */
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.35),
+    0 0 2px rgba(255, 255, 255, 0.45);
 }
 .chip-count {
   font-size: 11px;

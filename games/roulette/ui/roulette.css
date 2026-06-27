@@ -120,33 +120,28 @@
   color: var(--face);
   cursor: pointer;
   position: relative;
-  /* a real chip: a spotted edge ring (conic) around a domed inner face */
-  background: repeating-conic-gradient(from -12deg, var(--body) 0 42deg, var(--edge) 42deg 60deg);
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5);
+  /* a real poker chip image (per-tone via --chip-img) */
+  background-color: transparent;
+  background-image: var(--chip-img);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
   transition:
     transform 0.1s ease,
     box-shadow 0.12s ease,
     filter 0.12s ease;
 }
-.rl-chipbtn::before {
-  content: '';
-  position: absolute;
-  inset: 21%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 34%,
-    color-mix(in srgb, var(--body) 78%, #fff),
-    var(--body) 78%
-  );
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--body) 55%, #000);
-}
 .rl-chipbtn-val {
   position: relative;
   z-index: 1;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  /* legible on the chip image's clean center, light or dark face */
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.45),
+    0 0 2px rgba(0, 0, 0, 0.3);
 }
 .rl-chipbtn:hover:not(:disabled) {
-  filter: brightness(1.08);
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5)) brightness(1.08);
   transform: translateY(-2px);
 }
 .rl-chipbtn:disabled {
@@ -154,11 +149,10 @@
   cursor: default;
 }
 .rl-chipbtn.is-on {
-  /* the chip you're holding lifts off the rack with a gold ring */
+  /* the chip you're holding lifts off the rack with a gold glow ring */
   transform: translateY(-3px) scale(1.08);
-  box-shadow:
-    0 0 0 3px var(--gem),
-    0 7px 12px rgba(0, 0, 0, 0.5);
+  filter: drop-shadow(0 0 3px var(--gem)) drop-shadow(0 0 5px var(--gem))
+    drop-shadow(0 7px 10px rgba(0, 0, 0, 0.5));
 }
 .rl-chip-custom {
   margin-top: 8px;
@@ -172,28 +166,23 @@
   color: var(--text);
 }
 .rl-chipbtn.tone-white {
-  --body: #e9edf2;
-  --edge: #b6bdc6;
+  --chip-img: url('/chips/white-1.png');
   --face: #1b2733;
 }
 .rl-chipbtn.tone-red {
-  --body: #d8323f;
-  --edge: #ffd9dd;
+  --chip-img: url('/chips/red-5.png');
   --face: #fff;
 }
 .rl-chipbtn.tone-blue {
-  --body: #2f6fe0;
-  --edge: #cfe0ff;
+  --chip-img: url('/chips/blue-10.png');
   --face: #fff;
 }
 .rl-chipbtn.tone-green {
-  --body: #1f9d4d;
-  --edge: #c9f4d8;
+  --chip-img: url('/chips/green-25.png');
   --face: #fff;
 }
 .rl-chipbtn.tone-black {
-  --body: #283341;
-  --edge: #f6c350;
+  --chip-img: url('/chips/black-100.png');
   --face: #fff;
 }
 
@@ -269,6 +258,25 @@
     /* dark wooden ball track */ inset 0 0 0 9px rgba(0, 0, 0, 0.55),
     inset 0 0 22px rgba(0, 0, 0, 0.65);
   will-change: transform;
+}
+/* the premium empty-bowl wheel art as the base layer of the disc: it fills the
+   wheel and spins with it (it's a child of the rotating .rl-wheel). The conic
+   pocket gradient, frets, and number ring all render on top of it. */
+.rl-wheel-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  z-index: 0;
+  /* Show the premium art only at the gold centre hub and the outer rim/ball
+     track; cut out the pocket-band annulus so the red/black/green WHEEL_GRADIENT
+     pockets underneath show through (frets + numbers ride on top, same angles). */
+  -webkit-mask: radial-gradient(circle, #000 0 30%, rgba(0, 0, 0, 0) 36% 70%, #000 76%);
+  mask: radial-gradient(circle, #000 0 30%, rgba(0, 0, 0, 0) 36% 70%, #000 76%);
 }
 /* The 37 pockets, rendered as distinct SLOTS the ball drops into. Each segment's
    face sinks into a dark shadow "well" at its edges, with a bright RAISED brass
@@ -447,12 +455,11 @@
   width: 15px;
   height: 15px;
   margin-left: -7.5px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 34% 28%, #ffffff 0%, #eef1f4 45%, #b4bcc4 100%);
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.75),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
-    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  /* soft contact shadow follows the ball's round silhouette (transparent PNG) */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.75));
 }
 /* a soft shadow under the ball that squashes when it lands — reads as weight */
 .rl-ball-shadow {
@@ -470,13 +477,12 @@
 .rl-wheel-wrap.is-spinning .rl-ball-shadow {
   animation: rl-ball-shadow 4800ms linear both;
 }
-/* a hot motion glow while the ball is racing — drops back to a plain ball at rest */
+/* a hot motion glow while the ball is racing — drops back to a plain ball at rest.
+   drop-shadow (not box-shadow) so the glow hugs the ball's round silhouette, not a
+   square box around the transparent PNG. */
 .rl-wheel-wrap.is-spinning .rl-ball {
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.75),
-    0 0 16px 3px rgba(255, 255, 255, 0.7),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
-    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.75))
+    drop-shadow(0 0 7px rgba(255, 255, 255, 0.8));
 }
 /* a comet motion-trail streaming off the racing ball: it points along the rim
    behind the ball (the ball moves left at the top of its counter-clockwise orbit,
@@ -1110,10 +1116,13 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-  /* a clean casino chip: 6 crisp edge spots around the rim, then a domed inner
-     disc set off by a fine ring line (no fuzzy dashed border) */
-  background: repeating-conic-gradient(from -10deg, var(--body) 0 44deg, var(--edge) 44deg 60deg);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+  /* a real poker chip image (per-tone via --chip-img) sitting on the felt spot */
+  background-color: transparent;
+  background-image: var(--chip-img);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
   animation: rl-chip-pop 0.18s ease;
 }
 @keyframes rl-chip-pop {
@@ -1129,20 +1138,6 @@
     opacity: 1;
   }
 }
-.rl-chip-token::before {
-  content: '';
-  position: absolute;
-  inset: 15%; /* the inner disc — leaves the spotted rim showing */
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 32%,
-    color-mix(in srgb, var(--body) 80%, #fff),
-    var(--body) 76%
-  );
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--body) 58%, #000),
-    inset 0 0 0 2.5px color-mix(in srgb, var(--edge) 55%, transparent);
-}
 .rl-chip-token-val {
   position: relative;
   z-index: 1;
@@ -1151,31 +1146,29 @@
   letter-spacing: -0.3px;
   font-variant-numeric: tabular-nums;
   color: var(--face);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  /* legible on the chip image's clean center */
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.4),
+    0 0 2px rgba(0, 0, 0, 0.3);
 }
 .rl-chip-token.tone-white {
-  --body: #e9edf2;
-  --edge: #c2c9d2;
+  --chip-img: url('/chips/white-1.png');
   --face: #1b2733;
 }
 .rl-chip-token.tone-red {
-  --body: #d8323f;
-  --edge: #ffffff;
+  --chip-img: url('/chips/red-5.png');
   --face: #ffffff;
 }
 .rl-chip-token.tone-blue {
-  --body: #2f6fe0;
-  --edge: #ffffff;
+  --chip-img: url('/chips/blue-10.png');
   --face: #ffffff;
 }
 .rl-chip-token.tone-green {
-  --body: #1f9d4d;
-  --edge: #ffffff;
+  --chip-img: url('/chips/green-25.png');
   --face: #ffffff;
 }
 .rl-chip-token.tone-black {
-  --body: #283341;
-  --edge: #f6c350;
+  --chip-img: url('/chips/black-100.png');
   --face: #ffffff;
 }
 

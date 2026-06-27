@@ -131,6 +131,7 @@
   animation: balloon-breathe 2.4s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center;
+  pointer-events: none;
 }
 @keyframes balloon-breathe {
   0%,
@@ -288,6 +289,32 @@
   }
 }
 
+/* the burst-shreds image — the popped balloon scraps, blown out from the centre
+   then fading, the same beat the old vector scraps flew on */
+.burst-shreds {
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+  animation: burst-shreds 0.62s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+@keyframes burst-shreds {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
 .balloon-pop-label {
   font-size: 26px;
   font-weight: 900;
@@ -322,6 +349,9 @@
   transform-box: view-box;
   transform-origin: 72px 288px;
   transform: scale(1.12);
+}
+.pump-rig-img {
+  pointer-events: none;
 }
 .pump-hose {
   opacity: 0.95;
@@ -423,7 +453,8 @@
   .balloon.is-tense .balloon-scale,
   .balloon.is-critical .balloon-scale,
   .pump-plunger.is-pumping,
-  .pump-air {
+  .pump-air,
+  .burst-shreds {
     animation: none;
   }
 }

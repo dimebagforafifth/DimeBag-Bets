@@ -377,38 +377,31 @@
 }
 
 /* ====================================================================
-   The brown wooden treasure chest (two overlaid SVGs sharing one viewBox).
-   Wood/brass are uniform; only var(--swatch) tints the spilling light.
+   The premium treasure chest — two stacked transparent PNGs (closed + open)
+   that swap on landing. The chest art is uniform across all 52 cells; only
+   var(--swatch) tints the bloom of light spilling out of the opened chest.
    ==================================================================== */
-.cases-chest-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
 .cases-chest {
   position: relative;
   width: 92px;
   height: 57px;
-  /* a gentle perspective — the lid only tilts back a little before it fades away,
-     so we avoid the distorted full-flip that looked weird at this small size */
-  perspective: 560px;
-  perspective-origin: 50% 32%;
 }
-.cases-chest-body,
-.cases-chest-lid {
+/* both chest images share the cell footprint, stacked one over the other */
+.cases-chest-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
-/* the lid is its OWN element; on open it tilts back a touch then fades out */
-.cases-chest-lid {
-  transform-origin: 50% 46.8%; /* hinge at the seam (viewBox y=78) */
-  /* no base transform — a no-op rotateX(0) would force each closed lid onto its own
-     3D layer (52 of them). The open animation sets the rotateX when it's time. */
+/* at rest only the closed art shows; the open art waits underneath, invisible */
+.cases-chest-img-open {
+  opacity: 0;
+  transform-origin: 50% 70%;
 }
 /* soft elliptical contact shadow grounding the chest */
 .cases-chest-shadow {
@@ -440,38 +433,46 @@
   opacity: 0;
   pointer-events: none;
 }
-/* the interior fan + glow, hidden until open */
-.cases-chest-interior {
-  opacity: 0;
-}
-.cases-chest-rays {
-  transform-box: view-box;
-  transform-origin: 100px 92px;
-}
-.cases-chest-rays polygon {
-  fill: color-mix(in srgb, var(--swatch) 70%, #fff);
-  opacity: 0.5;
-}
-.cases-chest-innerlight {
-  mix-blend-mode: screen;
-}
 
-/* ---- open: a quick rattle, then the lid hinges up-and-back, light blooms ---- */
+/* ---- open: a quick rattle, then the closed art crossfades out as the open art
+   (lid up, glowing) pops in, and the tier-coloured light blooms ---- */
 .cases-chest.is-open {
   animation: cases-chest-rattle 0.26s ease-in-out;
 }
-.cases-chest.is-open .cases-chest-lid {
-  /* a little tip back on the hinge, then the lid lifts and fades away entirely */
-  animation: cases-lid-open 0.5s ease-out 0.18s both;
+/* the closed chest fades away as the lid pops (replacing the old rotateX hinge) */
+.cases-chest.is-open .cases-chest-img-closed {
+  animation: cases-chest-close-out 0.4s ease-out 0.18s both;
 }
-.cases-chest.is-open .cases-chest-interior {
-  animation: cases-chest-interior-in 0.5s ease-out 0.36s both;
-}
-.cases-chest.is-open .cases-chest-rays {
-  animation: cases-chest-rays 0.85s ease-out 0.42s both;
+/* the open chest fades + scales in for the reveal */
+.cases-chest.is-open .cases-chest-img-open {
+  animation: cases-chest-open-in 0.5s cubic-bezier(0.2, 1.1, 0.4, 1) 0.18s both;
 }
 .cases-chest.is-open .cases-chest-bloom {
   animation: cases-chest-bloom 0.9s ease-out 0.3s both;
+}
+@keyframes cases-chest-close-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+@keyframes cases-chest-open-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.82) translateY(3px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 @keyframes cases-chest-rattle {
   0%,
@@ -491,14 +492,6 @@
     transform: translateX(1px);
   }
 }
-@keyframes cases-chest-interior-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
 @keyframes cases-chest-bloom {
   0% {
     opacity: 0;
@@ -513,35 +506,6 @@
     transform: translate(-50%, -50%) scale(1.4);
   }
 }
-@keyframes cases-chest-rays {
-  0% {
-    opacity: 0;
-    transform: scaleY(0.2);
-  }
-  45% {
-    opacity: 0.6;
-    transform: scaleY(1.05);
-  }
-  100% {
-    opacity: 0;
-    transform: scaleY(1.15);
-  }
-}
-@keyframes cases-lid-open {
-  0% {
-    transform: rotateX(0deg) translateY(0);
-    opacity: 1;
-  }
-  45% {
-    transform: rotateX(40deg) translateY(-2px);
-    opacity: 1;
-  }
-  100% {
-    transform: rotateX(50deg) translateY(-10px);
-    opacity: 0;
-  }
-}
-
 /* ---- the prize result, popped up OVER the marker/cursor (no popup card) ---- */
 .cases-reel-result {
   position: absolute;
@@ -646,27 +610,24 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cases-reel::after,
-  .cases-chest.is-open .cases-chest-lid,
   .cases-chest.is-open,
-  .cases-chest.is-open .cases-chest-interior,
-  .cases-chest.is-open .cases-chest-rays,
+  .cases-chest.is-open .cases-chest-img-closed,
+  .cases-chest.is-open .cases-chest-img-open,
   .cases-chest.is-open .cases-chest-bloom,
   .cases-reel-result {
     animation: none;
   }
-  /* static reveal: the lid is simply gone, interior lit, result shown */
-  .cases-chest.is-open .cases-chest-lid {
+  /* static reveal: the closed art is simply gone, the open art shown, result lit */
+  .cases-chest.is-open .cases-chest-img-closed {
     opacity: 0;
   }
-  .cases-chest.is-open .cases-chest-interior {
+  .cases-chest.is-open .cases-chest-img-open {
     opacity: 1;
+    transform: none;
   }
   .cases-chest.is-open .cases-chest-bloom {
     opacity: 0.3;
     transform: translate(-50%, -50%) scale(1.25);
-  }
-  .cases-chest.is-open .cases-chest-rays {
-    opacity: 0.5;
   }
   .cases-reel-result {
     opacity: 1;

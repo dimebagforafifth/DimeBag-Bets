@@ -488,19 +488,30 @@ export function CoinFlipGame({
   )
 }
 
-/** A gold (heads) / silver (tails) coin. Each toss (`spins` increments) replays a
- *  gamey arc — it leaps up, tumbles, and lands on the dealt `face` with a little
- *  bounce. Re-keying on `spins` restarts the toss animation; it holds the landed
- *  face afterwards (animation-fill-mode: forwards). At rest it shows heads. */
+/** A real 3D coin — a gold heads face and a gold tails face mounted back-to-back on
+ *  a preserve-3d container. Each toss (`spins` increments) replays a gamey arc: it
+ *  leaps up, tumbles, and lands on the dealt `face` with a little bounce. Re-keying
+ *  on `spins` restarts the toss animation; it holds the landed face afterwards
+ *  (animation-fill-mode: forwards). At rest it shows heads. */
 function Coin({ face, spins, sizeClass }: { face: CoinFace; spins: number; sizeClass: string }) {
   const toss = spins > 0 ? (face === 'tails' ? 'is-toss-tails' : 'is-toss-heads') : ''
   return (
     <div key={spins} className={`coinflip-coin ${sizeClass} ${toss}`}>
       <div className="coinflip-face is-heads">
-        <span className="coinflip-emblem">♛</span>
+        <img
+          className="coinflip-face-img"
+          src="/game-assets/coins/coin-heads.png"
+          alt="Heads"
+          draggable={false}
+        />
       </div>
       <div className="coinflip-face is-tails">
-        <span className="coinflip-emblem">★</span>
+        <img
+          className="coinflip-face-img"
+          src="/game-assets/coins/coin-tails.png"
+          alt="Tails"
+          draggable={false}
+        />
       </div>
     </div>
   )

@@ -294,7 +294,12 @@ function PlayingCard({ card, flash }: { card: Card | null; flash?: boolean }) {
   if (!card) {
     return (
       <div className="playing-card is-empty">
-        <span className="card-back">?</span>
+        <img
+          className="card-back-img"
+          src="/game-assets/cards/card-back.png"
+          alt="Face-down card"
+          draggable={false}
+        />
       </div>
     )
   }

@@ -468,7 +468,7 @@
 }
 
 /* the 3D coin. Size is set by the tier class (more coins → smaller); the face
-   glyphs are em-based so they scale with it. */
+   images fill it via object-fit so they scale with it. */
 .coinflip-coin {
   position: relative;
   transform-style: preserve-3d;
@@ -557,97 +557,37 @@
   height: 80px;
   font-size: 8px;
 }
+/* Each face fills the coin and shows its transparent PNG. They sit back-to-back on
+   the preserve-3d container; backface-visibility hides whichever face is turned
+   away, so the toss reveals the correct side as it rotates. */
 .coinflip-face {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.05em;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border: 0.3em solid #7c5810; /* the coin's dark outer edge (gold by default) */
-  box-shadow:
-    0 16px 30px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 0.25em rgba(255, 255, 255, 0.28),
-    inset 0 0 0 0.38em rgba(110, 75, 12, 0.5),
-    inset 0 0.45em 1em rgba(255, 255, 255, 0.32),
-    inset 0 -0.55em 1.1em rgba(74, 47, 5, 0.42),
-    0 0 24px rgba(243, 201, 72, 0.45); /* gold glow — gamey token */
-  overflow: hidden; /* clip the shine sweep to the coin */
 }
-/* the milled (reeded) edge — a ring of fine ticks just inside the rim */
-.coinflip-face::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(#6e4e0e 0 3deg, #e0bb5e 3deg 6deg);
-  -webkit-mask: radial-gradient(circle, transparent 0 45%, #000 46% 49.5%, transparent 50%);
-  mask: radial-gradient(circle, transparent 0 45%, #000 46% 49.5%, transparent 50%);
-  z-index: 2;
-}
-/* a glossy shine that slowly sweeps across — sells it as a shiny game token */
-.coinflip-face::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: linear-gradient(
-    115deg,
-    transparent 36%,
-    rgba(255, 255, 255, 0.45) 50%,
-    transparent 64%
-  );
-  background-size: 250% 100%;
-  animation: coin-sheen 3.6s ease-in-out infinite;
+/* the coin artwork — matches the round footprint, soft drop shadow under it as a
+   gamey token glow */
+.coinflip-face-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   pointer-events: none;
-  z-index: 3;
+  -webkit-user-select: none;
+  user-select: none;
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 14px rgba(243, 201, 72, 0.35));
 }
-@keyframes coin-sheen {
-  0% {
-    background-position: 130% 0;
-  }
-  100% {
-    background-position: -30% 0;
-  }
-}
-/* one clean emblem per face — gold crown for heads, silver star for tails. A
-   single mark reads instantly and keeps the coin uncluttered. */
-.coinflip-emblem {
-  position: relative;
-  z-index: 1;
-  font-size: 2.9em;
-  line-height: 1;
-  text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.45),
-    0 0 0.45em rgba(255, 255, 255, 0.4);
-}
-/* heads = gold */
+/* heads faces forward; tails is mounted on the back, a half-turn around */
 .coinflip-face.is-heads {
-  background: radial-gradient(circle at 38% 30%, #fff1ba 0%, #f3c948 48%, #b9831f 100%);
-  color: #5a3d05;
   transform: rotateY(0deg);
 }
-/* tails = silver */
 .coinflip-face.is-tails {
-  background: radial-gradient(circle at 38% 30%, #ffffff 0%, #c5cfd9 48%, #7e8b99 100%);
-  color: #2a3744;
-  border-color: #66727f; /* silver edge */
   transform: rotateY(180deg);
-}
-.coinflip-face.is-tails::before {
-  background: repeating-conic-gradient(#59636e 0 3deg, #cdd6df 3deg 6deg);
-}
-.coinflip-face.is-tails {
-  box-shadow:
-    0 16px 30px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 0.25em rgba(255, 255, 255, 0.45),
-    inset 0 0 0 0.38em rgba(70, 80, 92, 0.5),
-    inset 0 0.45em 1em rgba(255, 255, 255, 0.5),
-    inset 0 -0.55em 1.1em rgba(40, 50, 62, 0.4);
 }
 
 @media (max-width: 640px) {
@@ -656,8 +596,8 @@
   }
 }
 
-/* respect reduced-motion: drop the toss tumble and the looping sheen — the coin
-   simply shows the dealt face. */
+/* respect reduced-motion: drop the toss tumble — the coin simply shows the dealt
+   face. Tails rests a half-turn around so its face finishes forward. */
 @media (prefers-reduced-motion: reduce) {
   .coinflip-coin.is-toss-heads,
   .coinflip-coin.is-toss-tails {
@@ -665,8 +605,5 @@
   }
   .coinflip-coin.is-toss-tails {
     transform: rotateY(180deg);
-  }
-  .coinflip-face::after {
-    animation: none;
   }
 }

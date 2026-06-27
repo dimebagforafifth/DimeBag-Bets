@@ -56,32 +56,21 @@
   color: var(--face);
   cursor: pointer;
   position: relative;
-  background: repeating-conic-gradient(from -12deg, var(--body) 0 42deg, var(--edge) 42deg 60deg);
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5);
+  background: var(--chip-img) center / contain no-repeat;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
   transition:
     transform 0.1s ease,
-    box-shadow 0.12s ease,
     filter 0.12s ease;
-}
-.baccarat-chipbtn::before {
-  content: '';
-  position: absolute;
-  inset: 21%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 34%,
-    color-mix(in srgb, var(--body) 78%, #fff),
-    var(--body) 78%
-  );
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--body) 55%, #000);
 }
 .baccarat-chipbtn-val {
   position: relative;
   z-index: 1;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 0 3px rgba(0, 0, 0, 0.45);
 }
 .baccarat-chipbtn:hover:not(:disabled) {
-  filter: brightness(1.08);
+  filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.55)) brightness(1.08);
   transform: translateY(-2px);
 }
 .baccarat-chipbtn:disabled {
@@ -90,34 +79,29 @@
 }
 .baccarat-chipbtn.is-on {
   transform: translateY(-3px) scale(1.08);
-  box-shadow:
-    0 0 0 3px var(--gem),
-    0 7px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px var(--gem);
+  filter: drop-shadow(0 7px 12px rgba(0, 0, 0, 0.5));
 }
-/* shared chip palette (rack buttons + the tokens on the felt) */
+/* shared chip palette (rack buttons + the tokens on the felt) — each tone maps to
+   its premium chip PNG; --face keeps the denomination text legible on top. */
 .baccarat .tone-white {
-  --body: #e9edf2;
-  --edge: #b6bdc6;
+  --chip-img: url('/chips/white-1.png');
   --face: #1b2733;
 }
 .baccarat .tone-red {
-  --body: #d8323f;
-  --edge: #ffd9dd;
+  --chip-img: url('/chips/red-5.png');
   --face: #fff;
 }
 .baccarat .tone-blue {
-  --body: #5a6470;
-  --edge: #c2c8d0;
+  --chip-img: url('/chips/blue-10.png');
   --face: #fff;
 }
 .baccarat .tone-green {
-  --body: #1f9d4d;
-  --edge: #c9f4d8;
+  --chip-img: url('/chips/green-25.png');
   --face: #fff;
 }
 .baccarat .tone-black {
-  --body: #283341;
-  --edge: var(--gold);
+  --chip-img: url('/chips/black-100.png');
   --face: #fff;
 }
 
@@ -471,13 +455,11 @@
   opacity: 0.92;
 }
 .baccarat-card.is-back {
-  background:
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.07) 0 6px, transparent 6px 12px),
-    linear-gradient(160deg, #7c1f2e 0%, #4a1019 100%);
-  box-shadow:
-    inset 0 0 0 3px rgba(255, 255, 255, 0.07),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.3),
-    0 8px 18px rgba(0, 0, 0, 0.4);
+  background: none;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
+  box-shadow: none;
   animation: none;
 }
 @keyframes baccarat-deal {
@@ -592,21 +574,9 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: repeating-conic-gradient(from -12deg, var(--body) 0 42deg, var(--edge) 42deg 60deg);
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.55);
+  background: var(--chip-img) center / contain no-repeat;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55));
   animation: baccarat-chip-drop 0.24s cubic-bezier(0.2, 1.4, 0.5, 1);
-}
-.baccarat-chiptoken::before {
-  content: '';
-  position: absolute;
-  inset: 20%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 34%,
-    color-mix(in srgb, var(--body) 78%, #fff),
-    var(--body) 78%
-  );
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--body) 55%, #000);
 }
 .baccarat-chiptoken-val {
   position: relative;
@@ -614,7 +584,9 @@
   font-size: 9px;
   font-weight: 800;
   color: var(--face);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 0 3px rgba(0, 0, 0, 0.45);
 }
 @keyframes baccarat-chip-drop {
   from {

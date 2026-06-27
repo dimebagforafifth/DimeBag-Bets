@@ -78,6 +78,9 @@
   width: 72%;
   height: 72%;
   overflow: visible;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
 /* big gem, big bomb — fill the tile so they read clearly */
 .tile-gem .icon {

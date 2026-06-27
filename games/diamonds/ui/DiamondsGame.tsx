@@ -52,6 +52,23 @@ const GEM_COLORS = [
   '#ff4fd8', // magenta
 ]
 
+/** Transparent gem PNGs, one per colour index — same order as GEM_COLORS above
+ *  (0 red, 1 orange, 2 yellow, 3 green, 4 cyan, 5 blue, 6 purple, 7 magenta).
+ *  The colour index decided by the seed picks the artwork; logic is unchanged. */
+const GEM_IMAGES = [
+  '/game-tiles/diamonds/gem-red.png',
+  '/game-tiles/diamonds/gem-orange.png',
+  '/game-tiles/diamonds/gem-yellow.png',
+  '/game-tiles/diamonds/gem-green.png',
+  '/game-tiles/diamonds/gem-cyan.png',
+  '/game-tiles/diamonds/gem-blue.png',
+  '/game-tiles/diamonds/gem-purple.png',
+  '/game-tiles/diamonds/gem-magenta.png',
+]
+
+/** Readable colour name per index, for gem alt text. Same order as above. */
+const GEM_NAMES = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta']
+
 const REVEAL_MS = 120 // stagger between each gem popping in — snappy, so the result lands fast
 /** Hold a short beat after the last gem lands so the hand reads before the win card. */
 const POPUP_DELAY_MS = 320
@@ -196,7 +213,12 @@ export function DiamondsGame({
                   }
                 >
                   {revealed && colour != null ? (
-                    <Gem color={GEM_COLORS[colour]} />
+                    <img
+                      className="diamonds-gem"
+                      src={GEM_IMAGES[colour]}
+                      alt={`${GEM_NAMES[colour]} gem`}
+                      draggable={false}
+                    />
                   ) : (
                     <span className="diamonds-slot-empty" />
                   )}
@@ -250,31 +272,6 @@ export function DiamondsGame({
         />
       </section>
     </div>
-  )
-}
-
-/** A faceted brilliant-cut gem, tinted to its colour. Cosmetic — the colour
- *  index decided by the seed is what counts, not the artwork. */
-function Gem({ color }: { color: string }) {
-  return (
-    <svg className="diamonds-gem" viewBox="0 0 32 32" aria-hidden="true" style={{ color }}>
-      {/* crown facets */}
-      <polygon className="gem-light" points="6,11 16,4 26,11 21,13 11,13" />
-      <polygon className="gem-mid" points="6,11 11,13 9,18 5,15" />
-      <polygon className="gem-dark" points="26,11 27,15 23,18 21,13" />
-      {/* table */}
-      <polygon className="gem-table" points="11,13 21,13 23,18 9,18" />
-      {/* pavilion to the culet */}
-      <polygon className="gem-mid" points="9,18 23,18 16,29" />
-      <polygon className="gem-dark" points="5,15 9,18 16,29" />
-      <polygon className="gem-light" points="27,15 23,18 16,29" />
-      {/* sparkle */}
-      <path
-        className="gem-spark"
-        d="M14.4 9 l1 2.2 2.2 1 -2.2 1 -1 2.2 -1 -2.2 -2.2 -1 2.2 -1 Z"
-        opacity="0.85"
-      />
-    </svg>
   )
 }
 

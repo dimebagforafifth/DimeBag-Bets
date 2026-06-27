@@ -664,7 +664,13 @@ function PlayingCard({
           </span>
         </div>
         <div className="threecardpoker-face is-back">
-          <span className="threecardpoker-cardback" />
+          <img
+            className="threecardpoker-cardback"
+            src="/game-assets/cards/card-back.png"
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+          />
         </div>
       </div>
     </div>

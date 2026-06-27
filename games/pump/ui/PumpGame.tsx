@@ -388,21 +388,19 @@ function Balloon({
 
           {/* the pump rig (foot + cylinder + nozzle + mouth + plunger), scaled up a
               touch as one unit and anchored at the hose connection, so the wire
-              feeding the balloon stays exactly the same size and position */}
+              feeding the balloon stays exactly the same size and position. The rig
+              body is now a raster image; the plunger stays a separate animated layer
+              over it so the pump-plunge slam still fires. */}
           <g className="pump-rig">
-            <rect x="2" y="330" width="64" height="12" rx="4" fill="#1b2630" />
-            <rect
-              x="14"
-              y="263"
-              width="40"
-              height="67"
-              rx="8"
-              fill="#2b3947"
-              stroke="#465666"
-              strokeWidth="2"
+            <image
+              className="pump-rig-img"
+              href="/game-tiles/pump/pump-rig.png"
+              x="0"
+              y="255"
+              width="72"
+              height="87"
+              preserveAspectRatio="xMidYMax meet"
             />
-            <rect x="50" y="281" width="22" height="11" rx="3" fill="#465666" />
-            <rect x="25" y="257" width="18" height="9" rx="3" fill="#161f28" />
 
             {/* plunger: a press-button (handle) + shaft, clipped to the cylinder mouth
                 so it disappears into the block as it's pushed down */}
@@ -428,10 +426,14 @@ function Balloon({
               <g className="balloon-sway">
                 {/* keyed by the pump count so the squash-stretch puff replays each pump */}
                 <g className="balloon-inflate" key={pumps}>
-                  <path
+                  <image
                     className="balloon-skin"
-                    d="M128 100 C 168 100, 190 131, 190 161 C 190 202, 162 228, 136 232 L 120 232 C 94 228, 66 202, 66 161 C 66 131, 88 100, 128 100 Z"
-                    fill="var(--balloon)"
+                    href="/game-tiles/pump/balloon.png"
+                    x="62"
+                    y="96"
+                    width="132"
+                    height="140"
+                    preserveAspectRatio="xMidYMax meet"
                   />
                   <text x="128" y="172" className="balloon-mult" textAnchor="middle">
                     {`${label}×`}
@@ -446,35 +448,21 @@ function Balloon({
   )
 }
 
-/** The popped balloon — a shockwave ring + a scatter of spinning scraps, drawn
- *  where the balloon body was (centred ~120,164 in the shared scene). */
+/** The popped balloon — a shockwave ring + the burst-shreds image, drawn where the
+ *  balloon body was (centred ~128,164 in the shared scene). */
 function BurstScene() {
-  const bits = Array.from({ length: 16 }, (_, i) => {
-    const a = (i / 16) * Math.PI * 2 + (i % 2) * 0.22
-    const dist = 52 + (i % 4) * 16
-    return {
-      i,
-      dx: Math.cos(a) * dist,
-      dy: Math.sin(a) * dist,
-      rot: (i % 2 ? 1 : -1) * (170 + (i % 3) * 70),
-    }
-  })
   return (
     <g className="burst">
       <circle className="burst-ring" cx="128" cy="164" r="24" />
-      <g className="burst-bits" fill="var(--balloon)">
-        {bits.map((b) => (
-          <path
-            key={b.i}
-            d="M124 159 l9 1 -2 9 -8 -2 Z"
-            style={{
-              ['--dx' as string]: `${b.dx}px`,
-              ['--dy' as string]: `${b.dy}px`,
-              ['--rot' as string]: `${b.rot}deg`,
-            }}
-          />
-        ))}
-      </g>
+      <image
+        className="burst-shreds"
+        href="/game-tiles/pump/balloon-burst.png"
+        x="58"
+        y="94"
+        width="140"
+        height="140"
+        preserveAspectRatio="xMidYMid meet"
+      />
       <text x="128" y="174" className="balloon-pop-label" textAnchor="middle">
         POP
       </text>

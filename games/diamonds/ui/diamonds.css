@@ -102,6 +102,9 @@
 .diamonds-gem {
   width: 44px;
   height: 44px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
   animation: diamonds-pop 0.32s cubic-bezier(0.18, 1.4, 0.4, 1) both;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
 }
@@ -114,22 +117,6 @@
     opacity: 1;
     transform: scale(1) rotate(0deg);
   }
-}
-/* gem facets — tinted to the gem's `color`, shaded for top-left light */
-.gem-light {
-  fill: color-mix(in srgb, currentColor 55%, #ffffff);
-}
-.gem-mid {
-  fill: currentColor;
-}
-.gem-dark {
-  fill: color-mix(in srgb, currentColor 70%, #000000);
-}
-.gem-table {
-  fill: color-mix(in srgb, currentColor 40%, #ffffff);
-}
-.gem-spark {
-  fill: #ffffff;
 }
 
 /* ---- the dealt pattern name + multiplier ---- */

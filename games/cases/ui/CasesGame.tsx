@@ -229,7 +229,6 @@ export function CasesGame({
         </section>
 
         <section className="cases-stage">
-          <ChestDefs />
           <div className="cases-historybar">
             {history.map((h, i) => (
               <span key={i} className={`pill ${h.won ? 'pill-win' : 'pill-loss'}`}>
@@ -268,7 +267,7 @@ export function CasesGame({
                     }`}
                     style={{ '--swatch': colorFor(m, colors) } as CSSProperties}
                   >
-                    <CaseBox open={landed} variant={i} />
+                    <CaseBox open={landed} />
                   </div>
                 )
               })}
@@ -309,358 +308,41 @@ export function CasesGame({
 
 /* ----------------------------- helpers ---------------------------------- */
 
-/** Closed chests vary cosmetically: 5 wood stains + a lid emblem, picked by cell
- *  index. Purely decorative — it does NOT hint at the prize (revealed only on open). */
-const CHEST_WOOD = ['chestWoodA', 'chestWoodB', 'chestWoodC', 'chestWoodD', 'chestWoodE']
-const CHEST_LIDWOOD = ['chestLidA', 'chestLidB', 'chestLidC', 'chestLidD', 'chestLidE']
-const CHEST_EMBLEM = ['diamond', 'round', 'sparkle', 'plus', 'studs']
-
-/** A small brass emblem on the lid; its shape varies by variant for variety. */
-function LidEmblem({ kind }: { kind: string }) {
-  switch (kind) {
-    case 'round':
-      return (
-        <>
-          <circle
-            cx="100"
-            cy="41"
-            r="5"
-            fill="url(#chestBrass)"
-            stroke="url(#chestBrassEdge)"
-            strokeWidth="0.6"
-          />
-          <circle cx="100" cy="41" r="2" fill="url(#chestRivet)" />
-        </>
-      )
-    case 'sparkle':
-      return (
-        <path
-          d="M100 34 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"
-          fill="url(#chestBrass)"
-          stroke="url(#chestBrassEdge)"
-          strokeWidth="0.6"
-        />
-      )
-    case 'plus':
-      return (
-        <path
-          d="M97 35 h6 v3.5 h3.5 v6 h-3.5 v3.5 h-6 v-3.5 h-3.5 v-6 h3.5 Z"
-          fill="url(#chestBrass)"
-          stroke="url(#chestBrassEdge)"
-          strokeWidth="0.6"
-        />
-      )
-    case 'studs':
-      return (
-        <>
-          <circle cx="91" cy="41" r="2" fill="url(#chestRivet)" />
-          <circle cx="100" cy="41" r="2" fill="url(#chestRivet)" />
-          <circle cx="109" cy="41" r="2" fill="url(#chestRivet)" />
-        </>
-      )
-    case 'diamond':
-    default:
-      return (
-        <path
-          d="M100 34 l6.5 7 -6.5 7 -6.5 -7 Z"
-          fill="url(#chestBrass)"
-          stroke="url(#chestBrassEdge)"
-          strokeWidth="0.6"
-        />
-      )
-  }
-}
-
 /**
- * A brown wooden treasure chest, drawn as two overlaid SVGs that share one
- * coordinate space (viewBox "0 20 200 124"): a static BODY (wood box, brass
- * corner brackets + straps, and a glowing interior that's hidden until open) and
- * a LID that hinges up-and-back. The lid is its OWN positioned <svg> element (not
- * an inner <g>) because 3D CSS transforms render reliably on HTML/SVG-root
- * elements but are flattened on SVG sub-groups in several browsers.
+ * A premium treasure chest rendered as two stacked transparent PNGs sharing the
+ * same footprint: chest-closed.png shown at rest, chest-open.png (lid up, glowing)
+ * shown the instant the cell lands. The reveal is a state swap — the closed image
+ * crossfades/scales out while the open image fades in (replacing the old rotateX
+ * lid hinge, which doesn't apply to a flat <img>) — with the tier-coloured bloom
+ * (.cases-chest-bloom) kept layered on top so the spilling light still reads.
  *
- * The wood + brass are UNIFORM (never tier-tinted). Only the light spilling out of
- * an opened chest takes var(--swatch) (the winning tier colour), set on .cases-cell.
- * All gradient/clip ids live once in <ChestDefs/> (rendered a single time) and are
- * referenced here by url(#...), so the 52 reel instances never duplicate an id.
- *
- * Purely cosmetic (aria-hidden); the prize shows in the reel-level .cases-reel-result.
+ * One chest art is reused for all 52 reel cells (the old 5 decorative wood variants
+ * are dropped). Purely cosmetic (aria-hidden); the prize shows in the reel-level
+ * .cases-reel-result pill.
  */
-const CaseBox = memo(function CaseBox({ open, variant = 0 }: { open: boolean; variant?: number }) {
-  const v = ((variant % CHEST_WOOD.length) + CHEST_WOOD.length) % CHEST_WOOD.length
-  const wood = `url(#${CHEST_WOOD[v]})`
-  const lidWood = `url(#${CHEST_LIDWOOD[v]})`
+const CaseBox = memo(function CaseBox({ open }: { open: boolean }) {
   return (
     <div className={`cases-chest ${open ? 'is-open' : ''}`} aria-hidden="true">
       <span className="cases-chest-shadow" />
-
-      {/* ---- body: wooden box + brass + the glowing interior (revealed on open) ---- */}
-      <svg
-        className="cases-chest-body"
-        viewBox="0 20 200 124"
-        preserveAspectRatio="xMidYMid meet"
-        focusable="false"
-        role="presentation"
-      >
-        <path
-          d="M14 92 q0 -16 16 -16 h140 q16 0 16 16 v34 q0 14 -14 14 H28 q-14 0 -14 -14 Z"
-          fill={wood}
-          stroke="url(#chestWoodEdge)"
-          strokeWidth="1.5"
-        />
-        {/* vertical plank seams */}
-        <g stroke="url(#chestSeam)" strokeWidth="1.4" fill="none">
-          <path d="M58 80 V138" />
-          <path d="M100 80 V140" />
-          <path d="M142 80 V138" />
-        </g>
-        {/* warm top-edge rim highlight */}
-        <path
-          d="M16 92 q0 -14 16 -14 h136 q16 0 16 14"
-          fill="none"
-          stroke="url(#chestRimLight)"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        {/* L-shaped brass corner brackets */}
-        <g fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.8">
-          <path d="M16 118 h12 v6 h-12 v14 q0 4 4 4 h8 v6 h-10 q-12 0 -12 -12 Z" />
-          <path d="M184 118 h-12 v6 h12 v14 q0 4 -4 4 h-8 v6 h10 q12 0 12 -12 Z" />
-        </g>
-        {/* two vertical brass straps with rivets */}
-        <g>
-          <rect
-            x="55"
-            y="80"
-            width="11"
-            height="60"
-            rx="2"
-            fill="url(#chestBrass)"
-            stroke="url(#chestBrassEdge)"
-            strokeWidth="0.8"
-          />
-          <rect
-            x="134"
-            y="80"
-            width="11"
-            height="60"
-            rx="2"
-            fill="url(#chestBrass)"
-            stroke="url(#chestBrassEdge)"
-            strokeWidth="0.8"
-          />
-          <circle cx="60.5" cy="100" r="1.8" fill="url(#chestRivet)" />
-          <circle cx="60.5" cy="132" r="1.8" fill="url(#chestRivet)" />
-          <circle cx="139.5" cy="100" r="1.8" fill="url(#chestRivet)" />
-          <circle cx="139.5" cy="132" r="1.8" fill="url(#chestRivet)" />
-        </g>
-        {/* the glowing open mouth — drawn ON TOP of the body, hidden until open */}
-        <g className="cases-chest-interior">
-          <path
-            d="M28 84 q0 -10 12 -10 h120 q12 0 12 10 v2 q0 9 -12 9 H40 q-12 0 -12 -9 Z"
-            fill="url(#chestCavity)"
-          />
-          <g className="cases-chest-rays">
-            <polygon points="100,92 86,30 96,34" />
-            <polygon points="100,92 100,24 110,32" />
-            <polygon points="100,92 118,32 124,42" />
-            <polygon points="100,92 72,36 82,44" />
-            <polygon points="100,92 130,42 140,54" />
-          </g>
-          <ellipse
-            className="cases-chest-innerlight"
-            cx="100"
-            cy="88"
-            rx="66"
-            ry="13"
-            fill="url(#chestInnerLight)"
-          />
-        </g>
-      </svg>
-
-      {/* tier-coloured bloom at the opening, sitting over the body but under the lid */}
+      {/* closed art at rest; crossfades out as the lid pops on open */}
+      <img
+        className="cases-chest-img cases-chest-img-closed"
+        src="/game-assets/cases/chest-closed.png"
+        alt=""
+        draggable={false}
+      />
+      {/* open art (lid up, glowing) — fades/scales in to read as the reveal */}
+      <img
+        className="cases-chest-img cases-chest-img-open"
+        src="/game-assets/cases/chest-open.png"
+        alt=""
+        draggable={false}
+      />
+      {/* tier-coloured bloom at the opening, layered above the chest art */}
       <span className="cases-chest-bloom" />
-
-      {/* ---- lid: its own SVG so the 3D hinge is reliable; flips up-and-back ---- */}
-      <svg
-        className="cases-chest-lid"
-        viewBox="0 20 200 124"
-        preserveAspectRatio="xMidYMid meet"
-        focusable="false"
-        role="presentation"
-      >
-        {/* domed wood + detail (cubic dome bulges UP). No clip-path — the seams sit
-            inside the dome and the straps are short enough to stay on it, so 52
-            chests don't each pay for an SVG clip while the reel slides. */}
-        <g>
-          <path d="M16 78 C16 40 56 28 100 28 C144 28 184 40 184 78 Z" fill={lidWood} />
-          {/* concentric plank seams following the dome */}
-          <g stroke="url(#chestSeam)" strokeWidth="1.3" fill="none">
-            <path d="M30 78 C30 50 62 42 100 42 C138 42 170 50 170 78" />
-            <path d="M46 78 C46 58 72 52 100 52 C128 52 154 58 154 78" />
-            <path d="M64 78 C64 66 82 62 100 62 C118 62 136 66 136 78" />
-          </g>
-          {/* brass straps continuing the body straps up over the lower dome */}
-          <g fill="url(#chestBrass)" stroke="url(#chestBrassEdge)" strokeWidth="0.8">
-            <rect x="55" y="48" width="11" height="30" rx="2" />
-            <rect x="134" y="48" width="11" height="30" rx="2" />
-          </g>
-        </g>
-        {/* lit top edge + crisp outline */}
-        <path
-          d="M16 78 C16 40 56 28 100 28 C144 28 184 40 184 78"
-          fill="none"
-          stroke="url(#chestRimLight)"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M16 78 C16 40 56 28 100 28 C144 28 184 40 184 78 Z"
-          fill="none"
-          stroke="url(#chestWoodEdge)"
-          strokeWidth="1.5"
-        />
-        <circle cx="60.5" cy="56" r="1.8" fill="url(#chestRivet)" />
-        <circle cx="139.5" cy="56" r="1.8" fill="url(#chestRivet)" />
-        {/* a small brass emblem — its shape varies by variant for visual variety */}
-        <LidEmblem kind={CHEST_EMBLEM[v]} />
-        {/* ornate brass lock plate on the lid front — lifts away with the lid */}
-        <g>
-          <path
-            d="M82 48 h36 v13 q0 13 -18 17 q-18 -4 -18 -17 Z"
-            fill="url(#chestLock)"
-            stroke="url(#chestBrassEdge)"
-            strokeWidth="1"
-          />
-          <path d="M85 50 h9 v24 q-6 -2 -9 -10 Z" fill="url(#chestLockShine)" />
-          <circle
-            cx="100"
-            cy="61"
-            r="5"
-            fill="none"
-            stroke="url(#chestBrassEdge)"
-            strokeWidth="0.9"
-          />
-          <circle cx="100" cy="61" r="3.2" fill="#180d04" />
-          <path d="M98.4 63 h3.2 l1.1 9 h-5.4 Z" fill="#180d04" />
-        </g>
-      </svg>
     </div>
   )
 })
-
-/** Every gradient/clipPath id used by CaseBox, declared ONCE. Rendered a single
- *  time (outside the 52-cell reel loop) so the ids never duplicate. Draws nothing
- *  itself (0×0). Wood/brass gradients are tier-neutral; the tier colour only ever
- *  appears via CSS var(--swatch) in the bloom/rays/glow. */
-function ChestDefs() {
-  return (
-    <svg className="cases-chest-defs" width="0" height="0" aria-hidden="true" focusable="false">
-      <defs>
-        {/* ---- 5 wood stains for closed-chest variety (body + lid each) ---- */}
-        {/* A — classic oak */}
-        <linearGradient id="chestWoodA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#a86b33" />
-          <stop offset="38%" stopColor="#8a5226" />
-          <stop offset="100%" stopColor="#4f2b14" />
-        </linearGradient>
-        <linearGradient id="chestLidA" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#a86b33" />
-          <stop offset="45%" stopColor="#7a4620" />
-          <stop offset="100%" stopColor="#5d3318" />
-        </linearGradient>
-        {/* B — dark walnut */}
-        <linearGradient id="chestWoodB" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7a4a2a" />
-          <stop offset="38%" stopColor="#5a3318" />
-          <stop offset="100%" stopColor="#33200f" />
-        </linearGradient>
-        <linearGradient id="chestLidB" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#84512e" />
-          <stop offset="45%" stopColor="#5a331a" />
-          <stop offset="100%" stopColor="#3a2410" />
-        </linearGradient>
-        {/* C — red mahogany */}
-        <linearGradient id="chestWoodC" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#9c5638" />
-          <stop offset="38%" stopColor="#7a3820" />
-          <stop offset="100%" stopColor="#451d10" />
-        </linearGradient>
-        <linearGradient id="chestLidC" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#a85e3a" />
-          <stop offset="45%" stopColor="#7a3a1f" />
-          <stop offset="100%" stopColor="#52260f" />
-        </linearGradient>
-        {/* D — golden honey */}
-        <linearGradient id="chestWoodD" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#b8893f" />
-          <stop offset="38%" stopColor="#956322" />
-          <stop offset="100%" stopColor="#583714" />
-        </linearGradient>
-        <linearGradient id="chestLidD" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#c2954f" />
-          <stop offset="45%" stopColor="#8a5d28" />
-          <stop offset="100%" stopColor="#5c3a16" />
-        </linearGradient>
-        {/* E — weathered grey-brown */}
-        <linearGradient id="chestWoodE" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#86735c" />
-          <stop offset="38%" stopColor="#5e4a38" />
-          <stop offset="100%" stopColor="#342619" />
-        </linearGradient>
-        <linearGradient id="chestLidE" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#90795f" />
-          <stop offset="45%" stopColor="#5e4631" />
-          <stop offset="100%" stopColor="#372818" />
-        </linearGradient>
-        <linearGradient id="chestWoodEdge" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6b3e1e" />
-          <stop offset="100%" stopColor="#2b1a0e" />
-        </linearGradient>
-        <linearGradient id="chestSeam" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3a2110" stopOpacity="0.85" />
-          <stop offset="100%" stopColor="#1f1107" stopOpacity="0.9" />
-        </linearGradient>
-        <linearGradient id="chestRimLight" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e7b878" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#c98a4b" stopOpacity="0.35" />
-        </linearGradient>
-        <linearGradient id="chestBrass" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f0d88a" />
-          <stop offset="48%" stopColor="#c9a227" />
-          <stop offset="100%" stopColor="#8a6510" />
-        </linearGradient>
-        <linearGradient id="chestBrassEdge" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f7e7af" />
-          <stop offset="100%" stopColor="#6e4e12" />
-        </linearGradient>
-        <linearGradient id="chestLock" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fcefbf" />
-          <stop offset="40%" stopColor="#e8c247" />
-          <stop offset="100%" stopColor="#9a7414" />
-        </linearGradient>
-        <linearGradient id="chestLockShine" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#fff6da" stopOpacity="0.85" />
-          <stop offset="100%" stopColor="#fff6da" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="chestRivet" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="#fff2c4" />
-          <stop offset="55%" stopColor="#c9a227" />
-          <stop offset="100%" stopColor="#6e4e12" />
-        </radialGradient>
-        <linearGradient id="chestCavity" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1c0f06" />
-          <stop offset="100%" stopColor="#0a0502" />
-        </linearGradient>
-        <radialGradient id="chestInnerLight" cx="50%" cy="60%" r="60%">
-          <stop offset="0%" stopColor="#fff8e1" />
-          <stop offset="45%" stopColor="#ffe7a8" stopOpacity="0.7" />
-          <stop offset="100%" stopColor="#ffe7a8" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-    </svg>
-  )
-}
 
 /** A compact row of payout colours under the reel. Tapping any colour toggles a
  *  single panel listing EVERY outcome's multiplier and its % chance of hitting.

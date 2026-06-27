@@ -297,11 +297,16 @@
   font-weight: 800;
   color: #fff;
   font-variant-numeric: tabular-nums;
-  border: 2px dashed rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 3px 7px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 4px rgba(255, 255, 255, 0.14);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  /* the chip artwork is a transparent PNG, fitted to the round footprint */
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+  /* the denomination number sits over the chip's clean centre — keep it legible */
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.7),
+    0 0 3px rgba(0, 0, 0, 0.6);
 }
 /* tray chips are buttons you can pick up */
 button.threecardpoker-clay {
@@ -322,19 +327,19 @@ button.threecardpoker-clay:disabled {
   animation: tcp-chip-drop 0.28s cubic-bezier(0.2, 0.8, 0.3, 1.15);
 }
 .threecardpoker-clay.is-d1 {
-  background: radial-gradient(circle at 50% 34%, #8a929c, #565d66 72%);
+  background-image: url('/chips/white-1.png');
 }
 .threecardpoker-clay.is-d5 {
-  background: radial-gradient(circle at 50% 34%, #e0566a, #c01f33 72%);
+  background-image: url('/chips/red-5.png');
 }
 .threecardpoker-clay.is-d25 {
-  background: radial-gradient(circle at 50% 34%, #2fb56a, #138043 72%);
+  background-image: url('/chips/green-25.png');
 }
 .threecardpoker-clay.is-d100 {
-  background: radial-gradient(circle at 50% 34%, #465663, #161f27 72%);
+  background-image: url('/chips/black-100.png');
 }
 .threecardpoker-clay.is-d500 {
-  background: radial-gradient(circle at 50% 34%, var(--gold-bright), var(--gold-press) 72%);
+  background-image: url('/chips/purple-500.png');
 }
 @keyframes tcp-chip-drop {
   0% {
@@ -436,16 +441,11 @@ button.threecardpoker-clay:disabled {
 .threecardpoker-face.is-front.is-red {
   color: #d11f3a;
 }
-/* the back is pre-rotated so it faces out only while the flip is 'is-down'. A
-   classic red playing-card back: a diamond lattice inside a white margin. */
+/* the back is pre-rotated so it faces out only while the flip is 'is-down'. An
+   ornate gold-filigree card back, rendered from a transparent PNG. */
 .threecardpoker-face.is-back {
   transform: rotateY(180deg);
-  background-color: #be1430;
-  background-image:
-    radial-gradient(ellipse 58% 66% at 50% 50%, rgba(255, 255, 255, 0.18) 0 36%, transparent 42%),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.16) 0 1.5px, transparent 1.5px 8px);
-  border: 3px solid #f6f7f9;
+  overflow: hidden;
   box-shadow:
     inset 0 0 0 1.5px rgba(0, 0, 0, 0.35),
     0 12px 22px -12px rgba(0, 0, 0, 0.85);
@@ -495,12 +495,17 @@ button.threecardpoker-clay:disabled {
 .threecardpoker-row.is-dealer .tcp-pip {
   font-size: 40px;
 }
-/* a thin inner frame line on the card back, like a real card */
+/* the ornate card-back artwork, filling its slot */
 .threecardpoker-cardback {
   position: absolute;
-  inset: 7px;
-  border-radius: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  pointer-events: none;
+  user-select: none;
 }
 @keyframes tcp-deal {
   0% {

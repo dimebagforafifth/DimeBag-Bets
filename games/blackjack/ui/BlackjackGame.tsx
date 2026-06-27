@@ -584,7 +584,9 @@ function Side({
       {/* Empty until Deal: cards only appear as they're dealt — no placeholder. */}
       <div className="bj-hand">
         {shown.map((c, i) =>
-          hideHole && i === 1 ? <CardBack key={i} /> : <PlayingCard key={i} card={c} />,
+          // the dealer's hole card (index 1): a 3D flip card that shows its back
+          // while hidden, then rotates over to reveal the face when hideHole drops
+          i === 1 ? <HoleCard key={i} card={c} faceDown={hideHole} /> : <PlayingCard key={i} card={c} />,
         )}
       </div>
     </div>
@@ -614,7 +616,29 @@ function PlayingCard({ card }: { card: Card }) {
 }
 
 function CardBack() {
-  return <div className="card card-back" aria-hidden="true" />
+  return (
+    <div className="card card-back" aria-hidden="true">
+      <img className="card-back-img" src="/game-assets/cards/card-back.png" alt="" draggable={false} />
+    </div>
+  )
+}
+
+/** The dealer's hole card: a 3D flip between the ornate card back (face down) and
+ *  the code-drawn face. `faceDown` keeps it backed; when it drops the card rotates
+ *  over on its Y axis to reveal the face. Footprint matches a normal card slot. */
+function HoleCard({ card, faceDown }: { card: Card; faceDown: boolean }) {
+  return (
+    <div className={`bj-flip ${faceDown ? 'is-down' : 'is-up'}`}>
+      <div className="bj-flip-inner">
+        <div className="bj-flip-back">
+          <CardBack />
+        </div>
+        <div className="bj-flip-front">
+          <PlayingCard card={card} />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /* The four moves share one neutral button; a coloured icon tells them apart:
@@ -802,18 +826,20 @@ function PlayerHand({
 
 /* --------------------------------- chips -------------------------------- */
 
-/** Standard casino denominations (in cents) with their classic chip colours,
- *  high → low. A greedy break-down turns any bet into real stacks of these. */
+/** Standard casino denominations (in cents) with their chip image + a legible
+ *  label colour, high → low. A greedy break-down turns any bet into real stacks
+ *  of these. Each `img` is a transparent PNG chip (value→image table; denoms
+ *  under $1 fall to the nearest white tier). The number still reads on the face. */
 const CHIP_DENOMS = [
-  { v: 100000, label: '1K', body: '#f4c430', edge: '#fff4cc', face: '#3a2f05' }, // gold
-  { v: 50000, label: '500', body: '#7b4fb5', edge: '#d9c7f0', face: '#ffffff' }, // purple
-  { v: 10000, label: '100', body: '#23272e', edge: '#7b828b', face: '#ffffff' }, // black
-  { v: 2500, label: '25', body: '#1f9d57', edge: '#bdeccf', face: '#ffffff' }, // green
-  { v: 500, label: '5', body: '#d23b3b', edge: '#f4c3c3', face: '#ffffff' }, // red
-  { v: 100, label: '1', body: '#eef2f6', edge: '#aeb8c2', face: '#1a1d22' }, // white
-  { v: 25, label: '25¢', body: '#3f7cc0', edge: '#c3d8ef', face: '#ffffff' }, // blue
-  { v: 5, label: '5¢', body: '#e89b3c', edge: '#f6dcb8', face: '#3a2705' }, // orange
-  { v: 1, label: '1¢', body: '#b7bec6', edge: '#e3e8ec', face: '#1a1d22' }, // grey
+  { v: 100000, label: '1K', img: '/chips/gold-1k.png', face: '#3a2f05' }, // gold
+  { v: 50000, label: '500', img: '/chips/purple-500.png', face: '#ffffff' }, // purple
+  { v: 10000, label: '100', img: '/chips/black-100.png', face: '#ffffff' }, // black
+  { v: 2500, label: '25', img: '/chips/green-25.png', face: '#ffffff' }, // green
+  { v: 500, label: '5', img: '/chips/red-5.png', face: '#ffffff' }, // red
+  { v: 100, label: '1', img: '/chips/white-1.png', face: '#1a1d22' }, // white
+  { v: 25, label: '25¢', img: '/chips/white-1.png', face: '#1a1d22' }, // <$1 → white tier
+  { v: 5, label: '5¢', img: '/chips/white-1.png', face: '#1a1d22' }, // <$1 → white tier
+  { v: 1, label: '1¢', img: '/chips/white-1.png', face: '#1a1d22' }, // <$1 → white tier
 ] as const
 
 /** Break a cent amount into stacks of chips, largest denomination first. */
@@ -854,13 +880,17 @@ function ChipStack({ cents }: { cents: number }) {
                         key={i}
                         className="bj-chip"
                         style={{
-                          ['--body' as string]: denom.body,
-                          ['--edge' as string]: denom.edge,
                           ['--face' as string]: denom.face,
                           bottom: `${i * 7}px`,
                           zIndex: i,
                         }}
                       >
+                        <img
+                          className="bj-chip-img"
+                          src={denom.img}
+                          alt=""
+                          draggable={false}
+                        />
                         {i === shown - 1 && <span className="bj-chip-label">{denom.label}</span>}
                       </span>
                     ))}

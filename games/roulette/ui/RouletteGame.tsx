@@ -437,7 +437,10 @@ function Wheel({
   const wobbleName = variant === 0 ? 'rl-ball-wobble' : `rl-ball-wobble-${variant}`
   return (
     <div className={`rl-wheel-wrap ${spinning ? 'is-spinning' : ''}`}>
-      {/* the spinning disc: pockets, frets, and the printed numbers all turn together */}
+      {/* the spinning disc: pockets, frets, and the printed numbers all turn together.
+          The premium wheel art is the base layer (empty bowl/rim/gold hub, no numbers);
+          the conic gradient, frets, and number ring still ride on top so the seed-decided
+          winning pocket is computed and shown exactly as before. */}
       <div
         className="rl-wheel"
         style={{
@@ -446,6 +449,13 @@ function Wheel({
           transition: spinTransition,
         }}
       >
+        <img
+          className="rl-wheel-art"
+          src="/game-assets/roulette/wheel.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
         <div className="rl-frets" aria-hidden="true" />
         <div className="rl-turret" aria-hidden="true">
           {Array.from({ length: 4 }, (_, k) => (
@@ -492,7 +502,13 @@ function Wheel({
                   : { transform: 'translateY(var(--rl-pocket-drop))' }
               }
             >
-              <span className="rl-ball" />
+              <img
+                className="rl-ball"
+                src="/game-assets/roulette/ball.png"
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+              />
               <span className="rl-ball-shadow" aria-hidden="true" />
             </div>
           </div>

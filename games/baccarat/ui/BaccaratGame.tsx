@@ -495,8 +495,20 @@ function Hand({
       <div className="baccarat-cards">
         {visible.length === 0 ? (
           <>
-            <span className="baccarat-card is-back" aria-hidden="true" />
-            <span className="baccarat-card is-back" aria-hidden="true" />
+            <img
+              className="baccarat-card is-back"
+              src="/game-assets/cards/card-back.png"
+              alt=""
+              draggable={false}
+              aria-hidden="true"
+            />
+            <img
+              className="baccarat-card is-back"
+              src="/game-assets/cards/card-back.png"
+              alt=""
+              draggable={false}
+              aria-hidden="true"
+            />
           </>
         ) : (
           visible.map((c, i) => <PlayingCard key={i} card={c} />)

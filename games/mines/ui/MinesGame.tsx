@@ -412,83 +412,28 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-/** A big, shiny faceted green gem — table + crown + pavilion facets, sparkles. */
+/** A big, shiny faceted green gem — transparent PNG, keeps the .gem glow + pop. */
 function Gem() {
   return (
-    <svg viewBox="0 0 24 24" className="icon gem" aria-hidden="true">
-      {/* crown body behind the facets */}
-      <polygon className="gem-crown" points="3,9 7,3 17,3 21,9" />
-      {/* pavilion (lower) facets — alternating shades for depth */}
-      <polygon className="gem-p1" points="3,9 8,9 12,22" />
-      <polygon className="gem-p2" points="8,9 12,9 12,22" />
-      <polygon className="gem-p3" points="12,9 16,9 12,22" />
-      <polygon className="gem-p4" points="16,9 21,9 12,22" />
-      {/* table (top, brightest) + crown side facets */}
-      <polygon className="gem-table" points="6,9 7,3 17,3 18,9" />
-      <polygon className="gem-cl" points="3,9 7,3 6,9" />
-      <polygon className="gem-cr" points="21,9 17,3 18,9" />
-      {/* glossy streak across the table */}
-      <polygon className="gem-gloss" points="8,4 14,4 13,6 9,6" opacity="0.55" />
-      {/* girdle line */}
-      <line className="gem-girdle" x1="3" y1="9" x2="21" y2="9" strokeWidth="0.6" opacity="0.4" />
-      {/* sparkles */}
-      <path
-        className="gem-sparkle gem-spark"
-        d="M10 5.2 L10.7 6.6 L12.1 7.3 L10.7 8 L10 9.4 L9.3 8 L7.9 7.3 L9.3 6.6 Z"
-      />
-      <circle className="gem-spark" cx="15.5" cy="6" r="0.7" opacity="0.9" />
-    </svg>
+    <img
+      src="/game-tiles/mines/gem.png"
+      alt="gem"
+      className="icon gem"
+      draggable={false}
+      aria-hidden="true"
+    />
   )
 }
 
 function Mine({ hit = false }: { hit?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className={`icon bomb ${hit ? 'mine-boom' : ''}`} aria-hidden="true">
-      <defs>
-        <radialGradient id="bombBody" cx="37%" cy="32%" r="78%">
-          <stop offset="0%" stopColor="#5c6573" />
-          <stop offset="45%" stopColor="#2a313b" />
-          <stop offset="100%" stopColor="#0c1015" />
-        </radialGradient>
-      </defs>
-
-      {hit && (
-        <g className="boom-spikes">
-          {Array.from({ length: 9 }, (_, i) => {
-            const a = (i * 2 * Math.PI) / 9
-            return (
-              <line
-                key={i}
-                x1={12 + Math.cos(a) * 8}
-                y1={14 + Math.sin(a) * 8}
-                x2={12 + Math.cos(a) * 13}
-                y2={14 + Math.sin(a) * 13}
-              />
-            )
-          })}
-        </g>
-      )}
-
-      {/* fuse cap + curved fuse + burning spark */}
-      <rect x="10.6" y="3.4" width="2.8" height="3.2" rx="0.7" fill="#3a414c" />
-      <path
-        d="M12.4 4 C 15.5 1.2, 19 2.4, 19 5.4"
-        fill="none"
-        stroke="#b9924c"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-      <g className="bomb-spark">
-        <circle cx="19" cy="5.4" r="2.1" fill="#ff9d2a" opacity="0.55" />
-        <circle cx="19" cy="5.4" r="1.3" fill="#ffd24a" />
-        <circle cx="19" cy="5.4" r="0.6" fill="#fff7da" />
-      </g>
-
-      {/* sphere body with specular highlight */}
-      <circle cx="12" cy="14.5" r="8" fill="url(#bombBody)" />
-      <ellipse cx="9" cy="11.4" rx="2.6" ry="1.7" fill="#ffffff" opacity="0.3" />
-      <circle cx="8.4" cy="10.9" r="0.8" fill="#ffffff" opacity="0.9" />
-    </svg>
+    <img
+      src={hit ? '/game-tiles/mines/bomb-hit.png' : '/game-tiles/mines/bomb.png'}
+      alt={hit ? 'mine exploding' : 'mine'}
+      className={`icon bomb ${hit ? 'mine-boom' : ''}`}
+      draggable={false}
+      aria-hidden="true"
+    />
   )
 }
 

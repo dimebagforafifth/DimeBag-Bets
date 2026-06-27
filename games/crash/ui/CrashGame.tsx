@@ -467,36 +467,36 @@ const Scene = memo(function Scene() {
 })
 
 function Rocket() {
-  // Drawn nose-right; the holder rotates it to follow the curve (flame trails).
+  // The PNG is drawn nose-up; the holder rotates it to follow the curve, so the
+  // sprite is pre-rotated +90° (.rocket-craft) to align nose-up with nose-right
+  // before the curve tangent is applied. The exhaust trail sits behind/below the
+  // nozzle (.rocket-trail) and flickers with the same --flame-flicker cadence.
   return (
-    <svg className="rocket" viewBox="-14 -9 28 18" aria-hidden="true">
-      <path className="rocket-flame" d="M-7,-2.4 L-15,0 L-7,2.4 Z" />
-      <path className="rocket-fin" d="M-7,-3.6 L-10.5,-7.5 L-5,-3.6 Z" />
-      <path className="rocket-fin" d="M-7,3.6 L-10.5,7.5 L-5,3.6 Z" />
-      <path className="rocket-body" d="M11,0 C7,-5 -3,-5.4 -7,-4.2 L-7,4.2 C-3,5.4 7,5 11,0 Z" />
-      <circle className="rocket-port" cx="3" cy="0" r="2.1" />
-      <circle className="rocket-port-glow" cx="3" cy="0" r="1" />
-    </svg>
+    <div className="rocket" aria-hidden="true">
+      <img
+        className="rocket-trail"
+        src="/game-assets/crash/trail.png"
+        alt=""
+        draggable={false}
+      />
+      <img
+        className="rocket-craft"
+        src="/game-assets/crash/rocket.png"
+        alt="rocket"
+        draggable={false}
+      />
+    </div>
   )
 }
 
 function Burst() {
   return (
-    <svg className="burst" viewBox="-12 -12 24 24" aria-hidden="true">
-      {Array.from({ length: 10 }, (_, i) => {
-        const a = (i * Math.PI) / 5
-        return (
-          <line
-            key={i}
-            x1={Math.cos(a) * 2.5}
-            y1={Math.sin(a) * 2.5}
-            x2={Math.cos(a) * 10}
-            y2={Math.sin(a) * 10}
-          />
-        )
-      })}
-      <circle cx="0" cy="0" r="3.5" />
-    </svg>
+    <img
+      className="burst"
+      src="/game-assets/crash/explosion.png"
+      alt="crash"
+      draggable={false}
+    />
   )
 }
 

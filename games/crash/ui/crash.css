@@ -158,49 +158,78 @@
   transform-origin: center;
   will-change: left, top, transform;
 }
+/* The PNG sprites live in a relative box so the trail can be tucked behind/below
+   the craft. The box keeps the holder's translate+rotate (curve-follow) intact. */
 .rocket {
+  position: relative;
   width: 100%;
   height: auto;
-  overflow: visible;
+}
+.rocket-craft {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  /* The sprite is nose-up; the holder rotates by the curve tangent (drawn for a
+     nose-right shape), so pre-rotate +90° to align nose-up with that tangent. */
+  transform: rotate(90deg);
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+  position: relative;
+  z-index: 1;
 }
-.rocket-body {
-  fill: #e3e9ee;
-}
-.rocket-fin {
-  fill: #9aa7b0;
-}
-.rocket-port {
-  fill: var(--gem);
-}
-.rocket-port-glow {
-  fill: var(--gold-bright);
-}
-.rocket-flame {
-  fill: var(--gold);
-  /* flicker quickens with playback speed (set per-flight on .crash-stage) */
+/* Exhaust plume tucked at the nozzle, behind/below the craft. The plume art is a
+   vertical flame (bright at top); the rocket sprite is nose-up so the nozzle is at
+   its bottom — anchor the plume's bright top there and let it stream downward. */
+.rocket-trail {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 78%;
+  width: 46%;
+  height: auto;
+  object-fit: contain;
+  transform: translate(-50%, 0) rotate(90deg);
+  transform-origin: center top;
+  z-index: 0;
+  /* Tint with the trail state colour (gold while climbing, red on bust) and
+     flicker on the same cadence the SVG flame used. */
+  filter: drop-shadow(0 0 5px var(--trail));
   animation: flicker var(--flame-flicker, 0.18s) ease-in-out infinite alternate;
+}
+.crash-stage.is-busted .rocket-trail {
+  /* Shift the gold plume toward the red bust state. */
+  filter: drop-shadow(0 0 5px var(--trail)) hue-rotate(-40deg) saturate(1.4);
 }
 @keyframes flicker {
   from {
-    opacity: 0.7;
+    opacity: 0.6;
   }
   to {
     opacity: 1;
   }
 }
 .burst {
+  display: block;
   width: 100%;
   height: auto;
-  overflow: visible;
+  object-fit: contain;
+  /* Quick scale/pop-in when the rocket busts. */
+  animation: burst-pop calc(var(--flame-flicker, 0.18s) + 0.12s) ease-out 1;
+  filter: drop-shadow(0 0 10px var(--red));
 }
-.burst line {
-  stroke: var(--red);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-}
-.burst circle {
-  fill: var(--red);
+@keyframes burst-pop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ---- recent crashes (overlaid, Stake-style) ---- */
@@ -286,5 +315,15 @@
 @media (max-width: 640px) {
   .crash {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rocket-trail,
+  .burst {
+    animation: none;
+  }
+  .burst {
+    transform: none;
   }
 }
