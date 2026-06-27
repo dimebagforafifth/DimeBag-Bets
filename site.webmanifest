@@ -1,0 +1,17 @@
+{
+  "name": "PlayStadium.io",
+  "short_name": "PlayStadium",
+  "description": "Points-based sportsbook and casino. Points only — no buy-in, no cash-out, no real-money value.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101113",
+  "theme_color": "#101113",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

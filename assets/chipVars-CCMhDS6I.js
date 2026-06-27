@@ -1,0 +1,1 @@
+import{a as t}from"./assetUrl-DuF-0Q7X.js";const n=["white-1","red-5","blue-10","green-25","black-100","purple-500","gold-1k"];if(typeof document<"u"){const o=document.documentElement.style;for(const e of n)o.setProperty(`--chip-${e}`,`url("${t(`/chips/${e}.png`)}")`)}
