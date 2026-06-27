@@ -25,34 +25,8 @@
   color: var(--muted);
 }
 
-/* Manual / Auto tabs */
-.bet-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 4px;
-}
-.bet-tab {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 7px 0;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.bet-tab.is-active {
-  background: var(--surface-2);
-  color: var(--text);
-}
-.bet-tab:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
+/* Manual / Auto tabs (.bet-tabs/.bet-tab) are shared across games and now live
+   in app/theme.css so any view styles them regardless of load order. */
 
 /* read-only field (Profit on win) */
 .field-bet.is-readonly {
