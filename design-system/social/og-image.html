@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PlayStadium — OG / link-preview image (screenshot me · 1200×630)</title>
+<!--
+  Link-preview (Open Graph / Twitter) image. Mirrors design-system/social/x-banner.html
+  in the "Chip Gold & Carbon" language, reflowed to the 1200×630 OG aspect.
+  Wordmark-led, gold as a small accent only. Screenshot the dark panel -> public/og.png.
+-->
+<style>
+  @font-face {
+    font-family: 'Slight Chance';
+    src: url('../../app/fonts/SlightChance-Regular.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: block;
+  }
+  @font-face {
+    font-family: 'Barlow Condensed';
+    src: url('../../app/fonts/BarlowCondensed-Medium.ttf') format('truetype');
+    font-weight: 500; font-style: normal; font-display: block;
+  }
+  :root { --gold: #f0be4a; --gold-glow: 240,190,74; --text: #fcfcfb; --muted: #c4c4c2; }
+  html, body { margin: 0; background: #0a0b0c; }
+
+  /* OG / link-preview — exact 1200×630 */
+  .og {
+    position: relative; width: 1200px; height: 630px; overflow: hidden;
+    background: radial-gradient(120% 150% at 50% 8%, #1b1c1f 0%, #141517 42%, #0e0f11 100%);
+    font-family: 'Slight Chance', cursive; isolation: isolate;
+  }
+  .og::before {
+    content: ""; position: absolute; left: 50%; top: -34%;
+    width: 1120px; height: 1120px; transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(var(--gold-glow), 0.16) 0%, rgba(var(--gold-glow), 0.05) 38%, transparent 64%);
+    pointer-events: none; z-index: 0;
+  }
+  .og::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(115% 130% at 50% 42%, transparent 52%, rgba(0,0,0,0.42) 100%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .stack {
+    position: absolute; inset: 0; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;
+  }
+  .wordmark {
+    font-family: 'Slight Chance', cursive;
+    font-size: 158px; line-height: 0.9; color: var(--text);
+    letter-spacing: 0.5px; white-space: nowrap;
+    text-shadow: 0 6px 30px rgba(0,0,0,0.55);
+  }
+  .wordmark .dot { color: var(--gold); text-shadow: 0 0 26px rgba(var(--gold-glow), 0.55); }
+
+  .rule { display: flex; align-items: center; gap: 18px; }
+  .rule .line { width: 90px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold)); }
+  .rule .line.r { background: linear-gradient(90deg, var(--gold), transparent); }
+  .rule .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px rgba(var(--gold-glow), 0.7); }
+
+  .tagline {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.46em; font-size: 30px;
+    color: var(--muted); padding-left: 0.46em; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="og" data-screen-label="OG image">
+    <div class="stack">
+      <div class="wordmark">PlayStadium<span class="dot">.</span>io</div>
+      <div class="rule"><span class="line"></span><span class="pip"></span><span class="line r"></span></div>
+      <div class="tagline">Points · Casino · Sportsbook</div>
+    </div>
+  </div>
+  <script>
+    Promise.all([
+      document.fonts.load('158px "Slight Chance"'),
+      document.fonts.load('500 30px "Barlow Condensed"'),
+    ]).then(() => document.fonts.ready).then(() => document.documentElement.setAttribute('data-fonts', 'ready'));
+  </script>
+</body>
+</html>

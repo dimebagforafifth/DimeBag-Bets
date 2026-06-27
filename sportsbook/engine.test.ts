@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Account } from '../core/index.js'
 import { availableToWager } from '../core/index.js'
-import { gradeTicket, hasRelatedLegs, placeTicket, priceTicket } from './engine.js'
+import { gradeTicket, hasRelatedLegs, placeTicket, priceTicket, regradeTicket } from './engine.js'
 import type { MatchResult, Selection } from './markets.js'
 
 function account(overrides: Partial<Account> = {}): Account {
@@ -152,5 +152,81 @@ describe('grading parlays', () => {
     const t = placeTicket(a, { kind: 'single', legs: [leg('a', 150)], stake: 1000 })
     gradeTicket(a, t, { a: win })
     expect(() => gradeTicket(a, t, { a: win })).toThrow(/already settled/)
+  })
+})
+
+describe('regradeTicket — max-payout cap is pinned to the original grade', () => {
+  it('backs out the prior win against the cap in force AT grade, not the current cap', () => {
+    // +900 odds → 10.0 decimal; uncapped profit on a 1000 stake would be 9000.
+    const a = account({ maxPayout: 2000 })
+    const t = placeTicket(a, { kind: 'single', legs: [leg('a', 900)], stake: 1000 })
+
+    // First grade: WIN, capped to 2000.
+    gradeTicket(a, t, { a: win })
+    expect(t.status).toBe('won')
+    expect(a.balance).toBe(2000) // profit 9000 capped to 2000
+    expect(t.gradedMaxPayout).toBe(2000) // cap captured at grade time
+
+    // Operator raises the cap AFTER the grade.
+    a.maxPayout = 5000
+
+    // Re-grade to a LOSS. The back-out must use the ORIGINAL cap (2000), so the
+    // delta is -1000 - 2000 = -3000, landing the figure at exactly -1000 (a clean
+    // first-time loss). If it wrongly used the current cap (5000) it would land at
+    // 2000 - 5000 + ... — i.e. the wrong figure.
+    const moved = regradeTicket(a, t, { a: loss })
+    expect(moved).toBe(true)
+    expect(t.status).toBe('lost')
+    expect(a.balance).toBe(-1000) // delta = (-1000) - (+2000) = -3000, from +2000
+  })
+
+  it('applies the current cap to the corrected win', () => {
+    const a = account({ maxPayout: 2000 })
+    const t = placeTicket(a, { kind: 'single', legs: [leg('a', 900)], stake: 1000 })
+
+    // First grade: LOSS (no cap in play on a loss), figure -1000.
+    gradeTicket(a, t, { a: loss })
+    expect(a.balance).toBe(-1000)
+    expect(t.gradedMaxPayout).toBe(2000)
+
+    // Operator lowers the cap, then the result is corrected to a WIN.
+    a.maxPayout = 1500
+    regradeTicket(a, t, { a: win })
+    expect(t.status).toBe('won')
+    // Corrected win uses the CURRENT cap (1500): delta = +1500 - (-1000) = +2500,
+    // from -1000 → +1500 (a clean first-time capped win).
+    expect(a.balance).toBe(1500)
+  })
+
+  it('legacy ticket with no stored cap falls back to the current cap', () => {
+    const a = account({ maxPayout: 2000 })
+    const t = placeTicket(a, { kind: 'single', legs: [leg('a', 900)], stake: 1000 })
+    gradeTicket(a, t, { a: win })
+    expect(a.balance).toBe(2000)
+
+    // Simulate a ticket graded before gradedMaxPayout was recorded.
+    delete (t as { gradedMaxPayout?: number | null }).gradedMaxPayout
+
+    // Re-grade to a loss with the cap unchanged: prevEffect falls back to the
+    // current cap (2000), so the figure lands at -1000 just as before.
+    regradeTicket(a, t, { a: loss })
+    expect(a.balance).toBe(-1000)
+  })
+
+  it('records the current cap after a re-grade for any further re-grade', () => {
+    const a = account({ maxPayout: 2000 })
+    const t = placeTicket(a, { kind: 'single', legs: [leg('a', 900)], stake: 1000 })
+    gradeTicket(a, t, { a: win })
+
+    a.maxPayout = 5000
+    regradeTicket(a, t, { a: loss }) // now stands graded under cap 5000
+    expect(t.gradedMaxPayout).toBe(5000)
+    expect(a.balance).toBe(-1000)
+
+    // A second re-grade back to a win: prevEffect (loss) = -1000, newEffect (win)
+    // capped to current 5000 → delta = +5000 - (-1000) = +6000, figure -1000 → +5000.
+    regradeTicket(a, t, { a: win })
+    expect(t.status).toBe('won')
+    expect(a.balance).toBe(5000)
   })
 })

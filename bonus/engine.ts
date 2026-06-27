@@ -22,7 +22,8 @@
  */
 
 import { grant } from '../core/index.js'
-import { onWagerPlaced } from '../core/index.js'
+import { onWagerPlaced, onWagerResolved } from '../core/index.js'
+import type { Outcome } from '../core/index.js'
 import { getMember, downline, membersByRole, type Member, type Org } from '../org/index.js'
 import { getBook, mutateBook } from '../app/book-store.js'
 import { adjustFigure } from '../app/manager-actions.js'
@@ -510,29 +511,134 @@ export function expireDue(now = Date.now()): BonusGrant[] {
   return expired
 }
 
+/* --------------------------------- lifecycle triggers (auto-fire) ---------- */
+
+/**
+ * How many consecutive losing settlements arm the `losing-streak` retention nudge. No core
+ * notion of N exists, so the engine owns the threshold here (a sensible default; an operator
+ * can tune the rule's reward/eligibility, this just decides WHEN it fires).
+ */
+export const LOSING_STREAK_N = 3
+
+/**
+ * Per-player lifecycle markers — the small, idempotent state that lets the auto-fired triggers
+ * grant AT MOST once per condition. Persisted so a reload can't replay a one-shot grant.
+ *   - `firstBetFired`:   the player's first-ever wager has already fired `first-bet`.
+ *   - `lastDailyUtc`:    the UTC day key (YYYY-MM-DD) the player last fired `daily` for.
+ *   - `lossStreak`:      current run of consecutive losing settlements (resets on a non-loss).
+ *   - `lastStreakFired`: the streak length we last fired `losing-streak` at — so a longer run
+ *                        can fire again at the next multiple, but the SAME length never double-fires.
+ */
+interface PlayerLifecycle {
+  firstBetFired?: boolean
+  lastDailyUtc?: string
+  lossStreak?: number
+  lastStreakFired?: number
+}
+
+const LIFECYCLE_DOC: Doc<Record<string, PlayerLifecycle>> = persistedDoc<
+  Record<string, PlayerLifecycle>
+>(store, 'bonus.lifecycle', { version: 1, initial: {} })
+
+let lifecycle: Record<string, PlayerLifecycle> = LIFECYCLE_DOC.load() ?? {}
+
+function lifeOf(playerId: string): PlayerLifecycle {
+  return lifecycle[playerId] ?? {}
+}
+function setLife(playerId: string, patch: PlayerLifecycle): void {
+  lifecycle = { ...lifecycle, [playerId]: { ...lifeOf(playerId), ...patch } }
+  LIFECYCLE_DOC.save(lifecycle)
+}
+
+/** The UTC calendar-day key (YYYY-MM-DD) for a timestamp — the per-day idempotency key. */
+function utcDayKey(now: number): string {
+  return new Date(now).toISOString().slice(0, 10)
+}
+
+/**
+ * A real wager was PLACED. Auto-fire the player lifecycle triggers that key off activity:
+ *   - `first-bet` once, ever (the player's first wager);
+ *   - `daily` once per UTC day (their first activity that day).
+ * Each is guarded by a persisted marker, so a repeat wager — or a reload — never re-grants.
+ * Firing flows through `fireTrigger` → `issueRuleToPlayer` → core.grant (no new money path).
+ */
+function onPlacedLifecycle(playerId: string, now: number): void {
+  const life = lifeOf(playerId)
+
+  if (!life.firstBetFired) {
+    setLife(playerId, { firstBetFired: true })
+    fireTrigger('first-bet', { playerId, now })
+  }
+
+  const day = utcDayKey(now)
+  if (lifeOf(playerId).lastDailyUtc !== day) {
+    setLife(playerId, { lastDailyUtc: day })
+    fireTrigger('daily', { playerId, now })
+  }
+}
+
+/**
+ * A real wager RESOLVED. Track the consecutive-loss run and auto-fire `losing-streak` when it
+ * reaches `LOSING_STREAK_N` (and again at each further multiple). The marker means the SAME
+ * streak length can't double-fire on a replayed/duplicate event; a non-loss outcome (win, and
+ * — being neutral, not a loss — push/void) resets the run.
+ */
+function onResolvedLifecycle(playerId: string, outcome: Outcome, now: number): void {
+  const life = lifeOf(playerId)
+  if (outcome !== 'loss') {
+    if (life.lossStreak || life.lastStreakFired) {
+      setLife(playerId, { lossStreak: 0, lastStreakFired: 0 })
+    }
+    return
+  }
+  const streak = (life.lossStreak ?? 0) + 1
+  setLife(playerId, { lossStreak: streak })
+  if (streak >= LOSING_STREAK_N && streak % LOSING_STREAK_N === 0 && life.lastStreakFired !== streak) {
+    setLife(playerId, { lastStreakFired: streak })
+    fireTrigger('losing-streak', { playerId, now })
+  }
+}
+
 /* --------------------------------- live wiring (opt-in) -------------------- */
 
 let armed: (() => void) | null = null
 
 /**
- * Connect the engine to real play: every wager placed feeds `recordTurnover`, so bonuses
- * clear from actual betting. Idempotent — returns the existing unsubscribe if already armed.
+ * Connect the engine to real play. Idempotent — returns the existing unsubscribe if already armed.
+ *  - every wager PLACED feeds `recordTurnover` (bonuses clear from actual betting) AND fires the
+ *    activity-keyed lifecycle triggers (`first-bet`, `daily`);
+ *  - every wager RESOLVED tracks the loss run and fires `losing-streak` at `LOSING_STREAK_N`.
+ * Every lifecycle fire is idempotent via a persisted per-player marker and grants only through the
+ * existing `fireTrigger` → core.grant path — the engine still never opens a second money path.
  *
  * // SEAM: the wiring pass calls this at app start (and the console panel calls it on mount).
- * Trigger firing (signup/first-bet/daily) is left to the wiring pass to connect to the real
- * lifecycle events — the engine never auto-grants money on import.
+ * `signup` stays an explicit hook at its real source (the onboarding flow); `deposit` is n/a for a
+ * points-only book.
  */
 export function armBonusEngine(): () => void {
   if (armed) return armed
-  const off = onWagerPlaced((e) => {
+  const offPlaced = onWagerPlaced((e) => {
     try {
       recordTurnover(e.accountId, e.stake)
     } catch {
       /* a turnover update must never break placement */
     }
+    try {
+      onPlacedLifecycle(e.accountId, Date.now())
+    } catch {
+      /* a lifecycle grant must never break placement */
+    }
+  })
+  const offResolved = onWagerResolved((e) => {
+    try {
+      onResolvedLifecycle(e.accountId, e.outcome, Date.now())
+    } catch {
+      /* a lifecycle grant must never break settlement */
+    }
   })
   armed = () => {
-    off()
+    offPlaced()
+    offResolved()
     armed = null
   }
   return armed
@@ -645,6 +751,8 @@ export function __resetBonusEngine(): void {
   grants = []
   seeded = false
   grantSeq = 0
+  lifecycle = {}
+  LIFECYCLE_DOC.save(lifecycle)
   if (armed) armed()
   notifyRules()
   notifyGrants()

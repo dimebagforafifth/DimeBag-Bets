@@ -55,6 +55,11 @@ export interface SbAuthClient {
       provider: OAuthProvider
       options?: { redirectTo?: string }
     }): Promise<{ data: { provider: string; url: string | null }; error: { message: string } | null }>
+    /** Emails a password-reset link; `redirectTo` is where the link returns the user. */
+    resetPasswordForEmail(
+      email: string,
+      options?: { redirectTo?: string },
+    ): Promise<{ data: unknown; error: { message: string } | null }>
     signOut(): Promise<{ error: { message: string } | null }>
   }
 }
@@ -184,6 +189,16 @@ export function createSupabaseAdapter(deps: SupabaseAdapterDeps = {}): AuthAdapt
       })
       // In a browser supabase-js redirects to the provider; this only returns on a config
       // error. The session is picked up on the callback by getSession() (detectSessionInUrl).
+      if (error) throw new Error(error.message)
+    },
+
+    async requestPasswordReset(email) {
+      const sb = await getClient()
+      // The reset link returns the user to the app (where they set a new password); reuse
+      // the same configured redirect/origin as the OAuth + email-confirmation round-trips.
+      const { error } = await sb.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: oauthRedirectUrl(),
+      })
       if (error) throw new Error(error.message)
     },
 

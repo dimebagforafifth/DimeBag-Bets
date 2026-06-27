@@ -24,6 +24,8 @@ import {
   settleOrgWeek,
   settlementStatement,
 } from './index.js'
+import { onSettlement } from '../core/index.js'
+import type { SettlementRecord } from '../core/index.js'
 
 /**
  * A small four-tier org with all the shapes the rules allow:
@@ -292,6 +294,54 @@ describe('weekly settlement', () => {
     // …but nothing was rolled up or zeroed — figures carry forward
     expect(getMember(org, 'p1').account.balance).toBe(-3_000)
     expect(getMember(org, 'psa').account.balance).toBe(1_000)
+  })
+
+  it('roll-up is strictly zero-sum: total figure is conserved across the move to the manager', () => {
+    const { org } = seedOrg()
+    getMember(org, 'p1').account.balance = -3_000
+    getMember(org, 'psa').account.balance = 1_000
+    getMember(org, 'pm').account.balance = -500
+    const before = Object.values(org.members).reduce((s, m) => s + m.account.balance, 0)
+    // The manager carries the whole book just before its own settleWeek zeroes it.
+    const off = onSettlement((e) => {
+      if (e.accountId === 'mgr') expect(e.closingBalance).toBe(before)
+    })
+    settleOrgWeek(org)
+    off()
+    // Nothing was created or destroyed: everyone ends flat (sum still the same: 0).
+    const after = Object.values(org.members).reduce((s, m) => s + m.account.balance, 0)
+    expect(after).toBe(0)
+  })
+
+  it('records an auditable settlement for every member, routed through core', () => {
+    const { org } = seedOrg()
+    getMember(org, 'p1').account.balance = -3_000
+    getMember(org, 'psa').account.balance = 1_000
+    getMember(org, 'pm').account.balance = -500
+
+    const records: SettlementRecord[] = []
+    const off = onSettlement((e) => records.push(e))
+    settleOrgWeek(org, { week: '2026-W26', now: 4242 })
+    off()
+
+    // One record per member (every roll-up + the manager's own settleWeek).
+    const ids = records.map((r) => r.accountId).sort()
+    expect(ids).toEqual(Object.keys(org.members).sort())
+
+    // Each transfer is stamped with the cycle + timestamp we passed in.
+    for (const r of records) {
+      expect(r.week).toBe('2026-W26')
+      expect(r.timestamp).toBe(4242)
+    }
+
+    // The audited closing figure matches each member's pre-settlement book figure,
+    // signed/derived the same way settleWeek does it.
+    const p1 = records.find((r) => r.accountId === 'p1')!
+    expect(p1.closingBalance).toBe(-3_000)
+    expect(p1.direction).toBe('paid_in')
+    const psa = records.find((r) => r.accountId === 'psa')!
+    expect(psa.closingBalance).toBe(1_000)
+    expect(psa.direction).toBe('paid_out')
   })
 })
 

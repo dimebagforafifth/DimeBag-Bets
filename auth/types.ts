@@ -90,6 +90,13 @@ export interface AuthAdapter {
    * not "signed in". The demo adapter rejects (OAuth needs the real backend).
    */
   signInWithOAuth(provider: OAuthProvider): Promise<void>
+  /**
+   * Begin a player-facing password reset: the backend emails a reset link to `email`.
+   * Resolving means "the request was accepted" (the email send is fire-and-forget on the
+   * backend) — to avoid leaking which addresses exist, this should NOT reveal whether the
+   * address is registered. The demo adapter simulates a success (no real email).
+   */
+  requestPasswordReset(email: string): Promise<void>
   signOut(): Promise<void>
 }
 
@@ -109,5 +116,8 @@ export interface AuthContextValue {
   signUp(username: string, password: string, displayName?: string): Promise<SignUpResult>
   /** Start a Google OAuth sign-in (redirect). Rejects in demo mode. */
   signInWithGoogle(): Promise<void>
+  /** Request a password-reset email for `email`. Always resolves on a well-formed request
+   *  (it never reveals whether the address exists); the demo adapter simulates success. */
+  requestPasswordReset(email: string): Promise<void>
   signOut(): Promise<void>
 }

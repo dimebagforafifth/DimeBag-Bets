@@ -12,7 +12,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { getBook } from '../app/book-store.js'
-import { onGrant } from '../core/index.js'
+import { onGrant, placeWager, resolveWager } from '../core/index.js'
 import {
   DEFAULT_RULES,
   upsertBonusRule,
@@ -23,6 +23,8 @@ import {
   grantsForPlayer,
   eligibilityContext,
   signupGrantPreviewCents,
+  armBonusEngine,
+  LOSING_STREAK_N,
   __resetBonusEngine,
 } from './engine.js'
 import type { BonusRule } from './rules.js'
@@ -209,5 +211,86 @@ describe('max-win cap', () => {
     const g = grantsForPlayer('p-lena')[0]
     expect(g.grantedCents).toBe(5_000_00)
     expect(bal('p-lena') - before).toBe(5_000_00) // only the capped amount credited through core
+  })
+})
+
+/* ---------------------- lifecycle triggers auto-fired from core events ----- */
+// armBonusEngine() subscribes to the live wager/settlement streams and fires `first-bet`,
+// `daily`, and `losing-streak` automatically — each idempotent via a persisted marker, each
+// granting only through fireTrigger → core.grant. We drive REAL core events (placeWager /
+// resolveWager on a seeded player) and assert the grant fires exactly once.
+
+describe('lifecycle triggers fire automatically (and idempotently) from real play', () => {
+  const acct = () => getBook().members['p-priya'].account
+  const grantsFromRule = (ruleId: string) =>
+    grantsForPlayer('p-priya').filter((g) => g.ruleId === ruleId)
+
+  it('first-bet fires on the first wager and never again', () => {
+    upsertBonusRule(
+      credit({ id: 'fb', trigger: 'first-bet', oncePerPlayer: true, eligibility: {} }),
+    )
+    armBonusEngine()
+
+    const w1 = placeWager(acct(), 1_00)
+    resolveWager(acct(), w1, 'loss')
+    expect(grantsFromRule('fb')).toHaveLength(1) // fired on the first wager
+
+    const w2 = placeWager(acct(), 1_00) // a SECOND wager must not re-fire
+    resolveWager(acct(), w2, 'loss')
+    expect(grantsFromRule('fb')).toHaveLength(1) // still exactly one
+  })
+
+  it('daily fires once per UTC day on the first wager of the day', () => {
+    upsertBonusRule(credit({ id: 'dl', trigger: 'daily', eligibility: {} }))
+    armBonusEngine()
+
+    const w1 = placeWager(acct(), 1_00)
+    resolveWager(acct(), w1, 'loss')
+    const w2 = placeWager(acct(), 1_00) // same UTC day → no second daily grant
+    resolveWager(acct(), w2, 'loss')
+
+    expect(grantsFromRule('dl')).toHaveLength(1)
+  })
+
+  it('losing-streak fires after N consecutive losses, once per streak length', () => {
+    upsertBonusRule(credit({ id: 'ls', trigger: 'losing-streak', eligibility: {} }))
+    armBonusEngine()
+
+    // N-1 losses: not yet enough.
+    for (let i = 0; i < LOSING_STREAK_N - 1; i++) {
+      const w = placeWager(acct(), 1_00)
+      resolveWager(acct(), w, 'loss')
+    }
+    expect(grantsFromRule('ls')).toHaveLength(0)
+
+    // The Nth consecutive loss trips the nudge.
+    const wN = placeWager(acct(), 1_00)
+    resolveWager(acct(), wN, 'loss')
+    expect(grantsFromRule('ls')).toHaveLength(1)
+
+    // One more loss at the SAME streak boundary must not re-fire (idempotent per length).
+    const wExtra = placeWager(acct(), 1_00)
+    resolveWager(acct(), wExtra, 'loss')
+    expect(grantsFromRule('ls')).toHaveLength(1)
+  })
+
+  it('a win resets the loss run so the streak nudge does not fire', () => {
+    upsertBonusRule(credit({ id: 'ls2', trigger: 'losing-streak', eligibility: {} }))
+    armBonusEngine()
+
+    for (let i = 0; i < LOSING_STREAK_N - 1; i++) {
+      const w = placeWager(acct(), 1_00)
+      resolveWager(acct(), w, 'loss')
+    }
+    // A win mid-run resets the counter.
+    const win = placeWager(acct(), 1_00)
+    resolveWager(acct(), win, 'win', 2)
+
+    // Another N-1 losses: still short of N because the run restarted.
+    for (let i = 0; i < LOSING_STREAK_N - 1; i++) {
+      const w = placeWager(acct(), 1_00)
+      resolveWager(acct(), w, 'loss')
+    }
+    expect(grantsFromRule('ls2')).toHaveLength(0)
   })
 })

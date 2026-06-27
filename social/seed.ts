@@ -9,6 +9,7 @@
 import { mockSlate } from '../app/book/mockBook.js'
 import { combinedDecimal, legFromSelection, type SlipLeg } from '../app/book/slip.js'
 import type { NormalizedEvent } from '../lib/odds/contract.js'
+import { demoSeedsEnabled } from '../app/demo-seeds.js'
 import { seedFollows, __resetFollows } from './follows-store.js'
 import { shareSlip, allSlips, __resetFeed } from './feed-store.js'
 
@@ -62,8 +63,15 @@ const FOLLOW_EDGES: ReadonlyArray<readonly [string, string]> = [
   ['p-tariq', 'p-marco'],
 ]
 
-/** (Re)seed the social graph + feed deterministically from `now`. */
-export function seedSocial(now: number): void {
+/**
+ * (Re)seed the social graph + feed deterministically from `now`.
+ *
+ * Demo seeding is gated by `demoSeedsEnabled()` (ON in dev, OFF in production, override via
+ * VITE_DEMO_SEEDS) so real users never see fabricated slips. Pass `force` to seed regardless of
+ * the env default (tests / an explicit "load the demo" control).
+ */
+export function seedSocial(now: number, force = false): void {
+  if (!force && !demoSeedsEnabled()) return
   __resetFollows()
   __resetFeed()
   seedFollows(FOLLOW_EDGES)
@@ -166,10 +174,12 @@ export function seedSocial(now: number): void {
 
 let seeded = false
 
-/** Seed once (idempotent) — the section calls this on mount so the demo is populated. */
+/** Seed once (idempotent) — the section calls this on mount so the demo is populated. No-op when
+ *  demo seeding is disabled (production), so real users start with an empty community. */
 export function ensureSeeded(now: number): void {
   if (seeded) return
   seeded = true
+  if (!demoSeedsEnabled()) return
   // The feed + follows now persist (KVStore seam), so on a reload they're already populated
   // (the demo seed and/or the player's own shares/follows). Only seed a genuinely empty feed,
   // so a refresh never clobbers persisted state.

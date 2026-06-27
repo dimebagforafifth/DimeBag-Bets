@@ -41,6 +41,15 @@ export interface Ticket {
   legOutcomes?: Outcome[]
   /** Points returned to the player on settlement (0 on a loss, stake on a push). */
   returned?: number
+  /**
+   * The per-head max-payout cap (`Account.maxPayout`) that was in force when the
+   * ticket was ORIGINALLY graded, captured at settle time. A later re-grade backs
+   * out the prior figure effect against THIS cap (not the account's current one),
+   * so changing `maxPayout` between grade and re-grade can't corrupt the back-out.
+   * Undefined on legacy tickets (graded before this was recorded) → fall back to the
+   * current cap, preserving prior behaviour.
+   */
+  gradedMaxPayout?: number | null
 }
 
 let ticketSeq = 0
@@ -150,6 +159,9 @@ export function gradeTicket(
   const s = computeSettlement(ticket, results)
   ticket.legOutcomes = s.outcomes
   ticket.status = s.status
+  // Capture the cap in force at THIS first grade, so a later re-grade backs the
+  // prior settlement out against the right cap even if the operator changes it.
+  ticket.gradedMaxPayout = account.maxPayout ?? null
 
   if (s.status === 'lost') {
     resolveWager(account, ticket.wager, 'loss')
@@ -197,9 +209,13 @@ function figureEffect(
  * this never touches `pending`; it moves the figure by the DIFFERENCE between the
  * settlement's prior figure effect and the corrected one, through core's
  * `adjustBalance` (the same manual-adjustment primitive the operator uses elsewhere).
- * Both effects are computed cap-aware via `figureEffect`, so the corrected figure
- * lands EXACTLY where a clean first-time grade at the new result would — even with a
- * max-payout cap in play. Idempotent: an unchanged outcome moves nothing. A cashed-out
+ * Both effects are computed cap-aware via `figureEffect`: the prior effect against the
+ * cap that was in force when the ticket FIRST graded (`ticket.gradedMaxPayout`), and the
+ * corrected effect against the account's CURRENT cap — so the corrected figure lands
+ * EXACTLY where a clean first-time grade at the new result would, even if the operator
+ * changed the cap between grade and re-grade. (A legacy ticket with no stored cap falls
+ * back to the current cap, preserving prior behaviour.) Idempotent: an unchanged outcome
+ * moves nothing. A cashed-out
  * ticket is left alone (the player already took a settled-early price). Returns true
  * if the figure moved.
  */
@@ -211,15 +227,23 @@ export function regradeTicket(
   if (ticket.status === 'open') throw new Error(`ticket ${ticket.id} is open; use gradeTicket`)
   if (ticket.status === 'cashed') return false // a cashed ticket isn't re-graded
 
-  // The prior effect, from the ticket's standing status + the decimal it won at.
-  const prevEffect = figureEffect(ticket.stake, ticket.status, ticket.oddsDecimal, account.maxPayout)
+  // The prior effect must back out against the cap that was in force when the ticket
+  // FIRST graded — not the account's current cap, which the operator may have changed
+  // since. A legacy ticket with no stored cap falls back to the current one.
+  const priorCap = ticket.gradedMaxPayout !== undefined ? ticket.gradedMaxPayout : account.maxPayout
+  const prevEffect = figureEffect(ticket.stake, ticket.status, ticket.oddsDecimal, priorCap)
   const s = computeSettlement(ticket, results)
+  // The corrected effect uses the CURRENT cap — where a clean first-time grade now
+  // would land.
   const newEffect = figureEffect(ticket.stake, s.status, s.decimal, account.maxPayout)
   const delta = newEffect - prevEffect
 
   ticket.legOutcomes = s.outcomes
   ticket.status = s.status
   ticket.returned = s.returned
+  // The ticket now stands graded under the current cap; record it so any further
+  // re-grade backs out against THIS one.
+  ticket.gradedMaxPayout = account.maxPayout ?? null
   if (s.status === 'won') ticket.oddsDecimal = s.decimal
 
   if (delta !== 0) {

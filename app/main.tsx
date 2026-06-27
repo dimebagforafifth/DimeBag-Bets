@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useSyncExternalStore } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App.js'
 import { ErrorBoundary } from './ErrorBoundary.js'
+import { installGlobalErrorReporting } from './error-report.js'
 import { AuthProvider, Login, useAuth, memberForUser } from '../auth/index.js'
 import { getBookVersion, subscribeBook } from './book-store.js'
 import { OnboardingPlayer } from './onboarding/OnboardingPlayer.js'
@@ -31,8 +32,12 @@ function Root() {
   // transport build; once provisioning supplies the endpoints it pages on a breach.
   useEffect(() => installAlertTransport(), [])
   // Arm the bonus engine: every real wager (core `onWagerPlaced`) feeds `recordTurnover`, so
-  // bonus playthrough clears from ACTUAL betting. Safe + off-by-default — arming only records
-  // turnover, never grants; money grants happen solely via fireTrigger/expireDue → core.grant.
+  // bonus playthrough clears from ACTUAL betting. The same arm path also auto-fires the
+  // activity-keyed lifecycle triggers from real core events — `first-bet` on a player's first
+  // wager, `daily` on their first wager of a UTC day, and `losing-streak` after N consecutive
+  // losing settlements — each idempotent via a persisted per-player marker, each granting only
+  // through the existing fireTrigger → core.grant path (never a second money path). Off-by-
+  // default: with no matching enabled rule authored, a fire grants nothing.
   useEffect(() => armBonusEngine(), [])
   // Arm the boost engine (round 4 B): subscribes to core settlement so a winning, qualifying bet
   // gets its boost uplift granted via the bonus engine's grant path. Off-by-default — with no boost
@@ -47,16 +52,14 @@ function Root() {
   // policy is in force before the first wager. Off-by-default: with no config the tenant resolves to
   // the default credit policy, byte-identical to base.
   useEffect(() => setActiveEconomyTenant(getActiveTenant()), [])
-  // fireTrigger HOOKS (documented seam — the engine never auto-grants on import). The points-only
-  // demo has no safe real source for these lifecycle events, so each stays an explicit hook to
-  // connect when its source is provisioned (every fire grants a rule's reward through core.grant):
-  //   fireTrigger('signup',        { playerId })  // real new-player signup (demo bootstraps an operator)
-  //   fireTrigger('deposit',       { playerId })  // n/a — points only, no real deposits
-  //   fireTrigger('daily',         { targetId })  // a daily check-in / login-streak source
-  //   fireTrigger('first-bet',     { playerId })  // a player's first ever wager (needs lifecycle state)
-  //   fireTrigger('losing-streak', { playerId })  // N losses in a row — a retention nudge
-  // 'first-bet'/'losing-streak' are derivable from core wager events, but auto-firing would grant
-  // credit mid-play, which is an operator rule-config decision — hence explicit hooks, not a wire.
+  // fireTrigger LIFECYCLE WIRING. The three activity-keyed triggers now fire AUTOMATICALLY from
+  // real core events inside armBonusEngine() above (idempotent, marker-guarded):
+  //   first-bet     → on a player's first-ever wager        (onWagerPlaced)
+  //   daily         → on their first wager of a UTC day      (onWagerPlaced)
+  //   losing-streak → after N consecutive losing settlements (onWagerResolved)
+  // The remaining two stay explicit seams fired at their real source:
+  //   signup  → fired by the onboarding flow on a fresh player (app/onboarding/OnboardingPlayer.tsx)
+  //   deposit → n/a for a points-only book (no real deposits)
   if (status === 'loading') return null
   return status === 'authenticated' ? <AuthedApp /> : <Login />
 }
@@ -91,6 +94,12 @@ function AuthedApp() {
   }
   return <App />
 }
+
+// Capture uncaught errors + unhandled promise rejections app-wide and route them through the
+// error-report seam (complements ErrorBoundary, which catches React render errors). The remote
+// sink stays unset until a future Sentry-DSN wiring calls setErrorSink — until then this only
+// buffers/console-logs. Safe no-op outside the browser.
+installGlobalErrorReporting()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

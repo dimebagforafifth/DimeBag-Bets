@@ -13,19 +13,39 @@ import { getEconomyMode, getBalanceFloorCents } from './economy.js'
 import { assertWithinLimits } from './limits.js'
 
 /**
- * How a wager id is minted when the caller doesn't supply one. The default is an
- * in-memory sequence — fine for the demo, but it RESETS on reload and isn't safe
- * across multiple instances / a server process, so ids can collide once wagers are
- * durable (issue #6). A backend plugs in a collision-free source (DB sequence /
- * UUID) via `setWagerIdFactory`, keeping the mint point in core instead of every
- * caller inventing its own ids. `placeWager` still honours an explicit `id` arg.
+ * How a wager id is minted when the caller doesn't supply one. The default is a
+ * random UUID — collision-free across reloads, multiple instances, and a server
+ * process, so ids stay unique once wagers are durable (issue #6). Earlier this was
+ * an in-memory counter (`w_1`, `w_2`, …) that reset on reload and collided across
+ * instances. A backend can still plug in its own source (a DB sequence) via
+ * `setWagerIdFactory`, keeping the mint point in core instead of every caller
+ * inventing its own ids. `placeWager` still honours an explicit `id` arg.
  */
-let wagerSeq = 0
-const defaultWagerIdFactory = (): string => {
-  wagerSeq += 1
-  return `w_${wagerSeq}`
-}
+const defaultWagerIdFactory = (): string => `w_${randomId()}`
 let wagerIdFactory: () => string = defaultWagerIdFactory
+
+/**
+ * A collision-free random id. Uses `crypto.randomUUID()` where available (browsers,
+ * modern Node), falling back to `crypto.getRandomValues` and finally to `Math.random`
+ * for environments that expose neither — so id minting never throws regardless of host.
+ */
+function randomId(): string {
+  const c: Crypto | undefined = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined
+  if (c && typeof c.randomUUID === 'function') {
+    return c.randomUUID()
+  }
+  if (c && typeof c.getRandomValues === 'function') {
+    const bytes = c.getRandomValues(new Uint8Array(16))
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+  }
+  // Last-resort fallback: two random chunks + a time component. Not cryptographic,
+  // but vanishingly unlikely to collide in the demo environments that reach here.
+  return (
+    Math.random().toString(36).slice(2) +
+    Math.random().toString(36).slice(2) +
+    Date.now().toString(36)
+  )
+}
 
 /** Mint a unique wager id when the caller doesn't supply one. */
 function nextWagerId(): string {
@@ -34,16 +54,15 @@ function nextWagerId(): string {
 
 /**
  * Override how unsupplied wager ids are minted — e.g. a backend supplies DB-backed
- * or UUID ids that are unique across instances and survive a restart. Only changes
- * the fallback; an explicit `id` passed to `placeWager` always wins.
+ * ids that are unique across instances and survive a restart. Only changes the
+ * fallback; an explicit `id` passed to `placeWager` always wins.
  */
 export function setWagerIdFactory(factory: () => string): void {
   wagerIdFactory = factory
 }
 
-/** Restore the default in-memory sequence and zero the counter (tests). */
+/** Restore the default random-UUID factory (tests). */
 export function __resetWagerIds(): void {
-  wagerSeq = 0
   wagerIdFactory = defaultWagerIdFactory
 }
 
@@ -456,6 +475,36 @@ export function settleWeek(
     timestamp: opts?.now ?? Date.now(),
   }
   account.balance = 0
+  emitSettlement(record)
+  return record
+}
+
+/**
+ * Record an auditable settlement that did NOT go through `settleWeek` — e.g. an org
+ * roll-up where a member's figure is transferred up to its parent (via `adjustBalance`)
+ * rather than collected/zeroed in place. This keeps the settlement-recording in one
+ * place: the caller does the money move through the core mutation path, then logs the
+ * transfer here so the ledger sees a `SettlementRecord` for it just like a weekly close.
+ *
+ * It is money-neutral — it only emits and returns the record, never touching a balance.
+ * Pass the figure that was squared (signed as the member carried it); `direction` is
+ * derived to match `settleWeek`, or supply one explicitly for a roll-up transfer.
+ */
+export function recordSettlement(
+  rec: Omit<SettlementRecord, 'direction' | 'timestamp'> & {
+    direction?: SettlementRecord['direction']
+    timestamp?: number
+  },
+): SettlementRecord {
+  const record: SettlementRecord = {
+    accountId: rec.accountId,
+    closingBalance: rec.closingBalance,
+    direction:
+      rec.direction ??
+      (rec.closingBalance > 0 ? 'paid_out' : rec.closingBalance < 0 ? 'paid_in' : 'flat'),
+    week: rec.week,
+    timestamp: rec.timestamp ?? Date.now(),
+  }
   emitSettlement(record)
   return record
 }

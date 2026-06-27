@@ -9,7 +9,10 @@
  */
 
 import type { Account } from '../core/index.js'
-import { settleWeek, getEconomyMode } from '../core/index.js'
+import { settleWeek, getEconomyMode, adjustBalance } from '../core/index.js'
+// Imported from core.js directly: `recordSettlement` is the shared settlement-audit
+// hook (it emits on the same channel as `settleWeek`) and isn't on the index barrel.
+import { recordSettlement } from '../core/core.js'
 import type { Member, MemberProfile, Org, Role } from './types.js'
 import {
   computeCommission,
@@ -710,8 +713,15 @@ export function settlementStatement(org: Org): Settlement[] {
  * zero anything — every figure carries forward into the next period (a soft close /
  * snapshot, for when the book isn't actually collected this period). The pending
  * guard still applies so the snapshot is clean.
+ *
+ * `opts.week` labels the cycle being closed and `opts.now` overrides the timestamp on
+ * the per-member roll-up + manager settlement records (both threaded into core), so a
+ * settlement run leaves a consistently-stamped, auditable trail for the whole tree.
  */
-export function settleOrgWeek(org: Org, opts: { carryover?: boolean } = {}): Settlement[] {
+export function settleOrgWeek(
+  org: Org,
+  opts: { carryover?: boolean; week?: string; now?: number } = {},
+): Settlement[] {
   const stuck = Object.values(org.members).find((m) => m.account.pending !== 0)
   if (stuck) {
     throw new Error(`can't settle: ${stuck.name} still has ${stuck.account.pending} pending`)
@@ -737,15 +747,27 @@ export function settleOrgWeek(org: Org, opts: { carryover?: boolean } = {}): Set
   }
 
   // Roll balances up, deepest tier first, so each parent accumulates everything
-  // beneath it before it settles upward in turn.
+  // beneath it before it settles upward in turn. Every transfer goes through core's
+  // single mutation path (`adjustBalance`) — never a raw `+=`/`= 0` — and is logged
+  // as an auditable `SettlementRecord` so the roll-up is fully traceable. The move is
+  // strictly zero-sum (the child loses exactly what the parent gains) and the totals
+  // are identical to the old raw mutation.
+  const week = opts.week
+  const now = opts.now ?? Date.now()
   const bottomUp = Object.values(org.members).sort((a, b) => ROLE_TIER[b.role] - ROLE_TIER[a.role])
   for (const m of bottomUp) {
     if (m.parentId == null) continue // the manager is squared below
-    org.members[m.parentId].account.balance += m.account.balance
-    m.account.balance = 0
+    const closing = m.account.balance
+    if (closing !== 0) {
+      adjustBalance(org.members[m.parentId].account, closing) // parent gains the figure
+      adjustBalance(m.account, -closing) // child zeroed — net zero-sum
+    }
+    // Record the roll-up even at a flat figure, so every member appears in the trail.
+    recordSettlement({ accountId: m.account.id, closingBalance: closing, week, timestamp: now })
   }
-  // The manager now carries the whole book; settle it to zero for the new week.
-  settleWeek(getMember(org, org.managerId).account)
+  // The manager now carries the whole book; settle it to zero for the new week
+  // (this emits the manager's own auditable settlement record via core).
+  settleWeek(getMember(org, org.managerId).account, { week, now })
 
   return statement
 }

@@ -31,6 +31,10 @@ describe('demo auth adapter', () => {
     await expect(createDemoAdapter().signInWithOAuth('google')).rejects.toThrow(/Supabase/i)
   })
 
+  it('requestPasswordReset resolves as a simulated success (no real email)', async () => {
+    await expect(createDemoAdapter().requestPasswordReset('anyone@example.com')).resolves.toBeUndefined()
+  })
+
   it('signs out and stays signed out (no auto re-login)', async () => {
     const a = createDemoAdapter()
     await a.signIn(DEMO_OPERATOR_USERNAME, 'demo')

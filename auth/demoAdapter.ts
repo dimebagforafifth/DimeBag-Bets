@@ -104,6 +104,12 @@ export function createDemoAdapter(): AuthAdapter {
       throw new Error('Google sign-in needs the Supabase backend (set SUPABASE_URL + keys)')
     },
 
+    async requestPasswordReset() {
+      // No external mail service in the local demo, and we never reveal whether an address
+      // exists — so this is a safe simulated success. Real password-reset emails come from
+      // Supabase Auth (see auth/supabaseAdapter.ts). // TODO(api)
+    },
+
     async signOut() {
       SESSION.save(null)
       BOOTSTRAPPED.save(true) // don't auto-bootstrap a session back in

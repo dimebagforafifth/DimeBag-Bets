@@ -8,7 +8,7 @@
  */
 
 import { useState, type FormEvent } from 'react'
-import { ArrowLeft, Dice5, Info, Lock, MailCheck, ShieldCheck, Sparkles, Trophy, User, Zap } from 'lucide-react'
+import { ArrowLeft, Dice5, Info, Lock, Mail, MailCheck, ShieldCheck, Sparkles, Trophy, User, Zap } from 'lucide-react'
 import { useAuth } from './AuthProvider.js'
 import { DEMO_OPERATOR_USERNAME } from './demoAdapter.js'
 import { Button } from '../components/ui/button.js'
@@ -32,8 +32,10 @@ const DEMOS: { username: string; role: string }[] = [
 ]
 
 export function Login() {
-  const { signIn, signUp, signInWithGoogle, isDemo, canUseOAuth } = useAuth()
+  const { signIn, signUp, signInWithGoogle, requestPasswordReset, isDemo, canUseOAuth } = useAuth()
   const [mode, setMode] = useState<'in' | 'up'>('in')
+  // When set, the inline "forgot password?" view replaces the sign-in/sign-up form.
+  const [forgot, setForgot] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -88,6 +90,11 @@ export function Login() {
                   setVerifyEmail(null)
                   setMode('in')
                 }}
+              />
+            ) : forgot ? (
+              <ForgotPassword
+                requestPasswordReset={requestPasswordReset}
+                onBack={() => setForgot(false)}
               />
             ) : (
               <>
@@ -146,6 +153,18 @@ export function Login() {
                   <div className="auth-field">
                     <div className="auth-field-row">
                       <span className="label">{mode === 'in' ? 'Password' : 'Create a password'}</span>
+                      {mode === 'in' && (
+                        <button
+                          type="button"
+                          className="auth-link"
+                          onClick={() => {
+                            setError(null)
+                            setForgot(true)
+                          }}
+                        >
+                          Forgot password?
+                        </button>
+                      )}
                     </div>
                     <div className="auth-input-wrap">
                       <Lock size={16} />
@@ -247,6 +266,108 @@ export function Login() {
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * The inline "forgot password?" flow: an email input → submit → a "check your email"
+ * confirmation. To avoid leaking which addresses exist, a successful request always lands
+ * on the same confirmation regardless of whether the email is registered. In demo mode
+ * the request is a simulated success (no real email is sent).
+ */
+function ForgotPassword({
+  requestPasswordReset,
+  onBack,
+}: {
+  requestPasswordReset: (email: string) => Promise<void>
+  onBack: () => void
+}) {
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setBusy(true)
+    requestPasswordReset(email)
+      .then(() => setSent(true))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Something went wrong'))
+      .finally(() => setBusy(false))
+  }
+
+  if (sent) {
+    return (
+      <div className="auth-center-state">
+        <div className="auth-state-ic">
+          <MailCheck size={28} />
+        </div>
+        <h1 className="auth-title">Check your email</h1>
+        <p className="auth-sub">
+          If an account matches <strong style={{ color: 'var(--text)' }}>{email}</strong>, we sent a link
+          to reset your password. Follow it, then come back and sign in.
+        </p>
+        <div style={{ marginTop: 22 }}>
+          <Button variant="outline" size="lg" className="w-full" onClick={onBack}>
+            <ArrowLeft size={16} />
+            Back to sign in
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="auth-head">
+        <div className="auth-kicker">Account recovery</div>
+        <h1 className="auth-title">Reset your password</h1>
+        <p className="auth-sub">Enter your email and we'll send you a link to set a new password.</p>
+      </div>
+
+      <form className="auth-form" onSubmit={submit} noValidate>
+        <div className="auth-field">
+          <div className="auth-field-row">
+            <label className="label" htmlFor="reset-email">
+              Email
+            </label>
+          </div>
+          <div className="auth-input-wrap">
+            <Mail size={16} />
+            <input
+              id="reset-email"
+              className="input"
+              type="email"
+              value={email}
+              placeholder="you@example.com"
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              required
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div className="auth-formerr">
+            <Info size={16} />
+            {error}
+          </div>
+        )}
+
+        <Button type="submit" size="lg" className="w-full" disabled={busy || !email.trim()}>
+          {busy ? 'Sending…' : 'Send reset link'}
+        </Button>
+
+        <button type="button" className="auth-oauth" onClick={onBack} disabled={busy}>
+          <ArrowLeft size={16} />
+          Back to sign in
+        </button>
+      </form>
+    </>
   )
 }
 

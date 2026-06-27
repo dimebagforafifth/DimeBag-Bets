@@ -15,6 +15,7 @@ import { toBetRows, type BetRow } from '../app/ledger-stats.js'
 import { getBookLedger, subscribeBookLedger } from '../app/book-ledger.js'
 import { listPlayers } from '../app/book-store.js'
 import { subscribeSettlements } from '../app/settlement-store.js'
+import { demoSeedsEnabled } from '../app/demo-seeds.js'
 import { seededRows, seededClv, seededAccountIds } from '../records/seed.js'
 import type { ClvDatum } from '../records/types.js'
 import { projectPlayer, type ProfileStatBlock, type StatWindow } from './projection.js'
@@ -23,10 +24,10 @@ const DAY_MS = 24 * 60 * 60 * 1000
 /** Default rolling "season" length when no absolute season start is pinned (120 days). */
 export const SEASON_MS = 120 * DAY_MS
 
-// Demo seeding mirrors records/store: ON for the mock/local default so every profile renders
-// populated; a real keyed deployment flips it OFF so the projection derives purely from the
-// server-authoritative ledger. SEAM (the wiring pass flips it with the records seed).
-let seedEnabled = true
+// Demo seeding mirrors records/store: gated by demoSeedsEnabled() (ON in dev, OFF in production,
+// override via VITE_DEMO_SEEDS) so the projection derives purely from the server-authoritative
+// ledger for real users. The test hook `__setProjectionSeed` still forces it regardless. SEAM.
+let seedEnabled = demoSeedsEnabled()
 // An absolute season anchor (epoch ms); null = a rolling SEASON_MS window from `now`.
 let seasonStartMs: number | null = null
 
@@ -187,7 +188,7 @@ export function __setProjectionSeed(enabled: boolean): void {
   dirty = true
 }
 export function __resetProjection(): void {
-  seedEnabled = true
+  seedEnabled = demoSeedsEnabled()
   seasonStartMs = null
   mv = new Map()
   builtAt = 0

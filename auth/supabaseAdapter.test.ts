@@ -16,6 +16,7 @@ function fakeClient(session: unknown = null) {
     signIn?: { email: string; password: string }
     signUp?: unknown
     oauth?: { provider: string; options?: { redirectTo?: string } }
+    reset?: { email: string; options?: { redirectTo?: string } }
     signOut?: boolean
   } = {}
   const sb: SbAuthClient = {
@@ -34,6 +35,10 @@ function fakeClient(session: unknown = null) {
       async signInWithOAuth(c) {
         calls.oauth = c
         return { data: { provider: c.provider, url: 'https://accounts.google.com/o/oauth2/auth' }, error: null }
+      },
+      async resetPasswordForEmail(email, options) {
+        calls.reset = { email, options }
+        return { data: {}, error: null }
       },
       async signOut() {
         calls.signOut = true
@@ -134,6 +139,9 @@ describe('createSupabaseAdapter', () => {
         async signInWithOAuth(c) {
           return { data: { provider: c.provider, url: null }, error: null }
         },
+        async resetPasswordForEmail() {
+          return { data: {}, error: null }
+        },
         async signOut() {
           return { error: null }
         },
@@ -157,6 +165,13 @@ describe('createSupabaseAdapter', () => {
     const adapter = createSupabaseAdapter({ env: ENV, emailDomain: DOMAIN, createClient: () => sb })
     await adapter.signInWithOAuth('google')
     expect(calls.oauth?.provider).toBe('google')
+  })
+
+  it('requestPasswordReset emails a reset link through the client', async () => {
+    const { sb, calls } = fakeClient(null)
+    const adapter = createSupabaseAdapter({ env: ENV, emailDomain: DOMAIN, createClient: () => sb })
+    await adapter.requestPasswordReset('  Marco@Example.com  ')
+    expect(calls.reset?.email).toBe('Marco@Example.com') // trimmed, not lowercased (real email)
   })
 
   it('maps email + verified state from the session', async () => {

@@ -23,6 +23,7 @@ import { createStore, persistedDoc, type Doc } from '../persistence/index.js'
 import { getRewardsConfig, recordIssuance, type ProfitBoost } from './economy.js'
 import { adjustFigure } from '../app/manager-actions.js'
 import { getBook } from '../app/book-store.js'
+import { demoSeedsEnabled } from '../app/demo-seeds.js'
 
 /* --------------------------------- types ----------------------------------- */
 
@@ -145,14 +146,25 @@ const SEED: Record<string, PlayerRewardState> = {
 /* ------------------------------- the store --------------------------------- */
 
 const store = createStore({ namespace: 'dimebag' })
+
+/**
+ * The initial reward state. Demo seeding is gated by `demoSeedsEnabled()` (ON in dev, OFF in
+ * production, override via VITE_DEMO_SEEDS) — so real users start with an EMPTY hub ({}) instead
+ * of fabricated players like 'p-marco'. `__resetRewardsPlayers` reuses this so tests reflect the
+ * same gate.
+ */
+function initialStates(): Record<string, PlayerRewardState> {
+  return demoSeedsEnabled() ? SEED : {}
+}
+
 const DOC: Doc<Record<string, PlayerRewardState>> = persistedDoc<Record<string, PlayerRewardState>>(
   store,
   'rewards.players',
   // v3: focused hub state (wagered/rakeback/daily+streak/warmup/spins/store).
-  { version: 3, initial: SEED },
+  { version: 3, initial: initialStates() },
 )
 
-let states: Record<string, PlayerRewardState> = DOC.load() ?? SEED
+let states: Record<string, PlayerRewardState> = DOC.load() ?? initialStates()
 let version = 0
 const listeners = new Set<() => void>()
 function notify(): void {
@@ -420,6 +432,6 @@ export function recordComp(memberId: string, rec: Omit<CompRecord, 'id' | 'at'>,
 }
 
 export function __resetRewardsPlayers(): void {
-  states = SEED
+  states = initialStates()
   notify()
 }

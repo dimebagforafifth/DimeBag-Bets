@@ -11,6 +11,7 @@ import { toBetRows } from '../app/ledger-stats.js'
 import { getBookLedger, subscribeBookLedger } from '../app/book-ledger.js'
 import { getBook, listPlayers, subscribeBook } from '../app/book-store.js'
 import { getVipConfig } from '../app/vip-store.js'
+import { demoSeedsEnabled } from '../app/demo-seeds.js'
 import { rankProgress } from '../vip/index.js'
 import { buildRecord } from './record.js'
 import { hasSeed, seededAccountIds, seededClv, seededRows } from './seed.js'
@@ -20,8 +21,12 @@ import type { ClvDatum, VerifiedRecord } from './types.js'
  * Demo seeding is the mock/local default (so every profile renders populated). A real, keyed
  * deployment turns this OFF so records derive purely from the server-authoritative ledger —
  * the wiring pass / production flips this once the backend is the source of truth. SEAM.
+ *
+ * Default is gated by `demoSeedsEnabled()` (ON in dev, OFF in production, override via
+ * VITE_DEMO_SEEDS) so real users never see fabricated history. The test hook
+ * `__setRecordsSeed` still forces it on/off regardless of the env default.
  */
-let seedEnabled = true
+let seedEnabled = demoSeedsEnabled()
 
 /**
  * Real closing-line data per account — none captured in the ledger today (CLV is gated honest
@@ -107,5 +112,5 @@ export function __setRecordsSeed(enabled: boolean): void {
 }
 
 export function __resetRecords(): void {
-  seedEnabled = true
+  seedEnabled = demoSeedsEnabled()
 }

@@ -37,6 +37,13 @@ describe('seed — deterministic, varied demo records', () => {
 })
 
 describe('store gating', () => {
+  it('with seed ON (forced), a demo player has fabricated rows', () => {
+    __setRecordsSeed(true)
+    const dana = getRecord('p-dana', NOW)
+    expect(dana.lifetime.bets).toBeGreaterThan(0)
+    expect(dana.integrity.demoSeeded).toBe(true)
+  })
+
   it('with seed OFF, a demo player has an empty real record (no fabricated rows)', () => {
     __setRecordsSeed(false)
     const dana = getRecord('p-dana', NOW)

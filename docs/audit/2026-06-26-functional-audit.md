@@ -57,11 +57,11 @@ For a single-machine manager demo this is mostly fine. For **real users testing 
 ### Medium priority
 
 5. **Sessions tile** — shows only the current session; login/device/IP history is a flagged "Needs backend" placeholder (`features/control/SessionsPanel.tsx`).
-6. **Bonus lifecycle triggers don't auto-fire** — signup/first-bet/daily/losing-streak hooks are commented out in `app/main.tsx`; the console "Run trigger" uses hardcoded demo amounts. The grant *mechanics* are real; the *triggers* aren't wired.
+6. **Bonus lifecycle triggers don't auto-fire** — ✅ FIXED (2026-06-27, branch `feat/launch-prep-batch`). `signup` was already wired (onboarding); `first-bet`, `daily`, and `losing-streak` now fire automatically + idempotently from real core wager/settlement events inside `armBonusEngine()` (markers persisted per player / UTC-day / streak), all through the existing `fireTrigger → core.grant` path. Tests in `bonus/engine.test.ts`. (The console "Run trigger" still uses demo amounts by design — it's a manual test tool.)
 7. **Boosts & Referrals ship off/empty** — engines are real but off-by-default with no seeded rules, so nothing fires in a demo until an operator configures them. Referrals also has no player-side claim at signup.
 8. **Scheduled promotions only fire while a manager's browser tab is open** (`manager/promotions/schedule-runner.ts`) — no server cron.
 9. **Player onboarding dropped the agent/referral-code step** — a recruited player can't attach to an agent's desk at signup.
-10. **No "Forgot password?"** on the sign-in screen (reset exists only operator-side).
+10. **No "Forgot password?"** on the sign-in screen — ✅ FIXED (2026-06-27, branch `feat/launch-prep-batch`): added `requestPasswordReset` to the auth adapter (Supabase `resetPasswordForEmail`; demo = simulated success), exposed via `useAuth`, and a "Forgot password?" link + inline email→confirmation view in `auth/Login.tsx`.
 
 ### Cross-cutting (not a balance bug, but real for live users)
 
@@ -86,7 +86,7 @@ For a single-machine manager demo this is mostly fine. For **real users testing 
 ---
 
 ## Before real users (pre-demo checklist)
-- [ ] Flip demo seeds off: `records/store.ts` `seedEnabled`, `rewards/players.ts` SEED, `social/seed.ts` — or real players see fabricated history.
+- [x] Flip demo seeds off — ✅ DONE (2026-06-27, branch `feat/launch-prep-batch`): all four lanes (`records/store.ts`, `profile/projection-store.ts`, `rewards/players.ts`, `social/seed.ts`) default OFF in production via the `VITE_DEMO_SEEDS` gate (`app/demo-seeds.ts`); seeds stay on in dev. Ensure `VITE_DEMO_SEEDS` is unset/`off` in the prod build.
 - [ ] Decide single-machine demo vs multi-device → if multi-device, the Supabase persistence cutover (#12) is required.
 - [ ] Fix the profile streak bug (#1) and the dead edge knobs (#3) — most visible "this is broken" moments.
 - [ ] Decide whether managers self-onboard (#4) or are provisioned.

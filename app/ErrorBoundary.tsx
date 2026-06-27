@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { reportError } from './error-report.js'
 
 /**
  * Catches any render/lifecycle error in the tree below it and shows a
@@ -21,6 +22,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('DimeBag-Bets hit an unexpected error:', error, info.componentStack)
+    reportError(error, { componentStack: info.componentStack })
   }
 
   render(): ReactNode {

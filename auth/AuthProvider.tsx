@@ -67,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // mount-time getSession() establishes the session. Nothing to set here.
     await adapter.signInWithOAuth('google')
   }, [adapter])
+  const requestPasswordReset = useCallback(
+    // Fire-and-forget: the backend emails a reset link. No session change here — the user
+    // stays unauthenticated until they follow the link and set a new password.
+    (email: string) => adapter.requestPasswordReset(email),
+    [adapter],
+  )
   const signOut = useCallback(async () => {
     await adapter.signOut()
     setSession(null)
@@ -82,9 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signInWithGoogle,
+      requestPasswordReset,
       signOut,
     }),
-    [status, session, adapter, signIn, signUp, signInWithGoogle, signOut],
+    [status, session, adapter, signIn, signUp, signInWithGoogle, requestPasswordReset, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -102,6 +109,7 @@ const FALLBACK: AuthContextValue = {
     return { session: { user: FALLBACK.user!, token: 'demo-fallback', expiresAt: null } }
   },
   async signInWithGoogle() {},
+  async requestPasswordReset() {},
   async signOut() {},
 }
 

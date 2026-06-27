@@ -45,11 +45,11 @@ The [OWASP Top 10 was refreshed in 2025](https://owasp.org/Top10/2025/); the not
 
 | # | Item | Cat | Status | Why it's top |
 |---|------|-----|--------|--------------|
-| 1 | [Atomic + idempotent balance mutation](#11-idempotency--atomic-balance-mutation) | Sec/Integrity | 🔴 | Once balances are server-side, concurrent/replayed bets can double-spend `availableToWager`. |
+| 1 | [Atomic + idempotent balance mutation](#11-idempotency--atomic-balance-mutation) | Sec/Integrity | 🟡 | Migration `0016` authored (branch `feat/launch-prep-batch`) — apply + pass a client UUID to finish. Once balances are server-side, concurrent/replayed bets can double-spend `availableToWager`. |
 | 2 | [HTTP security headers](#21-http-security-headers) | Security | 🔴 | One `vercel.json` block buys CSP/HSTS/anti-clickjacking. Cheapest high-value win. |
 | 3 | [API edge rate limiting + bot protection](#22-rate-limiting-at-the-http-edge) | Sec/Cost | 🔴 | `api/fairness` & future player routes are unauthenticated and unthrottled — spam grows `fairness_seeds` and burns function quota. Needed *before* player logins. |
 | 4 | [Runtime validation at trust boundaries (zod)](#23-runtime-schema-validation-zod) | Security | 🔴 | API bodies, the odds feed, and env are cast/trusted today; one malformed payload reaches pricing/balance. |
-| 5 | [Error tracking + uptime monitoring](#31-error-tracking-sentry) | Reliability | 🔴 | You can't run a launch you can't see. No Sentry, no external uptime alerting today. |
+| 5 | [Error tracking + uptime monitoring](#31-error-tracking-sentry) | Reliability | 🟡 | Local report seam done (branch `feat/launch-prep-batch`); still needs a Sentry DSN + external uptime monitor. |
 | 6 | [CI security automation](#26-ci-security-automation) | Security | 🔴 | No dep-audit / Dependabot / CodeQL / secret-scan — and there are already known leaked secrets to rotate. |
 | 7 | [Legal pages + data-rights path](#51-published-privacy-policy--terms) | Legal | 🔴 | Email + IP + gameplay are collected via Google OAuth; GDPR/CCPA apply even points-only. |
 
@@ -58,7 +58,7 @@ The [OWASP Top 10 was refreshed in 2025](https://owasp.org/Top10/2025/); the not
 ## 1. Integrity & money-safety (beyond what `pending-issues.md` tracks)
 
 ### 1.1 Idempotency & atomic balance mutation
-- **Status:** 🔴 Missing
+- **Status:** 🟡 Migration authored (branch `feat/launch-prep-batch`, 2026-06-27) — `supabase/migrations/0016_atomic_place_wager.sql`: single atomic check-and-debit `UPDATE`, `idempotency_key` UNIQUE + `ON CONFLICT` replay-safety, DB-minted id; core's `wagerSeq` replaced with `crypto.randomUUID()`. **Not applied to a remote yet**, and `money/rpc.ts` / `persistence/supabase/*` must pass a client UUID. (Was: 🔴 Missing.)
 - **Now:** `core` mutates the account **in place** in a `ref` (`app/App.tsx`); wager ids come from an in-memory counter (`core/core.ts` `wagerSeq`, already flagged in `pending-issues.md`). There is no protection against a bet being submitted twice (double-click, network retry) or two bets racing the same `availableToWager`.
 - **Risk at launch:** When the balance moves to Supabase, a double-submit or two concurrent tabs can each pass the `stake ≤ availableToWager` check before either writes, **double-spending** the hold. For a points economy with a leaderboard, that's an exploit.
 - **Fix:**
@@ -137,7 +137,7 @@ The [OWASP Top 10 was refreshed in 2025](https://owasp.org/Top10/2025/); the not
 ## 3. Reliability & operations (mostly new vs `checklist.md` §5)
 
 ### 3.1 Error tracking (Sentry)
-- **Status:** 🔴 Missing
+- **Status:** 🟡 Local seam done (branch `feat/launch-prep-batch`, 2026-06-27) — `app/error-report.ts` (`reportError` + pluggable `setErrorSink` + `installGlobalErrorReporting`), wired into `ErrorBoundary` + `main.tsx`. Still needs a vendor: register a Sentry DSN as the sink. (Was: 🔴 Missing.)
 - **Now:** There's a React `app/ErrorBoundary.tsx` ✅ (catches render crashes for users) and API handlers return generic errors ✅ — but nothing **reports** exceptions anywhere. No Sentry/Rollbar/etc.
 - **Fix:** Add Sentry for the React app **and** the Vercel functions/worker. Wire `ErrorBoundary` to `Sentry.captureException`. Scrub PII; keep sample rate modest to control cost.
 
@@ -243,7 +243,7 @@ The [OWASP Top 10 was refreshed in 2025](https://owasp.org/Top10/2025/); the not
 ## 6. SEO & discoverability (beyond `checklist.md` §5 launch)
 
 ### 6.1 Open Graph / Twitter card + share image
-- **Status:** 🔴 Missing
+- **Status:** ✅ Done (branch `feat/launch-prep-batch`, 2026-06-27) — OG/Twitter meta added to `index.html` (`summary_large_image`, 1200×630) pointing at `public/og.png`; the share image is generated from `design-system/social/og-image.html` (mirrors the X-banner "Chip Gold & Carbon" brand treatment). Follow-up: set an absolute `og:image` URL once the prod domain is fixed (scrapers prefer absolute). (Was: 🔴 Missing.)
 - **Now:** `index.html` has `description` + `theme-color` ✅ but **no `og:*` / `twitter:card`** tags and no share image (`public/` holds only `favicon.svg`).
 - **Fix:** Add OG/Twitter meta to `index.html` and a `public/og.png`. (This is `checklist.md` launch item "preview image," concretized.)
 
@@ -257,7 +257,7 @@ The [OWASP Top 10 was refreshed in 2025](https://owasp.org/Top10/2025/); the not
 ## 7. Accessibility & UX quality
 
 ### 7.1 Accessibility automation
-- **Status:** 🟡 Partial (already strong)
+- **Status:** 🟡 Partial (already strong) — `eslint-plugin-jsx-a11y` was attempted (branch `feat/launch-prep-batch`, 2026-06-27) but **backed out**: its latest release (6.10.2) peer-caps at ESLint 9 while the repo is on ESLint 10, so it breaks `npm ci`. Re-add once an ESLint-10-compatible release exists, or opt into a repo-wide `legacy-peer-deps` policy. The `axe`/Playwright CI pass below is still open.
 - **Now:** ~509 `aria-*`/`role` usages across 139 components — accessibility is clearly being done by hand ✅.
 - **Fix:** Lock it in with automated checks: `eslint-plugin-jsx-a11y` in the existing ESLint config + an `axe`/Playwright pass in CI on a few key screens; spot-check keyboard nav and color contrast on the dark theme.
 

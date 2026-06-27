@@ -8,6 +8,7 @@ import {
   resolveAtMultiplier,
   resolveWager,
   settleWeek,
+  recordSettlement,
   onSettlement,
   setWagerIdFactory,
   __resetWagerIds,
@@ -37,9 +38,19 @@ describe('wager id minting (issue #6)', () => {
     // An explicit id always wins over the factory.
     expect(placeWager(account(), 100, 'explicit').id).toBe('explicit')
     __resetWagerIds()
-    // Back to the default in-memory sequence from a zeroed counter.
-    expect(placeWager(account(), 100).id).toBe('w_1')
+    // Back to the default random factory: ids are unique and unguessable, not a counter.
+    const id = placeWager(account(), 100).id
+    expect(id).toMatch(/^w_/)
+    expect(id).not.toBe('w_1') // not the old in-memory sequence
     __resetWagerIds() // leave global state clean for other tests
+  })
+
+  it('mints collision-free random ids — no counter, no collisions across many wagers', () => {
+    __resetWagerIds()
+    const ids = new Set<string>()
+    for (let i = 0; i < 1000; i++) ids.add(placeWager(account(), 100).id)
+    expect(ids.size).toBe(1000) // every id distinct
+    __resetWagerIds()
   })
 })
 
@@ -345,6 +356,30 @@ describe('settleWeek', () => {
     expect(() => settleWeek(a)).not.toThrow()
     expect(a.balance).toBe(0)
     off()
+  })
+})
+
+describe('recordSettlement (auditable settlement without zeroing)', () => {
+  it('emits + returns a record and is money-neutral (touches no balance)', () => {
+    const seen: { accountId: string; closingBalance: number; direction: string }[] = []
+    const off = onSettlement((e) =>
+      seen.push({ accountId: e.accountId, closingBalance: e.closingBalance, direction: e.direction }),
+    )
+    const a = account({ balance: 700 })
+    const rec = recordSettlement({ accountId: a.id, closingBalance: 700, week: '2026-W26' })
+    off()
+    expect(rec).toMatchObject({ accountId: 'acct_1', closingBalance: 700, direction: 'paid_out' })
+    expect(seen).toEqual([{ accountId: 'acct_1', closingBalance: 700, direction: 'paid_out' }])
+    // It records only — the balance is untouched (unlike settleWeek, which zeroes).
+    expect(a.balance).toBe(700)
+  })
+
+  it('derives direction from the figure but honours an explicit override', () => {
+    expect(recordSettlement({ accountId: 'x', closingBalance: -10 }).direction).toBe('paid_in')
+    expect(recordSettlement({ accountId: 'x', closingBalance: 0 }).direction).toBe('flat')
+    expect(
+      recordSettlement({ accountId: 'x', closingBalance: 5, direction: 'paid_in' }).direction,
+    ).toBe('paid_in')
   })
 })
 

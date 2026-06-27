@@ -18,9 +18,9 @@ done or deferred to Phase 1+. Pick these up once Supabase, OAuth, and hosting ar
 |---|------|------------|
 | 1 | **Apply Supabase migrations** | Run `supabase db push` against the remote project. Migrations 0001–0015 are all in `supabase/migrations/`. Balance is ledger-derived (0015). |
 | 2 | **Google OAuth in Supabase dashboard** | Enable Google provider (client id + secret), add deployed origin to allowed redirect URLs (`SUPABASE_AUTH_REDIRECT_URL`), enable email confirmation. Code is already done (`auth/supabaseAdapter.ts`, `auth/Login.tsx`). |
-| 3 | **Atomic placeWager — prevent double-spend (G1)** | Replace the current `place_wager` RPC with a single atomic `UPDATE … WHERE available >= stake RETURNING …` (0 rows = reject). Add a client-minted idempotency key with a `UNIQUE` constraint on `wagers`. See `docs/audit/gap-analysis.md §1.1`. Claude can write this migration — ask in the next session. |
+| 3 | **Atomic placeWager — prevent double-spend (G1)** | ✅ **Migration authored** — `supabase/migrations/0016_atomic_place_wager.sql` (branch `feat/launch-prep-batch`, 2026-06-27): single atomic `UPDATE … WHERE available >= stake RETURNING`, `wagers.idempotency_key` + partial UNIQUE with `ON CONFLICT DO NOTHING` replay-safety, DB-minted id. **Still to do:** apply it (`supabase db push`) and pass a client-minted UUID from `money/rpc.ts` / `persistence/supabase/*` (mirror in the fake-server). See `docs/operations/note-0016-atomic-place-wager.md`. |
 | 4 | **CSP: promote report-only → enforcing** | After first real Vercel deploy, check the CSP violation report in Vercel logs. Once clean, change `Content-Security-Policy-Report-Only` → `Content-Security-Policy` in `vercel.json`. |
-| 5 | **Error tracking — Sentry (G5)** | Create a Sentry project, get the DSN, add `VITE_SENTRY_DSN` env var. Wire `componentDidCatch` in `app/ErrorBoundary.tsx` to `Sentry.captureException`. Claude can add the SDK wiring — ask in the next session. |
+| 5 | **Error tracking — Sentry (G5)** | ✅ **Local seam DONE** (branch `feat/launch-prep-batch`, 2026-06-27): `app/error-report.ts` (`reportError` + pluggable `setErrorSink` + `installGlobalErrorReporting`), wired into `app/ErrorBoundary.tsx` + `app/main.tsx`. **Still to do (needs a vendor):** create a Sentry project, add `VITE_SENTRY_DSN`, register the SDK as the sink via `setErrorSink(...)` — no caller changes needed. |
 | 6 | **Edge rate limiting — auth routes (G3)** | `api/fairness.ts` already has in-memory rate limiting. For auth routes and the HTTP edge, add Upstash Ratelimit + Vercel KV. |
 | 7 | **Self-serve data export / delete** | Needed for GDPR/CCPA. Privacy policy currently directs users to email. Build account settings UI with export + delete once Supabase auth is live. |
 
@@ -48,10 +48,15 @@ done or deferred to Phase 1+. Pick these up once Supabase, OAuth, and hosting ar
 
 ---
 
-## M1 — `settleWeek` discards the settlement instead of recording it
+## M1 — `settleWeek` discards the settlement instead of recording it — ✅ RESOLVED (2026-06-27)
 
 - **Severity:** Medium (becomes High once balances persist)
-- **Status:** Deferred to Phase 1 (needs persistence / transaction history).
+- **Status:** ✅ Resolved on branch `feat/launch-prep-batch` (verified green; pending commit & merge).
+- **Fix shipped:** Investigated — `settleWeek` ALREADY emits/returns an auditable `SettlementRecord`
+  (accountId, closing balance, direction, week, timestamp) before zeroing, with the pending guard
+  intact. The real gap was `org.ts` `settleOrgWeek`, which rolled child balances up by raw mutation;
+  it now routes each member transfer through `core.adjustBalance` and records a per-member settlement
+  via a new `recordSettlement()` helper (zero-sum, audited). Tests in `core/core.test.ts` + `org/org.test.ts`.
 - **Where:** `core/core.ts` (`settleWeek`)
 - **Problem:** The doc comment says accounts "pay in / get paid" then reset, but
   the function only zeroes `balance` — no payout amount is recorded anywhere.
@@ -106,7 +111,7 @@ done or deferred to Phase 1+. Pick these up once Supabase, OAuth, and hosting ar
 
 ---
 
-## `core` wager id counter is not persistence-safe
+## `core` wager id counter is not persistence-safe — ✅ FIXED (2026-06-27)
 
 - **Severity:** Low (until the backend lands)
 - **Where:** `core/core.ts` (`wagerSeq` / `nextWagerId`)
@@ -114,6 +119,10 @@ done or deferred to Phase 1+. Pick these up once Supabase, OAuth, and hosting ar
   and isn't safe across multiple instances / a server process — ids can collide.
 - **Intended fix:** when wagers are persisted, mint ids from the database (or a
   UUID) rather than an in-memory sequence.
+- **Fix shipped (branch `feat/launch-prep-batch`, 2026-06-27):** the in-memory `wagerSeq` counter is
+  replaced by `crypto.randomUUID()` (with a `getRandomValues` / `Math.random` fallback) in
+  `core/core.ts`; the injectable factory + explicit-id override still work. The DB-side mint lands
+  with migration `0016` for the server path.
 
 ---
 
@@ -192,17 +201,21 @@ everywhere, all money through `core`). Findings + this session's work below.
 4. **Rotate leaked secrets** (SGO API key, any dev GitHub token seen in transcripts).
 5. **Confirm The Odds API terms** allow a non-real-money app before enabling live odds.
 
-### Open code findings (not yet fixed)
+### Open code findings (updated 2026-06-27)
 
 - **External feed not schema-validated** — `sportsdata/vendors/theOddsApi.ts` casts vendor
   JSON `as ApiEvent[]` / `as OddsApiScoreEvent[]` with no runtime validation (`Number(score)`
   is the only guard). Add a validation layer (e.g. zod) at the network boundary before live
-  odds — malformed/hostile feed data could propagate `NaN`/`undefined` into pricing.
-- **`org.ts:738` weekly roll-up bypasses core + ledger** — `parent.balance += child.balance`
-  directly (zero-sum but unaudited). Route through `adjustBalance` / the ledger.
-- **`regradeTicket` cap recomputation** (`sportsbook/engine.ts`) — uses the CURRENT
-  `account.maxPayout` for both the prior and corrected effect; a cap changed between grade and
-  re-grade computes the back-out against the wrong cap.
+  odds — malformed/hostile feed data could propagate `NaN`/`undefined` into pricing. *(NB: a zod
+  layer now exists in `sportsdata/vendors/validation.ts` — re-verify this finding is already closed.)*
+- **`org.ts` weekly roll-up bypasses core + ledger** — ✅ FIXED (2026-06-27, branch
+  `feat/launch-prep-batch`): `settleOrgWeek` now moves each child→parent figure via
+  `core.adjustBalance` and records a per-member settlement (zero-sum, audited) instead of the raw
+  `parent.balance += child.balance` mutation. Tests in `org/org.test.ts`.
+- **`regradeTicket` cap recomputation** (`sportsbook/engine.ts`) — ✅ FIXED (2026-06-27, branch
+  `feat/launch-prep-batch`): the cap in force at first grade is pinned on the ticket
+  (`gradedMaxPayout`) and used to back out the prior effect, while the current cap applies to the
+  corrected effect. Regression tests in `sportsbook/engine.test.ts`.
 
 ---
 
@@ -213,7 +226,7 @@ The **top 7** items from the extended, repo-scored audit in
 perf/cost, SEO, and a11y, plus the OWASP Top 10:2025 mapping and current 2026 research).
 Each item below is a summary — the full rationale + fix is in that doc.
 
-### G1 — Idempotency & atomic balance mutation
+### G1 — Idempotency & atomic balance mutation — ✅ MIGRATION AUTHORED (2026-06-27)
 - **Severity:** High (money/points integrity; Critical once balances persist)
 - **Where:** `core/core.ts` (in-place mutation + `wagerSeq`), `app/App.tsx` (ref), `supabase/migrations/0003_money_rpcs.sql`
 - **Problem:** No protection against a double-submitted or concurrent bet. Once the balance
@@ -222,6 +235,12 @@ Each item below is a summary — the full rationale + fix is in that doc.
 - **Intended fix:** Make `placeWager` a single atomic RPC (`UPDATE … WHERE available ≥ stake
   RETURNING …`, 0 rows = rejected); add a client-minted **idempotency key** with a `UNIQUE`
   constraint; mint wager ids from the DB. See gap-analysis §1.1.
+- **Fix shipped (branch `feat/launch-prep-batch`, 2026-06-27):** `supabase/migrations/0016_atomic_place_wager.sql`
+  redefines `place_wager` as a single atomic `UPDATE accounts SET pending = pending + p_stake WHERE id = …
+  AND (credit_limit + balance - pending) >= p_stake RETURNING …` (0 rows = reject), adds
+  `wagers.idempotency_key` + a partial UNIQUE index with `ON CONFLICT DO NOTHING` replay-safety, and
+  mints the id in-DB; core's `wagerSeq` is also replaced with `crypto.randomUUID()`. **Not yet applied**
+  (no remote) and callers must pass a UUID — see `docs/operations/note-0016-atomic-place-wager.md`.
 
 ### G2 — HTTP security headers — ✅ FIXED (2026-06-24)
 - **Severity:** Medium (defense-in-depth; cheap, high-value — OWASP A02, now #2)
@@ -255,7 +274,7 @@ Each item below is a summary — the full rationale + fix is in that doc.
   **env at startup** (hard-fail in prod). Folds in the open feed-validation finding above. See
   gap-analysis §2.3, §3.5.
 
-### G5 — Error tracking + uptime monitoring
+### G5 — Error tracking + uptime monitoring — 🟡 LOCAL SEAM DONE (2026-06-27)
 - **Severity:** Medium (launch readiness — OWASP A10, new for 2025)
 - **Where:** `app/ErrorBoundary.tsx` (catches but doesn't report), `worker/health.ts` (unmonitored)
 - **Problem:** Exceptions are caught for users but reported nowhere; the worker's health endpoint
@@ -263,6 +282,11 @@ Each item below is a summary — the full rationale + fix is in that doc.
 - **Intended fix:** Add Sentry (React app + Vercel functions + worker), wire `ErrorBoundary` to
   `captureException`; point an external monitor at `worker/health.ts` + a key page, alerting to
   the existing Slack. See gap-analysis §3.1, §3.2.
+- **Fix shipped (branch `feat/launch-prep-batch`, 2026-06-27):** the client-side reporting seam is built —
+  `app/error-report.ts` (`reportError`, a pluggable `setErrorSink`, and `installGlobalErrorReporting()`
+  for window `error`/`unhandledrejection`), wired into `app/ErrorBoundary.tsx` and installed in
+  `app/main.tsx`. **Still open:** register an actual vendor (Sentry DSN via `setErrorSink`) and external
+  uptime monitoring on `worker/health.ts`.
 
 ### G6 — CI security automation
 - **Severity:** Medium (cheap; catches the issues vibe-coded repos leak most — OWASP A03)
