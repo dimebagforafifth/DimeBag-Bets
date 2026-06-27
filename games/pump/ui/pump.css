@@ -122,7 +122,7 @@
    into the coupling. The springy ease overshoots then settles, a real "puff". */
 .balloon-scale {
   transform-box: view-box;
-  transform-origin: 128px 232px; /* grow from the flat base seated on the red connector — the fixed connection point */
+  transform-origin: 138px 216px; /* grow from the balloon's own flat base */
   transition: transform 0.4s cubic-bezier(0.34, 1.85, 0.42, 1); /* a big springy puff */
   /* the balloon's own red glow — kept on the body so the pump isn't haloed */
   filter: drop-shadow(0 0 11px rgba(var(--balloon-glow), 0.4));
@@ -346,55 +346,25 @@
 /* the pump rig sized up a touch, anchored at the hose connection (72,288) so the
    wire feeding the balloon stays exactly the same size and place */
 .pump-rig {
-  transform-box: view-box;
-  transform-origin: 72px 288px;
-  transform: scale(1.12);
+  transform-box: fill-box;
+  transform-origin: center bottom;
 }
 .pump-rig-img {
   pointer-events: none;
 }
-.pump-hose {
-  opacity: 0.95;
+/* the whole rig presses down and squashes a touch on each pump, then springs back */
+.pump-rig.is-pumping {
+  animation: pump-press 0.4s cubic-bezier(0.3, 0.85, 0.35, 1);
 }
-/* the plunger slams down hard into the cylinder, then springs back */
-.pump-plunger {
-  transform-box: fill-box;
-}
-.pump-plunger.is-pumping {
-  animation: pump-plunge 0.42s cubic-bezier(0.3, 0.85, 0.35, 1);
-}
-@keyframes pump-plunge {
+@keyframes pump-press {
   0% {
-    transform: translateY(0);
+    transform: translateY(0) scaleY(1);
   }
-  28% {
-    transform: translateY(27px); /* hard slam down deep into the block */
-  }
-  46% {
-    transform: translateY(17px);
+  30% {
+    transform: translateY(7px) scaleY(0.95); /* push down into the stroke */
   }
   100% {
-    transform: translateY(0); /* recoil back up */
-  }
-}
-/* a puff of compressed air shooting up the hose into the balloon */
-.pump-air {
-  fill: #c4ecff;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pump-air 0.46s ease-out forwards;
-}
-@keyframes pump-air {
-  0% {
-    transform: translate(0, 0) scale(0.3);
-    opacity: 0;
-  }
-  25% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate(56px, -50px) scale(1.7); /* up the hose, through the stem, into the balloon */
-    opacity: 0;
+    transform: translateY(0) scaleY(1); /* recoil back up */
   }
 }
 
@@ -452,8 +422,7 @@
   .balloon-sway,
   .balloon.is-tense .balloon-scale,
   .balloon.is-critical .balloon-scale,
-  .pump-plunger.is-pumping,
-  .pump-air,
+  .pump-rig.is-pumping,
   .burst-shreds {
     animation: none;
   }

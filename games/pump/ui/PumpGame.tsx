@@ -365,58 +365,20 @@ function Balloon({
         {/* The pump, the hose and the balloon share ONE coordinate space, so the
             hose stays plugged into the balloon's nozzle however big it inflates. */}
         <svg viewBox="0 0 240 360" className="pump-scene" aria-hidden="true">
-          <defs>
-            {/* clips the plunger to ABOVE the cylinder mouth, so on a downstroke it
-                sinks INTO the block instead of sliding over it */}
-            <clipPath id="pumpClip">
-              <rect x="0" y="0" width="240" height="263" />
-            </clipPath>
-          </defs>
-
-          {/* the pump sits in the far-left corner; the hose runs up and to the
-              right into a short stem, which plugs into the balloon's flat base.
-              Hose, stem and base are all 8 wide so the connection is seamless. */}
-          <path
-            className="pump-hose"
-            d="M72 288 C 104 286, 126 270, 128 246"
-            fill="none"
-            stroke="#566273"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
-          {/* a puff of air travelling up the hose into the balloon, each pump */}
-          {tick > 0 && <circle key={`air-${tick}`} className="pump-air" cx="72" cy="286" r="6" />}
-
-          {/* the pump rig (foot + cylinder + nozzle + mouth + plunger), scaled up a
-              touch as one unit and anchored at the hose connection, so the wire
-              feeding the balloon stays exactly the same size and position. The rig
-              body is now a raster image; the plunger stays a separate animated layer
-              over it so the pump-plunge slam still fires. */}
-          <g className="pump-rig">
+          {/* the pump apparatus — one complete rig image (handle + cylinder + base);
+              the whole rig presses down on each pump. No separate vector plunger,
+              hose or valve — the art carries all of it. */}
+          <g className={`pump-rig ${tick > 0 ? 'is-pumping' : ''}`} key={`rig-${tick}`}>
             <image
               className="pump-rig-img"
-              href={assetUrl("/game-tiles/pump/pump-rig.png")}
-              x="0"
-              y="255"
-              width="72"
-              height="87"
+              href={assetUrl('/game-tiles/pump/pump-rig.png')}
+              x="6"
+              y="216"
+              width="96"
+              height="126"
               preserveAspectRatio="xMidYMax meet"
             />
-
-            {/* plunger: a press-button (handle) + shaft, clipped to the cylinder mouth
-                so it disappears into the block as it's pushed down */}
-            <g clipPath="url(#pumpClip)">
-              <g key={`plunge-${tick}`} className={`pump-plunger ${tick > 0 ? 'is-pumping' : ''}`}>
-                <rect x="29" y="202" width="10" height="62" rx="4" fill="#7d8a99" />
-                <rect x="6" y="192" width="56" height="15" rx="7.5" fill="var(--accent)" />
-              </g>
-            </g>
           </g>
-
-          {/* the RED connector: a chunky valve the SAME width as the balloon's
-              base, bridging the pump line and the balloon. Fixed at the scale
-              origin so it stays aligned; the balloon's base seats down onto it. */}
-          <rect x="122" y="226" width="12" height="20" rx="4" fill="#d8323f" />
 
           {popped ? (
             <BurstScene />
@@ -429,14 +391,14 @@ function Balloon({
                 <g className="balloon-inflate" key={pumps}>
                   <image
                     className="balloon-skin"
-                    href={assetUrl("/game-tiles/pump/balloon.png")}
-                    x="62"
-                    y="96"
-                    width="132"
-                    height="140"
+                    href={assetUrl('/game-tiles/pump/balloon.png')}
+                    x="74"
+                    y="80"
+                    width="128"
+                    height="136"
                     preserveAspectRatio="xMidYMax meet"
                   />
-                  <text x="128" y="172" className="balloon-mult" textAnchor="middle">
+                  <text x="138" y="152" className="balloon-mult" textAnchor="middle">
                     {`${label}×`}
                   </text>
                 </g>
