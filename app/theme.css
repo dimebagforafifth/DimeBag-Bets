@@ -384,6 +384,41 @@ body,
    Plinko board (and its container-query bucket labels) appear to zoom in/out. */
 html {
   scrollbar-gutter: stable;
+  /* Firefox: a thin graphite scrollbar instead of the OS default. The bright
+     white Windows scrollbar clashed with the graphite canvas; macOS draws
+     overlay scrollbars that hide when idle, so it only showed on some PCs. */
+  scrollbar-width: thin;
+  scrollbar-color: #3a3b3d transparent;
+}
+
+/* WebKit / Chromium (Chrome, Edge — most Windows browsers): theme every scrollbar
+   to the graphite canvas so none of them render the default light bar. A transparent
+   track lets the dark page show through the reserved gutter; the thumb is a slim
+   graphite pill (inset with a transparent border) that lifts on hover. Element-scoped
+   rules — e.g. .activity-viewport hiding its own bar — are more specific and still win. */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a3b3d;
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4d4e50;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:active {
+  background: #5a5b5d;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 body {
