@@ -166,23 +166,23 @@
   color: var(--text);
 }
 .rl-chipbtn.tone-white {
-  --chip-img: url('/chips/white-1.png');
+  --chip-img: var(--chip-white-1);
   --face: #1b2733;
 }
 .rl-chipbtn.tone-red {
-  --chip-img: url('/chips/red-5.png');
+  --chip-img: var(--chip-red-5);
   --face: #fff;
 }
 .rl-chipbtn.tone-blue {
-  --chip-img: url('/chips/blue-10.png');
+  --chip-img: var(--chip-blue-10);
   --face: #fff;
 }
 .rl-chipbtn.tone-green {
-  --chip-img: url('/chips/green-25.png');
+  --chip-img: var(--chip-green-25);
   --face: #fff;
 }
 .rl-chipbtn.tone-black {
-  --chip-img: url('/chips/black-100.png');
+  --chip-img: var(--chip-black-100);
   --face: #fff;
 }
 
@@ -1152,23 +1152,23 @@
     0 0 2px rgba(0, 0, 0, 0.3);
 }
 .rl-chip-token.tone-white {
-  --chip-img: url('/chips/white-1.png');
+  --chip-img: var(--chip-white-1);
   --face: #1b2733;
 }
 .rl-chip-token.tone-red {
-  --chip-img: url('/chips/red-5.png');
+  --chip-img: var(--chip-red-5);
   --face: #ffffff;
 }
 .rl-chip-token.tone-blue {
-  --chip-img: url('/chips/blue-10.png');
+  --chip-img: var(--chip-blue-10);
   --face: #ffffff;
 }
 .rl-chip-token.tone-green {
-  --chip-img: url('/chips/green-25.png');
+  --chip-img: var(--chip-green-25);
   --face: #ffffff;
 }
 .rl-chip-token.tone-black {
-  --chip-img: url('/chips/black-100.png');
+  --chip-img: var(--chip-black-100);
   --face: #ffffff;
 }
 

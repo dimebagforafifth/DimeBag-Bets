@@ -85,23 +85,23 @@
 /* shared chip palette (rack buttons + the tokens on the felt) — each tone maps to
    its premium chip PNG; --face keeps the denomination text legible on top. */
 .baccarat .tone-white {
-  --chip-img: url('/chips/white-1.png');
+  --chip-img: var(--chip-white-1);
   --face: #1b2733;
 }
 .baccarat .tone-red {
-  --chip-img: url('/chips/red-5.png');
+  --chip-img: var(--chip-red-5);
   --face: #fff;
 }
 .baccarat .tone-blue {
-  --chip-img: url('/chips/blue-10.png');
+  --chip-img: var(--chip-blue-10);
   --face: #fff;
 }
 .baccarat .tone-green {
-  --chip-img: url('/chips/green-25.png');
+  --chip-img: var(--chip-green-25);
   --face: #fff;
 }
 .baccarat .tone-black {
-  --chip-img: url('/chips/black-100.png');
+  --chip-img: var(--chip-black-100);
   --face: #fff;
 }
 

@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet, resolveAtMultiplier } from '../../../core/index.js'
@@ -416,7 +417,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 function Gem() {
   return (
     <img
-      src="/game-tiles/mines/gem.png"
+      src={assetUrl("/game-tiles/mines/gem.png")}
       alt="gem"
       className="icon gem"
       draggable={false}
@@ -428,7 +429,7 @@ function Gem() {
 function Mine({ hit = false }: { hit?: boolean }) {
   return (
     <img
-      src={hit ? '/game-tiles/mines/bomb-hit.png' : '/game-tiles/mines/bomb.png'}
+      src={assetUrl(hit ? '/game-tiles/mines/bomb-hit.png' : '/game-tiles/mines/bomb.png')}
       alt={hit ? 'mine exploding' : 'mine'}
       className={`icon bomb ${hit ? 'mine-boom' : ''}`}
       draggable={false}

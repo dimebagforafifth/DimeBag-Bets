@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet, resolveAtMultiplier } from '../../../core/index.js'
@@ -296,7 +297,7 @@ function PlayingCard({ card, flash }: { card: Card | null; flash?: boolean }) {
       <div className="playing-card is-empty">
         <img
           className="card-back-img"
-          src="/game-assets/cards/card-back.png"
+          src={assetUrl("/game-assets/cards/card-back.png")}
           alt="Face-down card"
           draggable={false}
         />

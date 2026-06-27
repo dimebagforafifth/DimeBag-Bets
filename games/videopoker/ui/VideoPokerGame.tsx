@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet } from '../../../core/index.js'
@@ -330,7 +331,7 @@ function PlayingCard({
       <span className="videopoker-card is-back" aria-hidden="true">
         <img
           className="videopoker-card-back-img"
-          src="/game-assets/cards/card-back.png"
+          src={assetUrl("/game-assets/cards/card-back.png")}
           alt=""
           draggable={false}
         />

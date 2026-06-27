@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { availableToWager, maxBet, resolveAtMultiplier } from '../../../core/index.js'
@@ -500,7 +501,7 @@ function Coin({ face, spins, sizeClass }: { face: CoinFace; spins: number; sizeC
       <div className="coinflip-face is-heads">
         <img
           className="coinflip-face-img"
-          src="/game-assets/coins/coin-heads.png"
+          src={assetUrl("/game-assets/coins/coin-heads.png")}
           alt="Heads"
           draggable={false}
         />
@@ -508,7 +509,7 @@ function Coin({ face, spins, sizeClass }: { face: CoinFace; spins: number; sizeC
       <div className="coinflip-face is-tails">
         <img
           className="coinflip-face-img"
-          src="/game-assets/coins/coin-tails.png"
+          src={assetUrl("/game-assets/coins/coin-tails.png")}
           alt="Tails"
           draggable={false}
         />

@@ -1,3 +1,4 @@
+import '../../shared/chipVars.js'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet } from '../../../core/index.js'

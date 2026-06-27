@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet } from '../../../core/index.js'
@@ -215,7 +216,7 @@ export function DiamondsGame({
                   {revealed && colour != null ? (
                     <img
                       className="diamonds-gem"
-                      src={GEM_IMAGES[colour]}
+                      src={assetUrl(GEM_IMAGES[colour])}
                       alt={`${GEM_NAMES[colour]} gem`}
                       draggable={false}
                     />

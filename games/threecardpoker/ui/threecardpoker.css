@@ -327,19 +327,19 @@ button.threecardpoker-clay:disabled {
   animation: tcp-chip-drop 0.28s cubic-bezier(0.2, 0.8, 0.3, 1.15);
 }
 .threecardpoker-clay.is-d1 {
-  background-image: url('/chips/white-1.png');
+  background-image: var(--chip-white-1);
 }
 .threecardpoker-clay.is-d5 {
-  background-image: url('/chips/red-5.png');
+  background-image: var(--chip-red-5);
 }
 .threecardpoker-clay.is-d25 {
-  background-image: url('/chips/green-25.png');
+  background-image: var(--chip-green-25);
 }
 .threecardpoker-clay.is-d100 {
-  background-image: url('/chips/black-100.png');
+  background-image: var(--chip-black-100);
 }
 .threecardpoker-clay.is-d500 {
-  background-image: url('/chips/purple-500.png');
+  background-image: var(--chip-purple-500);
 }
 @keyframes tcp-chip-drop {
   0% {

@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import {
   memo,
   useEffect,
@@ -475,13 +476,13 @@ function Rocket() {
     <div className="rocket" aria-hidden="true">
       <img
         className="rocket-trail"
-        src="/game-assets/crash/trail.png"
+        src={assetUrl("/game-assets/crash/trail.png")}
         alt=""
         draggable={false}
       />
       <img
         className="rocket-craft"
-        src="/game-assets/crash/rocket.png"
+        src={assetUrl("/game-assets/crash/rocket.png")}
         alt="rocket"
         draggable={false}
       />
@@ -493,7 +494,7 @@ function Burst() {
   return (
     <img
       className="burst"
-      src="/game-assets/crash/explosion.png"
+      src={assetUrl("/game-assets/crash/explosion.png")}
       alt="crash"
       draggable={false}
     />

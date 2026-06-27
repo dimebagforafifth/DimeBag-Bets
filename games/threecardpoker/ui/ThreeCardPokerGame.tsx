@@ -1,3 +1,5 @@
+import '../../shared/chipVars.js'
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { availableToWager, maxBet } from '../../../core/index.js'
@@ -666,7 +668,7 @@ function PlayingCard({
         <div className="threecardpoker-face is-back">
           <img
             className="threecardpoker-cardback"
-            src="/game-assets/cards/card-back.png"
+            src={assetUrl("/game-assets/cards/card-back.png")}
             alt=""
             aria-hidden="true"
             draggable={false}

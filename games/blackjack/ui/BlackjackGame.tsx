@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { availableToWager, maxBet } from '../../../core/index.js'
@@ -618,7 +619,7 @@ function PlayingCard({ card }: { card: Card }) {
 function CardBack() {
   return (
     <div className="card card-back" aria-hidden="true">
-      <img className="card-back-img" src="/game-assets/cards/card-back.png" alt="" draggable={false} />
+      <img className="card-back-img" src={assetUrl("/game-assets/cards/card-back.png")} alt="" draggable={false} />
     </div>
   )
 }
@@ -887,7 +888,7 @@ function ChipStack({ cents }: { cents: number }) {
                       >
                         <img
                           className="bj-chip-img"
-                          src={denom.img}
+                          src={assetUrl(denom.img)}
                           alt=""
                           draggable={false}
                         />

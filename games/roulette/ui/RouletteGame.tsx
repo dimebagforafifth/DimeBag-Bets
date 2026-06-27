@@ -1,3 +1,5 @@
+import '../../shared/chipVars.js'
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet } from '../../../core/index.js'
@@ -451,7 +453,7 @@ function Wheel({
       >
         <img
           className="rl-wheel-art"
-          src="/game-assets/roulette/wheel.png"
+          src={assetUrl("/game-assets/roulette/wheel.png")}
           alt=""
           aria-hidden="true"
           draggable={false}
@@ -504,7 +506,7 @@ function Wheel({
             >
               <img
                 className="rl-ball"
-                src="/game-assets/roulette/ball.png"
+                src={assetUrl("/game-assets/roulette/ball.png")}
                 alt=""
                 aria-hidden="true"
                 draggable={false}

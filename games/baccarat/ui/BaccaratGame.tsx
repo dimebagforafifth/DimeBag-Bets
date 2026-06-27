@@ -1,3 +1,5 @@
+import '../../shared/chipVars.js'
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet } from '../../../core/index.js'
@@ -497,14 +499,14 @@ function Hand({
           <>
             <img
               className="baccarat-card is-back"
-              src="/game-assets/cards/card-back.png"
+              src={assetUrl("/game-assets/cards/card-back.png")}
               alt=""
               draggable={false}
               aria-hidden="true"
             />
             <img
               className="baccarat-card is-back"
-              src="/game-assets/cards/card-back.png"
+              src={assetUrl("/game-assets/cards/card-back.png")}
               alt=""
               draggable={false}
               aria-hidden="true"

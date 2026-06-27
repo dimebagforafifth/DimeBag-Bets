@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import {
   memo,
   useEffect,
@@ -327,14 +328,14 @@ const CaseBox = memo(function CaseBox({ open }: { open: boolean }) {
       {/* closed art at rest; crossfades out as the lid pops on open */}
       <img
         className="cases-chest-img cases-chest-img-closed"
-        src="/game-assets/cases/chest-closed.png"
+        src={assetUrl("/game-assets/cases/chest-closed.png")}
         alt=""
         draggable={false}
       />
       {/* open art (lid up, glowing) — fades/scales in to read as the reveal */}
       <img
         className="cases-chest-img cases-chest-img-open"
-        src="/game-assets/cases/chest-open.png"
+        src={assetUrl("/game-assets/cases/chest-open.png")}
         alt=""
         draggable={false}
       />

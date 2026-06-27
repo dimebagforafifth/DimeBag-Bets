@@ -1,3 +1,4 @@
+import { assetUrl } from '../../shared/assetUrl.js'
 import { useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import type { Account } from '../../../core/index.js'
 import { maxBet, resolveAtMultiplier } from '../../../core/index.js'
@@ -394,7 +395,7 @@ function Balloon({
           <g className="pump-rig">
             <image
               className="pump-rig-img"
-              href="/game-tiles/pump/pump-rig.png"
+              href={assetUrl("/game-tiles/pump/pump-rig.png")}
               x="0"
               y="255"
               width="72"
@@ -428,7 +429,7 @@ function Balloon({
                 <g className="balloon-inflate" key={pumps}>
                   <image
                     className="balloon-skin"
-                    href="/game-tiles/pump/balloon.png"
+                    href={assetUrl("/game-tiles/pump/balloon.png")}
                     x="62"
                     y="96"
                     width="132"
@@ -456,7 +457,7 @@ function BurstScene() {
       <circle className="burst-ring" cx="128" cy="164" r="24" />
       <image
         className="burst-shreds"
-        href="/game-tiles/pump/balloon-burst.png"
+        href={assetUrl("/game-tiles/pump/balloon-burst.png")}
         x="58"
         y="94"
         width="140"
