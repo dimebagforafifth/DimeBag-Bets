@@ -70,6 +70,14 @@
 .slots-pay-symbols {
   font-size: 17px;
   letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.slots-pay-symbols .slots-symbol-img {
+  width: 24px;
+  height: 24px;
+  filter: none;
 }
 .slots-pay-mult {
   font-size: 13px;
@@ -156,6 +164,16 @@
   justify-content: center;
   font-size: 46px;
   line-height: 1;
+}
+/* the 3D symbol art, sized to sit comfortably in the 96px reel window */
+.slots-symbol-img {
+  width: 64px;
+  height: 64px;
+  max-width: none; /* avoid Tailwind preflight img{max-width:100%} clamping */
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
 }
 .slots-cell--result {
   animation: slots-land 0.28s cubic-bezier(0.16, 1, 0.3, 1);

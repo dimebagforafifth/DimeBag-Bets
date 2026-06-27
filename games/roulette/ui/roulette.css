@@ -452,9 +452,12 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 15px;
-  height: 15px;
-  margin-left: -7.5px;
+  width: 18px;
+  height: 18px;
+  /* Tailwind preflight sets img{max-width:100%}; the .rl-ball-drop parent is
+     width:0, so without this the ball gets clamped to 0px wide (invisible). */
+  max-width: none;
+  margin-left: -9px;
   display: block;
   object-fit: contain;
   pointer-events: none;

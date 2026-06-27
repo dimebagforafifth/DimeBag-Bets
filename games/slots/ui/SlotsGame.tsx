@@ -14,6 +14,7 @@ import {
   type SlotsRound,
 } from '../index.js'
 import { fairnessClient } from '../../shared/fair.js'
+import { assetUrl } from '../../shared/assetUrl.js'
 import { WinPopup } from '../../shared/WinPopup.js'
 import { Rules } from '../../shared/Rules.js'
 import { useResolving } from '../../shared/useResolving.js'
@@ -32,6 +33,16 @@ const SLOTS_RULES: ReactNode[] = [
   </>,
   <>The reels are weighted, and every spin is provably fair.</>,
 ]
+
+/** Base-aware src for a slot symbol's premium 3D art (public/game-tiles/slots/<key>.png). */
+const symbolSrc = (i: number) => assetUrl(`/game-tiles/slots/${SYMBOLS[i].key}.png`)
+
+/** A slot symbol rendered as its 3D image (replaces the old emoji glyph). */
+function SymbolIcon({ i }: { i: number }) {
+  return (
+    <img className="slots-symbol-img" src={symbolSrc(i)} alt={SYMBOLS[i].key} draggable={false} />
+  )
+}
 
 interface SlotsGameProps {
   account: Account
@@ -188,17 +199,17 @@ export function SlotsGame({
               }`}
             >
               <span className="slots-pay-symbols">
-                {s.glyph}
-                {s.glyph}
-                {s.glyph}
+                <SymbolIcon i={i} />
+                <SymbolIcon i={i} />
+                <SymbolIcon i={i} />
               </span>
               <span className="slots-pay-mult">{mult.toFixed(2)}×</span>
             </div>
           ))}
           <div className="slots-pay-row slots-pay-row--note">
             <span className="slots-pay-symbols">
-              {SYMBOLS[0].glyph}
-              {SYMBOLS[0].glyph}
+              <SymbolIcon i={0} />
+              <SymbolIcon i={0} />
             </span>
             <span className="slots-pay-mult">{twoCherry.toFixed(2)}×</span>
           </div>
@@ -257,11 +268,13 @@ function Reel({ target, spinning, dim }: { target: number; spinning: boolean; di
           // a long looping strip of symbols that scrolls past the window
           SCROLL_STRIP.map((s, i) => (
             <span key={i} className="slots-cell">
-              {SYMBOLS[s].glyph}
+              <SymbolIcon i={s} />
             </span>
           ))
         ) : (
-          <span className="slots-cell slots-cell--result">{SYMBOLS[target].glyph}</span>
+          <span className="slots-cell slots-cell--result">
+            <SymbolIcon i={target} />
+          </span>
         )}
       </div>
     </div>
