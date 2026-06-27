@@ -29,6 +29,7 @@ import { ensureViewerOffers } from './seed.js'
 import { accepterStakeFor, EVEN_ODDS, potCents } from './odds.js'
 import { useEconomyMode, ModeGate } from './economy-mode.js'
 import type { Challenge, ChallengeStatus, ChallengeWinner, PlayerSectionProps } from './types.js'
+import './challenges.css'
 
 type Tab = 'open' | 'active' | 'history'
 
