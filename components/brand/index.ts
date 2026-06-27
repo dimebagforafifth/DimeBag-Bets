@@ -31,3 +31,6 @@ export type { EventRowProps, Market, OddsOption, Competitor } from './EventRow'
 
 export { BetSlip } from './BetSlip'
 export type { BetSlipProps, BetSelection } from './BetSlip'
+
+export { Skeleton, SkeletonText, SkeletonCircle, SkeletonRegion } from './Skeleton'
+export type { SkeletonProps, SkeletonTextProps, SkeletonRegionProps } from './Skeleton'

@@ -1,5 +1,6 @@
 import {
   Suspense,
+  lazy,
   useEffect,
   useMemo,
   useReducer,
@@ -26,6 +27,10 @@ import { RewardsSection } from '../rewards/index.js'
 import './rewards-accrual.js' // side effect: accrue rewards from real wagers
 import { formatMoney } from '../games/shared/money.js'
 import { WalletPill, Wordmark, ChipLogo, GameCard, BrandBadge } from '../components/brand/index.js'
+// Section-shaped loading skeletons (app/skeletons). `sectionSkeleton(key)` is the shell's
+// <Suspense fallback> — every section gets a content-shaped placeholder, shown only when a
+// real load is in flight (a lazy chunk now; async data later). See CLAUDE.md "Skeleton loaders".
+import { sectionSkeleton, GameSkeleton, ConsoleSkeleton } from './skeletons/index.js'
 import { Button } from '../components/ui/button.js'
 import { useSoundEnabled, toggleSound } from '../sound/index.js'
 import {
@@ -68,7 +73,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import './menu.css'
-import { Console } from '../console/shell/index.js'
 // The money-desk lane + member list are now first-class entries in REGISTRY itself
 // (console/registry/index.ts), so the console mounts the whole feature set directly.
 import { REGISTRY } from '../console/registry/index.js'
@@ -128,6 +132,10 @@ import {
   type Section,
 } from '../auth/index.js'
 import '../auth/auth.css' // header identity menu styles (also used by the Login screen)
+
+// The operator console is a heavy, staff-only chunk — lazy-load it so it's fetched only
+// when Management is opened (real load → ConsoleSkeleton), not in the player bundle.
+const Console = lazy(() => import('../console/shell/index.js').then((m) => ({ default: m.Console })))
 
 // The top-level sections (the `Section` type) and the role→section access rules live
 // in auth/roles — one source of truth for both the visible nav and the render guard.
@@ -386,18 +394,21 @@ export function App() {
           roster ? { scopeId: authMember!.id, accountIds: new Set(roster.map((p) => p.id)) } : {},
         )
         return (
-          <Console
-            registry={consoleRegistry}
-            brand="DimeBag-Bets"
-            username={actor}
-            onSignOut={signOut}
-            balance={fig.balance}
-            week={fig.week}
-            weekTrend={fig.weekTrend}
-            today={fig.today}
-            todayTrend={fig.todayTrend}
-            activeAccts={fig.activeAccts}
-          />
+          // The console is a lazy chunk; show the console-shaped skeleton while it loads.
+          <Suspense fallback={<ConsoleSkeleton />}>
+            <Console
+              registry={consoleRegistry}
+              brand="DimeBag-Bets"
+              username={actor}
+              onSignOut={signOut}
+              balance={fig.balance}
+              week={fig.week}
+              weekTrend={fig.weekTrend}
+              today={fig.today}
+              todayTrend={fig.todayTrend}
+              activeAccts={fig.activeAccts}
+            />
+          </Suspense>
         )
       })()
     : null
@@ -553,110 +564,120 @@ export function App() {
               {/* Operator announcements reach the player here (the manager Communication
                   binding) — book-wide notices show above whatever section is active. */}
               <AnnouncementsBanner />
-              {activeSection === 'leaderboard' ? (
-                <Leaderboard
-                  players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
-                  currentPlayerId={getCurrentPlayerId()}
-                />
-              ) : activeSection === 'rewards' ? (
-                account && player ? (
-                  <RewardsSection
-                    memberId={player.id}
-                    playerName={player.name}
-                    balanceCents={account.balance}
-                    availableCents={availableToWager(account)}
+              {/* One section-aware Suspense boundary: a section whose lazy chunk or async data
+                  is in flight shows its content-shaped skeleton (sectionSkeleton). Instant
+                  sections render synchronously, so nothing flashes. Games + the console keep
+                  their own inner boundaries (GameSkeleton / ConsoleSkeleton). */}
+              <Suspense fallback={sectionSkeleton(activeSection)}>
+                {activeSection === 'leaderboard' ? (
+                  <Leaderboard
+                    players={listPlayers().map((p) => ({ id: p.id, name: p.name }))}
+                    currentPlayerId={getCurrentPlayerId()}
                   />
-                ) : (
-                  <NoPlayer
-                    onManage={() => setSection('management')}
-                    allSuspended={allSuspended}
-                    canManage={canManage(role)}
-                  />
-                )
-              ) : activeSection === 'sportsbook' ? (
-                account && player ? (
-                  <ResponsiblePlayGate playerId={account.id}>
-                    <BookView
-                      account={account}
+                ) : activeSection === 'rewards' ? (
+                  account && player ? (
+                    <RewardsSection
+                      memberId={player.id}
                       playerName={player.name}
-                      role={role}
-                      viewerId={authMember?.id ?? player.id}
-                      isDemo={isDemo}
-                      onBalanceChange={refresh}
+                      balanceCents={account.balance}
+                      availableCents={availableToWager(account)}
                     />
-                  </ResponsiblePlayGate>
-                ) : (
-                  <NoPlayer
-                    onManage={() => setSection('management')}
-                    allSuspended={allSuspended}
-                    canManage={canManage(role)}
-                  />
-                )
-              ) : activeSection === 'mybets' ? (
-                account && player ? (
-                  <MyBets account={account} player={player} />
-                ) : (
-                  <NoPlayer
-                    onManage={() => setSection('management')}
-                    allSuspended={allSuspended}
-                    canManage={canManage(role)}
-                  />
-                )
-              ) : activeRegistrySection ? (
-                // ONE render path for every registry section. Prop-taking sections (Community,
-                // Pick'em, …) get the shell context injected; a section that needs an active player
-                // falls back to NoPlayer when there is none. Prop-less self-contained sections
-                // (Profile) ignore the context and render regardless (their own empty state).
-                renderPlayerSection(
-                  activeRegistrySection,
-                  sectionCtx,
-                  <NoPlayer
-                    onManage={() => setSection('management')}
-                    allSuspended={allSuspended}
-                    canManage={canManage(role)}
-                  />,
-                )
-              ) : (
-                <div className="casino-view">
-                  {!account ? (
+                  ) : (
                     <NoPlayer
                       onManage={() => setSection('management')}
                       allSuspended={allSuspended}
                       canManage={canManage(role)}
                     />
-                  ) : liveGame ? (
-                    <div className="game-page">
-                      <button className="crumb" onClick={() => setRoute(null)}>
-                        ← Casino
-                      </button>
-                      {/* Each game's view is a lazy chunk (app/games.ts); show a light
-                    placeholder while it loads on first open. The crumb + Ledger
-                    stay outside the boundary so leaving is always instant. */}
-                      <ResponsiblePlayGate playerId={account.id}>
-                        <Suspense fallback={<GameLoading />}>
-                          <GameMount game={liveGame} account={account} onBalanceChange={refresh} />
-                        </Suspense>
-                      </ResponsiblePlayGate>
-                      {/* the ledger lives only inside a game — its own per-game history,
-                    scoped to the player you're currently playing as. */}
-                      <Ledger
-                        gameKey={liveGame.key}
-                        gameName={liveGame.name}
-                        accountId={account.id}
+                  )
+                ) : activeSection === 'sportsbook' ? (
+                  account && player ? (
+                    <ResponsiblePlayGate playerId={account.id}>
+                      <BookView
+                        account={account}
+                        playerName={player.name}
+                        role={role}
+                        viewerId={authMember?.id ?? player.id}
+                        isDemo={isDemo}
+                        onBalanceChange={refresh}
                       />
-                    </div>
+                    </ResponsiblePlayGate>
                   ) : (
-                    <Lobby
-                      onPlay={setRoute}
-                      favourites={lobbyFavourites}
-                      search={search}
-                      onBrowseAll={() => setSearch('')}
-                      onSeeLeaderboard={() => setSection('leaderboard')}
-                      playersOnline={activePlayers.length}
+                    <NoPlayer
+                      onManage={() => setSection('management')}
+                      allSuspended={allSuspended}
+                      canManage={canManage(role)}
                     />
-                  )}
-                </div>
-              )}
+                  )
+                ) : activeSection === 'mybets' ? (
+                  account && player ? (
+                    <MyBets account={account} player={player} />
+                  ) : (
+                    <NoPlayer
+                      onManage={() => setSection('management')}
+                      allSuspended={allSuspended}
+                      canManage={canManage(role)}
+                    />
+                  )
+                ) : activeRegistrySection ? (
+                  // ONE render path for every registry section. Prop-taking sections (Community,
+                  // Pick'em, …) get the shell context injected; a section that needs an active player
+                  // falls back to NoPlayer when there is none. Prop-less self-contained sections
+                  // (Profile) ignore the context and render regardless (their own empty state).
+                  renderPlayerSection(
+                    activeRegistrySection,
+                    sectionCtx,
+                    <NoPlayer
+                      onManage={() => setSection('management')}
+                      allSuspended={allSuspended}
+                      canManage={canManage(role)}
+                    />,
+                  )
+                ) : (
+                  <div className="casino-view">
+                    {!account ? (
+                      <NoPlayer
+                        onManage={() => setSection('management')}
+                        allSuspended={allSuspended}
+                        canManage={canManage(role)}
+                      />
+                    ) : liveGame ? (
+                      <div className="game-page">
+                        <button className="crumb" onClick={() => setRoute(null)}>
+                          ← Casino
+                        </button>
+                        {/* Each game's view is a lazy chunk (app/games.ts); show the
+                    game-shaped skeleton while it loads on first open. The crumb + Ledger
+                    stay outside the boundary so leaving is always instant. */}
+                        <ResponsiblePlayGate playerId={account.id}>
+                          <Suspense fallback={<GameSkeleton />}>
+                            <GameMount
+                              game={liveGame}
+                              account={account}
+                              onBalanceChange={refresh}
+                            />
+                          </Suspense>
+                        </ResponsiblePlayGate>
+                        {/* the ledger lives only inside a game — its own per-game history,
+                    scoped to the player you're currently playing as. */}
+                        <Ledger
+                          gameKey={liveGame.key}
+                          gameName={liveGame.name}
+                          accountId={account.id}
+                        />
+                      </div>
+                    ) : (
+                      <Lobby
+                        onPlay={setRoute}
+                        favourites={lobbyFavourites}
+                        search={search}
+                        onBrowseAll={() => setSearch('')}
+                        onSeeLeaderboard={() => setSection('leaderboard')}
+                        playersOnline={activePlayers.length}
+                      />
+                    )}
+                  </div>
+                )}
+              </Suspense>
               <footer className="psa-footer">
                 Play money — points for fun, no buy-in, no cash-out. PlayStadium.io
               </footer>
@@ -676,19 +697,6 @@ export function App() {
  * edge (the "keep current edges" ship default). The single contained cast lets us
  * pass a per-game-shaped config through the shared GameProps boundary.
  */
-/** Placeholder shown while a game's lazy chunk loads on first open. */
-function GameLoading() {
-  return (
-    <div
-      className="game-loading"
-      aria-busy="true"
-      style={{ padding: '4rem', textAlign: 'center', opacity: 0.55 }}
-    >
-      Loading…
-    </div>
-  )
-}
-
 function GameMount({
   game,
   account,
@@ -850,10 +858,12 @@ const GAME_DESC: Record<string, string> = {
   coinflip: 'Call heads or tails and ride the streak — every correct call grows your multiplier.',
   diamonds:
     'Reveal a hand of gems and get paid for matches — the more of a colour you hit, the bigger the multiplier.',
-  cases: 'Open a case and win whatever multiplier it lands on — pick a higher risk for bigger rewards.',
+  cases:
+    'Open a case and win whatever multiplier it lands on — pick a higher risk for bigger rewards.',
   // Table
   roulette: 'Place your chips on the single-zero European wheel and watch the ball land.',
-  sicbo: 'Bet on the roll of three dice — back totals, combos, or exact numbers before they tumble.',
+  sicbo:
+    'Bet on the roll of three dice — back totals, combos, or exact numbers before they tumble.',
   // Cards
   blackjack: 'Beat the dealer to 21 without going over.',
   baccarat: 'Back the Player or the Banker — whichever hand lands closest to nine takes it.',
